@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net8.0-windows7.0": {
+      "DalamudPackager": {
+        "type": "Direct",
+        "requested": "[11.0.0, )",
+        "resolved": "11.0.0",
+        "contentHash": "bjT7XUlhIJSmsE/O76b7weUX+evvGQctbQB8aKXt94o+oPWxHpCepxAGMs7Thow3AzCyqWs7cOpp9/2wcgRRQA=="
+      },
+      "LinearAssignment": {
+        "type": "Direct",
+        "requested": "[1.2.0, )",
+        "resolved": "1.2.0",
+        "contentHash": "KawnZ+ikYRCiiuKFRhtNs2mC+kLiD+bqIpsQyTxroYCN8kuet/RZL1354T+9e9q4J0yOiGSbZUUrMJGw7InkIg=="
+      },
+      "Lumina": {
+        "type": "Direct",
+        "requested": "[5.5.0, )",
+        "resolved": "5.5.0",
+        "contentHash": "riVvUZnznSS9c4VK0UrO/bykmrxZ8z44IMdXVV0xt6IIyipMlHq7SthHJy8QjsvKp3TLMWXv/xopNk95QAocpg==",
+        "dependencies": {
+          "Microsoft.Extensions.ObjectPool": "8.0.7"
+        }
+      },
+      "Lumina.Generated": {
+        "type": "Direct",
+        "requested": "[5.30.2, )",
+        "resolved": "5.30.2",
+        "contentHash": "mteXbT2nLs5l2d+8tCiVedhwPjdgkMutZHiEFk44rt/1rVuv/xuq8OrO+zrHZ/WeQ9JNQTI+Eei7elLRPGn3Ig==",
+        "dependencies": {
+          "Lumina": "2.1.1"
+        }
+      },
+      "Microsoft.Extensions.ObjectPool": {
+        "type": "Transitive",
+        "resolved": "8.0.7",
+        "contentHash": "2yLweyqmpuuFSRo+I3sLHMxmnAgNcI537kBJiyv49U2ZEqo00jZcG8lrnD8uCiOJp9IklYyTZULtbsXoFVzsjQ=="
+      }
+    }
+  }
+}

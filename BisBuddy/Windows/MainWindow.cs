@@ -1,0 +1,150 @@
+using BisBuddy.Gear;
+using Dalamud.Interface;
+using Dalamud.Interface.Windowing;
+using ImGuiNET;
+using System;
+using System.Collections.Generic;
+using System.Numerics;
+
+namespace BisBuddy.Windows;
+
+public partial class MainWindow : Window, IDisposable
+{
+    private readonly Plugin plugin;
+
+    private string scanInventoryStatus = string.Empty;
+
+    private static Vector4 UnobtainedColor = new(1.0f, 0.2f, 0.2f, 1.0f);
+    private static Vector4 ObtainedColor = new(0.2f, 1.0f, 0.2f, 1.0f);
+
+    public MainWindow(Plugin plugin)
+        : base($"{Plugin.PluginName}##bisbuddymainwindow")
+    {
+        SizeConstraints = new WindowSizeConstraints
+        {
+            MinimumSize = new Vector2(530, 250),
+            MaximumSize = new Vector2(1000, float.MaxValue)
+        };
+
+        this.plugin = plugin;
+    }
+
+    public override void OnClose()
+    {
+        base.OnClose();
+        scanInventoryStatus = string.Empty;
+    }
+
+    public void Dispose()
+    {
+    }
+
+    private void drawHeader()
+    {
+        ImGui.PushFont(UiBuilder.IconFont);
+        var configButtonSize = ImGui.CalcTextSize(FontAwesomeIcon.Cog.ToIconString()) + ImGui.GetStyle().FramePadding * 2;
+        if (ImGui.Button($"{FontAwesomeIcon.Cog.ToIconString()}##bisbuddysettings", configButtonSize))
+        {
+            plugin.ToggleConfigUI();
+        }
+        ImGui.PopFont();
+
+        ImGui.SameLine();
+
+        ImGui.BeginDisabled(!Services.ClientState.IsLoggedIn);
+        if (ImGui.Button("New Gearset##importgearset"))
+        {
+            if (Services.ClientState.IsLoggedIn)
+            {
+                plugin.ToggleImportGearsetUI();
+            }
+        }
+
+        ImGui.SameLine();
+
+        if (ImGui.Button("Sync Inventory##scaninventory"))
+        {
+            var gearpieceUpdateCount = plugin.UpdateFromInventory(plugin.Gearsets);
+
+            scanInventoryStatus = $"{gearpieceUpdateCount} gearpieces updated";
+        }
+        if (ImGui.IsItemHovered()) ImGui.SetTooltip("Update gearsets with items from your inventory");
+        ImGui.EndDisabled();
+
+        if (scanInventoryStatus != string.Empty)
+        {
+            ImGui.SameLine();
+            ImGui.Text(scanInventoryStatus);
+        }
+    }
+
+    private void drawNoGearsets()
+    {
+        var errorText = Services.ClientState.IsLoggedIn ?
+            "No gearsets found. Add one or more gearsets to get started"
+            : "Please log in to view/add gearsets";
+        var textWidth = ImGui.CalcTextSize(errorText).X;
+        var offsetX = (ImGui.GetWindowWidth() - textWidth) * 0.5f;
+        ImGui.SetCursorPosX(offsetX); // Center text
+        ImGui.Text(errorText);
+    }
+
+    private void drawGearsets(List<Gearset> gearsets)
+    {
+        var gearsetsToDelete = new List<int>();
+
+        for (var i = 0; i < gearsets.Count; i++)
+        {
+            var gearset = gearsets[i];
+            ImGui.PushID(gearset.Id);
+            var deleteGearset = drawGearset(gearset);
+            if (deleteGearset)
+            {
+                gearsetsToDelete.Add(i);
+            }
+            ImGui.PopID();
+        }
+
+        if (gearsetsToDelete.Count > 0)
+        {
+            foreach (var gearsetIndex in gearsetsToDelete)
+            {
+                Services.Log.Verbose($"Removed gearset {gearsetIndex}");
+                gearsets.RemoveAt(gearsetIndex);
+            }
+            plugin.SaveGearsetsWithUpdate();
+        }
+    }
+
+    public override void Draw()
+    {
+        var headerWidth = ImGui.GetWindowWidth();
+        var headerHeight = ImGui.GetTextLineHeight() + ImGui.GetStyle().FramePadding.Y * 2;
+        if (ImGui.BeginChild($"###{Plugin.PluginName}_main_header", new Vector2(headerWidth, headerHeight), false, ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse))
+        {
+            drawHeader();
+            ImGui.EndChild();
+            ImGui.Spacing();
+            ImGui.Separator();
+        }
+
+        var childWidth = ImGui.GetWindowWidth() - 12;
+        ImGui.BeginChild($"###{Plugin.PluginName}_main_content", new Vector2(childWidth, 0), false, ImGuiWindowFlags.AlwaysAutoResize);
+
+        if (plugin.Gearsets.Count == 0)
+        {
+            ImGui.Spacing();
+            ImGui.Spacing();
+            ImGui.Spacing();
+            ImGui.Spacing();
+
+            drawNoGearsets();
+        }
+        else
+        {
+            drawGearsets(plugin.Gearsets);
+        }
+
+        ImGui.EndChild();
+    }
+}
