@@ -17,5 +17,7 @@
         "meld",
         "etro",
         "xivgear"
-    ]
+    ],
+    "IconUrl": "https://raw.githubusercontent.com/RajahOmen/BisBuddy/images/icon.png",
+    "RepoUrl": "https://github.com/RajahOmen/BisBuddy"
 }
