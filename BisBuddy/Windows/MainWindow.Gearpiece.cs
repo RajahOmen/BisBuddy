@@ -79,7 +79,7 @@ namespace BisBuddy.Windows
                 ImGui.Indent(30);
                 var materiaMeldedCount =
                     $"[{gearpiece.ItemMateria.Where(m => m.IsMelded).Count()}/{gearpiece.ItemMateria.Count}]";
-                var windowWidth = ImGui.GetWindowContentRegionMax().X - ImGui.GetCursorPosX() + 3;
+                var windowWidth = ImGui.GetWindowContentRegionMax().X - ImGui.GetCursorPosX();
                 var childTextHeight = ImGui.CalcTextSize("0000").Y + (ImGui.GetStyle().FramePadding.Y * 2.0f);
                 var childHeightPadding = 8;
 

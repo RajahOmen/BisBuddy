@@ -63,12 +63,12 @@ namespace BisBuddy.Gear
                     if (gearpiece.ItemId != itemId) continue;
 
                     // look at what materia is needed for this gearpiece
-                    var meldsForThisGearpiece = new List<uint>();
+                    var meldsForThisGearpiece = new List<Materia>();
                     foreach (var materia in gearpiece.ItemMateria)
                     {
                         if (materia.IsMelded) continue;
 
-                        meldsForThisGearpiece.Add(materia.ItemId);
+                        meldsForThisGearpiece.Add(materia);
                     }
 
                     // if there are any melds needed, add this 'meld plan' to the list
@@ -78,7 +78,7 @@ namespace BisBuddy.Gear
                         {
                             Gearset = gearset,
                             Gearpiece = gearpiece,
-                            MateriaIds = meldsForThisGearpiece
+                            Materia = meldsForThisGearpiece
                         };
                         neededMeldPlans.Add(meldPlan);
                     }
@@ -87,8 +87,8 @@ namespace BisBuddy.Gear
 
             // only return distinct meld plans
             var distinctMeldPlans = neededMeldPlans
-                .GroupBy(plan => plan.MateriaIds != null
-                                 ? string.Join(",", plan.MateriaIds.Distinct().OrderBy(id => id))
+                .GroupBy(plan => plan.Materia != null
+                                 ? string.Join(",", plan.Materia.Select(m => m.ItemId).OrderBy(id => id))
                                  : "")
                 .Select(group => group.First())
                 .ToList();

@@ -159,21 +159,19 @@ public class ConfigWindow : Window, IDisposable
         ImGui.Text(FontAwesomeIcon.QuestionCircle.ToIconString());
         ImGui.PopFont();
         if (ImGui.IsItemHovered())
-            ImGui.SetTooltip($"When logging in or loading {Plugin.PluginName}, update gearsets with items in inventories (inventory, armoury chest, equipped)");
+            ImGui.SetTooltip($"When logging in, adding new gearsets, or loading {Plugin.PluginName}, update gearsets with items in inventories (inventory, armoury chest, equipped)");
 
         ImGui.Spacing();
 
 #if DEBUG
         //testing-- this is a button that resets all data
-        var contentRegionMax = ImGui.GetContentRegionMax();
-        ImGui.SetCursorPosY(contentRegionMax.Y - 23);
-        ImGui.SetCursorPosX(contentRegionMax.X - 100);
         ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(1.0f, 0.3f, 0.3f, 1.0f));
         if (ImGui.Button("RESET ALL DATA"))
         {
             var newConfiguration = new Configuration();
             plugin.Configuration = newConfiguration;
             plugin.SaveGearsetsWithUpdate();
+            Services.Log.Verbose($"Reset configuration data to fresh install");
         }
         ImGui.PopStyleColor();
 #endif

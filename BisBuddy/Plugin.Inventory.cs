@@ -34,6 +34,7 @@ namespace BisBuddy
         {
             // returns number of gearpiece status changes after update
             if (!Services.ClientState.IsLoggedIn) return 0;
+            if (gearsetsToUpdate.Count == 0) return 0;
 
             try
             {

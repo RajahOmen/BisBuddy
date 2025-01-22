@@ -20,8 +20,8 @@ namespace BisBuddy.Gear
             { "Critical Hit", "CRT" },
             { "Direct Hit Rate", "DHT" },
             { "Determination", "DET" },
-            { "Skill Speed", "SPS" },
-            { "Spell Speed", "SKS" },
+            { "Skill Speed", "SKS" },
+            { "Spell Speed", "SPS" },
             { "Piety", "PIE" },
             { "Tenacity", "TNC" },
             // DoH (abbrevs from etro)

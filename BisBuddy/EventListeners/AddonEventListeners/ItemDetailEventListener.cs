@@ -41,7 +41,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
         // custom text font size
         public static readonly byte CustomNodeTextSize = 12;
         // max width for custom text when the item name is one line
-        public static readonly int CustomNodeMaxTextWidth = 294;
+        public static readonly int CustomNodeMaxTextWidth = 292;
         // max width for custom text when the item name is two lines
         public static readonly int CustomNodeMaxTextWidthTwoLines = 230;
         // how long a gearset name can be before it is truncated
@@ -124,7 +124,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                 }
                 else
                 { // not enough space, truncate and end
-                    neededStrings.Add((outputGearsetName + $"+{neededGearsets.Count - i}", string.Empty, endStr));
+                    neededStrings.Add((string.Empty, string.Empty, $"+{neededGearsets.Count - i}{endStr}"));
                     break;
                 }
             }

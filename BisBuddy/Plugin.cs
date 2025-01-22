@@ -82,9 +82,13 @@ public sealed partial class Plugin : IDalamudPlugin
         }
         catch (Exception ex)
         {
-            //Configuration = new Configuration();
             Services.Log.Error(ex, "Failed to load configuration");
+#if DEBUG
+            Configuration = new Configuration();
+            Configuration.Save();
+#else
             throw;
+# endif
         }
 
         ItemData = new ItemData(Services.DataManager.Excel);
@@ -130,7 +134,7 @@ public sealed partial class Plugin : IDalamudPlugin
 
         Services.CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
         {
-            HelpMessage = $"View existing or add new gearsets\n      [config|c] - Open {PluginName} configuration",
+            HelpMessage = $"View existing or add new gearsets\n      [config/c] - Open {PluginName} configuration",
             ShowInHelp = true,
         });
         Services.CommandManager.AddHandler(CommandNameAlias, new CommandInfo(OnCommand)
@@ -211,6 +215,15 @@ public sealed partial class Plugin : IDalamudPlugin
     public void TriggerGearsetsUpdate()
     {
         OnGearsetsUpdate?.Invoke();
+    }
+
+    public delegate void SelectedMeldPlanIdxChangeHandler(int newIdx);
+
+    public event SelectedMeldPlanIdxChangeHandler? OnSelectedMeldPlanIdxChange;
+
+    public void TriggerSelectedMeldPlanChange(int newIdx)
+    {
+        OnSelectedMeldPlanIdxChange?.Invoke(newIdx);
     }
 
     public void SaveGearsetsWithUpdate()

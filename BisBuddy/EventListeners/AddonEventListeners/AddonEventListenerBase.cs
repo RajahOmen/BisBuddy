@@ -159,7 +159,9 @@ namespace BisBuddy.EventListeners.AddonEventListeners
 
                     setAddGreen(node, false);
                 }
-                Services.Log.Verbose($"Unhighlighted all {highlightedNodesCount} nodes in \"{AddonName}\"");
+                if (highlightedNodesCount > 0)
+                    Services.Log.Verbose($"Unhighlighted all {highlightedNodesCount} node(s) in \"{AddonName}\"");
+
                 for (var i = 0; i < customNodes.Count; i++)
                 {
                     var customNode = (AtkResNode*)customNodes[i];
@@ -167,7 +169,8 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                     if (!customNode->IsVisible()) continue;
                     customNode->ToggleVisibility(false);
                 }
-                Services.Log.Verbose($"Hid all {customNodes.Count} custom nodes in \"{AddonName}\"");
+                if (customNodes.Count > 0)
+                    Services.Log.Verbose($"Hid all {customNodes.Count} custom node(s) in \"{AddonName}\"");
                 allNodesUnmarked = true;
             }
             catch (Exception ex)

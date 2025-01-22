@@ -5,6 +5,7 @@ using FFXIVClientStructs.FFXIV.Component.GUI;
 using ImGuiNET;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 
 namespace BisBuddy.Windows;
@@ -31,37 +32,51 @@ public unsafe class MeldPlanSelectorWindow : Window, IDisposable
     public void UpdatePopupNames(List<MeldPlan> meldPlans)
     {
         List<string> newPlanNames = [];
-        Dictionary<Gearset, int> counts = [];
+        //Dictionary<Gearset, int> counts = [];
+        //foreach (var plan in meldPlans)
+        //{
+        //    if (!counts.TryGetValue(plan.Gearset, out var value))
+        //    {
+        //        counts[plan.Gearset] = 0;
+        //    }
+        //    else
+        //    {
+        //        counts[plan.Gearset] = ++value;
+        //    }
+        //}
+
         foreach (var plan in meldPlans)
         {
-            if (!counts.TryGetValue(plan.Gearset, out var value))
-            {
-                counts[plan.Gearset] = 0;
-            }
-            else
-            {
-                counts[plan.Gearset] = ++value;
-            }
+            var jobAbbrev = plan.Gearset.JobAbbrv;
+            var gearsetName = plan.Gearset.Name.Length > MaxMeldPlanNameLength
+                ? plan.Gearset.Name[..(MaxMeldPlanNameLength - 2)] + ".."
+                : plan.Gearset.Name;
+            var materiaAbbrevs = plan
+                .Materia
+                .OrderByDescending(m => m.StatQuantity)
+                .Select(m => $"+{m.StatQuantity} {m.StatShortName}");
+            newPlanNames.Add($"[{jobAbbrev}] {gearsetName}\n[{string.Join(" ", materiaAbbrevs)}]");
         }
 
-        foreach (var kvp in counts)
-        {
-            // cut off name if too long
-            var gearsetName = kvp.Key.Name.Length > MaxMeldPlanNameLength
-                ? (kvp.Key.Name[..(MaxMeldPlanNameLength - 3)] + "...")
-                : kvp.Key.Name;
-            if (kvp.Value > 1)
-            {
-                for (var i = 0; i < kvp.Value; i++)
-                {
-                    newPlanNames.Add($"{i + 1}:{kvp.Key.JobAbbrv}-{gearsetName}");
-                }
-            }
-            else
-            {
-                newPlanNames.Add($"{gearsetName}");
-            }
-        }
+        //foreach (var kvp in counts)
+        //{
+        //    // cut off name if too long
+        //    var gearsetName = kvp.Key.Name.Length > MaxMeldPlanNameLength
+        //        ? (kvp.Key.Name[..(MaxMeldPlanNameLength - 3)] + "...")
+        //        : kvp.Key.Name;
+
+        //    if (kvp.Value > 1)
+        //    {
+        //        for (var i = 0; i < kvp.Value; i++)
+        //        {
+        //            newPlanNames.Add($"[{kvp.Key.JobAbbrv}] {gearsetName}:{i + 1}");
+        //        }
+        //    }
+        //    else
+        //    {
+        //        newPlanNames.Add($"[{kvp.Key.JobAbbrv}] {gearsetName}");
+        //    }
+        //}
         planNames = newPlanNames;
     }
 
@@ -107,7 +122,7 @@ public unsafe class MeldPlanSelectorWindow : Window, IDisposable
         if (curIdx >= planNames.Count) return;
 
 
-        ImGui.Text("Select Gearset Melds");
+        ImGui.Text("Select Desired Melds");
         ImGui.Separator();
         ImGui.Spacing();
         for (var i = 0; i < planNames.Count; i++)
@@ -115,7 +130,7 @@ public unsafe class MeldPlanSelectorWindow : Window, IDisposable
             var isSelected = plugin.MateriaAttachEventListener.selectedMeldPlanIndex == i;
             if (ImGui.Selectable(planNames[i], isSelected))
             {
-                plugin.MateriaAttachEventListener.selectedMeldPlanIndex = i;
+                plugin.TriggerSelectedMeldPlanChange(i);
                 Services.Log.Debug($"Selecting meld plan {i}");
             }
         }

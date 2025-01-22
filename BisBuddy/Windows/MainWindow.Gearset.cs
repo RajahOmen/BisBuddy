@@ -107,16 +107,6 @@ namespace BisBuddy.Windows
                 ImGui.Spacing();
                 ImGui.Indent();
 
-                var gearsetName = gearset.Name;
-                if (ImGui.InputText($"##gearset_rename_input", ref gearsetName, 512))
-                {
-                    gearset.Name = gearsetName;
-                    plugin.Configuration.Save();
-                }
-                if (ImGui.IsItemHovered()) ImGui.SetTooltip("Rename Gearset");
-
-                ImGui.Spacing();
-
                 var isAllCollected = gearset.Gearpieces.TrueForAll(g => g.IsCollected);
                 var isAllManuallyCollected = isAllCollected & gearset.Gearpieces.TrueForAll(g => g.IsManuallyCollected);
                 ImGui.BeginDisabled(!gearset.IsActive);
@@ -138,19 +128,42 @@ namespace BisBuddy.Windows
 
                 ImGui.SameLine();
 
-                if (ImGui.Button("Copy Json##export_gearset_json"))
+                var gearsetName = gearset.Name;
+                if (ImGui.InputText($"##gearset_rename_input", ref gearsetName, 512))
                 {
-                    ImGui.SetClipboardText(gearset.ExportToJsonStr());
+                    gearset.Name = gearsetName;
+                    plugin.Configuration.Save();
                 }
+                if (ImGui.IsItemHovered()) ImGui.SetTooltip("Rename Gearset");
+
+                //ImGui.Spacing();
+
+                ImGui.SameLine();
 
                 if (gearset.SourceUrl != null)
                 {
                     ImGui.SameLine();
-                    if (ImGui.Button("Copy Url##copy_gearset_url"))
+                    if (ImGui.Button("Copy URL##copy_gearset_url"))
                     {
                         ImGui.SetClipboardText(gearset.SourceUrl);
                     }
+                    if (ImGui.IsItemHovered())
+                    {
+                        ImGui.SetTooltip($"Copy {gearset.SourceType} link to clipboard");
+                    }
                 }
+
+                ImGui.SameLine();
+
+                if (ImGui.Button("Export##export_gearset_json"))
+                {
+                    ImGui.SetClipboardText(gearset.ExportToJsonStr());
+                }
+                if (ImGui.IsItemHovered())
+                {
+                    ImGui.SetTooltip("Copy gearset JSON to clipboard");
+                }
+
 
                 ImGui.SameLine();
 
@@ -184,10 +197,26 @@ namespace BisBuddy.Windows
                 ImGui.Spacing();
                 ImGui.Spacing();
 
+                var drawingLeftSide = false;
+                var drawingRightSide = false;
+
+
                 ImGui.BeginDisabled(!gearset.IsActive);
                 for (var i = 0; i < gearset.Gearpieces.Count; i++)
                 {
                     var item = gearset.Gearpieces[i];
+                    
+                    if (!drawingLeftSide && (item.GearpieceType & GearpieceType.LeftSide) != 0)
+                    {
+                        ImGui.Spacing();
+                        drawingLeftSide = true;
+                    }
+                    if (!drawingRightSide && (item.GearpieceType & GearpieceType.RightSide) != 0)
+                    {
+                        ImGui.Spacing();
+                        drawingRightSide = true;
+                    }
+
                     ImGui.PushID($"{item.ItemId}_{i}");
                     drawGearpiece(item, gearset);
                     ImGui.PopID();

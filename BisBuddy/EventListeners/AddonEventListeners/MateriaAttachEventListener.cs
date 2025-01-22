@@ -62,13 +62,17 @@ namespace BisBuddy.EventListeners.AddonEventListeners
 
         protected override void registerAddonListeners()
         {
-            Services.AddonLifecycle.RegisterListener(AddonEvent.PreUpdate, AddonName, handlePreUpdate);
+            Plugin.OnSelectedMeldPlanIdxChange += handleSelectedMateriaPlanIdxChange;
+            Services.AddonLifecycle.RegisterListener(AddonEvent.PostUpdate, AddonName, handlePostUpdate);
+            Services.AddonLifecycle.RegisterListener(AddonEvent.PostReceiveEvent, AddonName, handlePostReceiveEvent);
             Services.AddonLifecycle.RegisterListener(AddonEvent.PreFinalize, AddonName, handlePreFinalize);
         }
 
         protected override void unregisterAddonListeners()
         {
-            Services.AddonLifecycle.UnregisterListener(handlePreUpdate);
+            Plugin.OnSelectedMeldPlanIdxChange -= handleSelectedMateriaPlanIdxChange;
+            Services.AddonLifecycle.UnregisterListener(handlePostUpdate);
+            Services.AddonLifecycle.UnregisterListener(handlePostReceiveEvent);
             Services.AddonLifecycle.UnregisterListener(handlePreFinalize);
         }
 
@@ -78,6 +82,23 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             previousItemScrollbarY = -1.0f;
             previousMateriaScrollbarY = -1.0f;
             handleUpdate();
+        }
+
+        public unsafe void handlePostReceiveEvent(AddonEvent type, AddonArgs args)
+        {
+            var receiveEventArgs = (AddonReceiveEventArgs)args;
+            updateSelectedItemName((AtkUnitBase*) receiveEventArgs.Addon);
+            previousItemScrollbarY = -1.0f;
+            previousMateriaScrollbarY = -1.0f;
+        }
+
+        public void handleSelectedMateriaPlanIdxChange(int newIdx)
+        {
+            if (selectedMeldPlanIndex != newIdx)
+            {
+                selectedMeldPlanIndex = newIdx;
+                previousMateriaScrollbarY = -1.0f;
+            }
         }
 
         protected override unsafe void unlinkCustomNode(nint nodePtr)
@@ -100,7 +121,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             if (newMeldPlans.Count <= 1)
             {
                 selectedMeldPlanIndex = 0;
-                Plugin.UpdateMeldPlanSelectorWindow([]);
+                Plugin.UpdateMeldPlanSelectorWindow(newMeldPlans);
             }
             else
             {
@@ -125,6 +146,14 @@ namespace BisBuddy.EventListeners.AddonEventListeners
 
                 // get the index of the item selected in the gear list
                 var selectedItemIndex = atkValues[AtkValueItemSelectedIndex].Int;
+
+                // no item selected at all
+                if (selectedItemIndex < 0 && selectedItemName != string.Empty)
+                {
+                    selectedItemName = string.Empty;
+                    updateMateriaMeldPlans();
+                    return true;
+                }
 
                 // get the name of the item from the list of gear list item names
                 var itemNameSeString = atkValues[AtkValueItemNameListStartIndex + selectedItemIndex];
@@ -162,10 +191,8 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             }
         }
 
-        private void handlePreUpdate(AddonEvent type, AddonArgs args)
+        private void handlePostUpdate(AddonEvent type, AddonArgs args)
         {
-            if (type != AddonEvent.PreUpdate) return;
-
             handleUpdate();
         }
 
@@ -189,21 +216,21 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                     AddonGearpieceScrollbarButtonNodeId
                     ]);
 
-                var materiaScrollbarNode = materiaAttachNode.GetNestedNode<AtkResNode>([
+                var materiaScrollbar = materiaAttachNode.GetNestedNode<AtkResNode>([
                     AddonMateriaListNodeId,
                     AddonMateriaScrollbarNodeId,
                     AddonMateriaScrollbarButtonNodeId
                     ]);
 
-                if (nameUpdated || itemScrollbar->Y != previousItemScrollbarY)
+                if (nameUpdated || itemScrollbar == null || itemScrollbar->Y != previousItemScrollbarY)
                 {
-                    previousItemScrollbarY = itemScrollbar->Y;
+                    if (itemScrollbar != null) previousItemScrollbarY = itemScrollbar->Y;
                     updateItemHighlights(materiaAttachNode);
                 }
 
-                if (nameUpdated || materiaScrollbarNode->Y != previousMateriaScrollbarY)
+                if (nameUpdated || materiaScrollbar == null || materiaScrollbar->Y != previousMateriaScrollbarY)
                 {
-                    previousMateriaScrollbarY = materiaScrollbarNode->Y;
+                    if (materiaScrollbar != null) previousMateriaScrollbarY = materiaScrollbar->Y;
                     updateMateriaHighlights(materiaAttachNode);
                 }
             }
@@ -245,7 +272,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             // pick selected materia plan to highlight
             var meldPlan = meldPlans[selectedMeldPlanIndex];
 
-            var meldPlanNames = meldPlan.MateriaIds.Select(Plugin.ItemData.GetItemNameById).ToList();
+            var meldPlanNames = meldPlan.Materia.Select(m => m.ItemName).ToList();
 
             HighlightItems(meldPlanNames, materiaListNode, AddonMateriaNameNodeId);
         }
@@ -291,14 +318,15 @@ namespace BisBuddy.EventListeners.AddonEventListeners
 
         private void handlePreFinalize(AddonEvent type, AddonArgs? args)
         {
-            if (type != AddonEvent.PreFinalize) return;
-
             // disable meld selector window
             Plugin.UpdateMeldPlanSelectorWindow([]);
 
             // materia attach node deconstructing, forget last item name highlighted
             selectedItemName = string.Empty;
             selectedMeldPlanIndex = 0;
+
+            previousItemScrollbarY = -1.0f;
+            previousMateriaScrollbarY = -1.0f;
         }
 
         protected override unsafe nint initializeCustomNode(nint parentNodePtr)

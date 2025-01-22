@@ -61,7 +61,7 @@ namespace BisBuddy.ItemAssignment
                 .Select(
                     c =>
                         itemData.GetItemNameById(c.ItemId).Length > 12
-                        ? $"{itemData.GetItemNameById(c.ItemId)[..6]}|{itemData.GetItemNameById(c.ItemId)[^5..]}"
+                        ? $"{itemData.GetItemNameById(c.ItemId)[..6]}-{itemData.GetItemNameById(c.ItemId)[^5..]}"
                         : $"{itemData.GetItemNameById(c.ItemId),12}"
                     );
             var candidateItemIdLabel = labelName + string.Join(" ", itemNames);
@@ -218,7 +218,7 @@ namespace BisBuddy.ItemAssignment
                         if (prerequesiteGroups.Any(group => group.AddMatchingPrerequesite(prerequesite, gearpiece, gearset))) continue;
 
                         // if no group was found, create a new one and add this prerequesite
-                        prerequesiteGroups.Add(new PrerequesiteGroup(prerequesite, gearpiece.ItemMateria, overallPrereqIdx, gearset));
+                        prerequesiteGroups.Add(new PrerequesiteGroup(prerequesite, gearpiece.ItemMateria, overallPrereqIdx, gearpiece, gearset));
                     }
 
                 }
@@ -282,7 +282,7 @@ namespace BisBuddy.ItemAssignment
                 var assignment = prerequesiteAssignments[i];
 
                 // "not" assigned, skip this assignment
-                if (assignment == -1 || prerequesiteEdges[assignment, i] == NoEdgeWeightValue) continue;
+                if (assignment == -1 || prerequesiteEdges![assignment, i] == NoEdgeWeightValue) continue;
 
                 var candidate = prerequesiteCandidateItems[i];
 

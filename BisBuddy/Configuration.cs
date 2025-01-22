@@ -8,6 +8,7 @@ namespace BisBuddy;
 [Serializable]
 public class Configuration : IPluginConfiguration
 {
+    public static readonly int CurrentVersion = 2;
     public int Version { get; set; } = 1;
 
     public bool HighlightNeedGreed { get; set; } = true;
@@ -19,23 +20,21 @@ public class Configuration : IPluginConfiguration
     public bool AutoCompleteItems { get; set; } = true;
     public bool AutoScanInventory { get; set; } = true;
 
-    public List<CharacterInfo> CharactersData { get; set; } = [];
+    public Dictionary<ulong, CharacterInfo> CharactersData { get; set; } = [];
 
     public List<Gearset> GetCharacterGearsets(ulong characterId)
     {
-        foreach (var character in CharactersData)
-        {
-            if (character.CharacterId == characterId)
-            {
-                return character.Gearsets;
-            }
-        }
+        // if not logged in, return a dummy list
+        if (!Services.ClientState.IsLoggedIn)
+            return [];
+
+        if (CharactersData.TryGetValue(characterId, out var charInfo))
+            return charInfo.Gearsets;
 
         Services.Log.Debug($"No existing gearsets found for character {characterId}, creating new one");
-
         // no existing gearsets found for character, creating new one
         var newCharacterInfo = new CharacterInfo(characterId, []);
-        CharactersData.Add(newCharacterInfo);
+        CharactersData.Add(characterId, newCharacterInfo);
         Save();
         return newCharacterInfo.Gearsets;
     }

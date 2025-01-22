@@ -31,11 +31,6 @@
         "dependencies": {
           "Lumina": "2.1.1"
         }
-      },
-      "Microsoft.Extensions.ObjectPool": {
-        "type": "Transitive",
-        "resolved": "8.0.7",
-        "contentHash": "2yLweyqmpuuFSRo+I3sLHMxmnAgNcI537kBJiyv49U2ZEqo00jZcG8lrnD8uCiOJp9IklYyTZULtbsXoFVzsjQ=="
       }
     }
   }

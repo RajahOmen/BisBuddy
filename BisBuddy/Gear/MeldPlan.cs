@@ -6,6 +6,6 @@ namespace BisBuddy.Gear
     {
         public Gearset Gearset { get; init; }
         public Gearpiece Gearpiece { get; init; }
-        public List<uint> MateriaIds { get; init; }
+        public List<Materia> Materia { get; init; }
     }
 }

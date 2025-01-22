@@ -257,6 +257,8 @@ namespace BisBuddy.Gear
                 gearpieces.Add(gearpiece);
             }
 
+            gearset.Gearpieces.Sort((a, b) => a.GearpieceType.CompareTo(b.GearpieceType));
+
             return gearset;
         }
 
@@ -353,6 +355,8 @@ namespace BisBuddy.Gear
                         gearpieces.Add(gearpiece);
                     }
                 }
+
+                gearset.Gearpieces.Sort((a, b) => a.GearpieceType.CompareTo(b.GearpieceType));
 
                 gearsets.Add(gearset);
 

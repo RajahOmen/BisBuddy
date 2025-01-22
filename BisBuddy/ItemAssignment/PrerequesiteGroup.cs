@@ -1,6 +1,7 @@
 using BisBuddy.Gear;
 using BisBuddy.Items;
 using Dalamud.Game.Inventory;
+using Dalamud.Interface;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,12 +12,14 @@ namespace BisBuddy.ItemAssignment
     {
         // ensure that item->prerequesite group edges are always scored lower than item->gearpiece group edges
         // basically, assign items first, then 'fill in' prerequesites
-        private static readonly int PrerequesiteScoreOffset = -10000;
+        private static readonly int PrerequesiteScoreOffset = -100000;
         // #0: ensure that if a prereq is manually collected, it is extremely highly-valued by auto-solver
-        private static readonly int ManualCollectionScore = 5000;
+        private static readonly int ManualCollectionScore = 50000;
         // #1: prioritize prereqs that satisfy many prereqs, primary and secondary/child
-        private static readonly int PrereqQuantityScoreScalar = 50;
-        // #2: prioritize filling gearpiece prereqs closer to the start/top of the list
+        private static readonly int PrereqQuantityScoreScalar = 500;
+        // #2: prioritize assigning prereqs to things close to being completed
+        private static readonly int MissingPrereqsScalar = -50;
+        // #3: prioritize filling gearpiece prereqs closer to the start/top of the list
         private static readonly int GearpieceIndexScoreScalar = -1;
 
         public DemandGroupType Type => DemandGroupType.Prerequesite;
@@ -26,6 +29,7 @@ namespace BisBuddy.ItemAssignment
         public bool IsManuallyCollected { get; set; } = false;
 
         public readonly int minGearpieceIdx;
+        public int minRemainingPrereqs;
         private List<Materia> materiaList = [];
         private readonly HashSet<Gearset> gearsets = [];
 
@@ -44,6 +48,7 @@ namespace BisBuddy.ItemAssignment
             GearpiecePrerequesite gearpiecePrerequesite,
             List<Materia> gearpieceMateria,
             int gearpieceIdx,
+            Gearpiece gearpiece,
             Gearset gearset
             )
         {
@@ -53,6 +58,7 @@ namespace BisBuddy.ItemAssignment
             MateriaList = new List<Materia>(gearpieceMateria);
             IsManuallyCollected = gearpiecePrerequesite.IsManuallyCollected;
             minGearpieceIdx = gearpieceIdx;
+            minRemainingPrereqs = gearpiece.PrerequisiteItems.Where(p => !p.IsCollected).Count();
 
             itemIdPrereqCounts.Add(gearpiecePrerequesite.ItemId, gearpiecePrerequesite.PrerequesiteCount + 1);
             addQuantityCounts(gearpiecePrerequesite);
@@ -104,6 +110,7 @@ namespace BisBuddy.ItemAssignment
             gearsets.Add(gearset);
             addQuantityCounts(prereq);
             IsManuallyCollected |= prereq.IsManuallyCollected;
+            minRemainingPrereqs = Math.Min(prereqGearpiece.PrerequisiteItems.Where(p => !p.IsCollected).Count(), minRemainingPrereqs);
 
             return true;
         }
@@ -119,10 +126,11 @@ namespace BisBuddy.ItemAssignment
             // get the sub-scores for the prerequesite group
             var manuallyCollectedScore = IsManuallyCollected ? ManualCollectionScore : 0;
             var prereqQuantityScore = prereqsSatisfiedByCandidate * PrereqQuantityScoreScalar;
+            var gearpiecePrereqsMissingPenalty = minRemainingPrereqs * MissingPrereqsScalar;
             var gearpieceIndexPenalty = minGearpieceIdx * GearpieceIndexScoreScalar;
 
             // return sum of sub-scores
-            return PrerequesiteScoreOffset + manuallyCollectedScore + prereqQuantityScore + gearpieceIndexPenalty;
+            return PrerequesiteScoreOffset + manuallyCollectedScore + prereqQuantityScore + gearpiecePrereqsMissingPenalty + gearpieceIndexPenalty;
         }
     }
 }

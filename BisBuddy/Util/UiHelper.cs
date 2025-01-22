@@ -459,12 +459,8 @@ public static unsafe partial class UiHelper
     {
         if (node == null) return;
 
-        Services.Log.Verbose($"sent to free: {(ulong)nodeSize(node->Type)} actual: {sizeof(AtkTextNode)} (type: {node->Type})");
-
         node->Destroy(false);
-        Services.Log.Verbose($"Destroyed node");
         IMemorySpace.Free(node, (ulong)nodeSize(node->Type));
-        Services.Log.Verbose($"Freed memory");
     }
 
     public static void FreePartsList(AtkUldPartsList* partsList)

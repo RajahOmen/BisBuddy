@@ -8,7 +8,11 @@ namespace BisBuddy.EventListeners
         {
             Services.ClientState.Login += handleLogin; // for keeping track of the player content id
             Services.ClientState.Logout += handleLogout;
-            handleLogin();
+
+            if (Services.ClientState.IsLoggedIn)
+            {
+                handleLogin();
+            }
 
             if (Plugin.Configuration.AutoScanInventory)
             {
