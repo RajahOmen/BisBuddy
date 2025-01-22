@@ -12,13 +12,21 @@ required items in windows, and tracks inventory state.
 * Highlight items
   * Need/greed windows
   * NPC shops/exchanges
+  
   ![Alt text](/images/npcshopexchange.png?raw=true "NPC Shop/Exchange")
+  
   * Materia melding
+    
   ![Alt text](/images/materiamelding.png?raw=true "Materia Melding")
+  
   * Player inventories
+  
   ![Alt text](/images/inventory.png?raw=true "Player Inventory")
+  
   * Item tooltips
+  
   ![Alt text](/images/itemtooltip.png?raw=true "Item Tooltip")
+  
 * Inventory state tracking
   * Assigns items to gearsets using linear assignment solver
   * Updates automatically on inventory state changes
