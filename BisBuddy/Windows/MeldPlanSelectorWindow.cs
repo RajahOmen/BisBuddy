@@ -32,18 +32,6 @@ public unsafe class MeldPlanSelectorWindow : Window, IDisposable
     public void UpdatePopupNames(List<MeldPlan> meldPlans)
     {
         List<string> newPlanNames = [];
-        //Dictionary<Gearset, int> counts = [];
-        //foreach (var plan in meldPlans)
-        //{
-        //    if (!counts.TryGetValue(plan.Gearset, out var value))
-        //    {
-        //        counts[plan.Gearset] = 0;
-        //    }
-        //    else
-        //    {
-        //        counts[plan.Gearset] = ++value;
-        //    }
-        //}
 
         foreach (var plan in meldPlans)
         {
@@ -58,25 +46,6 @@ public unsafe class MeldPlanSelectorWindow : Window, IDisposable
             newPlanNames.Add($"[{jobAbbrev}] {gearsetName}\n[{string.Join(" ", materiaAbbrevs)}]");
         }
 
-        //foreach (var kvp in counts)
-        //{
-        //    // cut off name if too long
-        //    var gearsetName = kvp.Key.Name.Length > MaxMeldPlanNameLength
-        //        ? (kvp.Key.Name[..(MaxMeldPlanNameLength - 3)] + "...")
-        //        : kvp.Key.Name;
-
-        //    if (kvp.Value > 1)
-        //    {
-        //        for (var i = 0; i < kvp.Value; i++)
-        //        {
-        //            newPlanNames.Add($"[{kvp.Key.JobAbbrv}] {gearsetName}:{i + 1}");
-        //        }
-        //    }
-        //    else
-        //    {
-        //        newPlanNames.Add($"[{kvp.Key.JobAbbrv}] {gearsetName}");
-        //    }
-        //}
         planNames = newPlanNames;
     }
 

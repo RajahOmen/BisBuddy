@@ -4,6 +4,7 @@ using ImGuiNET;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.InteropServices;
 
 namespace BisBuddy.Windows
 {
@@ -41,6 +42,7 @@ namespace BisBuddy.Windows
                 if (ImGui.Button($"{prereq.ItemName}{prereqLabelColorblind}##prereq_button"))
                 {
                     prereq.SetCollected(!prereq.IsCollected, true);
+                    Services.Log.Debug($"Set \"{parentGearpiece.ItemName}\" prereq \"{prereq.ItemName}\" to {(prereq.IsCollected ? "collected" : "not collected")}");
                     plugin.SaveGearsetsWithUpdate();
                 }
                 ImGui.EndDisabled();
