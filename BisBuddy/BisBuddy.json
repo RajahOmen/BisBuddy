@@ -18,6 +18,12 @@
         "etro",
         "xivgear"
     ],
-    "IconUrl": "https://raw.githubusercontent.com/RajahOmen/BisBuddy/master/images/icon.png",
-    "RepoUrl": "https://github.com/RajahOmen/BisBuddy"
+    "IconUrl": "https://raw.githubusercontent.com/RajahOmen/BisBuddy/main/images/icon.png",
+    "RepoUrl": "https://github.com/RajahOmen/BisBuddy",
+    "ImageUrls": [
+        "https://raw.githubusercontent.com/RajahOmen/BisBuddy/main/images/npcshopexchange.png",
+	"https://raw.githubusercontent.com/RajahOmen/BisBuddy/main/images/materiamelding.png",
+	"https://raw.githubusercontent.com/RajahOmen/BisBuddy/main/images/inventory.png",
+	"https://raw.githubusercontent.com/RajahOmen/BisBuddy/main/images/itemtooltip.png"
+    ]
 }
