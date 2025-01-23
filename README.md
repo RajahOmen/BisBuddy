@@ -10,22 +10,29 @@ required items in windows, and tracks inventory state.
   * JSON
   * Automatic prerequesites builder using game data
 * Highlight items
-  * Need/greed windows
+  * Need/greed loot windows
+
+  ![Items highlighted in need/greed loot window](/images/needgreed.png?raw=true "Need/Greed Loot")
+
   * NPC shops/exchanges
   
-  ![Alt text](/images/npcshopexchange.png?raw=true "NPC Shop/Exchange")
+  ![Items highlighted in NPC shop](/images/npcshopexchange.png?raw=true "NPC Shop/Exchange")
   
   * Materia melding
     
-  ![Alt text](/images/materiamelding.png?raw=true "Materia Melding")
+  ![Items and materia highlighted when melding](/images/materiamelding.png?raw=true "Materia Melding")
+
+  * Marketboard
+
+  ![Item listings highlighted in marketboard](/images/marketboard.png?raw=true "Marketboard Listing")
   
   * Player inventories
   
-  ![Alt text](/images/inventory.png?raw=true "Player Inventory")
+  ![Items highlighted in inventory window](/images/inventory.png?raw=true "Player Inventory")
   
   * Item tooltips
   
-  ![Alt text](/images/itemtooltip.png?raw=true "Item Tooltip")
+  ![Gearsets needing items listed on item tooltip](/images/itemtooltip.png?raw=true "Item Tooltip")
   
 * Inventory state tracking
   * Assigns items to gearsets using linear assignment solver
