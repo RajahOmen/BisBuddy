@@ -22,7 +22,7 @@ namespace BisBuddy.Windows
             if (ImGui.Checkbox($"##gearpiece_collected", ref gearpieceCollected))
             {
                 gearpiece.SetCollected(gearpieceCollected, true);
-                Services.Log.Verbose($"Set \"{gearset.Name}\" gearpiece \"{gearpiece.ItemName}\" to {(gearpieceCollected ? "collected" : "not collected")}");
+                Services.Log.Debug($"Set \"{gearset.Name}\" gearpiece \"{gearpiece.ItemName}\" to {(gearpieceCollected ? "collected" : "not collected")}");
                 plugin.SaveGearsetsWithUpdate();
             }
             if (gearpieceManuallyCollected) ImGui.PopStyleColor();
