@@ -15,5 +15,6 @@
     <PackageReference Include="LinearAssignment" Version="1.2.0" />
     <PackageReference Include="Lumina" Version="5.5.0" />
     <PackageReference Include="Lumina.Generated" Version="5.30.2" />
+    <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="9.0.0" />
   </ItemGroup>
 </Project>

@@ -7,7 +7,7 @@ namespace BisBuddy.Windows
 {
     public partial class MainWindow
     {
-        private Gearset gearsetHovered = null;
+        private Gearset? gearsetHovered = null;
         private bool gearsetRefreshed = false;
 
         private static Vector4 ManuallyCollectedColor = new(0.0f, 1.0f, 0.0f, 1.0f);
