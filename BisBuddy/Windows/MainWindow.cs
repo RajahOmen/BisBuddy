@@ -52,6 +52,7 @@ public partial class MainWindow : Window, IDisposable
         ImGui.SameLine();
 
         ImGui.BeginDisabled(!Services.ClientState.IsLoggedIn);
+        ImGui.BeginDisabled(plugin.Gearsets.Count >= Plugin.MaxGearsetCount);
         if (ImGui.Button("New Gearset##importgearset"))
         {
             if (Services.ClientState.IsLoggedIn)
@@ -59,6 +60,16 @@ public partial class MainWindow : Window, IDisposable
                 plugin.ToggleImportGearsetUI();
             }
         }
+        if (ImGui.IsItemHovered())
+        {
+            var tooltip =
+                plugin.Gearsets.Count >= Plugin.MaxGearsetCount
+                ? $"Maximum of {Plugin.MaxGearsetCount} gearsets"
+                : "Import a new gearset";
+            ImGui.SetTooltip(tooltip);
+        }
+
+        ImGui.EndDisabled();
 
         ImGui.SameLine();
 

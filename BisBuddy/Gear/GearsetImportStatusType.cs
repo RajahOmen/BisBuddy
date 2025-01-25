@@ -11,5 +11,6 @@ namespace BisBuddy.Gear
         NoGearsets,
         NoJson,
         InvalidJson,
+        TooManyGearsets,
     }
 }

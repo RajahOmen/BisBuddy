@@ -18,6 +18,7 @@ namespace BisBuddy;
 public sealed partial class Plugin : IDalamudPlugin
 {
     public static readonly string PluginName = "BISBuddy";
+    public static readonly int MaxGearsetCount = 25;
 
     private const string CommandName = "/bisbuddy";
     private const string CommandNameAlias = "/bis";

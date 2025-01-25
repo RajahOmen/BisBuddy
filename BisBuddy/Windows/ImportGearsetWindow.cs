@@ -34,7 +34,8 @@ public class ImportGearsetWindow : Window, IDisposable
         { GearsetImportStatusType.InvalidUrl, $"{GearsetImportFailBase}Invalid URL" },
         { GearsetImportStatusType.NoWebResponse, $"{GearsetImportFailBase}No Response from URL" },
         { GearsetImportStatusType.InvalidWebResponse, $"{GearsetImportFailBase}Invalid Response from URL" },
-        { GearsetImportStatusType.NoGearsets, $"{GearsetImportFailBase}No Gearsets Found" }
+        { GearsetImportStatusType.NoGearsets, $"{GearsetImportFailBase}No Gearsets Found" },
+        { GearsetImportStatusType.TooManyGearsets, $"{GearsetImportFailBase}Maximum of {Plugin.MaxGearsetCount} Gearsets" }
     };
 
     public ImportGearsetWindow(Plugin plugin)
@@ -58,10 +59,11 @@ public class ImportGearsetWindow : Window, IDisposable
             var newGearsets = await Gearset.ImportFromRemote(gearsetUrl, plugin.ItemData);
             if (newGearsets.Count == 0)
             {
-                Services.Log.Error("No gearsets found in URL");
-                webImportStatus = GearsetImportStatusType.NoGearsets;
-            }
-            else
+                throw new GearsetImportException(GearsetImportStatusType.NoGearsets);
+            } else if (newGearsets.Count + plugin.Gearsets.Count > Plugin.MaxGearsetCount)
+            {
+                throw new GearsetImportException(GearsetImportStatusType.TooManyGearsets);
+            } else
             {
                 plugin.Gearsets.AddRange(newGearsets);
 
@@ -78,10 +80,12 @@ public class ImportGearsetWindow : Window, IDisposable
         }
         catch (GearsetImportException ex)
         {
+            Services.Log.Error(ImportStatusTypeMessage.GetValueOrDefault(ex.FailStatusType) ?? "Unknown GearsetImportException");
             webImportStatus = ex.FailStatusType;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Services.Log.Error(ex, $"{GearsetImportFailBase}Internal Error");
             webImportStatus = GearsetImportStatusType.InternalError;
         }
         finally
@@ -95,6 +99,10 @@ public class ImportGearsetWindow : Window, IDisposable
         try
         {
             if (gearsetJson == string.Empty) return; // no gearset to import
+            if (plugin.Gearsets.Count >= Plugin.MaxGearsetCount)
+            {
+                throw new GearsetImportException(GearsetImportStatusType.TooManyGearsets);
+            }
             jsonLoading = true;
             var newGearset = Gearset.ImportFromJson(gearsetJson);
             plugin.Gearsets.Add(newGearset);
@@ -111,10 +119,12 @@ public class ImportGearsetWindow : Window, IDisposable
         }
         catch (GearsetImportException ex)
         {
+            Services.Log.Error(ImportStatusTypeMessage.GetValueOrDefault(ex.FailStatusType) ?? "Unknown GearsetImportException");
             jsonImportStatus = ex.FailStatusType;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Services.Log.Error(ex, $"{GearsetImportFailBase}Internal Error");
             jsonImportStatus = GearsetImportStatusType.InternalError;
         }
         finally
@@ -167,7 +177,7 @@ public class ImportGearsetWindow : Window, IDisposable
 
         ImGui.Text("Import gearset from JSON");
 
-        ImGui.InputText("JSON##importgearsetjson", ref gearsetJson, 10000);
+        ImGui.InputText("JSON##importgearsetjson", ref gearsetJson, 20000);
 
         ImGui.BeginDisabled(jsonLoading || gearsetJson == string.Empty);
         if (ImGui.Button("Import###import json button"))

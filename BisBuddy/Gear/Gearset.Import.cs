@@ -1,4 +1,5 @@
 using BisBuddy.Items;
+using Dalamud.Game.Text.SeStringHandling.Payloads;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,7 @@ namespace BisBuddy.Gear
     public partial class Gearset
     {
         private static readonly string XivgearApiBase = "https://api.xivgear.app/shortlink/";
+        private static readonly string XivgearSetIndexBase = "&onlySetIndex=";
         private static readonly string EtroApiBase = "https://etro.gg/api/gearsets/";
         private static readonly string EtroRelicApiBase = "https://etro.gg/api/relic/";
         private static readonly List<string> EtroGearpieceTypeFieldNames = new([
@@ -109,7 +111,7 @@ namespace BisBuddy.Gear
                         if (string.IsNullOrEmpty(page) || !page.Contains('|')) return (null, null);
 
                         // Split the string and return the part after '|' appended to base
-                        var xivgearSetUuid = page.Split('|')[1];
+                        var xivgearSetUuid = page.Split('|')[1].Split('&')[0];
                         return (XivgearApiBase + xivgearSetUuid, GearsetSourceType.Xivgear);
                     default: return (null, null);
                 }
@@ -121,6 +123,12 @@ namespace BisBuddy.Gear
         {
             try
             {
+                Services.Log.Verbose(sourceUrl);
+                var onlyImportSetIdx = sourceUrl.Contains(XivgearSetIndexBase)
+                    ? int.Parse(sourceUrl.Split(XivgearSetIndexBase)[1])
+                    : -1;
+                Services.Log.Verbose(onlyImportSetIdx.ToString());
+
                 var gearsets = new List<Gearset>();
                 using var client = new HttpClient();
                 var response = await client.GetAsync(apiUrl);
@@ -139,10 +147,16 @@ namespace BisBuddy.Gear
                 // Ignore links that are for pages with multiple sets
                 if (json.TryGetProperty("sets", out var sets))
                 {
+                    var setIdx = -1;
                     foreach (var set in sets.EnumerateArray())
                     {
                         try
                         {
+                            setIdx++;
+                            // importing a specific set, ignore the rest
+                            if (onlyImportSetIdx >= 0 && setIdx != onlyImportSetIdx) continue;
+                            Services.Log.Verbose($"{setIdx} == {onlyImportSetIdx} ({setIdx == onlyImportSetIdx}) || onlyImportSetIdx <= 0 ({onlyImportSetIdx > 0})");
+
                             string? job = null;
                             if (
                                 json.TryGetProperty("job", out var jobProp)
@@ -151,7 +165,11 @@ namespace BisBuddy.Gear
                             {
                                 job = jobProp.GetString();
                             }
-                            gearsets.Add(GearsetFromXivgear(sourceUrl, set, itemData, job));
+                            var setSourceUrl = 
+                                sourceUrl.Contains(XivgearSetIndexBase)
+                                ? sourceUrl
+                                : sourceUrl + XivgearSetIndexBase + setIdx;
+                            gearsets.Add(GearsetFromXivgear(setSourceUrl, set, itemData, job));
                         }
                         catch (Exception e)
                         {
