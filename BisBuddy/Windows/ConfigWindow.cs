@@ -162,18 +162,5 @@ public class ConfigWindow : Window, IDisposable
             ImGui.SetTooltip($"When logging in, adding new gearsets, or loading {Plugin.PluginName}, update gearsets with items in inventories (inventory, armoury chest, equipped)");
 
         ImGui.Spacing();
-
-#if DEBUG
-        //testing-- this is a button that resets all data
-        ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(1.0f, 0.3f, 0.3f, 1.0f));
-        if (ImGui.Button("RESET ALL DATA"))
-        {
-            var newConfiguration = new Configuration();
-            plugin.Configuration = newConfiguration;
-            plugin.SaveGearsetsWithUpdate();
-            Services.Log.Verbose($"Reset configuration data to fresh install");
-        }
-        ImGui.PopStyleColor();
-#endif
     }
 }
