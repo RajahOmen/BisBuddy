@@ -80,23 +80,25 @@ namespace BisBuddy.Windows
                 var materiaMeldedCount =
                     $"[{gearpiece.ItemMateria.Where(m => m.IsMelded).Count()}/{gearpiece.ItemMateria.Count}]";
                 var windowWidth = ImGui.GetWindowContentRegionMax().X - ImGui.GetCursorPosX();
-                var childTextHeight = ImGui.CalcTextSize("0000").Y + (ImGui.GetStyle().FramePadding.Y * 2.0f);
-                var childHeightPadding = 8;
-
+                var childHeight = ImGui.GetTextLineHeightWithSpacing() + (ImGui.GetStyle().FramePadding.Y * 2.0f);
+                var childHeightPadding = 6.5f;
                 if (gearpiece.ItemMateria.Count > 0)
                 {
-                    ImGui.BeginChild("gearpiece_materia_child", new Vector2(windowWidth, childTextHeight + childHeightPadding * 2), true);
+                    var materiaChildHeight = childHeight + (2 * childHeightPadding);
+                    ImGui.BeginChild("gearpiece_materia_child", new Vector2(windowWidth, childHeight + childHeightPadding * 2), true, ImGuiWindowFlags.AlwaysUseWindowPadding);
                     drawMateria(gearpiece);
                     ImGui.EndChild();
                 }
 
                 if (gearpiece.PrerequisiteItems.Count > 0)
                 {
-                    var gearpiecePrereqCount = gearpiece.PrerequisiteItems.Sum(p => p.PrerequesiteCount + 1);
-                    ImGui.BeginChild("gearpiece_prereq_child", new Vector2(windowWidth, (childTextHeight + childHeightPadding) * gearpiecePrereqCount + childHeightPadding), true);
+                    var prereqCount = gearpiece.PrerequisiteItems.Sum(p => p.PrerequesiteCount + 1);
+                    var prereqChildHeight = (prereqCount * childHeight) + (childHeightPadding * 2);
+                    ImGui.BeginChild("gearpiece_prereq_child", new Vector2(windowWidth, prereqChildHeight), true, ImGuiWindowFlags.AlwaysUseWindowPadding);
                     drawPrerequesites(gearpiece.PrerequisiteItems, gearpiece);
                     ImGui.EndChild();
                 }
+
                 ImGui.Unindent(30);
                 ImGui.Spacing();
             }
