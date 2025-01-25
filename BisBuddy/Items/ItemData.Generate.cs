@@ -1,9 +1,12 @@
 using BisBuddy.Gear;
 using Dalamud.Game.Text.SeStringHandling;
+using Fastenshtein;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 
 namespace BisBuddy.Items
@@ -13,6 +16,10 @@ namespace BisBuddy.Items
         // RAID SHOP REGEX
         // regex to match items that can be traded for raid gear
         private static readonly Regex RaidBookRegex = new(@"can be traded for special gear");
+        private static readonly string TotemShopString = "Totem Gear";
+        private static readonly string IdolShopString = "Idol Gear"; // SHB memoria misera
+        private static readonly string DiscipleShopString = @"\((DoW|DoM)\)";
+        private static readonly Regex ShopNameRegex = new($"({TotemShopString}|{IdolShopString}|{DiscipleShopString})");
 
         // COFFER REGEX
         // When want to enforce a match between coffer name and gear name
@@ -23,11 +30,21 @@ namespace BisBuddy.Items
         // regex in coffer name that indicates the ilvl the coffer will give gear of
         private static readonly string GearCofferIlvl = @"Coffer \(IL (\d+)\)";
         private static readonly Regex GearCofferRegex = new(
-            $"{ItemCofferMatchStrings}.*{GearCofferSlotNames}.*{GearCofferIlvl}"
+            @$"{GearCofferSlotNames}.*{GearCofferIlvl}",
+            RegexOptions.IgnoreCase
         );
 
         // AUGMENT SHOP REGEX
         private static readonly Regex ItemMatchRegex = new($"{ItemCofferMatchStrings}");
+        private static readonly string[] NoCofferExclusionStrings =
+            [
+                "Augmented", // upgraded tome gear
+                "Ultimate",  // ultimate raids
+                "Exquisite", // criterion savage upgraded tome gear
+                "Edencall",  // edge case (memoria misera): to avoid assigning to idealized coffers
+            ];
+        private static readonly Regex NoCofferRegex = new($"({string.Join("|", NoCofferExclusionStrings)})");
+
         // for standard savage raid shops
         private static readonly Regex SavageRaidUpgradeMatRegex = new(@"\b(weapons|vestments|accessories) enables full optimization of the gear's (offensive|defensive) properties");
         // for normal raid shops
@@ -35,73 +52,92 @@ namespace BisBuddy.Items
         // for criterion shops that augment augmented weapons using criterion savage drops
         private static readonly Regex CriterionUpgradeMatRegex = new(@"previously augmented (weaponry)");
 
-        private static List<(uint id, GearpieceType type, uint ilvl, string matchString, string name)> getCofferInfo(ExcelSheet<Item> itemSheet)
+        private static List<(uint id, GearpieceType type, uint ilvl, string name)> getCofferInfo(ExcelSheet<Item> itemSheet)
         {
             // coffer id, slot type (e.g. body, head, etc.), ilvl, match string (optional)
-            var cofferInfo = new List<(uint id, GearpieceType type, uint ilvl, string matchString, string name)>();
+            var cofferInfo = new List<(uint id, GearpieceType type, uint ilvl, string name)>();
 
             foreach (var item in itemSheet)
             {
                 var cofferMatch = GearCofferRegex.Match(item.Name.ToString());
                 if (
                     cofferMatch.Success
-                    && GearpieceTypeMapper.TryParse(cofferMatch.Groups[2].Value.Replace("-", null).Replace("Genji ", null), out var cofferType) // matches a gearpiece
-                    && uint.TryParse(cofferMatch.Groups[3].Value, out var cofferIlvl) // parsed ilvl
-                    && (
-                        (cofferType == GearpieceType.Weapon && cofferIlvl % 10 == 5)
-                        || cofferType != GearpieceType.Weapon
-                        ) // if item is a weapon coffer, ilvl must end in 5
+                    && GearpieceTypeMapper.TryParse(cofferMatch.Groups[1].Value.Replace("-", null).Replace("Genji ", null), out var cofferType) // matches a gearpiece
+                    && uint.TryParse(cofferMatch.Groups[2].Value, out var cofferIlvl) // parsed ilvl
+                    //&& (
+                    //    (cofferType == GearpieceType.Weapon && cofferIlvl % 10 == 5)
+                    //    || cofferType != GearpieceType.Weapon
+                    //    ) // if item is a weapon coffer, ilvl must end in 5
                     ) // item is a gear coffer
                 {
-                    cofferInfo.Add((item.RowId, cofferType, cofferIlvl, cofferMatch.Groups[1].Value, item.Name.ToString()));
+                    cofferInfo.Add((item.RowId, cofferType, cofferIlvl, item.Name.ToString()));
                 }
             }
             return cofferInfo;
         }
 
-        private static (List<SpecialShop>, List<SpecialShop>) getRelevantShops(ExcelSheet<SpecialShop> shopSheet)
+        private static List<SpecialShop> getRelevantShops(ExcelSheet<SpecialShop> shopSheet)
         {
+            var shops = new List<SpecialShop>();
             var raidBookShops = new List<SpecialShop>();
             var itemExchangeShops = new List<SpecialShop>();
 
             foreach (var shop in shopSheet) // check all SpecialShops
             {
+                if (ShopNameRegex.IsMatch(shop.Name.ExtractText()))
+                {
+                    shops.Add(shop);
+                    continue;
+                }
+
                 var shopAdded = false;
                 foreach (var shopItem in shop.Item) // check all items in this shop
                 {
                     foreach (var costItem in shopItem.ItemCosts) // look through what this item costs
                     {
-                        if (RaidBookRegex.IsMatch(costItem.ItemCost.Value.Description.ToString())) // costs a raid book
+                        if (RaidBookRegex.IsMatch(costItem.ItemCost.Value.Description.ExtractText())) // costs a raid book
                         {
+                            shops.Add(shop);
                             raidBookShops.Add(shop);
                             shopAdded = true;
                             break;
                         }
                         if (
-                            SavageRaidUpgradeMatRegex.IsMatch(costItem.ItemCost.Value.Description.ToString())
-                            || NormalRaidUpgradeMatRegex.IsMatch(costItem.ItemCost.Value.Description.ToString())
-                            || CriterionUpgradeMatRegex.IsMatch(costItem.ItemCost.Value.Description.ToString())
+                            //SavageRaidUpgradeMatRegex.IsMatch(costItem.ItemCost.Value.Description.ExtractText())
+                            //|| NormalRaidUpgradeMatRegex.IsMatch(costItem.ItemCost.Value.Description.ExtractText())
+                            CriterionUpgradeMatRegex.IsMatch(costItem.ItemCost.Value.Description.ExtractText())
                             ) // costs an upgrade material we care about
                         {
+                            shops.Add(shop);
                             itemExchangeShops.Add(shop);
                             shopAdded = true;
                             break;
                         }
                     }
+                    //foreach (var receiveItem in shopItem.ReceiveItems) // look through what this item is
+                    //{
+                    //    if (ItemMatchRegex.IsMatch(receiveItem.Item.Value.Name.ExtractText()))
+                    //    { // ex: clouddark armour
+                    //        raidBookShops.Add(shop);
+                    //        shopAdded = true;
+                    //        break;
+                    //    }
+                    //}
                     if (shopAdded) break; // don't check more items, already added to a shop
                 }
             }
 
-            return (raidBookShops, itemExchangeShops);
+            return shops;
         }
 
         private static Dictionary<uint, uint> generateItemsCoffers(
-            List<SpecialShop> raidBookShops,
-            List<(uint id, GearpieceType type, uint ilvl, string matchString, string name)> cofferInfo
+            List<SpecialShop> shops,
+            List<(uint id, GearpieceType type, uint ilvl, string name)> cofferInfo
             )
         {
             var itemsCoffers = new Dictionary<uint, uint>();
-            foreach (var shop in raidBookShops)
+            var cofferItems = new Dictionary<(uint cofferId, string classJobCategory), (uint itemId, int matchScore)>();
+            foreach (var shop in shops)
             {
                 foreach (var shopItem in shop.Item)
                 {
@@ -115,15 +151,32 @@ namespace BisBuddy.Items
                         if (
                             itemInfo.ClassJobCategory.RowId != 0 // equipped by a job/jobs
                             && gearpieceType != null // item is equipped in a slot on your character
-                            && cofferInfo.FirstOrDefault(k => k.type == gearpieceType && k.ilvl == itemInfo.LevelItem.RowId) is var matchingCoffer && matchingCoffer != default // coffer matching ilvl and slot exists
+                            && !NoCofferRegex.IsMatch(itemInfo.Name.ExtractText())
+                            && cofferInfo.Where(k => k.type == gearpieceType && k.ilvl == itemInfo.LevelItem.RowId).ToList() is var matchingCoffers
+                            && matchingCoffers.Count > 0 // coffer matching ilvl and slot exists
                             ) // valid item that can be recieved from a coffer
                         {
                             var itemMatch = ItemMatchRegex.Match(SeString.Parse(itemInfo.Name).TextValue);
 
-                            // item match string doesn't match coffer match string
-                            if (itemMatch.Success && itemMatch.Groups[1].Value != matchingCoffer.matchString) continue;
+                            var itemName = itemInfo.Name.ExtractText();
+                            var (bestCofferId, score) = getBestCofferMatch(itemName, matchingCoffers);
 
-                            itemsCoffers[itemInfo.RowId] = matchingCoffer.id;
+                            var classJobCategory = itemInfo.ClassJobCategory.Value.Name.ExtractText();
+
+                            if (cofferItems.TryGetValue((bestCofferId, itemInfo.ClassJobCategory.Value.Name.ExtractText()), out var prevMatch))
+                            {
+                                // only overwrite if better than previous match
+                                if (prevMatch.matchScore > score)
+                                {
+                                    itemsCoffers.Remove(prevMatch.itemId);
+                                    cofferItems[(bestCofferId, classJobCategory)] = (itemInfo.RowId, score);
+                                    itemsCoffers[itemInfo.RowId] = bestCofferId;
+                                }
+                            } else
+                            {
+                                cofferItems[(bestCofferId, classJobCategory)] = (itemInfo.RowId, score);
+                                itemsCoffers[itemInfo.RowId] = bestCofferId;
+                            }
                         }
                     }
                 }
@@ -131,6 +184,33 @@ namespace BisBuddy.Items
 
             return itemsCoffers;
         }
+
+        private static (uint, int) getBestCofferMatch(string itemName, List<(uint id, GearpieceType type, uint ilvl, string name)> matchingCoffers)
+        {
+            if (matchingCoffers.Count == 0) return (0, int.MaxValue);
+            if (matchingCoffers.Count == 1)
+            {
+                var coffer = matchingCoffers[0];
+                var cofferDist = Levenshtein.Distance(itemName, coffer.name);
+                return (coffer.id, cofferDist);
+            }
+
+            var leastDist = int.MaxValue;
+            var bestMatchId = 0u;
+            foreach (var coffer in matchingCoffers)
+            {
+                // the "edit distance" between two names
+                var dist = Levenshtein.Distance(itemName, coffer.name);
+                if (dist < leastDist)
+                {
+                    leastDist = dist;
+                    bestMatchId = coffer.id;
+                }
+            }
+
+            return (bestMatchId, leastDist);
+        }
+            
 
         private static Dictionary<uint, List<uint>> generateItemsPrerequesites(List<SpecialShop> itemExchangeShops)
         {
@@ -246,13 +326,13 @@ namespace BisBuddy.Items
             // coffer id, slot type (e.g. body, head, etc.), ilvl
             var cofferInfo = getCofferInfo(itemSheet);
 
-            var (raidBookShops, itemExchangeShops) = getRelevantShops(shopSheet);
+            var shops = getRelevantShops(shopSheet);
 
             // item id -> coffer id that the item is obtained from
-            var itemsCoffers = generateItemsCoffers(raidBookShops, cofferInfo);
+            var itemsCoffers = generateItemsCoffers(shops, cofferInfo);
 
             // item id -> upgrade material id that the item can be upgraded fromd
-            var itemsPrerequesites = generateItemsPrerequesites(itemExchangeShops);
+            var itemsPrerequesites = generateItemsPrerequesites(shops);
 
 #if DEBUG
             // minimum item id to display for debug logging. Update with new patches to review generations

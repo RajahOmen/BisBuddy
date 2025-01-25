@@ -11,6 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Fastenshtein" Version="1.0.10" />
     <PackageReference Include="LinearAssignment" Version="1.2.0" />
     <PackageReference Include="Lumina" Version="5.5.0" />
     <PackageReference Include="Lumina.Generated" Version="5.30.2" />
