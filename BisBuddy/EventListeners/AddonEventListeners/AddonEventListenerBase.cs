@@ -120,8 +120,9 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             if (customNode == null) // create if doesn't exist & should be enabled
             {
                 if (!toEnable) return false; // no need to create a node if it's not going to be enabled
+                Services.Log.Verbose($"Creating custom node \"{AddonCustomNodeId}\" (parent node \"{parentNode->NodeId}\") in \"{AddonName}\"");
                 customNode = (AtkResNode*)createCustomNode((nint)parentNode);
-                Services.Log.Verbose($"Created custom node {customNode->NodeId} (parent node {parentNode->NodeId}) in \"{AddonName}\"");
+                //Services.Log.Verbose($"Created custom node {customNode->NodeId} (parent node {parentNode->NodeId}) in \"{AddonName}\"");
                 //customNode->ToggleVisibility(toEnable); //
             }
 
