@@ -17,10 +17,6 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
         // ADDON NODE IDS
         // list of items in the shop
         protected abstract uint AddonShopItemListNodeId { get; }
-        // amount of child nodes for a valid displayed item in a shop
-        protected abstract int AddonShopItemChildNodeCount { get; }
-        // node containing the name of the item in the shop
-        protected abstract uint AddonShopItemTextNameNodeId { get; }
         // node for the hover highlight on the shop item
         protected abstract uint AddonShopHoverNodeId { get; }
         // node for the custom highlight on the shop item

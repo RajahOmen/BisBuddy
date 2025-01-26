@@ -17,10 +17,6 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
         // ADDON NODE IDS
         // list of items in the shop
         protected override uint AddonShopItemListNodeId => 19;
-        // amount of child nodes for a valid displayed item in a shop
-        protected override int AddonShopItemChildNodeCount => 11;
-        // node containing the name of the item in the shop
-        protected override uint AddonShopItemTextNameNodeId => 3;
         // node for the hover highlight on the shop item
         protected override uint AddonShopHoverNodeId => 10;
         // node for the custom highlight on the shop item
