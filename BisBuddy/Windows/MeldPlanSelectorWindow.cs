@@ -12,10 +12,14 @@ namespace BisBuddy.Windows;
 
 public unsafe class MeldPlanSelectorWindow : Window, IDisposable
 {
+    // maximum length of gearset name for a plan
     public static readonly int MaxMeldPlanNameLength = 30;
+    // how far down from the top of the addon to render the window
+    private static readonly int WindowYValueOffset = 102;
+
     private readonly Configuration configuration;
     private readonly Plugin plugin;
-    private List<string> planNames = [];
+    public List<MeldPlan> MeldPlans = [];
     private AtkUnitBase* addon = null;
 
     public MeldPlanSelectorWindow(Plugin plugin) : base("Meld Plan###meld plan selector bisbuddy")
@@ -29,11 +33,12 @@ public unsafe class MeldPlanSelectorWindow : Window, IDisposable
 
     public void Dispose() { }
 
-    public void UpdatePopupNames(List<MeldPlan> meldPlans)
+    private List<string> getPopupNames()
     {
         List<string> newPlanNames = [];
+        var colorblindIndicator = "*";
 
-        foreach (var plan in meldPlans)
+        foreach (var plan in MeldPlans)
         {
             var jobAbbrev = plan.Gearset.JobAbbrv;
             var gearsetName = plan.Gearset.Name.Length > MaxMeldPlanNameLength
@@ -42,11 +47,11 @@ public unsafe class MeldPlanSelectorWindow : Window, IDisposable
             var materiaAbbrevs = plan
                 .Materia
                 .OrderByDescending(m => m.StatQuantity)
-                .Select(m => $"+{m.StatQuantity} {m.StatShortName}");
+                .Select(m => $"+{m.StatQuantity} {m.StatShortName}{(m.IsMelded ? "" : colorblindIndicator)}");
             newPlanNames.Add($"[{jobAbbrev}] {gearsetName}\n[{string.Join(" ", materiaAbbrevs)}]");
         }
 
-        planNames = newPlanNames;
+        return newPlanNames;
     }
 
     public override void PreDraw()
@@ -80,7 +85,7 @@ public unsafe class MeldPlanSelectorWindow : Window, IDisposable
             short addonWidth = 0;
             short addonHeight = 0;
             addon->GetSize(&addonWidth, &addonHeight, true);
-            Position = ImGuiHelpers.MainViewport.Pos + new Vector2(addon->X + addonWidth, addon->Y + 102);
+            Position = ImGuiHelpers.MainViewport.Pos + new Vector2(addon->X + addonWidth, addon->Y + WindowYValueOffset);
         }
         base.PostDraw();
     }
@@ -88,19 +93,21 @@ public unsafe class MeldPlanSelectorWindow : Window, IDisposable
     public override void Draw()
     {
         var curIdx = plugin.MateriaAttachEventListener.selectedMeldPlanIndex;
-        if (curIdx >= planNames.Count) return;
+        if (curIdx >= MeldPlans.Count) return;
 
-
-        ImGui.Text("Select Desired Melds");
+        ImGui.Text("Select Materia Melds");
         ImGui.Separator();
         ImGui.Spacing();
+
+        var planNames = getPopupNames();
+
         for (var i = 0; i < planNames.Count; i++)
         {
             var isSelected = plugin.MateriaAttachEventListener.selectedMeldPlanIndex == i;
-            if (ImGui.Selectable(planNames[i], isSelected))
+            if (ImGui.Selectable($"{planNames[i]}##{i}", isSelected))
             {
                 plugin.TriggerSelectedMeldPlanChange(i);
-                Services.Log.Debug($"Selecting meld plan {i}");
+                Services.Log.Debug($"Selected meld plan {i}");
             }
         }
     }

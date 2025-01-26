@@ -92,7 +92,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             return customNode;
         }
 
-        private unsafe void setAddGreen(AtkResNode* node, bool toEnable)
+        private unsafe bool setAddGreen(AtkResNode* node, bool toEnable)
         {
             var nodeHighlighted = node->AddGreen == HighlightStrength;
 
@@ -104,43 +104,49 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             if (!highlightedNodes.Contains((nint)node) && toEnable)
                 highlightedNodes.Add((nint)node);
 
-            if (nodeHighlighted == toEnable) return; // already in the desired state
+            if (nodeHighlighted == toEnable) return false; // already in the desired state
 
-            if (toEnable) allNodesUnmarked = false; // marking a node here, not all unmarked
+            if (toEnable)
+                allNodesUnmarked = false; // marking a node here, not all unmarked
 
             var value = toEnable ? HighlightStrength : (short)0;
-            Services.Log.Verbose($"Setting node {node->NodeId} AddGreen to \"{value}\" in \"{AddonName}\"");
             node->AddGreen = value;
+            return true;
         }
 
-        private unsafe void setCustomNodeVisibility(AtkResNode* parentNode, bool toEnable)
+        private unsafe bool setCustomNodeVisibility(AtkResNode* parentNode, bool toEnable)
         {
             var customNode = customNodes.Count > 0 ? getCustomNodeByParent(parentNode) : null;
             if (customNode == null) // create if doesn't exist & should be enabled
             {
-                if (!toEnable) return; // no need to create a node if it's not going to be enabled
+                if (!toEnable) return false; // no need to create a node if it's not going to be enabled
                 customNode = (AtkResNode*)createCustomNode((nint)parentNode);
                 Services.Log.Verbose($"Created custom node {customNode->NodeId} (parent node {parentNode->NodeId}) in \"{AddonName}\"");
-                customNode->ToggleVisibility(toEnable);
+                //customNode->ToggleVisibility(toEnable); //
             }
 
             allNodesUnmarked &= !toEnable; // if any node is enabled, at least one node is marked
 
-            if (customNode->IsVisible() == toEnable) return;
+            if (customNode->IsVisible() == toEnable) return false;
 
             customNode->ToggleVisibility(toEnable);
-            Services.Log.Verbose($"Set custom node {customNode->NodeId} (parent node {parentNode->NodeId}) visibility to \"{toEnable}\" in \"{AddonName}\"");
+            return true;
         }
 
         protected unsafe void setNodeNeededMark(AtkResNode* parentNode, bool toEnable, bool highlightParent, bool useCustomNode)
         {
             if (parentNode == null) return; // node parent is null
 
+            var changeMade = false;
+
             // normal highlighting logic
-            if (highlightParent) setAddGreen(parentNode, toEnable);
+            if (highlightParent) changeMade = setAddGreen(parentNode, toEnable);
 
             // custom node logic
-            if (useCustomNode) setCustomNodeVisibility(parentNode, toEnable);
+            if (useCustomNode) changeMade |= setCustomNodeVisibility(parentNode, toEnable);
+
+            if (changeMade)
+                Services.Log.Verbose($"Set node \"{parentNode->NodeId}\" in \"{AddonName}\" marking to {(toEnable ? "enabled" : "disabled")}");
         }
 
         protected unsafe void unmarkAllNodes()

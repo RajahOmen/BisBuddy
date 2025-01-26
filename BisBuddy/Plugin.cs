@@ -246,7 +246,7 @@ public sealed partial class Plugin : IDalamudPlugin
         }
         else
         {
-            MeldPlanSelectorWindow.UpdatePopupNames(meldPlans);
+            MeldPlanSelectorWindow.MeldPlans = meldPlans;
             if (!MeldPlanSelectorWindow.IsOpen)
             {
                 MeldPlanSelectorWindow.Toggle();

@@ -63,37 +63,27 @@ namespace BisBuddy.Gear
                     if (gearpiece.ItemId != itemId) continue;
 
                     // look at what materia is needed for this gearpiece
-                    var meldsForThisGearpiece = new List<Materia>();
+                    var gearpieceMateria = new List<Materia>();
                     foreach (var materia in gearpiece.ItemMateria)
                     {
-                        if (materia.IsMelded) continue;
-
-                        meldsForThisGearpiece.Add(materia);
+                        gearpieceMateria.Add(materia);
                     }
 
                     // if there are any melds needed, add this 'meld plan' to the list
-                    if (meldsForThisGearpiece.Count > 0)
+                    if (gearpieceMateria.Count > 0)
                     {
                         var meldPlan = new MeldPlan()
                         {
                             Gearset = gearset,
                             Gearpiece = gearpiece,
-                            Materia = meldsForThisGearpiece
+                            Materia = gearpieceMateria
                         };
                         neededMeldPlans.Add(meldPlan);
                     }
                 }
             }
 
-            // only return distinct meld plans
-            var distinctMeldPlans = neededMeldPlans
-                .GroupBy(plan => plan.Materia != null
-                                 ? string.Join(",", plan.Materia.Select(m => m.ItemId).OrderBy(id => id))
-                                 : "")
-                .Select(group => group.First())
-                .ToList();
-
-            return distinctMeldPlans;
+            return neededMeldPlans;
         }
 
         public static List<Gearpiece> GetUnmeldedGearpieces(List<Gearset> gearsets)
@@ -106,8 +96,6 @@ namespace BisBuddy.Gear
                 if (!gearset.IsActive) continue;
                 foreach (var gearpiece in gearset.Gearpieces)
                 {
-                    // can't need melds if item isn't collected
-                    if (!gearpiece.IsCollected) continue;
                     foreach (var materia in gearpiece.ItemMateria)
                     {
                         if (!materia.IsMelded)
