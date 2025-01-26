@@ -22,7 +22,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
         // node containing the name of the item in the shop
         protected override uint AddonShopItemTextNameNodeId => 3;
         // node for the hover highlight on the shop item
-        protected override uint AddonShopHoverNode => 10;
+        protected override uint AddonShopHoverNodeId => 10;
         // node for the custom highlight on the shop item
         protected override uint AddonCustomHighlightNodeId => 420;
         // node for the scrollbar on the shop item list
