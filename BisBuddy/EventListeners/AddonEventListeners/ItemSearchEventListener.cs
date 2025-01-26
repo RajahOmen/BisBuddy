@@ -2,7 +2,6 @@ using BisBuddy.Gear;
 using BisBuddy.Util;
 using Dalamud.Game.Addon.Lifecycle;
 using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
-using Dalamud.Memory;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using FFXIVClientStructs.FFXIV.Component.GUI;
@@ -30,9 +29,8 @@ namespace BisBuddy.EventListeners.AddonEventListeners
         // id of the scroll button on the bar
         internal static readonly uint AddonItemScrollButtonNodeId = 2;
 
-
         // what items are needed from the marketboard listings
-        private readonly List<string> neededItems = [];
+        private readonly HashSet<int> neededItemIndexes = [];
         // the item list from the last refresh
         private List<string> previousItemNames = [];
         // the previous Y value of the scrollbar
@@ -74,7 +72,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
         {
             try
             {
-                neededItems.Clear();
+                neededItemIndexes.Clear();
                 var agent = AgentItemSearch.Instance();
 
                 if (agent == null) return;
@@ -92,7 +90,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                     if (nqOrHqNeeded) // needed at some level
                     {
                         var itemName = Plugin.ItemData.GetItemNameById(nqItemId);
-                        neededItems.Add(itemName);
+                        neededItemIndexes.Add(i);
                     }
                 }
 
@@ -110,7 +108,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
         {
             try
             {
-                if (neededItems.Count == 0)
+                if (neededItemIndexes.Count == 0)
                 { // no items needed from list, return
                     unmarkAllNodes();
                     return;
@@ -142,10 +140,8 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                 {
                     // scrollbar in same position, nodes haven't changed
                     if (scrollbarNode->Y == previousScrollbarY) return;
-
                     previousScrollbarY = scrollbarNode->Y;
                 }
-
 
                 var firstListItemIndex = -1;
                 for (var i = 0; i < itemList->ListLength; i++)
@@ -153,28 +149,10 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                     var listItem = itemList->ItemRendererList[i];
                     var listItemIndex = listItem.AtkComponentListItemRenderer->ListItemIndex;
                     if (i == 0) firstListItemIndex = listItemIndex;
-                    else if (listItemIndex == firstListItemIndex)
-                    {
-                        // display list has "looped back" to the beginning (too many items to display), break out
-                        break;
-                    }
+                    // display list has "looped back" to the beginning (too many items to display), break out
+                    else if (listItemIndex == firstListItemIndex) break;
 
-                    var itemNameTextNode = (AtkTextNode*)listItem.AtkComponentListItemRenderer->GetTextNodeById(AddonItemNameTextNodeId);
-                    if (itemNameTextNode == null) continue;
-
-                    var itemName = MemoryHelper.ReadSeStringNullTerminated((nint)itemNameTextNode->GetText()).TextValue;
-                    if (string.IsNullOrEmpty(itemName)) continue;
-
-                    // check previous data to see if new logic needs to be run
-                    if (previousItemNames[i] == itemName) continue; // no change
-                    previousItemNames[i] = itemName; // update for next call
-
-                    var itemNeeded = neededItems
-                        .Any(
-                            n => itemName.EndsWith("...")
-                            ? n.StartsWith(itemName.Replace("...", ""))
-                            : n == itemName
-                        );
+                    var itemNeeded = neededItemIndexes.Contains(listItemIndex);
                     setNodeNeededMark((AtkResNode*)listItem.AtkComponentListItemRenderer->OwnerNode, itemNeeded, true, true);
                 }
             }
