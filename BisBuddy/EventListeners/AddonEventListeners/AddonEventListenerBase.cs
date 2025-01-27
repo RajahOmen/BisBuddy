@@ -44,7 +44,10 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             registerAddonListeners();
 
             // call an update in case the listener is registered while addon is visible
-            handleManualUpdate();
+            if (Services.ClientState.IsLoggedIn)
+            {
+                handleManualUpdate();
+            }
         }
 
         protected override void unregister()
