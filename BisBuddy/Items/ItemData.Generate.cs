@@ -3,10 +3,8 @@ using Dalamud.Game.Text.SeStringHandling;
 using Fastenshtein;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 
 namespace BisBuddy.Items
@@ -64,10 +62,10 @@ namespace BisBuddy.Items
                     cofferMatch.Success
                     && GearpieceTypeMapper.TryParse(cofferMatch.Groups[1].Value.Replace("-", null).Replace("Genji ", null), out var cofferType) // matches a gearpiece
                     && uint.TryParse(cofferMatch.Groups[2].Value, out var cofferIlvl) // parsed ilvl
-                    //&& (
-                    //    (cofferType == GearpieceType.Weapon && cofferIlvl % 10 == 5)
-                    //    || cofferType != GearpieceType.Weapon
-                    //    ) // if item is a weapon coffer, ilvl must end in 5
+                                                                                      //&& (
+                                                                                      //    (cofferType == GearpieceType.Weapon && cofferIlvl % 10 == 5)
+                                                                                      //    || cofferType != GearpieceType.Weapon
+                                                                                      //    ) // if item is a weapon coffer, ilvl must end in 5
                     ) // item is a gear coffer
                 {
                     cofferInfo.Add((item.RowId, cofferType, cofferIlvl, item.Name.ToString()));
@@ -172,7 +170,8 @@ namespace BisBuddy.Items
                                     cofferItems[(bestCofferId, classJobCategory)] = (itemInfo.RowId, score);
                                     itemsCoffers[itemInfo.RowId] = bestCofferId;
                                 }
-                            } else
+                            }
+                            else
                             {
                                 cofferItems[(bestCofferId, classJobCategory)] = (itemInfo.RowId, score);
                                 itemsCoffers[itemInfo.RowId] = bestCofferId;
@@ -210,7 +209,7 @@ namespace BisBuddy.Items
 
             return (bestMatchId, leastDist);
         }
-            
+
 
         private static Dictionary<uint, List<uint>> generateItemsPrerequesites(List<SpecialShop> itemExchangeShops)
         {

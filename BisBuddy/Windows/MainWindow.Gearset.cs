@@ -205,7 +205,7 @@ namespace BisBuddy.Windows
                 for (var i = 0; i < gearset.Gearpieces.Count; i++)
                 {
                     var item = gearset.Gearpieces[i];
-                    
+
                     if (!drawingLeftSide && (item.GearpieceType & GearpieceType.LeftSide) != 0)
                     {
                         ImGui.Spacing();

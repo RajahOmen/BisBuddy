@@ -60,10 +60,12 @@ public class ImportGearsetWindow : Window, IDisposable
             if (newGearsets.Count == 0)
             {
                 throw new GearsetImportException(GearsetImportStatusType.NoGearsets);
-            } else if (newGearsets.Count + plugin.Gearsets.Count > Plugin.MaxGearsetCount)
+            }
+            else if (newGearsets.Count + plugin.Gearsets.Count > Plugin.MaxGearsetCount)
             {
                 throw new GearsetImportException(GearsetImportStatusType.TooManyGearsets);
-            } else
+            }
+            else
             {
                 plugin.Gearsets.AddRange(newGearsets);
 

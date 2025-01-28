@@ -1,5 +1,4 @@
 using BisBuddy.Items;
-using Dalamud.Game.Text.SeStringHandling.Payloads;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -165,7 +164,7 @@ namespace BisBuddy.Gear
                             {
                                 job = jobProp.GetString();
                             }
-                            var setSourceUrl = 
+                            var setSourceUrl =
                                 sourceUrl.Contains(XivgearSetIndexBase)
                                 ? sourceUrl
                                 : sourceUrl + XivgearSetIndexBase + setIdx;
