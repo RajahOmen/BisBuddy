@@ -75,12 +75,14 @@ public partial class MainWindow : Window, IDisposable
 
         ImGui.SameLine();
 
+        ImGui.BeginDisabled(InventoryScanRunning);
         if (ImGui.Button("Sync Inventory##scaninventory"))
         {
             InventoryScanRunning = true;
             plugin.UpdateFromInventory(plugin.Gearsets);
         }
         if (ImGui.IsItemHovered()) ImGui.SetTooltip("Update gearsets with items from your inventory");
+        ImGui.EndDisabled();
         ImGui.EndDisabled();
 
         if (InventoryScanRunning || InventoryScanUpdateCount >= 0)
