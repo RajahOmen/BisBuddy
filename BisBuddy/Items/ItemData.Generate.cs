@@ -62,10 +62,6 @@ namespace BisBuddy.Items
                     cofferMatch.Success
                     && GearpieceTypeMapper.TryParse(cofferMatch.Groups[1].Value.Replace("-", null).Replace("Genji ", null), out var cofferType) // matches a gearpiece
                     && uint.TryParse(cofferMatch.Groups[2].Value, out var cofferIlvl) // parsed ilvl
-                                                                                      //&& (
-                                                                                      //    (cofferType == GearpieceType.Weapon && cofferIlvl % 10 == 5)
-                                                                                      //    || cofferType != GearpieceType.Weapon
-                                                                                      //    ) // if item is a weapon coffer, ilvl must end in 5
                     ) // item is a gear coffer
                 {
                     cofferInfo.Add((item.RowId, cofferType, cofferIlvl, item.Name.ToString()));
@@ -101,8 +97,6 @@ namespace BisBuddy.Items
                             break;
                         }
                         if (
-                            //SavageRaidUpgradeMatRegex.IsMatch(costItem.ItemCost.Value.Description.ExtractText())
-                            //|| NormalRaidUpgradeMatRegex.IsMatch(costItem.ItemCost.Value.Description.ExtractText())
                             CriterionUpgradeMatRegex.IsMatch(costItem.ItemCost.Value.Description.ExtractText())
                             ) // costs an upgrade material we care about
                         {
@@ -112,15 +106,7 @@ namespace BisBuddy.Items
                             break;
                         }
                     }
-                    //foreach (var receiveItem in shopItem.ReceiveItems) // look through what this item is
-                    //{
-                    //    if (ItemMatchRegex.IsMatch(receiveItem.Item.Value.Name.ExtractText()))
-                    //    { // ex: clouddark armour
-                    //        raidBookShops.Add(shop);
-                    //        shopAdded = true;
-                    //        break;
-                    //    }
-                    //}
+
                     if (shopAdded) break; // don't check more items, already added to a shop
                 }
             }
