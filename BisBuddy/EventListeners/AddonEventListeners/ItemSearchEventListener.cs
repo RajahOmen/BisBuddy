@@ -38,13 +38,14 @@ namespace BisBuddy.EventListeners.AddonEventListeners
 
         protected override void registerAddonListeners()
         {
-            Services.AddonLifecycle.RegisterListener(AddonEvent.PostRequestedUpdate, AddonName, handleRequestedUpdate);
+            Services.AddonLifecycle.RegisterListener(AddonEvent.PostRequestedUpdate, AddonName, handlePostRequestedUpdate);
             Services.AddonLifecycle.RegisterListener(AddonEvent.PostRefresh, AddonName, handlePostRefresh);
             Services.AddonLifecycle.RegisterListener(AddonEvent.PreDraw, AddonName, handlePreDraw);
         }
         protected override void unregisterAddonListeners()
         {
-            Services.AddonLifecycle.UnregisterListener(handleRequestedUpdate);
+            Services.AddonLifecycle.UnregisterListener(handlePostRequestedUpdate);
+            Services.AddonLifecycle.UnregisterListener(handlePostRefresh);
             Services.AddonLifecycle.UnregisterListener(handlePreDraw);
         }
 
@@ -53,7 +54,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             updateNeededItems();
         }
 
-        private unsafe void handleRequestedUpdate(AddonEvent type, AddonArgs args)
+        private unsafe void handlePostRequestedUpdate(AddonEvent type, AddonArgs args)
         {
             updateNeededItems();
         }
@@ -79,7 +80,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
 
                 for (var i = 0; i < agent->ListingPageItemCount; i++)
                 {
-                    var nqItemId = agent->ListingPageItemIds[i];
+                    var nqItemId = agent->ListingPageItems[i].ItemId;
                     var hqItemId = Plugin.ItemData.ConvertItemIdToHq(nqItemId);
 
                     var nqOrHqNeeded = (
