@@ -8,8 +8,8 @@ required items in windows, and tracks inventory state.
   * Etro
   * Xivgear
   * JSON
-  * Automatic prerequesites builder using game data
-* Highlight items
+  * Automatic item prerequesites builder using game data
+* Highlights needed items
   * Need/greed loot windows
 
   ![Items highlighted in need/greed loot window](/images/needgreed.png?raw=true "Need/Greed Loot")
@@ -41,13 +41,13 @@ required items in windows, and tracks inventory state.
 ## Installing
 
 1. Open `/xlplugins`
-2. Find "BISBuddy" under "All Plugins"
-3. Click "Install"
-    * Optionally configure with `/bisbuddy config`
+2. Find `BISBuddy` under `All Plugins`
+3. Click `Install`
+    * Optionally, configure with `/bisbuddy config`
 
 ## How To Use
 
-1. Open plugin with `/bisbuddy`
-2. Click "Add Gearset" and import desired gearset
+1. Open plugin window with `/bisbuddy`
+2. Click `Add Gearset` and import desired gearset via URL or JSON
 3. Items needed to complete the gearset will be highlighted as they appear
     * When melding, select desired materia set to highlight melds
