@@ -12,7 +12,8 @@ public partial class MainWindow : Window, IDisposable
 {
     private readonly Plugin plugin;
 
-    private string scanInventoryStatus = string.Empty;
+    internal bool InventoryScanRunning = false;
+    internal int InventoryScanUpdateCount = -1;
 
     private static Vector4 UnobtainedColor = new(1.0f, 0.2f, 0.2f, 1.0f);
     private static Vector4 ObtainedColor = new(0.2f, 1.0f, 0.2f, 1.0f);
@@ -32,7 +33,8 @@ public partial class MainWindow : Window, IDisposable
     public override void OnClose()
     {
         base.OnClose();
-        scanInventoryStatus = string.Empty;
+        InventoryScanRunning = false;
+        InventoryScanUpdateCount = -1;
     }
 
     public void Dispose()
@@ -75,17 +77,20 @@ public partial class MainWindow : Window, IDisposable
 
         if (ImGui.Button("Sync Inventory##scaninventory"))
         {
-            var gearpieceUpdateCount = plugin.UpdateFromInventory(plugin.Gearsets);
-
-            scanInventoryStatus = $"{gearpieceUpdateCount} gearpieces updated";
+            InventoryScanRunning = true;
+            plugin.UpdateFromInventory(plugin.Gearsets);
         }
         if (ImGui.IsItemHovered()) ImGui.SetTooltip("Update gearsets with items from your inventory");
         ImGui.EndDisabled();
 
-        if (scanInventoryStatus != string.Empty)
+        if (InventoryScanRunning || InventoryScanUpdateCount >= 0)
         {
+            var text = InventoryScanRunning
+                ? "Loading..."
+                : $"{InventoryScanUpdateCount} gearpieces updated";
+
             ImGui.SameLine();
-            ImGui.Text(scanInventoryStatus);
+            ImGui.Text(text);
         }
     }
 

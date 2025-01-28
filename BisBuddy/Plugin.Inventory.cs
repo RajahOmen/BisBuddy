@@ -5,6 +5,7 @@ using Dalamud.Game.Inventory;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace BisBuddy
 {
@@ -30,11 +31,11 @@ namespace BisBuddy
             GameInventoryType.ArmoryRings,
         ];
 
-        public int UpdateFromInventory(List<Gearset> gearsetsToUpdate)
+        public void UpdateFromInventory(List<Gearset> gearsetsToUpdate)
         {
             // returns number of gearpiece status changes after update
-            if (!Services.ClientState.IsLoggedIn) return 0;
-            if (gearsetsToUpdate.Count == 0) return 0;
+            if (!Services.ClientState.IsLoggedIn) return;
+            if (gearsetsToUpdate.Count == 0) return;
 
             try
             {
@@ -42,29 +43,32 @@ namespace BisBuddy
 
                 var itemsList = ItemData.GetGameInventoryItems(InventorySources);
                 var gearpiecesToUpdate = Gearset.GetGearpiecesFromGearsets(gearsetsToUpdate);
-                Services.Log.Verbose($"Checking {InventorySources.Length} inventory sources for items");
 
                 // add ALL active gearsets to solver (not just ones being updated)
                 var activeGearsets = Gearsets.Where(g => g.IsActive).ToList();
 
                 var solver = new ItemAssigmentSolver(activeGearsets, itemsList, ItemData);
-                var solveResult = solver.Solve();
 
-                var updatedGearpieces = ItemAssigner.makeItemAssignments(solveResult, gearpiecesToUpdate, ItemData);
-
-                Services.Log.Debug($"Updated {updatedGearpieces.Count} gearpieces from inventories");
-
-                if (updatedGearpieces.Count > 0)
+                // don't block main thread
+                Task.Run(() =>
                 {
-                    SaveGearsetsWithUpdate();
-                }
+                    var solveResult = solver.Solve();
 
-                return updatedGearpieces.Count;
+                    var updatedGearpieces = ItemAssigner.makeItemAssignments(solveResult, gearpiecesToUpdate, ItemData);
+
+                    Services.Log.Debug($"Updated {updatedGearpieces.Count} gearpieces from inventories");
+
+                    if (updatedGearpieces.Count > 0)
+                    {
+                        SaveGearsetsWithUpdate();
+                    }
+                    MainWindow.InventoryScanUpdateCount = updatedGearpieces.Count;
+                    MainWindow.InventoryScanRunning = false;
+                });
             }
             catch (Exception ex)
             {
                 Services.Log.Error(ex, "Failed to update gearsets from inventory");
-                return 0;
             }
         }
     }
