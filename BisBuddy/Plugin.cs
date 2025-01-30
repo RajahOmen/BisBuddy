@@ -3,6 +3,7 @@ using BisBuddy.EventListeners.AddonEventListeners;
 using BisBuddy.EventListeners.AddonEventListeners.Containers;
 using BisBuddy.EventListeners.AddonEventListeners.ShopExchange;
 using BisBuddy.Gear;
+using BisBuddy.ItemAssignment;
 using BisBuddy.Items;
 using BisBuddy.Windows;
 using Dalamud.Game.Command;
@@ -37,6 +38,8 @@ public sealed partial class Plugin : IDalamudPlugin
     }
     public Configuration Configuration { get; set; }
     public List<Gearset> Gearsets { get; private set; } = [];
+    // handle async FIFO item assignment
+    internal ItemAssignmentQueue itemAssignmentQueue { get; private set; } = new();
 
     // plugin windows
     public readonly WindowSystem WindowSystem = new(PluginName);
@@ -89,7 +92,7 @@ public sealed partial class Plugin : IDalamudPlugin
             Configuration.Save();
 #else
             throw;
-# endif
+#endif
         }
 
         ItemData = new ItemData(Services.DataManager.Excel);
@@ -181,10 +184,13 @@ public sealed partial class Plugin : IDalamudPlugin
         InventoryBuddyEventListener.Dispose();
         ItemSearchResultEventListener.Dispose();
         ItemSearchEventListener.Dispose();
-
         ItemUpdateEventListener.Dispose();
+
         // dispose last (probably)
         LoginLoadEventListener.Dispose();
+
+        // stop worker thread
+        itemAssignmentQueue.Stop();
     }
 
     private void OnCommand(string command, string args)

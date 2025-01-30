@@ -5,7 +5,6 @@ using Dalamud.Game.Inventory;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace BisBuddy
 {
@@ -33,25 +32,23 @@ namespace BisBuddy
 
         public void UpdateFromInventory(List<Gearset> gearsetsToUpdate)
         {
-            // returns number of gearpiece status changes after update
-            if (!Services.ClientState.IsLoggedIn) return;
-            if (gearsetsToUpdate.Count == 0) return;
-
-            try
+            // don't block main thread, queue for execution instead
+            itemAssignmentQueue.Enqueue(() =>
             {
-                Services.Log.Verbose("Updating gearsets from inventory");
-
-                var itemsList = ItemData.GetGameInventoryItems(InventorySources);
-                var gearpiecesToUpdate = Gearset.GetGearpiecesFromGearsets(gearsetsToUpdate);
-
-                // add ALL active gearsets to solver (not just ones being updated)
-                var activeGearsets = Gearsets.Where(g => g.IsActive).ToList();
-
-                var solver = new ItemAssigmentSolver(activeGearsets, itemsList, ItemData);
-
-                // don't block main thread
-                Task.Run(() =>
+                // returns number of gearpiece status changes after update
+                try
                 {
+                    if (!Services.ClientState.IsLoggedIn) return;
+                    if (gearsetsToUpdate.Count == 0) return;
+
+                    var itemsList = ItemData.GetGameInventoryItems(InventorySources);
+                    var gearpiecesToUpdate = Gearset.GetGearpiecesFromGearsets(gearsetsToUpdate);
+
+                    // add ALL active gearsets to solver (not just ones being updated)
+                    var activeGearsets = Gearsets.Where(g => g.IsActive).ToList();
+
+                    var solver = new ItemAssigmentSolver(activeGearsets, itemsList, ItemData);
+
                     var solveResult = solver.Solve();
 
                     var updatedGearpieces = ItemAssigner.makeItemAssignments(solveResult, gearpiecesToUpdate, ItemData);
@@ -64,12 +61,12 @@ namespace BisBuddy
                     }
                     MainWindow.InventoryScanUpdateCount = updatedGearpieces.Count;
                     MainWindow.InventoryScanRunning = false;
-                });
-            }
-            catch (Exception ex)
-            {
-                Services.Log.Error(ex, "Failed to update gearsets from inventory");
-            }
+                }
+                catch (Exception ex)
+                {
+                    Services.Log.Error(ex, "Failed to update gearsets from inventory");
+                }
+            });
         }
     }
 }

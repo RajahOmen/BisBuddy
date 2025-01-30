@@ -52,7 +52,6 @@ namespace BisBuddy.ItemAssignment
 
         private void logSolution(int[] assignments, int[,] edges, List<GameInventoryItem> items, List<IDemandGroup> groups)
         {
-            // dont look at this
             var rows = edges.GetLength(0);
             var columns = edges.GetLength(1);
 
