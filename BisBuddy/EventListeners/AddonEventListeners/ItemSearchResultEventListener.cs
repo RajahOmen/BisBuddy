@@ -66,31 +66,6 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             handleUpdate();
         }
 
-        private unsafe void updateNeedQualities()
-        {
-            try
-            {
-                nqNeeded = false;
-                hqNeeded = false;
-                var infoProxy = InfoProxyItemSearch.Instance();
-
-                if (infoProxy == null) return;
-
-                var nqItemId = infoProxy->SearchItemId;
-                var hqItemId = Plugin.ItemData.ConvertItemIdToHq(nqItemId);
-
-                nqNeeded = Gearset.GetGearsetsNeedingItemById(nqItemId, Plugin.Gearsets).Count > 0;
-                hqNeeded = hqItemId != nqItemId && Gearset.GetGearsetsNeedingItemById(hqItemId, Plugin.Gearsets).Count > 0;
-
-                // ensure this update refreshes the draws by resetting caches
-                previousScrollbarY = -1.0f;
-            }
-            catch (Exception ex)
-            {
-                Services.Log.Error(ex, "Failed to update needed items");
-            }
-        }
-
         private unsafe void handleUpdate()
         {
             try
@@ -192,6 +167,31 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             catch (Exception ex)
             {
                 Services.Log.Error(ex, $"{GetType().Name}: Failed to update PostDraw");
+            }
+        }
+
+        private unsafe void updateNeedQualities()
+        {
+            try
+            {
+                nqNeeded = false;
+                hqNeeded = false;
+                var infoProxy = InfoProxyItemSearch.Instance();
+
+                if (infoProxy == null) return;
+
+                var nqItemId = infoProxy->SearchItemId;
+                var hqItemId = Plugin.ItemData.ConvertItemIdToHq(nqItemId);
+
+                nqNeeded = Gearset.GetGearsetsNeedingItemById(nqItemId, Plugin.Gearsets).Count > 0;
+                hqNeeded = hqItemId != nqItemId && Gearset.GetGearsetsNeedingItemById(hqItemId, Plugin.Gearsets).Count > 0;
+
+                // ensure this update refreshes the draws by resetting caches
+                previousScrollbarY = -1.0f;
+            }
+            catch (Exception ex)
+            {
+                Services.Log.Error(ex, "Failed to update needed items");
             }
         }
 

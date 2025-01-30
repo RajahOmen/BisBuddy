@@ -83,62 +83,6 @@ namespace BisBuddy.Gear
             return neededAsMateriaCount + neededAsPrereqCount;
         }
 
-        public string MateriaText()
-        {
-            if (ItemMateria == null || ItemMateria.Count == 0) return string.Empty;
-
-            var materiaText = "";
-            foreach (var m in ItemMateria)
-            {
-                if (materiaText != "")
-                {
-                    materiaText += " ";
-                }
-                materiaText += $"+{m.StatQuantity} {m.StatShortName}";
-            }
-
-            return materiaText;
-        }
-
-        public (string Melded, string Unmelded) MateriaTextGrouped()
-        {
-            var grouped = ItemMateria
-                .GroupBy(m => new { m.StatShortName, m.StatQuantity, m.IsMelded })
-                .OrderBy(g => g.Key.IsMelded)
-                .ThenByDescending(g => g.Key.StatQuantity)
-                .ThenBy(g => g.Key.StatShortName)
-                .Select(g => new { g.Key.StatShortName, g.Key.StatQuantity, g.Key.IsMelded, Count = g.Count() });
-
-            if (ItemMateria == null || ItemMateria.Count == 0) return (string.Empty, string.Empty);
-
-            var meldedMateriaText = string.Empty;
-            var unmeldedMateriaText = string.Empty;
-            foreach (var g in grouped)
-            {
-                if (g.IsMelded)
-                {
-                    meldedMateriaText += $"{g.Count}x +{g.StatQuantity} {g.StatShortName},   ";
-                }
-                else
-                {
-                    unmeldedMateriaText += $"{g.Count}x +{g.StatQuantity} {g.StatShortName},   ";
-                }
-
-            }
-
-            if (meldedMateriaText.Length > 0)
-            {
-                meldedMateriaText = meldedMateriaText.Substring(0, meldedMateriaText.Length - 4);
-            }
-
-            if (unmeldedMateriaText.Length > 0)
-            {
-                unmeldedMateriaText = unmeldedMateriaText.Substring(0, unmeldedMateriaText.Length - 4);
-            }
-
-            return (meldedMateriaText, unmeldedMateriaText);
-        }
-
         public void MeldSingleMateria(uint materiaId)
         {
             for (var i = 0; i < ItemMateria.Count; i++)

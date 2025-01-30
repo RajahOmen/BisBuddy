@@ -66,12 +66,43 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             handleHoveredItemChanged(null, Services.GameGui.HoveredItem);
         }
 
-        protected override unsafe void unlinkCustomNode(nint nodePtr)
+        private unsafe void handleHoveredItemChanged(object? sender, ulong itemId)
         {
-            var addon = (AtkUnitBase*)Services.GameGui.GetAddonByName(AddonName);
-            if (addon == null) return; // addon isn't loaded, nothing to unlink
+            try
+            {
+                if (itemId == 0) return;
 
-            UiHelper.UnlinkNode((AtkResNode*)nodePtr, addon);
+                if (itemId > uint.MaxValue)
+                {
+                    Services.Log.Warning($"{GetType().Name} HoveredItem itemId too large {itemId} > {uint.MaxValue}");
+                    return;
+                }
+
+                var namesUpdated = updateNeededGearsetNames((uint)itemId);
+
+                if (!namesUpdated) return; // no change
+
+                // update node visibility
+                if (neededGearsets.Count == 0)
+                {
+                    setNodeVisibility(false);
+                    return;
+                };
+                setNodeVisibility(true);
+
+                var addonPtr = (AtkUnitBase*)Services.GameGui.GetAddonByName(AddonName);
+
+                if (addonPtr == null || !addonPtr->IsVisible) return;
+
+                var itemNameIsTwoLines = isItemNameTwoLines(addonPtr);
+
+                // update the custom node with new information
+                updateCustomNode(addonPtr, itemNameIsTwoLines);
+            }
+            catch (Exception e)
+            {
+                Services.Log.Error(e, "Failed to handle PostRequestedUpdate event");
+            }
         }
 
         public SeString usedInSeString(
@@ -183,45 +214,6 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             return itemName.Contains("\r\n");
         }
 
-        private unsafe void handleHoveredItemChanged(object? sender, ulong itemId)
-        {
-            try
-            {
-                if (itemId == 0) return;
-
-                if (itemId > uint.MaxValue)
-                {
-                    Services.Log.Warning($"{GetType().Name} HoveredItem itemId too large {itemId} > {uint.MaxValue}");
-                    return;
-                }
-
-                var namesUpdated = updateNeededGearsetNames((uint)itemId);
-
-                if (!namesUpdated) return; // no change
-
-                // update node visibility
-                if (neededGearsets.Count == 0)
-                {
-                    setNodeVisibility(false);
-                    return;
-                };
-                setNodeVisibility(true);
-
-                var addonPtr = (AtkUnitBase*)Services.GameGui.GetAddonByName(AddonName);
-
-                if (addonPtr == null || !addonPtr->IsVisible) return;
-
-                var itemNameIsTwoLines = isItemNameTwoLines(addonPtr);
-
-                // update the custom node with new information
-                updateCustomNode(addonPtr, itemNameIsTwoLines);
-            }
-            catch (Exception e)
-            {
-                Services.Log.Error(e, "Failed to handle PostRequestedUpdate event");
-            }
-        }
-
         private unsafe void updateCustomNode(AtkUnitBase* addon, bool itemNameTwoLines)
         {
             var customTextNode = CustomNodes.Count > 0 ? (AtkTextNode*)CustomNodes[0] : null;
@@ -271,6 +263,14 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                 Services.Log.Error(ex, "Failed to initialize custom node");
                 return nint.Zero;
             }
+        }
+
+        protected override unsafe void unlinkCustomNode(nint nodePtr)
+        {
+            var addon = (AtkUnitBase*)Services.GameGui.GetAddonByName(AddonName);
+            if (addon == null) return; // addon isn't loaded, nothing to unlink
+
+            UiHelper.UnlinkNode((AtkResNode*)nodePtr, addon);
         }
     }
 }

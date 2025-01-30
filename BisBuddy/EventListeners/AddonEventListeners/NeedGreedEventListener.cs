@@ -41,11 +41,11 @@ namespace BisBuddy.EventListeners.AddonEventListeners
 
         private unsafe void handleUpdate(AddonNeedGreed* addon)
         {
-            if (addon == null || !addon->IsVisible) return;
-
-            var itemIndexesToHighlight = new List<int>();
             try
             {
+                if (addon == null || !addon->IsVisible) return;
+
+                var itemIndexesToHighlight = new List<int>();
                 for (var itemIdx = 0; itemIdx < addon->NumItems; itemIdx++)
                 {
                     var lootItem = addon->Items[itemIdx];

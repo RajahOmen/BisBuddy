@@ -25,28 +25,6 @@ namespace BisBuddy.Gear
             return satisfiedGearsets;
         }
 
-        public static bool IsItemIncompleteByName(string itemName, List<Gearset> gearsets)
-        {
-            foreach (var gearset in gearsets)
-            {
-                if (!gearset.IsActive) continue;
-
-                foreach (var gearpiece in gearset.Gearpieces)
-                {
-                    if (gearpiece.ItemName != itemName) continue;
-
-                    if (!gearpiece.IsCollected) return true;
-
-                    foreach (var materia in gearpiece.ItemMateria)
-                    {
-                        if (!materia.IsMelded) return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-
         public static List<MeldPlan> GetNeededItemMeldPlans(uint itemId, List<Gearset> gearsets)
         {
             var neededMeldPlans = new List<MeldPlan>();

@@ -271,13 +271,5 @@ namespace BisBuddy.Items
                 false
                 );
         }
-
-        public bool ItemIdIsShield(uint itemId)
-        {
-            if (!ItemSheet.TryGetRow(itemId, out var item)) return false;
-
-            Services.Log.Verbose($"{item.Name.ExtractText()} = {item.ItemUICategory.Value.Name.ExtractText()}");
-            return item.ItemUICategory.Value.Name.ExtractText() == "Shield";
-        }
     }
 }

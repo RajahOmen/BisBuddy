@@ -69,42 +69,6 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             handleUpdate();
         }
 
-        private unsafe void updateNeededItems()
-        {
-            try
-            {
-                neededItemIndexes.Clear();
-                var agent = AgentItemSearch.Instance();
-
-                if (agent == null) return;
-
-                for (var i = 0; i < agent->ListingPageItemCount; i++)
-                {
-                    var nqItemId = agent->ListingPageItems[i].ItemId;
-                    var hqItemId = Plugin.ItemData.ConvertItemIdToHq(nqItemId);
-
-                    var nqOrHqNeeded = (
-                        Gearset.GetGearsetsNeedingItemById(nqItemId, Plugin.Gearsets).Count > 0 // either the NQ is needed
-                        || (hqItemId != nqItemId // or there is a HQ variant and it is needed
-                            && Gearset.GetGearsetsNeedingItemById(hqItemId, Plugin.Gearsets).Count > 0)
-                        );
-                    if (nqOrHqNeeded) // needed at some level
-                    {
-                        var itemName = Plugin.ItemData.GetItemNameById(nqItemId);
-                        neededItemIndexes.Add(i);
-                    }
-                }
-
-                // ensure this update refreshes the draws by resetting caches
-                previousItemNames.Clear();
-                previousScrollbarY = -1.0f;
-            }
-            catch (Exception ex)
-            {
-                Services.Log.Error(ex, "Failed to update needed items");
-            }
-        }
-
         private unsafe void handleUpdate()
         {
             try
@@ -160,6 +124,42 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             catch (Exception ex)
             {
                 Services.Log.Error(ex, $"{GetType().Name}: Failed to update PostDraw");
+            }
+        }
+
+        private unsafe void updateNeededItems()
+        {
+            try
+            {
+                neededItemIndexes.Clear();
+                var agent = AgentItemSearch.Instance();
+
+                if (agent == null) return;
+
+                for (var i = 0; i < agent->ListingPageItemCount; i++)
+                {
+                    var nqItemId = agent->ListingPageItems[i].ItemId;
+                    var hqItemId = Plugin.ItemData.ConvertItemIdToHq(nqItemId);
+
+                    var nqOrHqNeeded = (
+                        Gearset.GetGearsetsNeedingItemById(nqItemId, Plugin.Gearsets).Count > 0 // either the NQ is needed
+                        || (hqItemId != nqItemId // or there is a HQ variant and it is needed
+                            && Gearset.GetGearsetsNeedingItemById(hqItemId, Plugin.Gearsets).Count > 0)
+                        );
+                    if (nqOrHqNeeded) // needed at some level
+                    {
+                        var itemName = Plugin.ItemData.GetItemNameById(nqItemId);
+                        neededItemIndexes.Add(i);
+                    }
+                }
+
+                // ensure this update refreshes the draws by resetting caches
+                previousItemNames.Clear();
+                previousScrollbarY = -1.0f;
+            }
+            catch (Exception ex)
+            {
+                Services.Log.Error(ex, "Failed to update needed items");
             }
         }
 

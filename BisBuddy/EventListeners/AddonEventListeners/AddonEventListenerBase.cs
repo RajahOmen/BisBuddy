@@ -62,6 +62,12 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             destroyNodes();
         }
 
+        private void handlePreFinalize(AddonEvent type, AddonArgs args)
+        {
+            // ensure all nodes are destroyed before finalizing
+            destroyNodes();
+        }
+
         protected unsafe AtkResNode* getCustomNodeByParent(AtkResNode* parent)
         {
             for (var i = 0; i < customNodes.Count; i++)
@@ -74,12 +80,6 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             }
 
             return null;
-        }
-
-        private void handlePreFinalize(AddonEvent type, AddonArgs args)
-        {
-            // ensure all nodes are destroyed before finalizing
-            destroyNodes();
         }
 
         protected nint createCustomNode(nint parentNode)

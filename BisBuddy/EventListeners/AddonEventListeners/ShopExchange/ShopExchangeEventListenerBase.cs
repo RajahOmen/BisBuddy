@@ -44,7 +44,6 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
         // value for the filter display list indicating item is visible
         protected virtual uint AtkValueFilteredItemsListVisibleValue { get; } = 0;
 
-
         private readonly HashSet<int> neededShopItemIndexes = [];
         private bool shieldInAtkValues = false;
         // the previous Y value of the scrollbar
@@ -62,73 +61,6 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
             Services.AddonLifecycle.UnregisterListener(handlePostSetup);
             Services.AddonLifecycle.UnregisterListener(handlePostRefresh);
             Services.AddonLifecycle.UnregisterListener(handlePostUpdate);
-        }
-
-        protected override unsafe void unlinkCustomNode(nint nodePtr)
-        {
-            var node = (AtkResNode*)nodePtr;
-            var addon = (AtkUnitBase*)Services.GameGui.GetAddonByName(AddonName);
-            if (addon == null) return; // addon isn't loaded, nothing to unlink
-            if (node->ParentNode == null) return; // node isn't linked, nothing to unlink
-
-            UiHelper.UnlinkNode(node, (AtkComponentNode*)node->ParentNode);
-        }
-
-        private unsafe void updateNeededShopItemIndexes(Span<AtkValue> atkValues)
-        {
-            neededShopItemIndexes.Clear();
-            shieldInAtkValues = false;
-            var shopItemCount = atkValues[AtkValueItemCountIndex].Int;
-            var maxItemIndex = AtkValueItemNameListStartingIndex + shopItemCount;
-
-            if (atkValues.Length <= maxItemIndex)
-            {
-                throw new Exception($"{AddonName} AtkValue list is too short ({atkValues.Length}, {maxItemIndex})");
-            }
-
-            // handle INDENTED shields
-            var itemListCount = atkValues[AtkValueItemCountIndex].Int;
-            var endOfItemIdList = atkValues[AtkValueItemIdListStartingIndex + itemListCount];
-            var endOfItemFilteredList = atkValues[AtkValueFilteredItemsListStartingIndex + itemListCount];
-            if (
-                endOfItemIdList.Type == ValueType.UInt // has another value at the end
-                && endOfItemIdList.UInt > 0             // shield at the end
-                && endOfItemFilteredList.Type == ValueType.UInt // visibility value for shield
-                && endOfItemFilteredList.UInt == AtkValueFilteredItemsListVisibleValue // is visible
-                )
-            {
-                // shield found
-                shieldInAtkValues = true;
-
-                Services.Log.Verbose($"Indented shield found!");
-
-                // add if needed
-                if (Gearset.GetGearsetsNeedingItemById(endOfItemIdList.UInt, Plugin.Gearsets).Count > 0)
-                {
-                    neededShopItemIndexes.Add(AddonShieldIndex);
-                }
-            }
-
-            // handle other items
-            for (var i = 0; i < atkValues[AtkValueItemCountIndex].Int; i++)
-            {
-                var itemIdAtkValue = atkValues[AtkValueItemIdListStartingIndex + i];
-                if (itemIdAtkValue.Type != ValueType.UInt)
-                {
-                    throw new Exception($"Item id at index {i} is a {itemIdAtkValue.Type}, not a UInt");
-                };
-                var itemId = itemIdAtkValue.UInt;
-                var shieldOffset = shieldInAtkValues && i >= AddonShieldIndex
-                    ? 1  // shield visible and idx after where shield goes
-                    : 0; // either shield not visible or before where shield goes
-                if (Gearset.GetGearsetsNeedingItemById(itemId, Plugin.Gearsets).Count > 0)
-                {
-                    var filteredIndex = getFilteredIndex(i, atkValues);
-                    if (filteredIndex >= 0) neededShopItemIndexes.Add(filteredIndex + shieldOffset);
-                }
-            }
-
-            Services.Log.Debug($"Found {neededShopItemIndexes.Count} item(s) needed in shop");
         }
 
         public override unsafe void handleManualUpdate()
@@ -235,6 +167,63 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
             }
         }
 
+        private unsafe void updateNeededShopItemIndexes(Span<AtkValue> atkValues)
+        {
+            neededShopItemIndexes.Clear();
+            shieldInAtkValues = false;
+            var shopItemCount = atkValues[AtkValueItemCountIndex].Int;
+            var maxItemIndex = AtkValueItemNameListStartingIndex + shopItemCount;
+
+            if (atkValues.Length <= maxItemIndex)
+            {
+                throw new Exception($"{AddonName} AtkValue list is too short ({atkValues.Length}, {maxItemIndex})");
+            }
+
+            // handle INDENTED shields
+            var itemListCount = atkValues[AtkValueItemCountIndex].Int;
+            var endOfItemIdList = atkValues[AtkValueItemIdListStartingIndex + itemListCount];
+            var endOfItemFilteredList = atkValues[AtkValueFilteredItemsListStartingIndex + itemListCount];
+            if (
+                endOfItemIdList.Type == ValueType.UInt // has another value at the end
+                && endOfItemIdList.UInt > 0             // shield at the end
+                && endOfItemFilteredList.Type == ValueType.UInt // visibility value for shield
+                && endOfItemFilteredList.UInt == AtkValueFilteredItemsListVisibleValue // is visible
+                )
+            {
+                // shield found
+                shieldInAtkValues = true;
+
+                Services.Log.Verbose($"Indented shield found!");
+
+                // add if needed
+                if (Gearset.GetGearsetsNeedingItemById(endOfItemIdList.UInt, Plugin.Gearsets).Count > 0)
+                {
+                    neededShopItemIndexes.Add(AddonShieldIndex);
+                }
+            }
+
+            // handle other items
+            for (var i = 0; i < atkValues[AtkValueItemCountIndex].Int; i++)
+            {
+                var itemIdAtkValue = atkValues[AtkValueItemIdListStartingIndex + i];
+                if (itemIdAtkValue.Type != ValueType.UInt)
+                {
+                    throw new Exception($"Item id at index {i} is a {itemIdAtkValue.Type}, not a UInt");
+                };
+                var itemId = itemIdAtkValue.UInt;
+                var shieldOffset = shieldInAtkValues && i >= AddonShieldIndex
+                    ? 1  // shield visible and idx after where shield goes
+                    : 0; // either shield not visible or before where shield goes
+                if (Gearset.GetGearsetsNeedingItemById(itemId, Plugin.Gearsets).Count > 0)
+                {
+                    var filteredIndex = getFilteredIndex(i, atkValues);
+                    if (filteredIndex >= 0) neededShopItemIndexes.Add(filteredIndex + shieldOffset);
+                }
+            }
+
+            Services.Log.Debug($"Found {neededShopItemIndexes.Count} item(s) needed in shop");
+        }
+
         private unsafe int getFilteredIndex(int index, Span<AtkValue> atkValues)
         {
             /*
@@ -315,6 +304,16 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
                 Services.Log.Error(ex, "Failed to create custom highlight node");
                 return nint.Zero;
             }
+        }
+
+        protected override unsafe void unlinkCustomNode(nint nodePtr)
+        {
+            var node = (AtkResNode*)nodePtr;
+            var addon = (AtkUnitBase*)Services.GameGui.GetAddonByName(AddonName);
+            if (addon == null) return; // addon isn't loaded, nothing to unlink
+            if (node->ParentNode == null) return; // node isn't linked, nothing to unlink
+
+            UiHelper.UnlinkNode(node, (AtkComponentNode*)node->ParentNode);
         }
     }
 }

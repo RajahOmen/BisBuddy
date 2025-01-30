@@ -196,7 +196,6 @@ namespace BisBuddy.Items
             return (bestMatchId, leastDist);
         }
 
-
         private static Dictionary<uint, List<uint>> generateItemsPrerequesites(List<SpecialShop> itemExchangeShops)
         {
             var itemsPrerequesites = new Dictionary<uint, List<uint>>();
