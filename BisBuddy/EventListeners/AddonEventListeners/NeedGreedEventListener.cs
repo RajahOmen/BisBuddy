@@ -1,8 +1,6 @@
 using BisBuddy.Gear;
-using BisBuddy.Util;
 using Dalamud.Game.Addon.Lifecycle;
 using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
-using Dalamud.Game.Text.SeStringHandling;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using System;
@@ -16,10 +14,6 @@ namespace BisBuddy.EventListeners.AddonEventListeners
         // ADDON NODE IDS
         // the node id of the list of items in the addon
         internal static readonly uint AddonItemListNodeId = 6;
-        // the offset of the item list node in the addon
-        internal static readonly int AddonItemListNodeOffset = 1;
-        // the int node type of a ListItemRenderer Component Node
-        internal static readonly int AddonListItemRendererType = 1008;
 
         public override uint AddonCustomNodeId => throw new NotImplementedException();
 
@@ -27,51 +21,41 @@ namespace BisBuddy.EventListeners.AddonEventListeners
 
         protected override void registerAddonListeners()
         {
-            Services.AddonLifecycle.RegisterListener(AddonEvent.PostRequestedUpdate, AddonName, handleEvents);
-            Services.AddonLifecycle.RegisterListener(AddonEvent.PostReceiveEvent, AddonName, handleEvents);
+            Services.AddonLifecycle.RegisterListener(AddonEvent.PostRequestedUpdate, AddonName, handlePostRefresh);
         }
 
         protected override void unregisterAddonListeners()
         {
-            Services.AddonLifecycle.UnregisterListener(handleEvents);
+            Services.AddonLifecycle.UnregisterListener(handlePostRefresh);
         }
 
-        public override void handleManualUpdate()
+        public override unsafe void handleManualUpdate()
         {
-            handleUpdate();
+            handleUpdate((AddonNeedGreed*)Services.GameGui.GetAddonByName(AddonName));
         }
 
-        protected override unsafe void unlinkCustomNode(nint nodePtr)
+        private unsafe void handlePostRefresh(AddonEvent type, AddonArgs args)
         {
-            // no nodes to unlink
-            return;
+            handleUpdate((AddonNeedGreed*)args.Addon);
         }
 
-        private void handleEvents(AddonEvent type, AddonArgs args)
+        private unsafe void handleUpdate(AddonNeedGreed* addon)
         {
-            handleUpdate();
-        }
-
-        private unsafe void handleUpdate()
-        {
-            var needGreed = (AddonNeedGreed*)Services.GameGui.GetAddonByName(AddonName);
-            if (needGreed == null || !needGreed->IsVisible) return;
+            if (addon == null || !addon->IsVisible) return;
 
             var itemIndexesToHighlight = new List<int>();
             try
             {
-                for (var itemIdx = 0; itemIdx < needGreed->NumItems; itemIdx++)
+                for (var itemIdx = 0; itemIdx < addon->NumItems; itemIdx++)
                 {
-                    var lootItem = needGreed->Items[itemIdx];
-                    var itemName = SeString.Parse(lootItem.ItemName).TextValue;
-                    var gearsetsNeedingItem = Gearset.GetGearsetsNeedingItemById(lootItem.ItemId, Plugin.Gearsets);
-                    if (gearsetsNeedingItem.Count > 0)
+                    var lootItem = addon->Items[itemIdx];
+                    if (Gearset.GetGearsetsNeedingItemById(lootItem.ItemId, Plugin.Gearsets).Count > 0)
                     {
                         itemIndexesToHighlight.Add(itemIdx);
                     }
                 }
 
-                highlightItems(itemIndexesToHighlight, needGreed);
+                highlightItems(itemIndexesToHighlight, addon);
             }
             catch (Exception ex)
             {
@@ -81,28 +65,23 @@ namespace BisBuddy.EventListeners.AddonEventListeners
 
         private unsafe void highlightItems(List<int> itemIndexes, AddonNeedGreed* needGreed)
         {
-            // highlight the items in the addon
+            var itemListComponent = (AtkComponentList*)needGreed
+                ->GetComponentByNodeId(AddonItemListNodeId);
 
-            var itemCount = needGreed->NumItems;
-            var baseNode = new BaseNode((AtkUnitBase*)needGreed);
-            var itemList = baseNode.GetComponentNode(AddonItemListNodeId).GetComponentNodes();
-
-
-            for (var i = 0; i < itemCount; i++)
+            for (var i = 0; i < itemListComponent->ListLength; i++)
             {
-                var itemNode = itemList[i];
-                var itemPtr = itemNode.GetPointer();
-
-                // not a ListItemRenderer Component Node, continue
-                if ((int)itemPtr->Type != AddonListItemRendererType) continue;
-
-                var itemNeeded = itemIndexes.Contains(i - AddonItemListNodeOffset);
-
-                setNodeNeededMark((AtkResNode*)itemPtr, itemNeeded, true, false);
+                var itemComponent = itemListComponent->ItemRendererList[i].AtkComponentListItemRenderer;
+                var itemNeeded = itemIndexes.Contains(itemComponent->ListItemIndex);
+                setNodeNeededMark((AtkResNode*)itemComponent->OwnerNode, itemNeeded, true, false);
             }
         }
 
         protected override nint initializeCustomNode(nint parentNodePtr)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override unsafe void unlinkCustomNode(nint nodePtr)
         {
             throw new NotImplementedException();
         }
