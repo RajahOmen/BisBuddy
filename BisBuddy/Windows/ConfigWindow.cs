@@ -1,4 +1,5 @@
 using Dalamud.Interface;
+using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
@@ -37,11 +38,7 @@ public class ConfigWindow : Window, IDisposable
             plugin.NeedGreedEventListener.SetListeningStatus(highlightNeedGreed);
         }
         ImGui.SameLine();
-        ImRaii.PushFont(UiBuilder.IconFont);
-        ImGui.Text(FontAwesomeIcon.QuestionCircle.ToIconString());
-        ImGui.PopFont();
-        if (ImGui.IsItemHovered())
-            ImGui.SetTooltip("Highlights items needed for gearsets in Need/Greed loot windows");
+        ImGuiComponents.HelpMarker("Highlights items needed for gearsets in Need/Greed loot windows");
 
         // SHOPS
         var highlightShops = configuration.HighlightShops;
@@ -53,11 +50,7 @@ public class ConfigWindow : Window, IDisposable
             plugin.ShopExchangeCurrencyEventListener.SetListeningStatus(highlightShops);
         }
         ImGui.SameLine();
-        ImGui.PushFont(UiBuilder.IconFont);
-        ImGui.Text(FontAwesomeIcon.QuestionCircle.ToIconString());
-        ImGui.PopFont();
-        if (ImGui.IsItemHovered())
-            ImGui.SetTooltip("Highlights items needed for gearsets in NPC shops/item exchanges");
+        ImGuiComponents.HelpMarker("Highlights items needed for gearsets in NPC shops/item exchanges");
 
         // MATERIA MELDING
         var highlightMateriaMeld = configuration.HighlightMateriaMeld;
@@ -68,11 +61,7 @@ public class ConfigWindow : Window, IDisposable
             plugin.MateriaAttachEventListener.SetListeningStatus(highlightMateriaMeld);
         }
         ImGui.SameLine();
-        ImGui.PushFont(UiBuilder.IconFont);
-        ImGui.Text(FontAwesomeIcon.QuestionCircle.ToIconString());
-        ImGui.PopFont();
-        if (ImGui.IsItemHovered())
-            ImGui.SetTooltip("Highlights gearpieces needing melds and the materia needed for those gearpieces in melding windows");
+        ImGuiComponents.HelpMarker("Highlights gearpieces needing melds and the materia needed for those gearpieces in melding windows");
 
         // INVENTORIES
         var highlightInventories = configuration.HighlightInventories;
@@ -88,11 +77,7 @@ public class ConfigWindow : Window, IDisposable
             plugin.InventoryBuddyEventListener.SetListeningStatus(highlightInventories);
         }
         ImGui.SameLine();
-        ImGui.PushFont(UiBuilder.IconFont);
-        ImGui.Text(FontAwesomeIcon.QuestionCircle.ToIconString());
-        ImGui.PopFont();
-        if (ImGui.IsItemHovered())
-            ImGui.SetTooltip("Highlights items needed for gearsets in inventories (inventory, retainer, saddlebag)");
+        ImGuiComponents.HelpMarker("Highlights items needed for gearsets in inventories (inventory, retainer, saddlebag)");
 
         // MARKETBOARD
         var highlightMarketboard = configuration.HighlightMarketboard;
@@ -104,11 +89,7 @@ public class ConfigWindow : Window, IDisposable
             plugin.ItemSearchResultEventListener.SetListeningStatus(highlightMarketboard);
         }
         ImGui.SameLine();
-        ImGui.PushFont(UiBuilder.IconFont);
-        ImGui.Text(FontAwesomeIcon.QuestionCircle.ToIconString());
-        ImGui.PopFont();
-        if (ImGui.IsItemHovered())
-            ImGui.SetTooltip("Highlights items needed for gearsets on the marketboard");
+        ImGuiComponents.HelpMarker("Highlights items needed for gearsets on the marketboard");
 
         // ITEM TOOLTIPS
         var annotateTooltips = configuration.AnnotateTooltips;
@@ -119,11 +100,7 @@ public class ConfigWindow : Window, IDisposable
             plugin.ItemDetailEventListener.SetListeningStatus(annotateTooltips);
         }
         ImGui.SameLine();
-        ImGui.PushFont(UiBuilder.IconFont);
-        ImGui.Text(FontAwesomeIcon.QuestionCircle.ToIconString());
-        ImGui.PopFont();
-        if (ImGui.IsItemHovered())
-            ImGui.SetTooltip("Lists what gearsets need the item being hovered over in the item tooltip");
+        ImGuiComponents.HelpMarker("Lists what gearsets need the item being hovered over in the item tooltip");
 
         ImGui.Spacing();
         ImGui.Separator();
@@ -139,11 +116,7 @@ public class ConfigWindow : Window, IDisposable
             plugin.ItemUpdateEventListener.SetListeningStatus(enableAutoComplete);
         }
         ImGui.SameLine();
-        ImGui.PushFont(UiBuilder.IconFont);
-        ImGui.Text(FontAwesomeIcon.QuestionCircle.ToIconString());
-        ImGui.PopFont();
-        if (ImGui.IsItemHovered())
-            ImGui.SetTooltip("When a change is detected in character inventories, update gearsets with items in inventories (inventory, armoury chest, equipped)");
+        ImGuiComponents.HelpMarker("When a change is detected in character inventories, update gearsets with items in inventories (inventory, armoury chest, equipped)");
 
         // INVENTORY SCAN
         var enableAutoScan = configuration.AutoScanInventory;
@@ -154,11 +127,7 @@ public class ConfigWindow : Window, IDisposable
             plugin.LoginLoadEventListener.SetListeningStatus(enableAutoScan);
         }
         ImGui.SameLine();
-        ImGui.PushFont(UiBuilder.IconFont);
-        ImGui.Text(FontAwesomeIcon.QuestionCircle.ToIconString());
-        ImGui.PopFont();
-        if (ImGui.IsItemHovered())
-            ImGui.SetTooltip($"When logging in, adding new gearsets, or loading {Plugin.PluginName}, update gearsets with items in inventories (inventory, armoury chest, equipped)");
+        ImGuiComponents.HelpMarker($"When logging in, adding new gearsets, or loading {Plugin.PluginName}, update gearsets with items in inventories (inventory, armoury chest, equipped)");
 
         ImGui.Spacing();
     }

@@ -1,5 +1,6 @@
 using BisBuddy.Gear;
 using Dalamud.Interface;
+using Dalamud.Interface.Components;
 using ImGuiNET;
 using System.Numerics;
 
@@ -44,31 +45,13 @@ namespace BisBuddy.Windows
 
             ImGui.SameLine();
 
-            ImGui.BeginDisabled(!gearset.IsActive);
-            ImGui.PushFont(UiBuilder.IconFont);
-            var refreshButtonSize = ImGui.CalcTextSize(FontAwesomeIcon.Sync.ToIconString()) + ImGui.GetStyle().FramePadding * 2;
-            if (ImGui.Button(FontAwesomeIcon.Sync.ToIconString() + $"##gearset_refresh", refreshButtonSize))
-            {
-                Services.Log.Debug($"refreshing gearset {gearset.Name}");
-                plugin.UpdateFromInventory([gearset]);
-                gearsetRefreshed = true;
-            }
-            ImGui.PopFont();
-            if (ImGui.IsItemHovered())
-            {
-                updateGearsetHovered(gearset);
-                var tooltip = gearsetRefreshed ? "Gearset Updated!" : "Sync Gearset With Inventory";
-                ImGui.SetTooltip(tooltip);
-            }
-            ImGui.EndDisabled();
-
             ImGui.SameLine();
             ImGui.PushFont(UiBuilder.IconFont);
             var shiftHeld = ImGui.IsKeyDown(ImGuiKey.LeftShift) || ImGui.IsKeyDown(ImGuiKey.RightShift);
             var deleteButtonSize = ImGui.CalcTextSize(FontAwesomeIcon.TrashAlt.ToIconString()) + ImGui.GetStyle().FramePadding * 2;
             var deleteTooltipText = shiftHeld ? "Click to quick delete" : "Shift+Click to quick delete";
             var lightRed = new Vector4(0.5f, 0.2f, 0.2f, 1.0f);
-            var darkRed = new Vector4(0.7f, 0.15f, 0.15f, 1.0f);
+            var darkRed = new Vector4(0.6f, 0.15f, 0.15f, 1.0f);
             ImGui.PushStyleColor(ImGuiCol.Button, shiftHeld ? darkRed : lightRed);
             if (ImGui.Button($"{FontAwesomeIcon.TrashAlt.ToIconString()}###delete_gearset_icon_button"))
             {
@@ -84,6 +67,7 @@ namespace BisBuddy.Windows
 
             ImGui.PopStyleColor();
             ImGui.PopFont();
+            ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(3.0f, 5.0f));
 
             if (ImGui.IsItemHovered()) ImGui.SetTooltip($"Delete this Gearset. {deleteTooltipText}");
 
@@ -98,14 +82,12 @@ namespace BisBuddy.Windows
                 ImGui.EndPopup();
             }
 
-            ImGui.PopStyleVar();
             ImGui.SameLine();
+            ImGui.PopStyleVar();
 
             if (ImGui.CollapsingHeader($"[{gearset.JobAbbrv}] {gearset.Name}###gearset_collapsingheader"))
             {
                 ImGui.Spacing();
-                ImGui.Spacing();
-                ImGui.Indent();
 
                 var isAllCollected = gearset.Gearpieces.TrueForAll(g => g.IsCollected);
                 var isAllManuallyCollected = isAllCollected & gearset.Gearpieces.TrueForAll(g => g.IsManuallyCollected);
@@ -129,6 +111,7 @@ namespace BisBuddy.Windows
                 ImGui.SameLine();
 
                 var gearsetName = gearset.Name;
+                ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X - 122);
                 if (ImGui.InputText($"##gearset_rename_input", ref gearsetName, 512))
                 {
                     gearset.Name = gearsetName;
@@ -136,14 +119,12 @@ namespace BisBuddy.Windows
                 }
                 if (ImGui.IsItemHovered()) ImGui.SetTooltip("Rename Gearset");
 
-                //ImGui.Spacing();
-
                 ImGui.SameLine();
 
                 if (gearset.SourceUrl != null)
                 {
                     ImGui.SameLine();
-                    if (ImGui.Button("Copy URL##copy_gearset_url"))
+                    if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.Copy, "Link##copy_gearset_url"))
                     {
                         ImGui.SetClipboardText(gearset.SourceUrl);
                     }
@@ -155,7 +136,7 @@ namespace BisBuddy.Windows
 
                 ImGui.SameLine();
 
-                if (ImGui.Button("Export##export_gearset_json"))
+                if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.FileExport, "JSON##export_gearset_json"))
                 {
                     ImGui.SetClipboardText(gearset.ExportToJsonStr());
                 }
@@ -166,22 +147,6 @@ namespace BisBuddy.Windows
 
 
                 ImGui.SameLine();
-
-                ImGui.PushStyleColor(ImGuiCol.Button, shiftHeld ? darkRed : lightRed);
-                if (ImGui.Button($"Delete###delete_gearset_button" + $"##gearset_delete"))
-                {
-                    if (shiftHeld)
-                    {
-                        deleteGearset = true;
-                    }
-                    else
-                    {
-                        ImGui.OpenPopup("Delete Gearset?##delete_gearset_confirm_popup");
-                    }
-                }
-                if (ImGui.IsItemHovered()) ImGui.SetTooltip($"Delete this Gearset. {deleteTooltipText}");
-
-                ImGui.PopStyleColor();
 
                 if (ImGui.BeginPopup("Delete Gearset?##delete_gearset_confirm_popup"))
                 {
@@ -199,7 +164,6 @@ namespace BisBuddy.Windows
 
                 var drawingLeftSide = false;
                 var drawingRightSide = false;
-
 
                 ImGui.BeginDisabled(!gearset.IsActive);
                 for (var i = 0; i < gearset.Gearpieces.Count; i++)
@@ -225,7 +189,6 @@ namespace BisBuddy.Windows
 
                 ImGui.Spacing();
                 ImGui.Separator();
-                ImGui.Unindent();
                 ImGui.Spacing();
                 ImGui.Spacing();
             }
