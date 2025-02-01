@@ -1,5 +1,6 @@
 
 using BisBuddy.Gear;
+using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
 using System;
@@ -155,13 +156,14 @@ public class ImportGearsetWindow : Window, IDisposable
         ImGui.Text("Import gearset(s) from Xivgear.app or Etro.gg");
         ImGui.InputText("URL###gearseturl", ref gearsetUrl, 512, ImGuiInputTextFlags.None);
 
-        ImGui.BeginDisabled(webLoading || gearsetUrl == string.Empty);
-        if (ImGui.Button("Import###import web button"))
+        using (ImRaii.Disabled(webLoading || gearsetUrl == string.Empty))
         {
-            webImportStatus = null;
-            _ = ImportNewWebGearset();
+            if (ImGui.Button("Import###import web button"))
+            {
+                webImportStatus = null;
+                _ = ImportNewWebGearset();
+            }
         }
-        ImGui.EndDisabled();
 
         ImGui.SameLine();
         if (webImportStatus != null)
@@ -181,13 +183,14 @@ public class ImportGearsetWindow : Window, IDisposable
 
         ImGui.InputText("JSON##importgearsetjson", ref gearsetJson, 20000);
 
-        ImGui.BeginDisabled(jsonLoading || gearsetJson == string.Empty);
-        if (ImGui.Button("Import###import json button"))
+        using (ImRaii.Disabled(jsonLoading || gearsetJson == string.Empty))
         {
-            jsonImportStatus = null;
-            ImportNewJsonGearset();
+            if (ImGui.Button("Import###import json button"))
+            {
+                jsonImportStatus = null;
+                ImportNewJsonGearset();
+            }
         }
-        ImGui.EndDisabled();
 
         ImGui.SameLine();
         if (jsonImportStatus != null)

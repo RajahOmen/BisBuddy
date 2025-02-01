@@ -1,4 +1,5 @@
 using BisBuddy.Gear;
+using Dalamud.Interface.Utility.Raii;
 using ImGuiNET;
 using System;
 using System.Linq;
@@ -14,18 +15,25 @@ namespace BisBuddy.Windows
         {
             var gearpieceCollected = gearpiece.IsCollected;
             var gearpieceManuallyCollected = gearpiece.IsManuallyCollected;
-            var gearpieceNeedsMelds = gearpiece.ItemMateria.Any(m => !m.IsMelded);
+            var gearpieceHasMelds = !gearpiece.ItemMateria.Any(m => !m.IsMelded);
             var gearpiecePrereqsCollected =
                 gearpiece.PrerequisiteItems.Count > 0
                 && gearpiece.PrerequisiteItems.All(p => p.IsCollected);
-            if (gearpieceManuallyCollected) ImGui.PushStyleColor(ImGuiCol.CheckMark, ManuallyCollectedColor);
-            if (ImGui.Checkbox($"##gearpiece_collected", ref gearpieceCollected))
+
+            var checkmarkColor = gearpieceManuallyCollected
+                ? ManuallyCollectedColor
+                : AutomaticallyCollectedColor;
+
+            using (ImRaii.PushColor(ImGuiCol.CheckMark, checkmarkColor))
             {
-                gearpiece.SetCollected(gearpieceCollected, true);
-                Services.Log.Debug($"Set \"{gearset.Name}\" gearpiece \"{gearpiece.ItemName}\" to {(gearpieceCollected ? "collected" : "not collected")}");
-                plugin.SaveGearsetsWithUpdate();
+                if (ImGui.Checkbox($"##gearpiece_collected", ref gearpieceCollected))
+                {
+                    gearpiece.SetCollected(gearpieceCollected, true);
+                    Services.Log.Debug($"Set \"{gearset.Name}\" gearpiece \"{gearpiece.ItemName}\" to {(gearpieceCollected ? "collected" : "not collected")}");
+                    plugin.SaveGearsetsWithUpdate();
+                }
             }
-            if (gearpieceManuallyCollected) ImGui.PopStyleColor();
+
             if (ImGui.IsItemHovered())
             {
                 var tooltip =
@@ -39,76 +47,82 @@ namespace BisBuddy.Windows
 
             ImGui.SameLine();
 
-            var gearpieceCollectedLabel = "";
-            if (gearpieceCollected)
+            // what label/color to apply to gearpice text
+            // by default, fully not collected
+            var gearpieceCollectedLabel = "*";
+            var textColor = UnobtainedColor;
+            if (gearpieceCollected && gearpieceHasMelds)
             {
-                if (gearpieceNeedsMelds)
-                {
-                    gearpieceCollectedLabel = "**";
-                    ImGui.PushStyleColor(ImGuiCol.Text, AlmostObtained);
-                }
-                else
-                {
-                    ImGui.PushStyleColor(ImGuiCol.Text, ObtainedColor);
-                }
-            }
-            else
+                gearpieceCollectedLabel = "";
+                textColor = ObtainedColor;
+            } else if (!gearpieceCollected && !gearpiecePrereqsCollected)
             {
-                if (gearpiecePrereqsCollected)
-                {
-                    gearpieceCollectedLabel = "**";
-                    ImGui.PushStyleColor(ImGuiCol.Text, AlmostObtained);
-                }
-                else
-                {
-                    ImGui.PushStyleColor(ImGuiCol.Text, UnobtainedColor);
-                    gearpieceCollectedLabel = "*";
-                }
+                gearpieceCollectedLabel = "*";
+                textColor = UnobtainedColor;
+            } else
+            {
+                gearpieceCollectedLabel = "**";
+                textColor = AlmostObtained;
             }
 
             var hasSubItems = gearpiece.ItemMateria.Count > 0 || gearpiece.PrerequisiteItems.Count > 0;
 
-            ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(0, 0, 0, 0));
-            if (
+            using (ImRaii.PushColor(ImGuiCol.Text, textColor))
+            using (ImRaii.PushColor(ImGuiCol.Button, new Vector4(0, 0, 0, 0)))
+            {
+                if (
                 ImGui.CollapsingHeader($"{gearpiece.ItemName}{gearpieceCollectedLabel}###gearpiece_collapsing_header")
                 && hasSubItems
                 )
-            {
-                ImGui.PopStyleColor();
-                ImGui.PopStyleColor();
-                ImGui.Indent(30);
-                var materiaMeldedCount =
-                    $"[{gearpiece.ItemMateria.Where(m => m.IsMelded).Count()}/{gearpiece.ItemMateria.Count}]";
-                var windowWidth = ImGui.GetWindowContentRegionMax().X - ImGui.GetCursorPosX();
-                var childHeight = ImGui.GetTextLineHeightWithSpacing() + (ImGui.GetStyle().FramePadding.Y * 2.0f);
-                var childHeightPadding = 6.5f;
-                if (gearpiece.ItemMateria.Count > 0)
                 {
-                    var materiaChildHeight = childHeight + (2 * childHeightPadding);
-                    ImGui.BeginChild("gearpiece_materia_child", new Vector2(windowWidth, childHeight + childHeightPadding * 2), true, ImGuiWindowFlags.AlwaysUseWindowPadding);
-                    drawMateria(gearpiece);
-                    ImGui.EndChild();
-                }
+                    var materiaMeldedCount =
+                        $"[{gearpiece.ItemMateria.Where(m => m.IsMelded).Count()}/{gearpiece.ItemMateria.Count}]";
+                    var windowWidth = ImGui.GetWindowContentRegionMax().X - ImGui.GetCursorPosX();
+                    var childHeight = ImGui.GetTextLineHeightWithSpacing() + (ImGui.GetStyle().FramePadding.Y * 2.0f);
+                    var childHeightPadding = 6.5f;
 
-                if (gearpiece.PrerequisiteItems.Count > 0)
-                {
-                    var prereqCount = gearpiece.PrerequisiteItems.Sum(p => p.PrerequesiteCount + 1);
-                    var prereqChildHeight = (prereqCount * childHeight) + (childHeightPadding * 2);
-                    ImGui.BeginChild("gearpiece_prereq_child", new Vector2(windowWidth, prereqChildHeight), true, ImGuiWindowFlags.AlwaysUseWindowPadding);
-                    drawPrerequesites(gearpiece.PrerequisiteItems, gearpiece);
-                    ImGui.EndChild();
-                }
+                    // don't inherit text color for children
+                    using (ImRaii.PushColor(ImGuiCol.Text, new Vector4(1.0f, 1.0f, 1.0f, 1.0f)))
+                    {
+                        if (gearpiece.ItemMateria.Count > 0)
+                        {
+                            var materiaChildHeight = childHeight + (2 * childHeightPadding);
+                            using (
+                                ImRaii.Child(
+                                    "gearpiece_materia_child",
+                                    new Vector2(windowWidth, childHeight + childHeightPadding * 2),
+                                    true,
+                                    ImGuiWindowFlags.AlwaysUseWindowPadding
+                                    )
+                                )
+                            {
+                                drawMateria(gearpiece);
+                            }
+                        }
 
-                ImGui.Unindent(30);
-                ImGui.Spacing();
+                        if (gearpiece.PrerequisiteItems.Count > 0)
+                        {
+                            var prereqCount = gearpiece.PrerequisiteItems.Sum(p => p.PrerequesiteCount + 1);
+                            var prereqChildHeight = (prereqCount * childHeight) + (childHeightPadding * 2);
+                            using (
+                                ImRaii.Child(
+                                    "gearpiece_prereq_child",
+                                    new Vector2(windowWidth, prereqChildHeight),
+                                    true,
+                                    ImGuiWindowFlags.AlwaysUseWindowPadding
+                                    )
+                                )
+                            {
+                                drawPrerequesites(gearpiece.PrerequisiteItems, gearpiece);
+                            }
+                        }
+                    }
+
+                    ImGui.Spacing();
+                }
+                if (ImGui.IsItemClicked(ImGuiMouseButton.Right)) Plugin.LinkItemById(gearpiece.ItemId);
+                if (ImGui.IsItemHovered()) ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
             }
-            else
-            {
-                ImGui.PopStyleColor();
-                ImGui.PopStyleColor();
-            }
-            if (ImGui.IsItemClicked(ImGuiMouseButton.Right)) Plugin.LinkItemById(gearpiece.ItemId);
-            if (ImGui.IsItemHovered()) ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }
     }
 }

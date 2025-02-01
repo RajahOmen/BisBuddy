@@ -1,5 +1,6 @@
 using BisBuddy.Gear;
 using Dalamud.Interface;
+using Dalamud.Interface.Utility.Raii;
 using ImGuiNET;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,41 +12,42 @@ namespace BisBuddy.Windows
     {
         private void drawPrerequesites(List<GearpiecePrerequesite> prerequesites, Gearpiece parentGearpiece)
         {
-            ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(0, 0, 0, 0));
             for (var i = 0; i < prerequesites.Count; i++)
             {
-                ImGui.PushID(i);
+                using var _ = ImRaii.PushId(i);
                 var prereq = prerequesites[i];
                 var prereqLabelColorblind = prereq.IsCollected ? "" : "*";
-                Vector4 color;
+                Vector4 textColor;
 
-                if (prereq.IsCollected) color = ObtainedColor;
+                if (prereq.IsCollected) textColor = ObtainedColor;
                 else if (prereq.Prerequesites.Count > 0 && prereq.Prerequesites.All(p => p.IsCollected))
-                    color = AlmostObtained;
-                else color = UnobtainedColor;
-                ImGui.PushStyleColor(ImGuiCol.Text, color);
+                    textColor = AlmostObtained;
+                else textColor = UnobtainedColor;
 
-                if (prereq.IsManuallyCollected)
+                using (ImRaii.PushColor(ImGuiCol.Text, textColor))
                 {
-                    ImGui.PushFont(UiBuilder.IconFont);
-                    ImGui.Text(FontAwesomeIcon.Lock.ToIconString());
-                    ImGui.PopFont();
-                    ImGui.PopStyleColor();
-                    if (ImGui.IsItemHovered()) ImGui.SetTooltip("Collection status locked. Inventory syncs will not uncollect.");
-                    ImGui.SameLine();
-                }
-                else ImGui.PopStyleColor();
+                    if (prereq.IsManuallyCollected)
+                    {
+                        using (ImRaii.PushFont(UiBuilder.IconFont))
+                        {
+                            ImGui.Text(FontAwesomeIcon.Check.ToIconString());
+                        }
+                        if (ImGui.IsItemHovered())
+                            ImGui.SetTooltip("Collection status locked. Inventory syncs will not uncollect.");
+                        ImGui.SameLine();
+                    }
 
-                ImGui.PushStyleColor(ImGuiCol.Text, color);
-                ImGui.BeginDisabled(parentGearpiece.IsCollected);
-                if (ImGui.Button($"{prereq.ItemName}{prereqLabelColorblind}##prereq_button"))
-                {
-                    prereq.SetCollected(!prereq.IsCollected, true);
-                    Services.Log.Debug($"Set \"{parentGearpiece.ItemName}\" prereq \"{prereq.ItemName}\" to {(prereq.IsCollected ? "collected" : "not collected")}");
-                    plugin.SaveGearsetsWithUpdate();
+                    using (ImRaii.Disabled(parentGearpiece.IsCollected))
+                    {
+                        if (ImGui.Button($"{prereq.ItemName}{prereqLabelColorblind}##prereq_button"))
+                        {
+                            prereq.SetCollected(!prereq.IsCollected, true);
+                            Services.Log.Debug($"Set \"{parentGearpiece.ItemName}\" prereq \"{prereq.ItemName}\" to {(prereq.IsCollected ? "collected" : "not collected")}");
+                            plugin.SaveGearsetsWithUpdate();
+                        }
+                    }
                 }
-                ImGui.EndDisabled();
-                ImGui.PopStyleColor();
+
                 if (ImGui.IsItemClicked(ImGuiMouseButton.Right)) Plugin.LinkItemById(prereq.ItemId);
                 if (ImGui.IsItemHovered())
                 {
@@ -62,13 +64,12 @@ namespace BisBuddy.Windows
 
                 if (prereq.PrerequesiteCount > 0)
                 {
-                    ImGui.Indent(30);
-                    drawPrerequesites(prereq.Prerequesites, parentGearpiece);
-                    ImGui.Unindent(30);
+                    using (ImRaii.PushIndent(40.0f))
+                    {
+                        drawPrerequesites(prereq.Prerequesites, parentGearpiece);
+                    }
                 }
-                ImGui.PopID();
             }
-            ImGui.PopStyleColor();
         }
     }
 }

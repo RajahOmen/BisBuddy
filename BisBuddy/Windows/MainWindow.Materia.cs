@@ -1,4 +1,5 @@
 using BisBuddy.Gear;
+using Dalamud.Interface.Utility.Raii;
 using ImGuiNET;
 using System;
 using System.Linq;
@@ -33,53 +34,53 @@ namespace BisBuddy.Windows
                     Count = g.Count()
                 }).ToList();
 
-            ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(0, 0, 0, 0));
-
             for (var i = 0; i < materiaGrouped.Count; i++)
             {
+                using var _ = ImRaii.PushId(i);
                 var materia = materiaGrouped[i];
-                ImGui.PushID($"{i}{materia.Count}{materia.ItemId}{materia.IsMelded}{gearpiece.ItemId}");
 
                 string needColorblind;
+                string meldVerb;
+                Vector4 textColor;
                 if (materia.IsMelded)
                 {
                     needColorblind = "";
-                    ImGui.PushStyleColor(ImGuiCol.Text, ObtainedColor);
+                    meldVerb = "Unmeld";
+                    textColor = ObtainedColor;
                 }
                 else
                 {
                     needColorblind = "*";
-                    ImGui.PushStyleColor(ImGuiCol.Text, UnobtainedColor);
+                    meldVerb = "Meld";
+                    textColor = UnobtainedColor;
                 }
 
                 var materiaButtonText = $"x{materia.Count} +{materia.StatQuantity} {materia.StatShortName}{needColorblind}";
 
-
-                ImGui.BeginDisabled(!gearpiece.IsCollected);
-                if (ImGui.Button($"{materiaButtonText}##materia_meld_button"))
+                using (ImRaii.PushColor(ImGuiCol.Text, textColor))
+                using (ImRaii.Disabled(!gearpiece.IsCollected))
                 {
-                    if (materia.IsMelded)
+                    if (ImGui.Button($"{materiaButtonText}##materia_meld_button"))
                     {
-                        Services.Log.Verbose($"Unmelding materia {materia.ItemId} from {gearpiece.ItemName}");
-                        gearpiece.UnmeldSingleMateria(materia.ItemId);
-                    }
-                    else
-                    {
-                        Services.Log.Verbose($"Melding materia {materia.ItemId} from {gearpiece.ItemName}");
-                        gearpiece.MeldSingleMateria(materia.ItemId);
-                    }
+                        if (materia.IsMelded)
+                        {
+                            Services.Log.Verbose($"Unmelding materia {materia.ItemId} from {gearpiece.ItemName}");
+                            gearpiece.UnmeldSingleMateria(materia.ItemId);
+                        }
+                        else
+                        {
+                            Services.Log.Verbose($"Melding materia {materia.ItemId} from {gearpiece.ItemName}");
+                            gearpiece.MeldSingleMateria(materia.ItemId);
+                        }
 
-                    plugin.SaveGearsetsWithUpdate();
+                        plugin.SaveGearsetsWithUpdate();
+                    }
+                    if (ImGui.IsItemHovered()) ImGui.SetTooltip($"{meldVerb} {materia.ItemName}");
+                    if (ImGui.IsItemHovered()) ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+                    if (ImGui.IsItemClicked(ImGuiMouseButton.Right)) Plugin.LinkItemById(materia.ItemId);
                 }
-                ImGui.PopStyleColor();
-                if (ImGui.IsItemHovered()) ImGui.SetTooltip($"{(materia.IsMelded ? "-" : "+")}1 {materia.ItemName}");
-                if (ImGui.IsItemClicked(ImGuiMouseButton.Right)) Plugin.LinkItemById(materia.ItemId);
-                if (ImGui.IsItemHovered()) ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-                ImGui.EndDisabled();
-                ImGui.PopID();
                 ImGui.SameLine();
             }
-            ImGui.PopStyleColor();
         }
     }
 }

@@ -1,10 +1,12 @@
 using BisBuddy.Gear;
 using Dalamud.Interface;
+using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Runtime.InteropServices;
 
 namespace BisBuddy.Windows;
 
@@ -37,53 +39,55 @@ public partial class MainWindow : Window, IDisposable
         InventoryScanUpdateCount = -1;
     }
 
-    public void Dispose()
-    {
-    }
+    public void Dispose() { }
 
     private void drawHeader()
     {
-        ImGui.PushFont(UiBuilder.IconFont);
-        var configButtonSize = ImGui.CalcTextSize(FontAwesomeIcon.Cog.ToIconString()) + ImGui.GetStyle().FramePadding * 2;
-        if (ImGui.Button($"{FontAwesomeIcon.Cog.ToIconString()}##bisbuddysettings", configButtonSize))
+        using (ImRaii.PushFont(UiBuilder.IconFont))
         {
-            plugin.ToggleConfigUI();
-        }
-        ImGui.PopFont();
-
-        ImGui.SameLine();
-
-        ImGui.BeginDisabled(!Services.ClientState.IsLoggedIn);
-        ImGui.BeginDisabled(plugin.Gearsets.Count >= Plugin.MaxGearsetCount);
-        if (ImGui.Button("New Gearset##importgearset"))
-        {
-            if (Services.ClientState.IsLoggedIn)
+            var configButtonSize = ImGui.CalcTextSize(FontAwesomeIcon.Cog.ToIconString()) + ImGui.GetStyle().FramePadding * 2;
+            if (ImGui.Button($"{FontAwesomeIcon.Cog.ToIconString()}##bisbuddysettings", configButtonSize))
             {
-                plugin.ToggleImportGearsetUI();
+                plugin.ToggleConfigUI();
             }
         }
-        if (ImGui.IsItemHovered())
-        {
-            var tooltip =
-                plugin.Gearsets.Count >= Plugin.MaxGearsetCount
-                ? $"Maximum of {Plugin.MaxGearsetCount} gearsets"
-                : "Import a new gearset";
-            ImGui.SetTooltip(tooltip);
-        }
-
-        ImGui.EndDisabled();
 
         ImGui.SameLine();
 
-        ImGui.BeginDisabled(InventoryScanRunning);
-        if (ImGui.Button("Sync Inventory##scaninventory"))
+        using (ImRaii.Disabled(!Services.ClientState.IsLoggedIn))
         {
-            InventoryScanRunning = true;
-            plugin.UpdateFromInventory(plugin.Gearsets);
+            using (ImRaii.Disabled(plugin.Gearsets.Count >= Plugin.MaxGearsetCount))
+            {
+                if (ImGui.Button("New Gearset##importgearset"))
+                {
+                    if (Services.ClientState.IsLoggedIn)
+                    {
+                        plugin.ToggleImportGearsetUI();
+                    }
+                }
+                if (ImGui.IsItemHovered())
+                {
+                    var tooltip =
+                        plugin.Gearsets.Count >= Plugin.MaxGearsetCount
+                        ? $"Maximum of {Plugin.MaxGearsetCount} gearsets"
+                        : "Import a new gearset";
+                    ImGui.SetTooltip(tooltip);
+                }
+            }
+
+            ImGui.SameLine();
+
+            using (ImRaii.Disabled(InventoryScanRunning))
+            {
+                if (ImGui.Button("Sync Inventory##scaninventory"))
+                {
+                    InventoryScanRunning = true;
+                    plugin.UpdateFromInventory(plugin.Gearsets);
+                }
+                if (ImGui.IsItemHovered()) ImGui.SetTooltip("Update gearsets with items from your inventory");
+            }
         }
-        if (ImGui.IsItemHovered()) ImGui.SetTooltip("Update gearsets with items from your inventory");
-        ImGui.EndDisabled();
-        ImGui.EndDisabled();
+
 
         if (InventoryScanRunning || InventoryScanUpdateCount >= 0)
         {
@@ -114,13 +118,14 @@ public partial class MainWindow : Window, IDisposable
         for (var i = 0; i < gearsets.Count; i++)
         {
             var gearset = gearsets[i];
-            ImGui.PushID(gearset.Id);
-            var deleteGearset = drawGearset(gearset);
-            if (deleteGearset)
+            using (ImRaii.PushId(gearset.Id))
             {
-                gearsetsToDelete.Add(i);
+                var deleteGearset = drawGearset(gearset);
+                if (deleteGearset)
+                {
+                    gearsetsToDelete.Add(i);
+                }
             }
-            ImGui.PopID();
         }
 
         if (gearsetsToDelete.Count > 0)
@@ -138,31 +143,43 @@ public partial class MainWindow : Window, IDisposable
     {
         var headerWidth = ImGui.GetWindowWidth();
         var headerHeight = ImGui.GetTextLineHeight() + ImGui.GetStyle().FramePadding.Y * 2;
-        if (ImGui.BeginChild($"###{Plugin.PluginName}_main_header", new Vector2(headerWidth, headerHeight), false, ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse))
+        using (
+            ImRaii.Child(
+                $"###main_header",
+                new Vector2(headerWidth, headerHeight),
+                false,
+                ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse
+                )
+            )
         {
             drawHeader();
-            ImGui.EndChild();
             ImGui.Spacing();
             ImGui.Separator();
         }
 
         var childWidth = ImGui.GetWindowWidth() - 12;
-        ImGui.BeginChild($"###{Plugin.PluginName}_main_content", new Vector2(childWidth, 0), false, ImGuiWindowFlags.AlwaysAutoResize);
-
-        if (plugin.Gearsets.Count == 0)
+        using (
+            ImRaii.Child(
+                $"###main_content",
+                new Vector2(childWidth, 0),
+                false,
+                ImGuiWindowFlags.AlwaysAutoResize
+                )
+            )
         {
-            ImGui.Spacing();
-            ImGui.Spacing();
-            ImGui.Spacing();
-            ImGui.Spacing();
+            if (plugin.Gearsets.Count == 0)
+            {
+                ImGui.Spacing();
+                ImGui.Spacing();
+                ImGui.Spacing();
+                ImGui.Spacing();
 
-            drawNoGearsets();
+                drawNoGearsets();
+            }
+            else
+            {
+                drawGearsets(plugin.Gearsets);
+            }
         }
-        else
-        {
-            drawGearsets(plugin.Gearsets);
-        }
-
-        ImGui.EndChild();
     }
 }
