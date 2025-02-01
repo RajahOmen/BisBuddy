@@ -13,12 +13,14 @@ using Dalamud.Interface.Windowing;
 using Dalamud.Plugin;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace BisBuddy;
 
 public sealed partial class Plugin : IDalamudPlugin
 {
     public static readonly string PluginName = "BISBuddy";
+    public string PluginVersion = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? string.Empty;
     public static readonly int MaxGearsetCount = 25;
 
     private const string CommandName = "/bisbuddy";
@@ -87,12 +89,7 @@ public sealed partial class Plugin : IDalamudPlugin
         catch (Exception ex)
         {
             Services.Log.Error(ex, "Failed to load configuration");
-#if DEBUG
-            Configuration = new Configuration();
-            Configuration.Save();
-#else
             throw;
-#endif
         }
 
         ItemData = new ItemData(Services.DataManager.Excel);
@@ -213,7 +210,6 @@ public sealed partial class Plugin : IDalamudPlugin
     public void ToggleConfigUI() => ConfigWindow.Toggle();
     public void ToggleMainUI() => MainWindow.Toggle();
     public void ToggleImportGearsetUI() => ImportGearsetWindow.Toggle();
-    public void ToggleMeldPlanSelectorUI() => MeldPlanSelectorWindow.Toggle();
 
     public delegate void GearsetsUpdateHandler();
 
@@ -262,6 +258,7 @@ public sealed partial class Plugin : IDalamudPlugin
 
     internal static void LinkItemById(uint itemId)
     {
+        Services.Log.Debug($"Linking item \"{itemId}\" in chat");
         var itemIsHq = itemId > ItemData.ItemIdHqOffset;
         var shiftedItemId = itemIsHq ? itemId - ItemData.ItemIdHqOffset : itemId;
         var itemLink = SeString.CreateItemLink(shiftedItemId, itemIsHq);
