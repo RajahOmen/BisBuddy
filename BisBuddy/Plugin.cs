@@ -13,14 +13,12 @@ using Dalamud.Interface.Windowing;
 using Dalamud.Plugin;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 
 namespace BisBuddy;
 
 public sealed partial class Plugin : IDalamudPlugin
 {
     public static readonly string PluginName = "BISBuddy";
-    public string PluginVersion = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? string.Empty;
     public static readonly int MaxGearsetCount = 25;
 
     private const string CommandName = "/bisbuddy";

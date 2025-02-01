@@ -10,7 +10,6 @@ namespace BisBuddy.Windows
     public partial class MainWindow
     {
         private Gearset? gearsetHovered = null;
-        private bool gearsetRefreshed = false;
 
         private static Vector4 ManuallyCollectedColor = new(0.0f, 1.0f, 0.0f, 1.0f);
         private static Vector4 AutomaticallyCollectedColor = new(1.0f, 1.0f, 1.0f, 1.0f);
@@ -20,7 +19,6 @@ namespace BisBuddy.Windows
             if (gearsetHovered == null || gearsetHovered != hovererdGearset)
             {
                 gearsetHovered = hovererdGearset;
-                gearsetRefreshed = false;
             }
         }
 
@@ -31,14 +29,11 @@ namespace BisBuddy.Windows
 
             using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(4.0f, 4.0f)))
             {
-                using (ImRaii.PushFont(UiBuilder.IconFont))
+                if (ImGui.Checkbox($"##gearset_active", ref isActive))
                 {
-                    if (ImGui.Checkbox($"##gearset_active", ref isActive))
-                    {
-                        gearset.IsActive = isActive;
-                        Services.Log.Debug($"{(isActive ? "enabled" : "disabled")} gearset \"{gearset.Name}\"");
-                        plugin.SaveGearsetsWithUpdate();
-                    }
+                    gearset.IsActive = isActive;
+                    Services.Log.Debug($"{(isActive ? "enabled" : "disabled")} gearset \"{gearset.Name}\"");
+                    plugin.SaveGearsetsWithUpdate();
                 }
 
                 if (ImGui.IsItemHovered())
@@ -51,15 +46,13 @@ namespace BisBuddy.Windows
                 ImGui.SameLine();
 
                 var shiftHeld = ImGui.IsKeyDown(ImGuiKey.LeftShift) || ImGui.IsKeyDown(ImGuiKey.RightShift);
-                var deleteButtonSize = ImGui.CalcTextSize(FontAwesomeIcon.TrashAlt.ToIconString()) + ImGui.GetStyle().FramePadding * 2;
                 var deleteTooltipText = shiftHeld ? "Click to quick delete" : "Shift+Click to quick delete";
                 var lightRed = new Vector4(0.5f, 0.2f, 0.2f, 1.0f);
                 var darkRed = new Vector4(0.6f, 0.15f, 0.15f, 1.0f);
 
                 using (ImRaii.PushColor(ImGuiCol.Button, shiftHeld ? darkRed : lightRed))
-                using (ImRaii.PushFont(UiBuilder.IconFont))
                 {
-                    if (ImGui.Button($"{FontAwesomeIcon.TrashAlt.ToIconString()}###delete_gearset_icon_button"))
+                    if (ImGuiComponents.IconButton(FontAwesomeIcon.TrashAlt))
                     {
                         if (shiftHeld)
                         {
@@ -72,20 +65,20 @@ namespace BisBuddy.Windows
                     }
                 }
                 if (ImGui.IsItemHovered()) ImGui.SetTooltip($"Delete this Gearset. {deleteTooltipText}");
-            }
 
-            if (ImGui.BeginPopup("Delete Gearset?##delete_gearset_icon_confirm_popup"))
-            {
-                if (ImGui.Button("Yes, Delete###confirm_delete_icon_gearset_button"))
+                using var deletePopup = ImRaii.Popup("Delete Gearset?##delete_gearset_icon_confirm_popup");
+                if (deletePopup)
                 {
-                    deleteGearset = true;
-                    ImGui.CloseCurrentPopup();
+                    if (ImGui.Button("Yes, Delete###confirm_delete_icon_gearset_button"))
+                    {
+                        deleteGearset = true;
+                        ImGui.CloseCurrentPopup();
+                    }
+                    if (ImGui.IsItemHovered()) ImGui.SetTooltip("This cannot be undone!");
                 }
-                if (ImGui.IsItemHovered()) ImGui.SetTooltip("This cannot be undone!");
-                ImGui.EndPopup();
-            }
 
-            ImGui.SameLine();
+                ImGui.SameLine();
+            }
 
             if (ImGui.CollapsingHeader($"[{gearset.JobAbbrv}] {gearset.Name}###gearset_collapsingheader"))
             {
@@ -118,7 +111,9 @@ namespace BisBuddy.Windows
                 ImGui.SameLine();
 
                 var gearsetName = gearset.Name;
-                ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X - 122);
+                var copyButtonWidth = ImGuiComponents.GetIconButtonWithTextWidth(FontAwesomeIcon.Copy, "Link");
+                var exportButtonWidth = ImGuiComponents.GetIconButtonWithTextWidth(FontAwesomeIcon.FileExport, "JSON");
+                ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X - (copyButtonWidth + exportButtonWidth + 17));
                 if (ImGui.InputText($"##gearset_rename_input", ref gearsetName, 512))
                 {
                     gearset.Name = gearsetName;
@@ -167,37 +162,41 @@ namespace BisBuddy.Windows
 
                 ImGui.Spacing();
                 ImGui.Spacing();
+                ImGui.Separator();
+                ImGui.Spacing();
 
-                var drawingLeftSide = false;
-                var drawingRightSide = false;
-
-                using (ImRaii.Disabled(!gearset.IsActive))
+                if (gearset.Gearpieces.Count > 0)
                 {
-                    for (var i = 0; i < gearset.Gearpieces.Count; i++)
+                    var drawingLeftSide = (gearset.Gearpieces[0].GearpieceType & GearpieceType.LeftSide) != 0;
+                    var drawingRightSide = (gearset.Gearpieces[0].GearpieceType & GearpieceType.RightSide) != 0;
+
+                    using (ImRaii.Disabled(!gearset.IsActive))
                     {
-                        var item = gearset.Gearpieces[i];
+                        for (var i = 0; i < gearset.Gearpieces.Count; i++)
+                        {
+                            var item = gearset.Gearpieces[i];
 
-                        if (!drawingLeftSide && (item.GearpieceType & GearpieceType.LeftSide) != 0)
-                        {
-                            ImGui.Spacing();
-                            drawingLeftSide = true;
-                        }
-                        if (!drawingRightSide && (item.GearpieceType & GearpieceType.RightSide) != 0)
-                        {
-                            ImGui.Spacing();
-                            drawingRightSide = true;
-                        }
+                            if (!drawingLeftSide && (item.GearpieceType & GearpieceType.LeftSide) != 0)
+                            {
+                                ImGui.Spacing();
+                                drawingLeftSide = true;
+                            }
+                            if (!drawingRightSide && (item.GearpieceType & GearpieceType.RightSide) != 0)
+                            {
+                                ImGui.Spacing();
+                                drawingRightSide = true;
+                            }
 
-                        using (ImRaii.PushId(i))
-                        {
-                            drawGearpiece(item, gearset);
+                            using (ImRaii.PushId(i))
+                            {
+                                drawGearpiece(item, gearset);
+                            }
                         }
                     }
                 }
 
                 ImGui.Spacing();
                 ImGui.Separator();
-                ImGui.Spacing();
                 ImGui.Spacing();
             }
             if (ImGui.IsItemHovered())

@@ -33,7 +33,13 @@ namespace BisBuddy.Windows
                             ImGui.Text(FontAwesomeIcon.Check.ToIconString());
                         }
                         if (ImGui.IsItemHovered())
-                            ImGui.SetTooltip("Collection status locked. Inventory syncs will not uncollect.");
+                        {
+                            using (ImRaii.PushColor(ImGuiCol.Text, new Vector4(1, 1, 1, 1)))
+                            {
+                                ImGui.SetTooltip("Collection status locked. Inventory syncs will not uncollect");
+                            }
+                        }
+                        
                         ImGui.SameLine();
                     }
 

@@ -1,12 +1,12 @@
 using BisBuddy.Gear;
 using Dalamud.Interface;
+using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using System.Runtime.InteropServices;
 
 namespace BisBuddy.Windows;
 
@@ -43,22 +43,11 @@ public partial class MainWindow : Window, IDisposable
 
     private void drawHeader()
     {
-        using (ImRaii.PushFont(UiBuilder.IconFont))
-        {
-            var configButtonSize = ImGui.CalcTextSize(FontAwesomeIcon.Cog.ToIconString()) + ImGui.GetStyle().FramePadding * 2;
-            if (ImGui.Button($"{FontAwesomeIcon.Cog.ToIconString()}##bisbuddysettings", configButtonSize))
-            {
-                plugin.ToggleConfigUI();
-            }
-        }
-
-        ImGui.SameLine();
-
         using (ImRaii.Disabled(!Services.ClientState.IsLoggedIn))
         {
             using (ImRaii.Disabled(plugin.Gearsets.Count >= Plugin.MaxGearsetCount))
             {
-                if (ImGui.Button("New Gearset##importgearset"))
+                if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.Plus, "New Gearset##importgearset"))
                 {
                     if (Services.ClientState.IsLoggedIn)
                     {
@@ -79,7 +68,7 @@ public partial class MainWindow : Window, IDisposable
 
             using (ImRaii.Disabled(InventoryScanRunning))
             {
-                if (ImGui.Button("Sync Inventory##scaninventory"))
+                if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.Sync, "Sync Inventory##scaninventory"))
                 {
                     InventoryScanRunning = true;
                     plugin.UpdateFromInventory(plugin.Gearsets);
@@ -87,7 +76,6 @@ public partial class MainWindow : Window, IDisposable
                 if (ImGui.IsItemHovered()) ImGui.SetTooltip("Update gearsets with items from your inventory");
             }
         }
-
 
         if (InventoryScanRunning || InventoryScanUpdateCount >= 0)
         {
@@ -97,6 +85,19 @@ public partial class MainWindow : Window, IDisposable
 
             ImGui.SameLine();
             ImGui.Text(text);
+        }
+
+        ImGui.SameLine();
+
+        var configButtonSize = ImGuiComponents.GetIconButtonWithTextWidth(FontAwesomeIcon.Cog, "");
+        ImGui.SetCursorPosX(ImGui.GetContentRegionMax().X - (configButtonSize + 12));
+        if (ImGuiComponents.IconButton(FontAwesomeIcon.Cog))
+        {
+            plugin.ToggleConfigUI();
+        }
+        if (ImGui.IsItemHovered())
+        {
+            ImGui.SetTooltip($"Open config");
         }
     }
 
@@ -153,9 +154,9 @@ public partial class MainWindow : Window, IDisposable
             )
         {
             drawHeader();
-            ImGui.Spacing();
-            ImGui.Separator();
         }
+        ImGui.Spacing();
+        ImGui.Separator();
 
         var childWidth = ImGui.GetWindowWidth() - 12;
         using (
@@ -178,6 +179,7 @@ public partial class MainWindow : Window, IDisposable
             }
             else
             {
+                ImGui.Spacing();
                 drawGearsets(plugin.Gearsets);
             }
         }

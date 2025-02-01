@@ -1,4 +1,6 @@
 using BisBuddy.Gear;
+using Dalamud.Interface;
+using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility.Raii;
 using ImGuiNET;
 using System;
@@ -24,28 +26,38 @@ namespace BisBuddy.Windows
                 ? ManuallyCollectedColor
                 : AutomaticallyCollectedColor;
 
-            using (ImRaii.PushColor(ImGuiCol.CheckMark, checkmarkColor))
+            using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(4.0f, 4.0f)))
             {
-                if (ImGui.Checkbox($"##gearpiece_collected", ref gearpieceCollected))
+                using (ImRaii.PushColor(ImGuiCol.CheckMark, checkmarkColor))
                 {
-                    gearpiece.SetCollected(gearpieceCollected, true);
-                    Services.Log.Debug($"Set \"{gearset.Name}\" gearpiece \"{gearpiece.ItemName}\" to {(gearpieceCollected ? "collected" : "not collected")}");
-                    plugin.SaveGearsetsWithUpdate();
+                    if (ImGui.Checkbox($"##gearpiece_collected", ref gearpieceCollected))
+                    {
+                        gearpiece.SetCollected(gearpieceCollected, true);
+                        Services.Log.Debug($"Set \"{gearset.Name}\" gearpiece \"{gearpiece.ItemName}\" to {(gearpieceCollected ? "collected" : "not collected")}");
+                        plugin.SaveGearsetsWithUpdate();
+                    }
                 }
-            }
+                if (ImGui.IsItemHovered())
+                {
+                    var tooltip =
+                        gearpieceCollected
+                        ? gearpieceManuallyCollected
+                        ? "Collection status locked. Inventory syncs will not uncollect"
+                        : "Mark as Not Collected"
+                        : "Lock as Collected";
+                    ImGui.SetTooltip(tooltip);
+                }
 
-            if (ImGui.IsItemHovered())
-            {
-                var tooltip =
-                    gearpieceCollected
-                    ? gearpieceManuallyCollected
-                    ? "Collection status locked. Inventory syncs will not uncollect."
-                    : "Mark as Not Collected"
-                    : "Lock as Collected";
-                ImGui.SetTooltip(tooltip);
-            }
+                ImGui.SameLine();
 
-            ImGui.SameLine();
+                if (ImGuiComponents.IconButton(FontAwesomeIcon.ExternalLinkAlt))
+                {
+                    Plugin.LinkItemById(gearpiece.ItemId);
+                }
+                if (ImGui.IsItemHovered()) ImGui.SetTooltip("Link item in chat");
+
+                ImGui.SameLine();
+            }
 
             // what label/color to apply to gearpice text
             // by default, fully not collected
@@ -75,6 +87,8 @@ namespace BisBuddy.Windows
                 && hasSubItems
                 )
                 {
+                    ImGui.Spacing();
+
                     var materiaMeldedCount =
                         $"[{gearpiece.ItemMateria.Where(m => m.IsMelded).Count()}/{gearpiece.ItemMateria.Count}]";
                     var windowWidth = ImGui.GetWindowContentRegionMax().X - ImGui.GetCursorPosX();
@@ -117,11 +131,8 @@ namespace BisBuddy.Windows
                             }
                         }
                     }
-
                     ImGui.Spacing();
                 }
-                if (ImGui.IsItemClicked(ImGuiMouseButton.Right)) Plugin.LinkItemById(gearpiece.ItemId);
-                if (ImGui.IsItemHovered()) ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
             }
         }
     }
