@@ -67,11 +67,13 @@ namespace BisBuddy.Windows
             {
                 gearpieceCollectedLabel = "";
                 textColor = ObtainedColor;
-            } else if (!gearpieceCollected && !gearpiecePrereqsCollected)
+            }
+            else if (!gearpieceCollected && !gearpiecePrereqsCollected)
             {
                 gearpieceCollectedLabel = "*";
                 textColor = UnobtainedColor;
-            } else
+            }
+            else
             {
                 gearpieceCollectedLabel = "**";
                 textColor = AlmostObtained;

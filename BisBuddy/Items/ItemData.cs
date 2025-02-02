@@ -167,19 +167,19 @@ namespace BisBuddy.Items
             return materiaItem.RowId;
         }
 
-        public List<GearpiecePrerequesite> BuildGearpiecePrerequesites(Gearpiece gearpiece)
+        public List<GearpiecePrerequesite> BuildGearpiecePrerequesites(uint gearpieceId)
         {
             // returns a list of item ids that are required to obtain the item with the provided id
             var prerequisites = new List<GearpiecePrerequesite>();
 
             // check for coffer
-            if (ItemsCoffers.TryGetValue(gearpiece.ItemId, out var cofferId))
+            if (ItemsCoffers.TryGetValue(gearpieceId, out var cofferId))
             {
                 prerequisites.Add(new GearpiecePrerequesite(cofferId, this));
             }
 
             // no prerequesites in the table
-            if (!ItemPrerequesites.TryGetValue(gearpiece.ItemId, out var directGearpiecePrereqs))
+            if (!ItemPrerequesites.TryGetValue(gearpieceId, out var directGearpiecePrereqs))
             {
                 return prerequisites;
             }

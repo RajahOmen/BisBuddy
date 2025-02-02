@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace BisBuddy.ItemAssignment
 {
-    internal class GearpieceGroup : IDemandGroup
+    public class GearpieceGroup : IDemandGroup
     {
         // #0: ensure that if a gearpiece is manually collected, it is extremely highly-valued by auto-solver
         private static readonly int ManualCollectionScore = 100000;

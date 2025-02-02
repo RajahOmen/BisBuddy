@@ -1,7 +1,7 @@
 
 namespace BisBuddy.ItemAssignment
 {
-    internal enum DemandGroupType
+    public enum DemandGroupType
     {
         Gearpiece,
         Prerequesite

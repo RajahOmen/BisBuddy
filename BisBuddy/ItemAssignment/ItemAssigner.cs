@@ -6,11 +6,11 @@ using System.Linq;
 
 namespace BisBuddy.ItemAssignment
 {
-    internal static class ItemAssigner
+    public static class ItemAssigner
     {
         // logic for applying assignments decided by solver
 
-        internal static List<Gearpiece> makeItemAssignments(SolveResult result, List<Gearpiece> gearpiecesToAssign, ItemData itemData)
+        public static List<Gearpiece> makeItemAssignments(SolveResult result, List<Gearpiece> gearpiecesToAssign, ItemData itemData)
         {
             var updatedGearpieces = new List<Gearpiece>();
             // Item -> Gearpiece assignments

@@ -5,8 +5,8 @@ using System.Linq;
 
 namespace BisBuddy.EventListeners.AddonEventListeners.Containers
 {
-    internal class InventoryRetainerEventListener(Plugin plugin)
-        : ContainerEventListenerBase(plugin)
+    public class InventoryRetainerEventListener(Plugin plugin)
+        : ContainerEventListener(plugin)
     {
         public override string AddonName => "InventoryRetainer";
         protected override int pagesPerView => 1;

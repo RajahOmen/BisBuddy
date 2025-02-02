@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace BisBuddy.ItemAssignment
 {
-    internal class SolveResult
+    public class SolveResult
     {
         public List<GearpiecesAssignment> GearpiecesAssignments { get; set; } = [];
         public List<PrerequesitesAssignment> PrerequesitesAssignments { get; set; } = [];

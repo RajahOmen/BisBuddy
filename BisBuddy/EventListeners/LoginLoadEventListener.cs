@@ -2,7 +2,7 @@ using System;
 
 namespace BisBuddy.EventListeners
 {
-    internal class LoginLoadEventListener : EventListenerBase
+    public class LoginLoadEventListener : EventListener
     {
         public LoginLoadEventListener(Plugin plugin) : base(plugin)
         {

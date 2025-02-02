@@ -5,7 +5,7 @@ namespace BisBuddy.Gear
     public class GearsetImportException : Exception
     {
         public GearsetImportStatusType FailStatusType { get; init; }
-        internal GearsetImportException(GearsetImportStatusType failStatusType)
+        public GearsetImportException(GearsetImportStatusType failStatusType)
         {
             FailStatusType = failStatusType;
         }

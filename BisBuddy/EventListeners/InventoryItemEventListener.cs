@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace BisBuddy.EventListeners
 {
-    internal class InventoryItemEventListener : EventListenerBase
+    public class InventoryItemEventListener : EventListener
     {
         public InventoryItemEventListener(Plugin plugin) : base(plugin)
         {

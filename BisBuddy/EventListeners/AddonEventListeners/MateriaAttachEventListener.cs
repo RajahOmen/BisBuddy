@@ -12,45 +12,45 @@ using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
 namespace BisBuddy.EventListeners.AddonEventListeners
 {
 
-    internal class MateriaAttachEventListener(Plugin plugin)
-        : AddonEventListenerBase(plugin, plugin.Configuration.HighlightMateriaMeld)
+    public class MateriaAttachEventListener(Plugin plugin)
+        : AddonEventListener(plugin, plugin.Configuration.HighlightMateriaMeld)
     {
         public override string AddonName => "MateriaAttach";
 
         // ADDON NODE IDS
         // node ids for gearpiece side
         // left side of the melding window (gearpieces)
-        internal static readonly uint AddonGearpieceComponentNodeId = 2;
+        public static readonly uint AddonGearpieceComponentNodeId = 2;
         // list of gearpieces to meld materia to
-        internal static readonly uint AddonGearpieceListNodeId = 13;
+        public static readonly uint AddonGearpieceListNodeId = 13;
         // hover highlight node for gearpieces
-        internal static readonly uint AddonGearpieceSelectedHighlightNodeId = 12;
+        public static readonly uint AddonGearpieceSelectedHighlightNodeId = 12;
 
         // node ids for materia side
         // right side of the melding window (materia)
-        internal static readonly uint AddonMateriaComponentNodeId = 16;
+        public static readonly uint AddonMateriaComponentNodeId = 16;
         // list of materia to meld to the selected gear
-        internal static readonly uint AddonMateriaListNodeId = 23;
+        public static readonly uint AddonMateriaListNodeId = 23;
         // hover highlight node for materia
-        internal static readonly uint AddonMateriaSelectedHighlightNodeId = 7;
+        public static readonly uint AddonMateriaSelectedHighlightNodeId = 7;
         // scrollbar node for the item list
-        internal static readonly uint AddonGearpieceScrollbarNodeId = 5;
+        public static readonly uint AddonGearpieceScrollbarNodeId = 5;
         // scrollbar button node for the item list
-        internal static readonly uint AddonGearpieceScrollbarButtonNodeId = 2;
+        public static readonly uint AddonGearpieceScrollbarButtonNodeId = 2;
         // scrollbar node for the materia list
-        internal static readonly uint AddonMateriaScrollbarNodeId = 5;
+        public static readonly uint AddonMateriaScrollbarNodeId = 5;
         // scrollbar button node for the materia list
-        internal static readonly uint AddonMateriaScrollbarButtonNodeId = 2;
+        public static readonly uint AddonMateriaScrollbarButtonNodeId = 2;
 
         // ADDON ATKVALUE INDEXES
         // index of the item selected in the gearpiece list
-        internal static readonly int AtkValueItemSelectedIndex = 287;
+        public static readonly int AtkValueItemSelectedIndex = 287;
         // start of the list of gearpiece names in the gearpiece list
-        internal static readonly int AtkValueItemNameListStartIndex = 147;
+        public static readonly int AtkValueItemNameListStartIndex = 147;
         // start of the list of materia names in the materia list
-        internal static readonly int AtkValueMateriaNameListStartIndex = 429;
+        public static readonly int AtkValueMateriaNameListStartIndex = 429;
         // value for index of page selected (Gets overwritten when list element hovered/clicked)
-        internal static readonly int AtkValuePageIndexSelectedIndex = 4;
+        public static readonly int AtkValuePageIndexSelectedIndex = 4;
 
         private string selectedItemName = string.Empty;
         private readonly HashSet<int> unmeldedItemIndexes = [];
@@ -58,12 +58,12 @@ namespace BisBuddy.EventListeners.AddonEventListeners
         private HashSet<string> unmeldedGearpieceNames = [];
         private HashSet<string> neededMateriaNames = [];
 
-        internal List<MeldPlan> meldPlans { get; private set; } = [];
+        public List<MeldPlan> meldPlans { get; private set; } = [];
         private float previousItemScrollbarY = -1.0f;
         private float previousMateriaScrollbarY = -1.0f;
         private int previousItemPageIndex = -1;
 
-        internal int selectedMeldPlanIndex = 0;
+        public int selectedMeldPlanIndex = 0;
 
         protected override void registerAddonListeners()
         {

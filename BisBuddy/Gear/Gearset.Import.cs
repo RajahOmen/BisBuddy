@@ -246,12 +246,11 @@ namespace BisBuddy.Gear
 
                 var gearpieceType = GearpieceTypeMapper.Parse(slot.Name);
 
-                var gearpieceId = id.GetUInt32();
+                var gearpieceId = itemData.ConvertItemIdToHq(id.GetUInt32());
                 // xivgear only provides NQ items, convert to HQ
                 gearpieceId = itemData.ConvertItemIdToHq(gearpieceId);
                 var gearpieceName = itemData.GetItemNameById(gearpieceId);
-                var gearpiece = new Gearpiece(gearpieceId, gearpieceName, gearpieceType, null, null);
-                gearpiece.PrerequisiteItems = itemData.BuildGearpiecePrerequesites(gearpiece);
+                List<Materia> materiaList = [];
 
                 if (slot.Value.TryGetProperty("materia", out var materiaArray))
                 {
@@ -264,11 +263,19 @@ namespace BisBuddy.Gear
                             )
                         {
                             var newMateria = itemData.BuildMateria(materiaId.GetUInt32());
-                            gearpiece.ItemMateria.Add(newMateria);
+                            materiaList.Add(newMateria);
                         }
                     }
 
                 }
+
+                var gearpiece = new Gearpiece(
+                    gearpieceId,
+                    itemData.GetItemNameById(gearpieceId),
+                    gearpieceType,
+                    itemData.BuildGearpiecePrerequesites(gearpieceId),
+                    materiaList
+                    );
 
                 // add gearpiece to gearset
                 gearpieces.Add(gearpiece);
@@ -333,14 +340,15 @@ namespace BisBuddy.Gear
                     {
                         // parse gearpiece properties
                         var gearpieceType = GearpieceTypeMapper.Parse(typeStr);
-                        var gearpieceId = gearpieceIdJson.GetUInt32();
+                        var gearpieceId = itemData.ConvertItemIdToHq(gearpieceIdJson.GetUInt32());
                         // etro only provides NQ items, convert to HQ
-                        var gearpieceIdHq = itemData.ConvertItemIdToHq(gearpieceId);
-                        var gearpieceName = itemData.GetItemNameById(gearpieceIdHq);
-                        var gearpiece = new Gearpiece(gearpieceIdHq, gearpieceName, gearpieceType, null, null);
-
-                        gearpiece.PrerequisiteItems = itemData.BuildGearpiecePrerequesites(gearpiece);
-                        gearpiece.ItemMateria = getEtroMateria(materiaProp, gearpieceId.ToString(), typeStr, itemData);
+                        var gearpiece = new Gearpiece(
+                            gearpieceId,
+                            itemData.GetItemNameById(gearpieceId),
+                            gearpieceType,
+                            itemData.BuildGearpiecePrerequesites(gearpieceId),
+                            getEtroMateria(materiaProp, gearpieceId.ToString(), typeStr, itemData)
+                            );
 
                         // add gearpiece to gearpieces
                         gearpieces.Add(gearpiece);
@@ -363,10 +371,13 @@ namespace BisBuddy.Gear
                         var relicName = itemData.GetItemNameById(relicItemId);
                         var relicType = GearpieceTypeMapper.Parse(relic.Name);
                         var relicMateria = new List<Materia>();
-                        var gearpiece = new Gearpiece(relicItemId, relicName, relicType, null, null);
-
-                        gearpiece.PrerequisiteItems = itemData.BuildGearpiecePrerequesites(gearpiece);
-                        gearpiece.ItemMateria = getEtroMateria(materiaProp, relicItemId.ToString(), relic.Name, itemData);
+                        var gearpiece = new Gearpiece(
+                            relicItemId,
+                            relicName,
+                            relicType,
+                            itemData.BuildGearpiecePrerequesites(relicItemId),
+                            getEtroMateria(materiaProp, relicItemId.ToString(), relic.Name, itemData)
+                            );
 
                         // add gearpiece to gearpieces
                         gearpieces.Add(gearpiece);

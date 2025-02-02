@@ -8,12 +8,12 @@ using System.Collections.Generic;
 
 namespace BisBuddy.EventListeners.AddonEventListeners
 {
-    internal class NeedGreedEventListener(Plugin plugin)
-        : AddonEventListenerBase(plugin, plugin.Configuration.HighlightNeedGreed)
+    public class NeedGreedEventListener(Plugin plugin)
+        : AddonEventListener(plugin, plugin.Configuration.HighlightNeedGreed)
     {
         // ADDON NODE IDS
         // the node id of the list of items in the addon
-        internal static readonly uint AddonItemListNodeId = 6;
+        public static readonly uint AddonItemListNodeId = 6;
 
         public override uint AddonCustomNodeId => throw new NotImplementedException();
 

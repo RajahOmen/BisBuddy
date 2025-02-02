@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace BisBuddy.ItemAssignment
 {
-    internal class ItemAssigmentSolver
+    public class ItemAssigmentSolver
     {
         // NOT no edge, because want to ensure solver runs, even for "no solution" cases
         public static readonly int NoEdgeWeightValue = int.MinValue + 1;
@@ -41,7 +41,7 @@ namespace BisBuddy.ItemAssignment
             prerequesiteCandidateItems = inventoryItems;
         }
 
-        internal static uint GameInventoryItemId(GameInventoryItem item)
+        public static uint GameInventoryItemId(GameInventoryItem item)
         {
             // 'normal' item
             if (!item.IsHq) return item.ItemId;

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace BisBuddy.ItemAssignment
 {
-    internal class ItemAssignmentQueue
+    public class ItemAssignmentQueue
     {
         private readonly ConcurrentQueue<Action> taskQueue = new();
         private readonly SemaphoreSlim signal = new(0);

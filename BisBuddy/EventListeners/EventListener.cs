@@ -2,7 +2,7 @@ using System;
 
 namespace BisBuddy.EventListeners
 {
-    internal abstract class EventListenerBase(Plugin plugin) : IEventListener
+    public abstract class EventListener(Plugin plugin) : IEventListener
     {
         protected Plugin Plugin { get; } = plugin;
         public bool IsEnabled { get; private set; } = false;

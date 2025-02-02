@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace BisBuddy.ItemAssignment
 {
-    internal class PrerequesiteGroup : IDemandGroup
+    public class PrerequesiteGroup : IDemandGroup
     {
         // ensure that item->prerequesite group edges are always scored lower than item->gearpiece group edges
         // basically, assign items first, then 'fill in' prerequesites

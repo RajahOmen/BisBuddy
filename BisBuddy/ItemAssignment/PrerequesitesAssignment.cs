@@ -3,7 +3,7 @@ using Dalamud.Game.Inventory;
 
 namespace BisBuddy.ItemAssignment
 {
-    internal class PrerequesitesAssignment(GameInventoryItem? item, GearpiecePrerequesite gearpiecePrerequesite)
+    public class PrerequesitesAssignment(GameInventoryItem? item, GearpiecePrerequesite gearpiecePrerequesite)
     {
         // null if prerequesites unassigned
         public GameInventoryItem? Item { get; set; } = item;

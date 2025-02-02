@@ -39,7 +39,7 @@ public sealed partial class Plugin : IDalamudPlugin
     public Configuration Configuration { get; set; }
     public List<Gearset> Gearsets { get; private set; } = [];
     // handle async FIFO item assignment
-    internal ItemAssignmentQueue itemAssignmentQueue { get; private set; } = new();
+    public ItemAssignmentQueue itemAssignmentQueue { get; private set; } = new();
 
     // plugin windows
     public readonly WindowSystem WindowSystem = new(PluginName);
@@ -50,27 +50,27 @@ public sealed partial class Plugin : IDalamudPlugin
 
     // event listeners
     // shops and other dialogs etc.
-    internal readonly MateriaAttachEventListener MateriaAttachEventListener;
-    internal readonly NeedGreedEventListener NeedGreedEventListener;
-    internal readonly ShopExchangeItemEventListener ShopExchangeItemEventListener;
-    internal readonly ShopExchangeCurrencyEventListener ShopExchangeCurrencyEventListener;
-    internal readonly ItemSearchEventListener ItemSearchEventListener;
-    internal readonly ItemSearchResultEventListener ItemSearchResultEventListener;
+    public readonly MateriaAttachEventListener MateriaAttachEventListener;
+    public readonly NeedGreedEventListener NeedGreedEventListener;
+    public readonly ShopExchangeItemEventListener ShopExchangeItemEventListener;
+    public readonly ShopExchangeCurrencyEventListener ShopExchangeCurrencyEventListener;
+    public readonly ItemSearchEventListener ItemSearchEventListener;
+    public readonly ItemSearchResultEventListener ItemSearchResultEventListener;
 
     // player inventory windows
-    internal readonly InventoryEventListener InventoryEventListener;
-    internal readonly InventoryLargeEventListener InventoryLargeEventListener;
-    internal readonly InventoryExpansionEventListener InventoryExpansionEventListener;
-    internal readonly InventoryRetainerEventListener InventoryRetainerEventListener;
-    internal readonly InventoryRetainerLargeEventListener InventoryRetainerLargeEventListener;
-    internal readonly InventoryBuddyEventListener InventoryBuddyEventListener;
+    public readonly InventoryEventListener InventoryEventListener;
+    public readonly InventoryLargeEventListener InventoryLargeEventListener;
+    public readonly InventoryExpansionEventListener InventoryExpansionEventListener;
+    public readonly InventoryRetainerEventListener InventoryRetainerEventListener;
+    public readonly InventoryRetainerLargeEventListener InventoryRetainerLargeEventListener;
+    public readonly InventoryBuddyEventListener InventoryBuddyEventListener;
 
     // item tooltip
-    internal readonly ItemDetailEventListener ItemDetailEventListener;
+    public readonly ItemDetailEventListener ItemDetailEventListener;
 
     // non-addon related
-    internal readonly InventoryItemEventListener ItemUpdateEventListener;
-    internal readonly LoginLoadEventListener LoginLoadEventListener;
+    public readonly InventoryItemEventListener ItemUpdateEventListener;
+    public readonly LoginLoadEventListener LoginLoadEventListener;
 
     // game data item sheet wrapper
     public ItemData ItemData { get; init; }
@@ -234,7 +234,7 @@ public sealed partial class Plugin : IDalamudPlugin
         TriggerGearsetsUpdate();
     }
 
-    internal void UpdateMeldPlanSelectorWindow(List<MeldPlan> meldPlans)
+    public void UpdateMeldPlanSelectorWindow(List<MeldPlan> meldPlans)
     {
 
         if (meldPlans.Count == 0)
@@ -254,7 +254,7 @@ public sealed partial class Plugin : IDalamudPlugin
         }
     }
 
-    internal static void LinkItemById(uint itemId)
+    public static void LinkItemById(uint itemId)
     {
         Services.Log.Debug($"Linking item \"{itemId}\" in chat");
         var itemIsHq = itemId > ItemData.ItemIdHqOffset;

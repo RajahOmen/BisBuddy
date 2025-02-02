@@ -11,8 +11,8 @@ using System.Linq;
 
 namespace BisBuddy.EventListeners.AddonEventListeners.Containers
 {
-    internal abstract class ContainerEventListenerBase(Plugin plugin)
-        : AddonEventListenerBase(plugin, plugin.Configuration.HighlightInventories)
+    public abstract class ContainerEventListener(Plugin plugin)
+        : AddonEventListener(plugin, plugin.Configuration.HighlightInventories)
     {
         public override uint AddonCustomNodeId => throw new NotImplementedException();
 

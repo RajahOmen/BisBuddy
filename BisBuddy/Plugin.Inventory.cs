@@ -10,7 +10,7 @@ namespace BisBuddy
 {
     public sealed partial class Plugin
     {
-        internal static readonly GameInventoryType[] InventorySources =
+        public static readonly GameInventoryType[] InventorySources =
         [
             GameInventoryType.Inventory1,
             GameInventoryType.Inventory2,
@@ -60,11 +60,15 @@ namespace BisBuddy
                         SaveGearsetsWithUpdate();
                     }
                     MainWindow.InventoryScanUpdateCount = updatedGearpieces.Count;
-                    MainWindow.InventoryScanRunning = false;
                 }
                 catch (Exception ex)
                 {
                     Services.Log.Error(ex, "Failed to update gearsets from inventory");
+                    MainWindow.InventoryScanUpdateCount = 0;
+                }
+                finally
+                {
+                    MainWindow.InventoryScanRunning = false;
                 }
             });
         }

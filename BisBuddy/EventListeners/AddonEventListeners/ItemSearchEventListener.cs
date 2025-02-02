@@ -12,22 +12,22 @@ using System.Linq;
 namespace BisBuddy.EventListeners.AddonEventListeners
 {
     // marketboard
-    internal class ItemSearchEventListener(Plugin plugin)
-        : AddonEventListenerBase(plugin, plugin.Configuration.HighlightMarketboard)
+    public class ItemSearchEventListener(Plugin plugin)
+        : AddonEventListener(plugin, plugin.Configuration.HighlightMarketboard)
     {
         public override string AddonName => "ItemSearch";
 
         // ADDON NODE IDS
         // id of the text node for the list item name
-        internal static readonly uint AddonItemNameTextNodeId = 13;
+        public static readonly uint AddonItemNameTextNodeId = 13;
         // id of the hover highlight node
-        internal static readonly uint AddonHoverHighlightNodeId = 15;
+        public static readonly uint AddonHoverHighlightNodeId = 15;
         // id of the list of items being displayed (and the scrollbar)
-        internal static readonly uint AddonItemListNodeId = 139;
+        public static readonly uint AddonItemListNodeId = 139;
         // id of the scrollbar in the list of items
-        internal static readonly uint AddonItemScrollbarNodeId = 4;
+        public static readonly uint AddonItemScrollbarNodeId = 4;
         // id of the scroll button on the bar
-        internal static readonly uint AddonItemScrollButtonNodeId = 2;
+        public static readonly uint AddonItemScrollButtonNodeId = 2;
 
         // what items are needed from the marketboard listings
         private readonly HashSet<int> neededItemIndexes = [];

@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace BisBuddy.EventListeners.AddonEventListeners
 {
-    internal abstract class AddonEventListenerBase : EventListenerBase
+    public abstract class AddonEventListener : EventListener
     {
         public static readonly short HighlightStrength = 100;
         private readonly List<nint> customNodes = [];
@@ -17,7 +17,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
         public abstract string AddonName { get; }
         private bool allNodesUnmarked = false;
 
-        protected AddonEventListenerBase(Plugin plugin, bool configBool) : base(plugin)
+        protected AddonEventListener(Plugin plugin, bool configBool) : base(plugin)
         {
             SetListeningStatus(configBool);
         }

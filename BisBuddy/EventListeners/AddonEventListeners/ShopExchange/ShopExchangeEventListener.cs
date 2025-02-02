@@ -10,8 +10,8 @@ using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
 
 namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
 {
-    internal abstract class ShopExchangeEventListenerBase(Plugin plugin)
-        : AddonEventListenerBase(plugin, plugin.Configuration.HighlightShops)
+    public abstract class ShopExchangeEventListener(Plugin plugin)
+        : AddonEventListener(plugin, plugin.Configuration.HighlightShops)
     {
         // ADDON NODE IDS
         // list of items in the shop

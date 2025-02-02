@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace BisBuddy.Gear
 {
-    internal static class GearpieceTypeMapper
+    public static class GearpieceTypeMapper
     {
         private static readonly Dictionary<string, GearpieceType> Mapping = new(StringComparer.OrdinalIgnoreCase)
         {

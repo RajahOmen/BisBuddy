@@ -10,22 +10,22 @@ using System;
 namespace BisBuddy.EventListeners.AddonEventListeners
 {
     // marketboard
-    internal class ItemSearchResultEventListener(Plugin plugin)
-        : AddonEventListenerBase(plugin, plugin.Configuration.HighlightMarketboard)
+    public class ItemSearchResultEventListener(Plugin plugin)
+        : AddonEventListener(plugin, plugin.Configuration.HighlightMarketboard)
     {
         public override string AddonName => "ItemSearchResult";
 
         // ADDON NODE IDS
         // id of the text node for the list item name
-        internal static readonly uint AddonItemQualityImageNodeId = 3;
+        public static readonly uint AddonItemQualityImageNodeId = 3;
         // id of the hover highlight node
-        internal static readonly uint AddonHoverHighlightNodeId = 14;
+        public static readonly uint AddonHoverHighlightNodeId = 14;
         // id of the list of items being displayed (and the scrollbar)
-        internal static readonly uint AddonItemListNodeId = 26;
+        public static readonly uint AddonItemListNodeId = 26;
         // id of the scrollbar in the list of items
-        internal static readonly uint AddonItemScrollbarNodeId = 5;
+        public static readonly uint AddonItemScrollbarNodeId = 5;
         // id of the scroll button on the bar
-        internal static readonly uint AddonItemScrollButtonNodeId = 2;
+        public static readonly uint AddonItemScrollButtonNodeId = 2;
 
 
         // if nq or hq is needed for the selected item

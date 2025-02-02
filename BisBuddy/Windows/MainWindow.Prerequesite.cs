@@ -39,7 +39,7 @@ namespace BisBuddy.Windows
                                 ImGui.SetTooltip("Collection status locked. Inventory syncs will not uncollect");
                             }
                         }
-                        
+
                         ImGui.SameLine();
                     }
 

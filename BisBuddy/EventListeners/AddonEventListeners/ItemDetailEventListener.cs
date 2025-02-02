@@ -11,8 +11,8 @@ using System.Linq;
 
 namespace BisBuddy.EventListeners.AddonEventListeners
 {
-    internal unsafe class ItemDetailEventListener(Plugin plugin)
-        : AddonEventListenerBase(plugin, plugin.Configuration.AnnotateTooltips)
+    public unsafe class ItemDetailEventListener(Plugin plugin)
+        : AddonEventListener(plugin, plugin.Configuration.AnnotateTooltips)
     {
         public override string AddonName => "ItemDetail";
 

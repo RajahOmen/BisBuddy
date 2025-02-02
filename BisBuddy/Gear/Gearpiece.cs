@@ -30,7 +30,29 @@ namespace BisBuddy.Gear
         public bool IsCollected { get; private set; }
         public bool IsManuallyCollected { get; set; } = false; // If this item was manually marked as collected
         public bool IsObtainable => PrerequisiteItems.All(p => p.IsCollected);
-        public List<Materia> ItemMateria { get; set; }
+        public List<Materia> ItemMateria { get; init; }
+        private List<(Materia Materia, int Count)>? itemMateriaGrouped = null;
+        public List<(Materia Materia, int Count)>? ItemMateriaGrouped
+        {
+            get
+            {
+                itemMateriaGrouped ??= ItemMateria
+                    .GroupBy(m => new
+                    {
+                        //m.StatShortName,
+                        //m.StatQuantity,
+                        m.IsMelded,
+                        m.ItemId,
+                        //m.ItemName
+                    }).OrderBy(g => g.Key.IsMelded)
+                    .ThenByDescending(g => g.First().StatQuantity)
+                    .ThenBy(g => g.First().StatShortName)
+                    .Select(g => (g.First(), g.Count()))
+                    .ToList();
+                return itemMateriaGrouped;
+            }
+            private set { }
+        }
 
         public void SetCollected(bool collected, bool manualToggle)
         {

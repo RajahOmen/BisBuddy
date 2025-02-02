@@ -1,7 +1,7 @@
 
 namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
 {
-    internal class ShopExchangeItemEventListener(Plugin plugin) : ShopExchangeEventListenerBase(plugin)
+    public class ShopExchangeItemEventListener(Plugin plugin) : ShopExchangeEventListener(plugin)
     {
         // the type of shop this is (what do items in this shop cost?)
         public override string AddonName => "ShopExchangeItem";

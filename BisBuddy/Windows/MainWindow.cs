@@ -14,8 +14,8 @@ public partial class MainWindow : Window, IDisposable
 {
     private readonly Plugin plugin;
 
-    internal bool InventoryScanRunning = false;
-    internal int InventoryScanUpdateCount = -1;
+    public bool InventoryScanRunning = false;
+    public int InventoryScanUpdateCount = -1;
 
     private static Vector4 UnobtainedColor = new(1.0f, 0.2f, 0.2f, 1.0f);
     private static Vector4 ObtainedColor = new(0.2f, 1.0f, 0.2f, 1.0f);
@@ -66,7 +66,7 @@ public partial class MainWindow : Window, IDisposable
 
             ImGui.SameLine();
 
-            using (ImRaii.Disabled(InventoryScanRunning))
+            using (ImRaii.Disabled(InventoryScanRunning || plugin.Gearsets.Count == 0))
             {
                 if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.Sync, "Sync Inventory##scaninventory"))
                 {
