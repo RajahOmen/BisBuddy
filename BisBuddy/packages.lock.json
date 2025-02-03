@@ -29,13 +29,13 @@
           "Microsoft.Extensions.ObjectPool": "8.0.7"
         }
       },
-      "Lumina.Generated": {
+      "Lumina.Excel": {
         "type": "Direct",
-        "requested": "[5.30.2, )",
-        "resolved": "5.30.2",
-        "contentHash": "mteXbT2nLs5l2d+8tCiVedhwPjdgkMutZHiEFk44rt/1rVuv/xuq8OrO+zrHZ/WeQ9JNQTI+Eei7elLRPGn3Ig==",
+        "requested": "[7.1.3, )",
+        "resolved": "7.1.3",
+        "contentHash": "fEYaSEbRPknwpSyB4cSqXMUr9oRD7citBhOY3Ib5tZlKILvKPoCCNvorcn7CzaFvg5p7cQf/6+ec1DQPj0niFw==",
         "dependencies": {
-          "Lumina": "2.1.1"
+          "Lumina": "0.0.0-preview.0"
         }
       },
       "Microsoft.Extensions.ObjectPool": {
