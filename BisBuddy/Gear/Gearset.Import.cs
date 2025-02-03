@@ -122,11 +122,9 @@ namespace BisBuddy.Gear
         {
             try
             {
-                Services.Log.Verbose(sourceUrl);
                 var onlyImportSetIdx = sourceUrl.Contains(XivgearSetIndexBase)
                     ? int.Parse(sourceUrl.Split(XivgearSetIndexBase)[1])
                     : -1;
-                Services.Log.Verbose(onlyImportSetIdx.ToString());
 
                 var gearsets = new List<Gearset>();
                 using var client = new HttpClient();
@@ -141,8 +139,6 @@ namespace BisBuddy.Gear
                 using var jsonDoc = JsonDocument.Parse(jsonString);
                 var json = jsonDoc.RootElement;
 
-                Services.Log.Verbose(jsonString);
-
                 // Ignore links that are for pages with multiple sets
                 if (json.TryGetProperty("sets", out var sets))
                 {
@@ -154,7 +150,6 @@ namespace BisBuddy.Gear
                             setIdx++;
                             // importing a specific set, ignore the rest
                             if (onlyImportSetIdx >= 0 && setIdx != onlyImportSetIdx) continue;
-                            Services.Log.Verbose($"{setIdx} == {onlyImportSetIdx} ({setIdx == onlyImportSetIdx}) || onlyImportSetIdx <= 0 ({onlyImportSetIdx > 0})");
 
                             string? job = null;
                             if (
