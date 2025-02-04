@@ -248,12 +248,12 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
             // not visible
             if (
                 atkValues[index + AtkValueFilteredItemsListStartingIndex].Int
-                != AtkValueFilteredItemsListVisibleMaxValue
+                > AtkValueFilteredItemsListVisibleMaxValue
                 ) return -1;
 
             Services.Log.Verbose($"hic");
             var itemCount = atkValues[AtkValueItemCountIndex];
-            var zeroCount = 0;
+            var visibleCount = 0;
             for (var i = 0; i <= itemCount.Int; i++)
             {
                 var value = atkValues[i + AtkValueFilteredItemsListStartingIndex];
@@ -265,11 +265,11 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
                 }
 
                 // reached the index
-                if (i >= index) return zeroCount;
+                if (i >= index) return visibleCount;
 
                 // this index is displayed by the filter
-                if (value.UInt == AtkValueFilteredItemsListVisibleMaxValue)
-                    zeroCount++;
+                if (value.UInt <= AtkValueFilteredItemsListVisibleMaxValue)
+                    visibleCount++;
             }
 
             Services.Log.Verbose($"hid");
