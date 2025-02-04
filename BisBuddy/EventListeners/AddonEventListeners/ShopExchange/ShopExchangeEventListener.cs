@@ -194,8 +194,6 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
                 // shield found
                 shieldInAtkValues = true;
 
-                Services.Log.Verbose($"Indented shield found!");
-
                 // add if needed
                 if (Gearset.GetGearsetsNeedingItemById(endOfItemIdList.UInt, Plugin.Gearsets).Count > 0)
                 {
@@ -215,8 +213,6 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
                 var shieldOffset = shieldInAtkValues && i >= AddonShieldIndex
                     ? 1  // shield visible and idx after where shield goes
                     : 0; // either shield not visible or before where shield goes
-
-                Services.Log.Verbose($"Item {Plugin.ItemData.GetItemNameById(itemId)}");
 
                 if (Gearset.GetGearsetsNeedingItemById(itemId, Plugin.Gearsets).Count > 0)
                 {
@@ -240,24 +236,20 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
              * using the filter list data.
             */
 
-            Services.Log.Verbose($"hi");
             if (atkValues.Length <= AtkValueFilteredItemsListStartingIndex)
                 return -1;
 
-            Services.Log.Verbose($"hib");
             // not visible
             if (
                 atkValues[index + AtkValueFilteredItemsListStartingIndex].Int
                 > AtkValueFilteredItemsListVisibleMaxValue
                 ) return -1;
 
-            Services.Log.Verbose($"hic");
             var itemCount = atkValues[AtkValueItemCountIndex];
             var visibleCount = 0;
             for (var i = 0; i <= itemCount.Int; i++)
             {
                 var value = atkValues[i + AtkValueFilteredItemsListStartingIndex];
-                Services.Log.Verbose($"hi {i}");
                 if (value.Type != ValueType.UInt)
                 {
                     Services.Log.Error($"[{GetType().Name}] Filter list item type \"{value.Type}\" unexpected");
@@ -272,7 +264,6 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
                     visibleCount++;
             }
 
-            Services.Log.Verbose($"hid");
             // didnt find, must not display
             Services.Log.Warning($"[{GetType().Name}] No compressed index found for \"{index}\"");
             return -1;
