@@ -39,22 +39,13 @@ namespace BisBuddy.Gear
                 itemMateriaGrouped ??= ItemMateria
                     .GroupBy(m => new
                     {
-                        //m.StatShortName,
-                        //m.StatQuantity,
                         m.IsMelded,
                         m.ItemId,
-                        //m.ItemName
                     }).OrderBy(g => g.Key.IsMelded)
                     .ThenByDescending(g => g.First().StatQuantity)
                     .ThenBy(g => g.First().StatShortName)
                     .Select(g => (g.First(), g.Count()))
                     .ToList();
-
-                Services.Log.Verbose($"Gearpiece: {this.ItemName}");
-                foreach (var item in itemMateriaGrouped)
-                {
-                    Services.Log.Verbose($"item: {item.Materia.ItemName} isMelded: {item.Materia.IsMelded} cnt: {item.Count}");
-                }
                 return itemMateriaGrouped;
             }
             set
