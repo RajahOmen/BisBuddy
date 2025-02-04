@@ -62,6 +62,7 @@ namespace BisBuddy.ItemAssignment
 
                             var materiaToUnmeld = gearpiece.ItemMateria.Count(m => m.IsMelded);
                             gearpiece.ItemMateria.ForEach(m => m.IsMelded = false);
+                            gearpiece.ItemMateriaGrouped = null;
 
                             // toggled to uncollected, OR unmelded previously-melded materia
                             if (materiaToUnmeld > 0 || gearpieceUncollected) updatedGearpieces.Add(gearpiece);

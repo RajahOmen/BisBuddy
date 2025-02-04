@@ -49,9 +49,18 @@ namespace BisBuddy.Gear
                     .ThenBy(g => g.First().StatShortName)
                     .Select(g => (g.First(), g.Count()))
                     .ToList();
+
+                Services.Log.Verbose($"Gearpiece: {this.ItemName}");
+                foreach (var item in itemMateriaGrouped)
+                {
+                    Services.Log.Verbose($"item: {item.Materia.ItemName} isMelded: {item.Materia.IsMelded} cnt: {item.Count}");
+                }
                 return itemMateriaGrouped;
             }
-            private set { }
+            set
+            {
+                itemMateriaGrouped = value;
+            }
         }
 
         public void SetCollected(bool collected, bool manualToggle)
@@ -107,6 +116,7 @@ namespace BisBuddy.Gear
 
         public void MeldSingleMateria(uint materiaId)
         {
+            itemMateriaGrouped = null;
             for (var i = 0; i < ItemMateria.Count; i++)
             {
                 var materia = ItemMateria[i];
@@ -122,6 +132,7 @@ namespace BisBuddy.Gear
         public int MeldMultipleMateria(List<uint> materiaList)
         {
             if (materiaList.Count == 0) return 0;
+            itemMateriaGrouped = null;
 
             // copy, since this will be modified here
             materiaList = new List<uint>(materiaList);
@@ -175,6 +186,7 @@ namespace BisBuddy.Gear
 
         public void UnmeldSingleMateria(uint materiaId)
         {
+            itemMateriaGrouped = null;
             for (var i = 0; i < ItemMateria.Count; i++)
             {
                 var materia = ItemMateria[i];
@@ -185,61 +197,6 @@ namespace BisBuddy.Gear
                     break;
                 }
             }
-        }
-
-        public bool UpdateWithItem(uint itemId, List<uint> materiaList)
-        {
-            if (ItemId != itemId) return false;
-
-            var gearpieceUpdated = false;
-            // was this previously not collected?
-            if (!IsCollected)
-            {
-                gearpieceUpdated = true;
-                SetCollected(true, false);
-                Services.Log.Debug($"Marking \"{ItemName}\" as collected");
-            }
-
-            // update materia, if applicable
-            if (materiaList.Count > 0)
-            {
-                var meldedMateriaCount = ItemMateria.Where(m => m.IsMelded).Count();
-                var matchingMateria = Materia.GetMatchingMateria(ItemMateria, materiaList);
-
-                // current melds are better/as good as new item, don't replace
-                if (meldedMateriaCount > matchingMateria.Count) return gearpieceUpdated;
-
-                // break ties by stat quantity (Ex: keep [+54, +54] over [+36 +36])
-                if (meldedMateriaCount == matchingMateria.Count)
-                {
-                    var meldedMateriaStatTotal = ItemMateria.Sum(m => m.StatQuantity);
-                    var matchingMateriaStatTotal = matchingMateria.Sum(m => m.StatQuantity);
-                    if (meldedMateriaStatTotal >= matchingMateriaStatTotal) return gearpieceUpdated;
-                }
-
-                // gearpiece will be updated
-                gearpieceUpdated = true;
-
-                // new melds better than previous, unmeld old materia
-                foreach (var materia in ItemMateria) materia.IsMelded = false;
-
-                // meld new materiad
-                foreach (var materia in matchingMateria) materia.IsMelded = true;
-            }
-
-            return gearpieceUpdated;
-        }
-
-        public bool IsItem(uint itemId, List<uint> materiaList)
-        {
-            if (ItemId != itemId) return false;
-
-            var meldedMateriaList = ItemMateria.Where(m => m.IsMelded).Select(m => m.ItemId).ToList();
-
-            // check if all materia match by sorting and comparing m1[i] == m2[i]
-            var eqLists = materiaList.OrderBy(m => m).SequenceEqual(meldedMateriaList.OrderBy(m => m));
-
-            return eqLists && materiaList.Count == meldedMateriaList.Count;
         }
     }
 }
