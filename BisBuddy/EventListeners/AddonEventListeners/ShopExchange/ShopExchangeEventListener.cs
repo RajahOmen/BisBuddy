@@ -231,9 +231,8 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
              * When a filter is applied to the shop, the list of items in AtkValues remains the same. 
              * However, the components to be filtered are no longer rendered, throwing the ListItemIndex
              * of a ListItemRenderer component node off from that list. To fix this, there is a list of
-             * ints in the AtkValues for each of the items that indicates if it is shown or not
-             * (0 if shown, 2 if not). This method converts a unfiltered index to the filtered one
-             * using the filter list data.
+             * ints in the AtkValues for each of the items that indicates if it is shown or not.
+             * This method converts a unfiltered index to the filtered one using the filter list data.
             */
 
             if (atkValues.Length <= AtkValueFilteredItemsListStartingIndex)
