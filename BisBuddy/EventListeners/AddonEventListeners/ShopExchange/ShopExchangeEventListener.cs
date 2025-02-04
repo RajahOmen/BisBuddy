@@ -1,4 +1,5 @@
 using BisBuddy.Gear;
+using BisBuddy.Items;
 using BisBuddy.Util;
 using Dalamud.Game.Addon.Lifecycle;
 using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
@@ -41,8 +42,8 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
         protected abstract int AtkValueItemIdListStartingIndex { get; }
         // index of the first element in the filter display list
         protected virtual int AtkValueFilteredItemsListStartingIndex { get; } = 1551;
-        // value for the filter display list indicating item is visible
-        protected virtual uint AtkValueFilteredItemsListVisibleValue { get; } = 0;
+        // max value for the filter display list indicating item is visible (diff shops have diff values)
+        protected virtual uint AtkValueFilteredItemsListVisibleMaxValue { get; } = 1;
 
         private readonly HashSet<int> neededShopItemIndexes = [];
         private bool shieldInAtkValues = false;
@@ -187,7 +188,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
                 endOfItemIdList.Type == ValueType.UInt // has another value at the end
                 && endOfItemIdList.UInt > 0             // shield at the end
                 && endOfItemFilteredList.Type == ValueType.UInt // visibility value for shield
-                && endOfItemFilteredList.UInt == AtkValueFilteredItemsListVisibleValue // is visible
+                && endOfItemFilteredList.UInt <= AtkValueFilteredItemsListVisibleMaxValue // is visible
                 )
             {
                 // shield found
@@ -214,9 +215,13 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
                 var shieldOffset = shieldInAtkValues && i >= AddonShieldIndex
                     ? 1  // shield visible and idx after where shield goes
                     : 0; // either shield not visible or before where shield goes
+
+                Services.Log.Verbose($"Item {Plugin.ItemData.GetItemNameById(itemId)}");
+
                 if (Gearset.GetGearsetsNeedingItemById(itemId, Plugin.Gearsets).Count > 0)
                 {
                     var filteredIndex = getFilteredIndex(i, atkValues);
+                    Services.Log.Verbose($"Needed at idx: {filteredIndex}");
                     if (filteredIndex >= 0) neededShopItemIndexes.Add(filteredIndex + shieldOffset);
                 }
             }
@@ -235,20 +240,24 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
              * using the filter list data.
             */
 
+            Services.Log.Verbose($"hi");
             if (atkValues.Length <= AtkValueFilteredItemsListStartingIndex)
                 return -1;
 
+            Services.Log.Verbose($"hib");
             // not visible
             if (
                 atkValues[index + AtkValueFilteredItemsListStartingIndex].Int
-                != AtkValueFilteredItemsListVisibleValue
+                != AtkValueFilteredItemsListVisibleMaxValue
                 ) return -1;
 
+            Services.Log.Verbose($"hic");
             var itemCount = atkValues[AtkValueItemCountIndex];
             var zeroCount = 0;
             for (var i = 0; i <= itemCount.Int; i++)
             {
                 var value = atkValues[i + AtkValueFilteredItemsListStartingIndex];
+                Services.Log.Verbose($"hi {i}");
                 if (value.Type != ValueType.UInt)
                 {
                     Services.Log.Error($"[{GetType().Name}] Filter list item type \"{value.Type}\" unexpected");
@@ -259,10 +268,11 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
                 if (i >= index) return zeroCount;
 
                 // this index is displayed by the filter
-                if (value.UInt == AtkValueFilteredItemsListVisibleValue)
+                if (value.UInt == AtkValueFilteredItemsListVisibleMaxValue)
                     zeroCount++;
             }
 
+            Services.Log.Verbose($"hid");
             // didnt find, must not display
             Services.Log.Warning($"[{GetType().Name}] No compressed index found for \"{index}\"");
             return -1;
