@@ -8,14 +8,17 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
 
         // ADDON ATKVALUE INDEXES
         protected override int AtkValueItemCountIndex => 4;
-        protected override int AtkValueItemNameListStartingIndex => 87;
         protected override int AtkValueItemIdListStartingIndex => 1063;
+        protected override int AtkValueFilteredItemsListStartingIndex => 1551;
+        protected override uint AtkValueFilteredItemsListVisibleMaxValue => 1;
 
         // ADDON NODE IDS
         protected override uint AddonShopItemListNodeId => 19;
         protected override uint AddonShopHoverNodeId => 10;
+        protected override uint AddonShopShieldHoverNodeId => 13;
         protected override uint AddonCustomHighlightNodeId => 420;
         protected override uint AddonScrollbarNodeId => 6;
         protected override uint AddonScrollbarButtonNodeId => 2;
+        protected override uint AddonShieldInfoResNodeId => 3;
     }
 }
