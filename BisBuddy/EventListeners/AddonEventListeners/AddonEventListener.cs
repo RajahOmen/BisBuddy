@@ -10,7 +10,6 @@ namespace BisBuddy.EventListeners.AddonEventListeners
 {
     public abstract class AddonEventListener : EventListener
     {
-        public readonly short HighlightStrength = 100;
         private readonly List<nint> customNodes = [];
         private readonly List<nint> highlightedNodes = [];
         protected IReadOnlyList<nint> CustomNodes => customNodes.AsReadOnly();
@@ -20,8 +19,6 @@ namespace BisBuddy.EventListeners.AddonEventListeners
 
         protected AddonEventListener(Plugin plugin, bool configBool) : base(plugin)
         {
-            HighlightStrength = (short)(255 * plugin.Configuration.HighlightColor.Y);
-            Services.Log.Verbose($"Highlight strength: {HighlightStrength}");
             SetListeningStatus(configBool);
         }
 
