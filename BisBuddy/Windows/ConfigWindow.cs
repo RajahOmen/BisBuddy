@@ -1,7 +1,9 @@
 using Dalamud.Interface.Components;
+using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
 using System;
+using System.Numerics;
 
 namespace BisBuddy.Windows;
 
@@ -26,6 +28,46 @@ public class ConfigWindow : Window, IDisposable
     {
         ImGui.Text("Item Highlighting");
         ImGui.Spacing();
+
+        using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(3.0f, 4.0f)))
+        {
+            // COLOR PICKER
+            var existingColor = configuration.HighlightColor;
+            if (ImGui.ColorButton($"Color needed items are highlighted in###ColorPickerButton", configuration.HighlightColor))
+            {
+                ImGui.OpenPopup($"###ColorPickerPopup");
+            }
+
+            using (var popup = ImRaii.Popup($"###ColorPickerPopup"))
+            {
+                if (popup)
+                {
+                    if (ImGui.ColorPicker4(
+                        $"###ColorPicker",
+                        ref existingColor,
+                        (
+                            ImGuiColorEditFlags.NoPicker
+                            | ImGuiColorEditFlags.AlphaBar
+                            | ImGuiColorEditFlags.NoSidePreview
+                            | ImGuiColorEditFlags.DisplayRGB
+                            | ImGuiColorEditFlags.NoBorder
+                        )))
+                    {
+                        if (existingColor != configuration.HighlightColor)
+                        {
+                            Services.Log.Verbose($"color picked");
+                            configuration.HighlightColor = existingColor;
+                            plugin.SaveGearsetsWithUpdate();
+                        }
+                    }
+                }
+            }
+            ImGui.SameLine();
+            ImGui.TextUnformatted("Highlight Color");
+        }
+        ImGui.SameLine();
+        ImGuiComponents.HelpMarker("What color to highlight needed items in");
+
 
         // NEED GREED
         var highlightNeedGreed = configuration.HighlightNeedGreed;
@@ -126,7 +168,5 @@ public class ConfigWindow : Window, IDisposable
         }
         ImGui.SameLine();
         ImGuiComponents.HelpMarker($"When logging in, adding new gearsets, or loading {Plugin.PluginName}, update gearsets with items in inventories (inventory, armoury chest, equipped)");
-
-        ImGui.Spacing();
     }
 }

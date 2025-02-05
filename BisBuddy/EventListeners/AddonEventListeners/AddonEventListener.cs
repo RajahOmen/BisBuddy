@@ -4,12 +4,13 @@ using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 
 namespace BisBuddy.EventListeners.AddonEventListeners
 {
     public abstract class AddonEventListener : EventListener
     {
-        public static readonly short HighlightStrength = 100;
+        public readonly short HighlightStrength = 100;
         private readonly List<nint> customNodes = [];
         private readonly List<nint> highlightedNodes = [];
         protected IReadOnlyList<nint> CustomNodes => customNodes.AsReadOnly();
@@ -19,6 +20,8 @@ namespace BisBuddy.EventListeners.AddonEventListeners
 
         protected AddonEventListener(Plugin plugin, bool configBool) : base(plugin)
         {
+            HighlightStrength = (short)(255 * plugin.Configuration.HighlightColor.Y);
+            Services.Log.Verbose($"Highlight strength: {HighlightStrength}");
             SetListeningStatus(configBool);
         }
 
@@ -40,6 +43,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
         protected override void register()
         {
             Plugin.OnGearsetsUpdate += handleManualUpdate;
+            Plugin.OnGearsetsUpdate += handleUpdateHighlightColor;
             Services.AddonLifecycle.RegisterListener(AddonEvent.PreFinalize, AddonName, handlePreFinalize);
             registerAddonListeners();
 
@@ -55,11 +59,20 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             if (IsEnabled) // only perform these if it is enabled
             {
                 Plugin.OnGearsetsUpdate -= handleManualUpdate;
+                Plugin.OnGearsetsUpdate -= handleUpdateHighlightColor;
                 Services.AddonLifecycle.UnregisterListener(handlePreFinalize);
                 unregisterAddonListeners();
             }
             unmarkAllNodes();
             destroyNodes();
+        }
+
+        private unsafe void handleUpdateHighlightColor()
+        {
+            foreach (var node in highlightedNodes)
+            {
+                UiHelper.SetNodeColor((AtkResNode*)node, Plugin.Configuration.HighlightColor, true);
+            }
         }
 
         private void handlePreFinalize(AddonEvent type, AddonArgs args)
@@ -97,7 +110,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
 
         private unsafe bool setAddGreen(AtkResNode* node, bool toEnable)
         {
-            var nodeHighlighted = node->AddGreen == HighlightStrength;
+            var nodeHighlighted = highlightedNodes.Contains((nint)node);
 
             // remove if unhighlighting
             if (highlightedNodes.Contains((nint)node) && !toEnable)
@@ -107,13 +120,18 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             if (!highlightedNodes.Contains((nint)node) && toEnable)
                 highlightedNodes.Add((nint)node);
 
-            if (nodeHighlighted == toEnable) return false; // already in the desired state
+            if (nodeHighlighted == toEnable)
+                return false; // already in the desired state
 
             if (toEnable)
                 allNodesUnmarked = false; // marking a node here, not all unmarked
 
-            var value = toEnable ? HighlightStrength : (short)0;
-            node->AddGreen = value;
+            var color = toEnable
+                ? Plugin.Configuration.HighlightColor
+                : new Vector4(0.0f, 0.0f, 0.0f, 1.0f); // reset color, eqv. to (0, 0, 0, 255)
+
+            UiHelper.SetNodeColor(node, color, true);
+
             return true;
         }
 
@@ -128,6 +146,8 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             }
 
             allNodesUnmarked &= !toEnable; // if any node is enabled, at least one node is marked
+
+            UiHelper.SetNodeColor(customNode, Plugin.Configuration.HighlightColor, false);
 
             if (customNode->IsVisible() == toEnable) return false;
 
@@ -161,11 +181,10 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                 {
                     var node = (AtkResNode*)highlightedNodes[0];
 
-                    highlightedNodes.RemoveAt(0);
+                    Services.Log.Verbose($"removing color from {node->NodeId}");
 
-                    if (node == null) continue;
-
-                    setAddGreen(node, false);
+                    if (node != null)
+                        setAddGreen(node, false);
                 }
                 if (highlightedNodesCount > 0)
                     Services.Log.Verbose($"Unhighlighted all {highlightedNodesCount} node(s) in \"{AddonName}\"");
