@@ -1,5 +1,4 @@
 using BisBuddy.Gear;
-using BisBuddy.Items;
 using BisBuddy.Util;
 using Dalamud.Game.Addon.Lifecycle;
 using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
@@ -181,14 +180,14 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
             }
 
             // handle INDENTED shields
-            var itemListCount = atkValues[AtkValueItemCountIndex].Int;
-            var endOfItemIdList = atkValues[AtkValueItemIdListStartingIndex + itemListCount];
-            var endOfItemFilteredList = atkValues[AtkValueFilteredItemsListStartingIndex + itemListCount];
+            var endOfItemIdList = atkValues[maxItemIndex];
+            var endOfItemFilteredList = atkValues[AtkValueFilteredItemsListStartingIndex + shopItemCount];
             if (
                 endOfItemIdList.Type == ValueType.UInt // has another value at the end
                 && endOfItemIdList.UInt > 0             // shield at the end
                 && endOfItemFilteredList.Type == ValueType.UInt // visibility value for shield
                 && endOfItemFilteredList.UInt <= AtkValueFilteredItemsListVisibleMaxValue // is visible
+                && Plugin.ItemData.ItemIsShield(endOfItemIdList.UInt) // item is a shield
                 )
             {
                 // shield found
@@ -217,7 +216,6 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
                 if (Gearset.GetGearsetsNeedingItemById(itemId, Plugin.Gearsets).Count > 0)
                 {
                     var filteredIndex = getFilteredIndex(i, atkValues);
-                    Services.Log.Verbose($"Needed at idx: {filteredIndex}");
                     if (filteredIndex >= 0) neededShopItemIndexes.Add(filteredIndex + shieldOffset);
                 }
             }

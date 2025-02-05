@@ -271,5 +271,13 @@ namespace BisBuddy.Items
                 false
                 );
         }
+
+        public bool ItemIsShield(uint itemId)
+        {
+            if (!ItemSheet.TryGetRow(itemId, out var itemRow)) return false;
+
+            // item is equippable to only the shield slot
+            return itemRow.EquipSlotCategory.RowId == 2u;
+        }
     }
 }
