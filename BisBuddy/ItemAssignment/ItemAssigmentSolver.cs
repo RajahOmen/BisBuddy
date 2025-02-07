@@ -207,8 +207,8 @@ namespace BisBuddy.ItemAssignment
                 {
                     var gearpiece = gearset.Gearpieces[gearpieceIdx];
 
-                    // already assigned in gearpiece assignment solution, don't add this to any group
-                    if (assignedGearpieces.Contains(gearpiece)) continue;
+                    // already assigned in gearpiece assignment solution or is manually collected, don't add this to any group
+                    if (assignedGearpieces.Contains(gearpiece) || gearpiece.IsManuallyCollected) continue;
 
                     foreach (var prerequesite in gearpiece.PrerequisiteItems)
                     {
