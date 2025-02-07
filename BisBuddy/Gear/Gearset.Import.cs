@@ -243,8 +243,8 @@ namespace BisBuddy.Gear
 
                 // xivgear only provides NQ items, convert to HQ
                 var gearpieceId = itemData.ConvertItemIdToHq(id.GetUInt32());
-                var gearpieceName = itemData.GetItemNameById(id.GetUInt32());
-
+                var gearpieceName = itemData.GetItemNameById(gearpieceId);
+                
                 List<Materia> materiaList = [];
 
                 if (slot.Value.TryGetProperty("materia", out var materiaArray))
