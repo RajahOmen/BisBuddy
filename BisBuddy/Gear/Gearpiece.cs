@@ -82,15 +82,15 @@ namespace BisBuddy.Gear
 
 
         // return the number of this item needed for this gearpiece
-        public int NeedsItemId(uint id, bool includeCollectedPrereqs)
+        public int NeedsItemId(uint id, bool ignoreCollected, bool includeCollectedPrereqs)
         {
             // Calculate how many of this item are needed as materia (assume item is materia)
             var neededAsMateriaCount = ItemMateria
-                .Where(materia => !materia.IsMelded && id == materia.ItemId)
+                .Where(materia => (!materia.IsMelded || !ignoreCollected) && id == materia.ItemId)
                 .Count();
 
             // If this item is marked as collected, only way item is needed is if it is materia
-            if (IsCollected) return neededAsMateriaCount;
+            if (IsCollected && ignoreCollected) return neededAsMateriaCount;
 
             // is this the item we need
             if (id == ItemId) return 1;
@@ -99,7 +99,7 @@ namespace BisBuddy.Gear
             var neededAsPrereqCount =
                 includeCollectedPrereqs
                 ? PrerequisiteItems.Where(i => i.ItemId == id).Count()
-                : PrerequisiteItems.Where(i => i.ItemId == id && !i.IsCollected).Count();
+                : PrerequisiteItems.Where(i => i.ItemId == id && (!i.IsCollected || !ignoreCollected)).Count();
 
             // If the item is one of the prerequisites. If not, returns 0
             return neededAsMateriaCount + neededAsPrereqCount;

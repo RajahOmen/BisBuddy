@@ -5,7 +5,12 @@ namespace BisBuddy.Gear
 {
     public partial class Gearset
     {
-        public static List<(Gearset gearset, int countNeeded)> GetGearsetsNeedingItemById(uint itemId, List<Gearset> gearsets, bool includeCollectedPrereqs = false)
+        public static List<(Gearset gearset, int countNeeded)> GetGearsetsNeedingItemById(
+            uint itemId,
+            List<Gearset> gearsets,
+            bool ignoreCollected = true,
+            bool includeCollectedPrereqs = false
+            )
         {
             // includeCollectedPrereqs: true  - for internal sources: highlight them in inventory to show they are needed to upgrade with
             //                          false - for external sources: don't highlight, we already have enough in inventories
@@ -15,7 +20,7 @@ namespace BisBuddy.Gear
             {
                 if (!gearset.IsActive) continue;
 
-                var satisfiedGearpieces = gearset.GetGearpiecesNeedingItem(itemId, includeCollectedPrereqs);
+                var satisfiedGearpieces = gearset.GetGearpiecesNeedingItem(itemId, ignoreCollected, includeCollectedPrereqs);
                 if (satisfiedGearpieces.Count > 0)
                 {
                     satisfiedGearsets.Add((gearset, satisfiedGearpieces.Sum(g => g.countNeeded)));
