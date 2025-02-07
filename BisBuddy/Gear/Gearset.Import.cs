@@ -241,10 +241,10 @@ namespace BisBuddy.Gear
 
                 var gearpieceType = GearpieceTypeMapper.Parse(slot.Name);
 
-                var gearpieceId = itemData.ConvertItemIdToHq(id.GetUInt32());
                 // xivgear only provides NQ items, convert to HQ
-                gearpieceId = itemData.ConvertItemIdToHq(gearpieceId);
-                var gearpieceName = itemData.GetItemNameById(gearpieceId);
+                var gearpieceId = itemData.ConvertItemIdToHq(id.GetUInt32());
+                var gearpieceName = itemData.GetItemNameById(id.GetUInt32());
+
                 List<Materia> materiaList = [];
 
                 if (slot.Value.TryGetProperty("materia", out var materiaArray))
@@ -266,7 +266,7 @@ namespace BisBuddy.Gear
 
                 var gearpiece = new Gearpiece(
                     gearpieceId,
-                    itemData.GetItemNameById(gearpieceId),
+                    gearpieceName,
                     gearpieceType,
                     itemData.BuildGearpiecePrerequesites(gearpieceId),
                     materiaList
