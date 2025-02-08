@@ -136,7 +136,7 @@ public partial class MainWindow : Window, IDisposable
                 Services.Log.Verbose($"Removed gearset {gearsetIndex}");
                 gearsets.RemoveAt(gearsetIndex);
             }
-            plugin.SaveGearsetsWithUpdate();
+            plugin.SaveGearsetsWithUpdate(true);
         }
     }
 

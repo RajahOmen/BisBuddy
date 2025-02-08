@@ -20,8 +20,7 @@ namespace BisBuddy.ItemAssignment
         private static readonly int GearpieceIndexScoreScalar = -1;
 
         private List<Materia> materiaList = [];
-        private readonly HashSet<Gearset> gearsets = [];
-        private readonly ItemData itemData;
+        public readonly HashSet<Gearset> Gearsets = [];
         private readonly int minGearpieceIdx;
 
         public DemandGroupType Type => DemandGroupType.Gearpiece;
@@ -48,17 +47,15 @@ namespace BisBuddy.ItemAssignment
         public GearpieceGroup(
             Gearpiece gearpiece,
             Gearset gearset,
-            int gearpieceIdx,
-            ItemData itemData
+            int gearpieceIdx
             )
         {
             ItemId = gearpiece.ItemId;
             MateriaList = new List<Materia>(gearpiece.ItemMateria);
             Gearpieces = [gearpiece];
-            gearsets = [gearset];
+            Gearsets = [gearset];
             minGearpieceIdx = gearpieceIdx;
             IsManuallyCollected = gearpiece.IsManuallyCollected;
-            this.itemData = itemData;
         }
 
         public bool AddMatchingGearpiece(Gearpiece gearpiece, Gearset gearset)
@@ -83,7 +80,7 @@ namespace BisBuddy.ItemAssignment
                 return false;
             }
 
-            if (gearsets.Contains(gearset))
+            if (Gearsets.Contains(gearset))
             {
                 // gearset already added, return false
                 return false;
@@ -91,17 +88,15 @@ namespace BisBuddy.ItemAssignment
 
             // ids and materia match, add it to group and return true
             Gearpieces.Add(gearpiece);
-            gearsets.Add(gearset);
+            Gearsets.Add(gearset);
             IsManuallyCollected |= gearpiece.IsManuallyCollected;
 
             return true;
         }
 
         // the edge score from candidate->gearpiece group. Values materia count first, then materia stat quantity
-        public int CandidateEdgeWeight(GameInventoryItem candidate)
+        public int CandidateEdgeWeight(uint candidateId, List<Materia> candidateMateria)
         {
-            var candidateMateria = itemData.GetItemMateria(candidate);
-            var candidateId = ItemData.GameInventoryItemId(candidate);
             // candidate item id must match this group's item id, else no edge
             if (candidateId != ItemId) return ItemAssigmentSolver.NoEdgeWeightValue;
 

@@ -47,7 +47,7 @@ namespace BisBuddy
                     // add ALL active gearsets to solver (not just ones being updated)
                     var activeGearsets = Gearsets.Where(g => g.IsActive).ToList();
 
-                    var solver = new ItemAssigmentSolver(activeGearsets, itemsList, ItemData);
+                    var solver = new ItemAssigmentSolver(activeGearsets, itemsList, ItemData, Configuration.StrictMateriaMatching);
 
                     var solveResult = solver.Solve();
 
@@ -57,7 +57,7 @@ namespace BisBuddy
 
                     if (updatedGearpieces.Count > 0)
                     {
-                        SaveGearsetsWithUpdate();
+                        SaveGearsetsWithUpdate(false);
                     }
                     MainWindow.InventoryScanUpdateCount = updatedGearpieces.Count;
                 }

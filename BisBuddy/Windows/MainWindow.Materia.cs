@@ -50,7 +50,7 @@ namespace BisBuddy.Windows
                             gearpiece.MeldSingleMateria(materiaGroup.Materia.ItemId);
                         }
 
-                        plugin.SaveGearsetsWithUpdate();
+                        plugin.SaveGearsetsWithUpdate(true);
                     }
                     if (ImGui.IsItemHovered()) ImGui.SetTooltip($"{meldVerb} {materiaGroup.Materia.ItemName}");
                     if (ImGui.IsItemHovered()) ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);

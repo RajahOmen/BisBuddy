@@ -49,7 +49,7 @@ namespace BisBuddy.Windows
                         {
                             prereq.SetCollected(!prereq.IsCollected, true);
                             Services.Log.Debug($"Set \"{parentGearpiece.ItemName}\" prereq \"{prereq.ItemName}\" to {(prereq.IsCollected ? "collected" : "not collected")}");
-                            plugin.SaveGearsetsWithUpdate();
+                            plugin.SaveGearsetsWithUpdate(true);
                         }
                     }
                 }

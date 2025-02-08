@@ -227,10 +227,10 @@ public sealed partial class Plugin : IDalamudPlugin
         OnSelectedMeldPlanIdxChange?.Invoke(newIdx);
     }
 
-    public void SaveGearsetsWithUpdate()
+    public void SaveGearsetsWithUpdate(bool pluginChange = false)
     {
         // save gearsets to configuration and trigger update event
-        Configuration.Save();
+        SaveConfiguration(pluginChange);
         TriggerGearsetsUpdate();
     }
 
@@ -267,5 +267,16 @@ public sealed partial class Plugin : IDalamudPlugin
             Type = XivChatType.Echo,
         };
         Services.ChatGui.Print(entry);
+    }
+
+    public void SaveConfiguration(bool pluginUpdate = false)
+    {
+        if (Configuration.PluginUpdateInventoryScan && pluginUpdate)
+        {
+            UpdateFromInventory(Gearsets);
+        } else
+        {
+            Configuration.Save();
+        }
     }
 }

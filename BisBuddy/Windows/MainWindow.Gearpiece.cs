@@ -34,7 +34,7 @@ namespace BisBuddy.Windows
                     {
                         gearpiece.SetCollected(gearpieceCollected, true);
                         Services.Log.Debug($"Set \"{gearset.Name}\" gearpiece \"{gearpiece.ItemName}\" to {(gearpieceCollected ? "collected" : "not collected")}");
-                        plugin.SaveGearsetsWithUpdate();
+                        plugin.SaveGearsetsWithUpdate(true);
                     }
                 }
                 if (ImGui.IsItemHovered())

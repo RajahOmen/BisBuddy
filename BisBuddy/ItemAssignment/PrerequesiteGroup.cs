@@ -1,6 +1,4 @@
 using BisBuddy.Gear;
-using BisBuddy.Items;
-using Dalamud.Game.Inventory;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,7 +28,7 @@ namespace BisBuddy.ItemAssignment
         public readonly int minGearpieceIdx;
         public int minRemainingPrereqs;
         private List<Materia> materiaList = [];
-        private readonly HashSet<Gearset> gearsets = [];
+        public readonly HashSet<Gearset> Gearsets = [];
 
         public List<Materia> MateriaList
         {
@@ -53,7 +51,7 @@ namespace BisBuddy.ItemAssignment
         {
             ItemId = gearpiecePrerequesite.ItemId;
             GearpiecePrerequesites = [gearpiecePrerequesite];
-            gearsets = [gearset];
+            Gearsets = [gearset];
             MateriaList = new List<Materia>(gearpieceMateria);
             IsManuallyCollected = gearpiecePrerequesite.IsManuallyCollected;
             minGearpieceIdx = gearpieceIdx;
@@ -98,7 +96,7 @@ namespace BisBuddy.ItemAssignment
                 return false;
             }
 
-            if (gearsets.Contains(gearset))
+            if (Gearsets.Contains(gearset))
             {
                 // gearset already added, return false
                 return false;
@@ -106,7 +104,7 @@ namespace BisBuddy.ItemAssignment
 
             // ids and materia match, add it to group and return true
             GearpiecePrerequesites.Add(prereq);
-            gearsets.Add(gearset);
+            Gearsets.Add(gearset);
             addQuantityCounts(prereq);
             IsManuallyCollected |= prereq.IsManuallyCollected;
             minRemainingPrereqs = Math.Min(prereqGearpiece.PrerequisiteItems.Where(p => !p.IsCollected).Count(), minRemainingPrereqs);
@@ -114,10 +112,8 @@ namespace BisBuddy.ItemAssignment
             return true;
         }
 
-        public int CandidateEdgeWeight(GameInventoryItem candidate)
+        public int CandidateEdgeWeight(uint candidateId, List<Materia> candidateMateria)
         {
-            var candidateId = ItemData.GameInventoryItemId(candidate);
-
             var prereqsSatisfiedByCandidate = itemIdPrereqCounts.GetValueOrDefault(candidateId, 0);
 
             if (prereqsSatisfiedByCandidate == 0) return ItemAssigmentSolver.NoEdgeWeightValue;
