@@ -2,6 +2,7 @@ using BisBuddy.Gear;
 using Dalamud.Interface;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility.Raii;
+using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using ImGuiNET;
 using System;
 using System.Linq;
@@ -13,7 +14,7 @@ namespace BisBuddy.Windows
     {
         private static readonly Vector4 AlmostObtained = new(1.0f, 1.0f, 0.2f, 1.0f);
 
-        private void drawGearpiece(Gearpiece gearpiece, Gearset gearset)
+        private unsafe void drawGearpiece(Gearpiece gearpiece, Gearset gearset)
         {
             var gearpieceCollected = gearpiece.IsCollected;
             var gearpieceManuallyCollected = gearpiece.IsManuallyCollected;
@@ -50,11 +51,12 @@ namespace BisBuddy.Windows
 
                 ImGui.SameLine();
 
-                if (ImGuiComponents.IconButton(FontAwesomeIcon.ExternalLinkAlt))
+                if (ImGuiComponents.IconButton(FontAwesomeIcon.Search))
                 {
-                    Plugin.LinkItemById(gearpiece.ItemId);
+                    ItemFinderModule.Instance()->SearchForItem(gearpiece.ItemId, true);
+                    //Plugin.LinkItemById(gearpiece.ItemId);
                 }
-                if (ImGui.IsItemHovered()) ImGui.SetTooltip("Link item in chat");
+                if (ImGui.IsItemHovered()) ImGui.SetTooltip("Search for Item in Inventories");
 
                 ImGui.SameLine();
             }
