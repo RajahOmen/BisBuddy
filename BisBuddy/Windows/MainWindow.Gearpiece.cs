@@ -6,6 +6,7 @@ using ImGuiNET;
 using System;
 using System.Linq;
 using System.Numerics;
+using BisBuddy.Resources;
 
 namespace BisBuddy.Windows
 {
@@ -42,9 +43,9 @@ namespace BisBuddy.Windows
                     var tooltip =
                         gearpieceCollected
                         ? gearpieceManuallyCollected
-                        ? "Collection status locked. Inventory syncs will not uncollect"
-                        : "Mark as Not Collected"
-                        : "Lock as Collected";
+                        ? Resource.ManuallyCollectedTooltip
+                        : Resource.AutomaticallyCollectedTooltip
+                        : Resource.UncollectedTooltip;
                     ImGui.SetTooltip(tooltip);
                 }
 
