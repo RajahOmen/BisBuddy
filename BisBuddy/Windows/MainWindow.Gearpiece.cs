@@ -52,11 +52,9 @@ namespace BisBuddy.Windows
                 ImGui.SameLine();
 
                 if (ImGuiComponents.IconButton(FontAwesomeIcon.Search))
-                {
                     ItemFinderModule.Instance()->SearchForItem(gearpiece.ItemId, true);
-                    //Plugin.LinkItemById(gearpiece.ItemId);
-                }
-                if (ImGui.IsItemHovered()) ImGui.SetTooltip("Search for Item in Inventories");
+                if (ImGui.IsItemHovered())
+                    ImGui.SetTooltip("Search for Item in Inventories");
 
                 ImGui.SameLine();
             }
