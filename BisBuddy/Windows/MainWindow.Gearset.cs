@@ -106,7 +106,9 @@ namespace BisBuddy.Windows
                     if (ImGui.Checkbox("###collect_all_gearpieces", ref isAllCollected))
                     {
                         foreach (var gearpiece in gearset.Gearpieces) gearpiece.SetCollected(isAllCollected, true);
-                        plugin.SaveGearsetsWithUpdate(true);
+
+                        // don't update here. Creates issues with being unable to unassign pieces reliably due to no manual lock for uncollected.
+                        plugin.SaveGearsetsWithUpdate(false);
                     }
                 }
                 if (ImGui.IsItemHovered())

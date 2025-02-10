@@ -35,7 +35,9 @@ namespace BisBuddy.Windows
                     {
                         gearpiece.SetCollected(gearpieceCollected, true);
                         Services.Log.Debug($"Set \"{gearset.Name}\" gearpiece \"{gearpiece.ItemName}\" to {(gearpieceCollected ? "collected" : "not collected")}");
-                        plugin.SaveGearsetsWithUpdate(true);
+
+                        // don't update here. Creates issues with being unable to unassign pieces reliably due to no manual lock for uncollected.
+                        plugin.SaveGearsetsWithUpdate(false);
                     }
                 }
                 if (ImGui.IsItemHovered())
