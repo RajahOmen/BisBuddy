@@ -4,6 +4,7 @@ using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility.Raii;
 using ImGuiNET;
 using System.Numerics;
+using BisBuddy.Resources;
 
 namespace BisBuddy.Windows
 {
@@ -39,14 +40,18 @@ namespace BisBuddy.Windows
                 if (ImGui.IsItemHovered())
                 {
                     updateGearsetHovered(gearset);
-                    var tooltip = isActive ? "Disable Gearset" : "Enable Gearset";
+                    var tooltip = isActive
+                        ? Resource.EnabledGearsetTooltip
+                        : Resource.DisabledGearsetTooltip;
                     ImGui.SetTooltip(tooltip);
                 }
 
                 ImGui.SameLine();
 
                 var shiftHeld = ImGui.IsKeyDown(ImGuiKey.LeftShift) || ImGui.IsKeyDown(ImGuiKey.RightShift);
-                var deleteTooltipText = shiftHeld ? "Click to quick delete" : "Shift+Click to quick delete";
+                var deleteTooltipText = shiftHeld
+                    ? Resource.DeleteGearsetTooltipQuick
+                    : Resource.DeleteGearsetTooltip;
                 var lightRed = new Vector4(0.5f, 0.2f, 0.2f, 1.0f);
                 var darkRed = new Vector4(0.6f, 0.15f, 0.15f, 1.0f);
 
@@ -60,21 +65,25 @@ namespace BisBuddy.Windows
                         }
                         else
                         {
-                            ImGui.OpenPopup("Delete Gearset?##delete_gearset_icon_confirm_popup");
+                            ImGui.OpenPopup($"{Resource.DeleteGearsetPopupTitle}##delete_gearset_icon_confirm_popup");
                         }
                     }
                 }
-                if (ImGui.IsItemHovered()) ImGui.SetTooltip($"Delete this Gearset. {deleteTooltipText}");
+                if (ImGui.IsItemHovered())
+                    ImGui.SetTooltip(deleteTooltipText);
 
-                using var deletePopup = ImRaii.Popup("Delete Gearset?##delete_gearset_icon_confirm_popup");
-                if (deletePopup)
+                using (var deletePopup = ImRaii.Popup($"{Resource.DeleteGearsetPopupTitle}##delete_gearset_icon_confirm_popup"))
                 {
-                    if (ImGui.Button("Yes, Delete###confirm_delete_icon_gearset_button"))
+                    if (deletePopup)
                     {
-                        deleteGearset = true;
-                        ImGui.CloseCurrentPopup();
+                        if (ImGui.Button($"{Resource.DeleteGearsetConfirmButton}###confirm_delete_icon_gearset_button"))
+                        {
+                            deleteGearset = true;
+                            ImGui.CloseCurrentPopup();
+                        }
+                        if (ImGui.IsItemHovered())
+                            ImGui.SetTooltip(Resource.DeleteGearsetConfirmTooltip);
                     }
-                    if (ImGui.IsItemHovered()) ImGui.SetTooltip("This cannot be undone!");
                 }
 
                 ImGui.SameLine();
@@ -103,61 +112,49 @@ namespace BisBuddy.Windows
                 if (ImGui.IsItemHovered())
                 {
                     var tooltip = isAllCollected
-                        ? "Mark all as not Collected"
-                        : "Lock all as Collected";
+                        ? Resource.AllCollectedTooltip
+                        : Resource.AllUncollectedTooltip;
                     ImGui.SetTooltip(tooltip);
                 }
 
                 ImGui.SameLine();
 
                 var gearsetName = gearset.Name;
-                var copyButtonWidth = ImGuiComponents.GetIconButtonWithTextWidth(FontAwesomeIcon.Copy, "Link");
-                var exportButtonWidth = ImGuiComponents.GetIconButtonWithTextWidth(FontAwesomeIcon.FileExport, "JSON");
+                var copyButtonWidth = ImGuiComponents.GetIconButtonWithTextWidth(FontAwesomeIcon.Copy, Resource.GearsetUrlButton);
+                var exportButtonWidth = ImGuiComponents.GetIconButtonWithTextWidth(FontAwesomeIcon.FileExport, Resource.GearsetJsonButton);
                 ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X - (copyButtonWidth + exportButtonWidth + 17));
                 if (ImGui.InputText($"##gearset_rename_input", ref gearsetName, 512))
                 {
                     gearset.Name = gearsetName;
                     plugin.SaveConfiguration(false);
                 }
-                if (ImGui.IsItemHovered()) ImGui.SetTooltip("Rename Gearset");
+                if (ImGui.IsItemHovered())
+                    ImGui.SetTooltip(Resource.RenameGearsetTooltip);
 
                 ImGui.SameLine();
 
                 if (gearset.SourceUrl != null)
                 {
                     ImGui.SameLine();
-                    if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.Copy, "Link##copy_gearset_url"))
+                    if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.Copy, $"{Resource.GearsetUrlButton}##copy_gearset_url"))
                     {
                         ImGui.SetClipboardText(gearset.SourceUrl);
                     }
                     if (ImGui.IsItemHovered())
                     {
-                        ImGui.SetTooltip($"Copy {gearset.SourceType} link to clipboard");
+                        ImGui.SetTooltip(string.Format(Resource.GearsetUrlTooltip, gearset.SourceType));
                     }
                 }
 
                 ImGui.SameLine();
 
-                if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.FileExport, "JSON##export_gearset_json"))
+                if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.FileExport, $"{Resource.GearsetJsonButton}##export_gearset_json"))
                 {
                     ImGui.SetClipboardText(gearset.ExportToJsonStr());
                 }
                 if (ImGui.IsItemHovered())
                 {
-                    ImGui.SetTooltip("Copy gearset JSON to clipboard");
-                }
-
-                ImGui.SameLine();
-
-                using var deletePopup = ImRaii.Popup("Delete Gearset?##delete_gearset_confirm_popup");
-                if (deletePopup)
-                {
-                    if (ImGui.Button("Yes, Delete###confirm_delete_gearset_button"))
-                    {
-                        deleteGearset = true;
-                        ImGui.CloseCurrentPopup();
-                    }
-                    if (ImGui.IsItemHovered()) ImGui.SetTooltip("This cannot be undone!");
+                    ImGui.SetTooltip(Resource.GearsetJsonTooltip);
                 }
 
                 ImGui.Spacing();
