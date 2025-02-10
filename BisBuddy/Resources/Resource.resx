@@ -331,14 +331,17 @@
     <value>Strict Materia Matching</value>
   </data>
   <data name="StrictMateriaMatchingHelp" xml:space="preserve">
-    <value>Whether auto assignment treats gearpieces with different materia as unique items\n\n
-When ON: Each gearpiece entry is considered unique based on its materia. So if you have multiple entries for the same gearpiece with different materia, a single inventory item can only satisfy one of them\n
-When OFF: Auto assignment ignores the materia differences and only looks at the actual gearpiece. One inventory item can satisfy multiple entries for the same gearpiece even if their materia differ\n\n
-Example\n
-Inventory: 1x Archeo Kingdom Ring of Aiming [CRT]\n
-Gearset 1: 1x Archeo Kingdom Ring of Aiming [CRT, DET]\n
-Gearset 2: 1x Archeo Kingdom Ring of Aiming [DET, DET]\n\n
-When ON: Gearset 1 completed, Gearset 2 incomplete\n
+    <value>Whether auto assignment treats gearpieces with different materia as unique items
+
+When ON: Each gearpiece entry is considered unique based on its materia. So if you have multiple entries for the same gearpiece with different materia, a single inventory item can only satisfy one of them
+When OFF: Auto assignment ignores the materia differences and only looks at the actual gearpiece. One inventory item can satisfy multiple entries for the same gearpiece even if their materia differ
+
+Example
+Inventory: 1x Archeo Kingdom Ring of Aiming [CRT]
+Gearset 1: 1x Archeo Kingdom Ring of Aiming [CRT, DET]
+Gearset 2: 1x Archeo Kingdom Ring of Aiming [DET, DET]
+
+When ON: Gearset 1 completed, Gearset 2 incomplete
 When OFF: Gearset 1 completed, Gearset 2 completed</value>
   </data>
 </root>

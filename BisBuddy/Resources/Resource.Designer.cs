@@ -610,11 +610,13 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Whether auto assignment treats gearpieces with different materia as unique items\n\n
-        ///When ON: Each gearpiece entry is considered unique based on its materia. So if you have multiple entries for the same gearpiece with different materia, a single inventory item can only satisfy one of them\n
-        ///When OFF: Auto assignment ignores the materia differences and only looks at the actual gearpiece. One inventory item can satisfy multiple entries for the same gearpiece even if their materia differ\n\n
-        ///Example\n
-        ///Inve [rest of string was truncated]&quot;;.
+        ///   Looks up a localized string similar to Whether auto assignment treats gearpieces with different materia as unique items
+        ///
+        ///When ON: Each gearpiece entry is considered unique based on its materia. So if you have multiple entries for the same gearpiece with different materia, a single inventory item can only satisfy one of them
+        ///When OFF: Auto assignment ignores the materia differences and only looks at the actual gearpiece. One inventory item can satisfy multiple entries for the same gearpiece even if their materia differ
+        ///
+        ///Example
+        ///Inventory: 1 [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string StrictMateriaMatchingHelp {
             get {
