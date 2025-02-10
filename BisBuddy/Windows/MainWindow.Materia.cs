@@ -2,6 +2,7 @@ using BisBuddy.Gear;
 using Dalamud.Interface.Utility.Raii;
 using ImGuiNET;
 using System.Numerics;
+using BisBuddy.Resources;
 
 namespace BisBuddy.Windows
 {
@@ -22,13 +23,13 @@ namespace BisBuddy.Windows
                 if (materiaGroup.Materia.IsMelded)
                 {
                     needColorblind = "";
-                    meldVerb = "Unmeld";
+                    meldVerb = Resource.UnmeldVerb;
                     textColor = ObtainedColor;
                 }
                 else
                 {
                     needColorblind = "*";
-                    meldVerb = "Meld";
+                    meldVerb = Resource.MeldVerb;
                     textColor = UnobtainedColor;
                 }
 
