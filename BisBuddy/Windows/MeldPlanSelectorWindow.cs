@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using BisBuddy.Resources;
 
 namespace BisBuddy.Windows;
 
@@ -95,7 +96,7 @@ public unsafe class MeldPlanSelectorWindow : Window, IDisposable
         var curIdx = plugin.MateriaAttachEventListener.selectedMeldPlanIndex;
         if (curIdx >= MeldPlans.Count) return;
 
-        ImGui.Text("Select Materia Melds");
+        ImGui.Text(Resource.MeldWindowHeader);
         ImGui.Separator();
         ImGui.Spacing();
 

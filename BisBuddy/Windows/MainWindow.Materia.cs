@@ -2,6 +2,7 @@ using BisBuddy.Gear;
 using Dalamud.Interface.Utility.Raii;
 using ImGuiNET;
 using System.Numerics;
+using BisBuddy.Resources;
 
 namespace BisBuddy.Windows
 {
@@ -22,13 +23,13 @@ namespace BisBuddy.Windows
                 if (materiaGroup.Materia.IsMelded)
                 {
                     needColorblind = "";
-                    meldVerb = "Unmeld";
+                    meldVerb = Resource.UnmeldVerb;
                     textColor = ObtainedColor;
                 }
                 else
                 {
                     needColorblind = "*";
-                    meldVerb = "Meld";
+                    meldVerb = Resource.MeldVerb;
                     textColor = UnobtainedColor;
                 }
 
@@ -50,7 +51,8 @@ namespace BisBuddy.Windows
                             gearpiece.MeldSingleMateria(materiaGroup.Materia.ItemId);
                         }
 
-                        plugin.SaveGearsetsWithUpdate();
+                        // don't update here. Creates issues with being unable to unassign materia reliably due to no manual lock for uncollected.
+                        plugin.SaveGearsetsWithUpdate(false);
                     }
                     if (ImGui.IsItemHovered()) ImGui.SetTooltip($"{meldVerb} {materiaGroup.Materia.ItemName}");
                     if (ImGui.IsItemHovered()) ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);

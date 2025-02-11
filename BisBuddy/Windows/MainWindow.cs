@@ -7,6 +7,7 @@ using ImGuiNET;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using BisBuddy.Resources;
 
 namespace BisBuddy.Windows;
 
@@ -47,7 +48,7 @@ public partial class MainWindow : Window, IDisposable
         {
             using (ImRaii.Disabled(plugin.Gearsets.Count >= Plugin.MaxGearsetCount))
             {
-                if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.Plus, "New Gearset##importgearset"))
+                if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.Plus, $"{Resource.NewGearsetButton}##importgearset"))
                 {
                     if (Services.ClientState.IsLoggedIn)
                     {
@@ -58,8 +59,8 @@ public partial class MainWindow : Window, IDisposable
                 {
                     var tooltip =
                         plugin.Gearsets.Count >= Plugin.MaxGearsetCount
-                        ? $"Maximum of {Plugin.MaxGearsetCount} gearsets"
-                        : "Import a new gearset";
+                        ? string.Format(Resource.NewGearsetTooltipMaxGearsets, Plugin.MaxGearsetCount)
+                        : Resource.NewGearsetTooltip;
                     ImGui.SetTooltip(tooltip);
                 }
             }
@@ -68,20 +69,20 @@ public partial class MainWindow : Window, IDisposable
 
             using (ImRaii.Disabled(InventoryScanRunning || plugin.Gearsets.Count == 0))
             {
-                if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.Sync, "Sync Inventory##scaninventory"))
+                if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.Sync, $"{Resource.SyncInventoryButton}##scaninventory"))
                 {
                     InventoryScanRunning = true;
                     plugin.UpdateFromInventory(plugin.Gearsets);
                 }
-                if (ImGui.IsItemHovered()) ImGui.SetTooltip("Update gearsets with items from your inventory");
+                if (ImGui.IsItemHovered()) ImGui.SetTooltip(Resource.SyncInventoryTooltip);
             }
         }
 
         if (InventoryScanRunning || InventoryScanUpdateCount >= 0)
         {
             var text = InventoryScanRunning
-                ? "Loading..."
-                : $"{InventoryScanUpdateCount} gearpieces updated";
+                ? Resource.InventoryScanLoading
+                : string.Format(Resource.InventoryScanUpdated, InventoryScanUpdateCount);
 
             ImGui.SameLine();
             ImGui.Text(text);
@@ -97,15 +98,15 @@ public partial class MainWindow : Window, IDisposable
         }
         if (ImGui.IsItemHovered())
         {
-            ImGui.SetTooltip($"Open config");
+            ImGui.SetTooltip(Resource.OpenConfigTooltip);
         }
     }
 
     private void drawNoGearsets()
     {
-        var errorText = Services.ClientState.IsLoggedIn ?
-            "No gearsets found. Add one or more gearsets to get started"
-            : "Please log in to view/add gearsets";
+        var errorText = Services.ClientState.IsLoggedIn
+            ? Resource.NoGearsetsText
+            : Resource.LoggedOutText;
         var textWidth = ImGui.CalcTextSize(errorText).X;
         var offsetX = (ImGui.GetWindowWidth() - textWidth) * 0.5f;
         ImGui.SetCursorPosX(offsetX); // Center text
@@ -136,7 +137,7 @@ public partial class MainWindow : Window, IDisposable
                 Services.Log.Verbose($"Removed gearset {gearsetIndex}");
                 gearsets.RemoveAt(gearsetIndex);
             }
-            plugin.SaveGearsetsWithUpdate();
+            plugin.SaveGearsetsWithUpdate(true);
         }
     }
 

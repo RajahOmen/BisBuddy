@@ -7,6 +7,7 @@ using ImGuiNET;
 using System;
 using System.Linq;
 using System.Numerics;
+using BisBuddy.Resources;
 
 namespace BisBuddy.Windows
 {
@@ -35,7 +36,9 @@ namespace BisBuddy.Windows
                     {
                         gearpiece.SetCollected(gearpieceCollected, true);
                         Services.Log.Debug($"Set \"{gearset.Name}\" gearpiece \"{gearpiece.ItemName}\" to {(gearpieceCollected ? "collected" : "not collected")}");
-                        plugin.SaveGearsetsWithUpdate();
+
+                        // don't update here. Creates issues with being unable to unassign pieces reliably due to no manual lock for uncollected.
+                        plugin.SaveGearsetsWithUpdate(false);
                     }
                 }
                 if (ImGui.IsItemHovered())
@@ -43,9 +46,9 @@ namespace BisBuddy.Windows
                     var tooltip =
                         gearpieceCollected
                         ? gearpieceManuallyCollected
-                        ? "Collection status locked. Inventory syncs will not uncollect"
-                        : "Mark as Not Collected"
-                        : "Lock as Collected";
+                        ? Resource.ManuallyCollectedTooltip
+                        : Resource.AutomaticallyCollectedTooltip
+                        : Resource.UncollectedTooltip;
                     ImGui.SetTooltip(tooltip);
                 }
 

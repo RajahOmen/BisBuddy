@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Linq;
 
 namespace BisBuddy.Gear
@@ -122,7 +123,6 @@ namespace BisBuddy.Gear
 
         public int MeldMultipleMateria(List<uint> materiaList)
         {
-            if (materiaList.Count == 0) return 0;
             itemMateriaGrouped = null;
 
             // copy, since this will be modified here
@@ -149,7 +149,6 @@ namespace BisBuddy.Gear
                         {
                             // meld candidate piece into slot
                             materiaSlot.IsMelded = true;
-                            ItemMateria[gearIdx] = materiaSlot;
                             slottedCount++;
                         }
 
@@ -163,12 +162,10 @@ namespace BisBuddy.Gear
                 if (assignedIdx > -1)
                 {
                     materiaList.RemoveAt(assignedIdx);
-
-                    // materia list exhausted
-                    if (materiaList.Count == 0)
-                    {
-                        break;
-                    }
+                }
+                else
+                {
+                    materiaSlot.IsMelded = false;
                 }
             }
 

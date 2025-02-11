@@ -5,6 +5,7 @@ using ImGuiNET;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using BisBuddy.Resources;
 
 namespace BisBuddy.Windows
 {
@@ -36,7 +37,7 @@ namespace BisBuddy.Windows
                         {
                             using (ImRaii.PushColor(ImGuiCol.Text, new Vector4(1, 1, 1, 1)))
                             {
-                                ImGui.SetTooltip("Collection status locked. Inventory syncs will not uncollect");
+                                ImGui.SetTooltip(Resource.ManuallyCollectedTooltip);
                             }
                         }
 
@@ -49,7 +50,9 @@ namespace BisBuddy.Windows
                         {
                             prereq.SetCollected(!prereq.IsCollected, true);
                             Services.Log.Debug($"Set \"{parentGearpiece.ItemName}\" prereq \"{prereq.ItemName}\" to {(prereq.IsCollected ? "collected" : "not collected")}");
-                            plugin.SaveGearsetsWithUpdate();
+
+                            // don't update here. Creates issues with being unable to unassign prereqs reliably due to no manual lock for uncollected
+                            plugin.SaveGearsetsWithUpdate(false);
                         }
                     }
                 }
@@ -59,11 +62,11 @@ namespace BisBuddy.Windows
                 {
                     if (prereq.IsCollected)
                     {
-                        ImGui.SetTooltip("Mark as Not Collected");
+                        ImGui.SetTooltip(Resource.AutomaticallyCollectedTooltip);
                     }
                     else
                     {
-                        ImGui.SetTooltip("Lock as Collected");
+                        ImGui.SetTooltip(Resource.UncollectedTooltip);
                     }
                     ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
                 }
