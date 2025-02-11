@@ -414,9 +414,6 @@ namespace BisBuddy.EventListeners.AddonEventListeners
 
                 customHighlightNode = UiHelper.CloneNineGridNode(AddonCustomNodeId, hoverNode);
                 customHighlightNode->SetAlpha(255);
-                customHighlightNode->AddRed = -255;
-                customHighlightNode->AddBlue = -255;
-                customHighlightNode->AddGreen = 255;
                 customHighlightNode->DrawFlags |= 0x01; // force a redraw ("dirty flag")
                 UiHelper.LinkNodeAfterTargetNode((AtkResNode*)customHighlightNode, parentNode, (AtkResNode*)hoverNode);
 

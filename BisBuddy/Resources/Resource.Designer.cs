@@ -214,6 +214,36 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Highlight Color.
+        /// </summary>
+        internal static string HighlightColorButtonLabel {
+            get {
+                return ResourceManager.GetString("HighlightColorButtonLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Color needed items are highlighted in.
+        /// </summary>
+        internal static string HighlightColorButtonTooltip {
+            get {
+                return ResourceManager.GetString("HighlightColorButtonTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to What color to highlight needed items in
+        ///
+        ///Use alpha channel to adjust highlight intensity on items/icons
+        ///List menu highlights are not affected.
+        /// </summary>
+        internal static string HighlightColorHelp {
+            get {
+                return ResourceManager.GetString("HighlightColorHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Inventories.
         /// </summary>
         internal static string HighlightInventoriesCheckbox {
