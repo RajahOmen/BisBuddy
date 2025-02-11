@@ -89,7 +89,7 @@ namespace BisBuddy.EventListeners
                 if (!Plugin.InventorySources.Contains(changedArgs.Inventory)) return;
 
                 // item not needed in any gearsets, ignore
-                if (Gearset.GetGearsetsNeedingItemById(changedArgs.Item.ItemId, Plugin.Gearsets, ignoreCollected:false).Count == 0) return;
+                if (Gearset.GetGearsetsNeedingItemById(changedArgs.Item.ItemId, Plugin.Gearsets, ignoreCollected: false).Count == 0) return;
 
                 // changed in a type we track, update gearsets
                 Plugin.UpdateFromInventory(Plugin.Gearsets);

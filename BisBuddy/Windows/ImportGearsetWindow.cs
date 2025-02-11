@@ -1,5 +1,6 @@
 
 using BisBuddy.Gear;
+using BisBuddy.Resources;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
@@ -7,7 +8,6 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Threading.Tasks;
-using BisBuddy.Resources;
 
 namespace BisBuddy.Windows;
 

@@ -7,8 +7,6 @@ using BisBuddy.ItemAssignment;
 using BisBuddy.Items;
 using BisBuddy.Windows;
 using Dalamud.Game.Command;
-using Dalamud.Game.Text;
-using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
@@ -274,7 +272,8 @@ public sealed partial class Plugin : IDalamudPlugin
         if (Configuration.PluginUpdateInventoryScan && pluginUpdate)
         {
             UpdateFromInventory(Gearsets);
-        } else
+        }
+        else
         {
             Configuration.Save();
         }

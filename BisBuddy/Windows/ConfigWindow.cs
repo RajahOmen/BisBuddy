@@ -1,12 +1,10 @@
-using BisBuddy.Gear;
+using BisBuddy.Resources;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
-using Lumina.Excel.Sheets;
 using System;
 using System.Numerics;
-using BisBuddy.Resources;
 
 namespace BisBuddy.Windows;
 

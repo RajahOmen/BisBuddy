@@ -1,4 +1,5 @@
 using BisBuddy.Gear;
+using BisBuddy.Resources;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Windowing;
 using FFXIVClientStructs.FFXIV.Component.GUI;
@@ -7,7 +8,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using BisBuddy.Resources;
 
 namespace BisBuddy.Windows;
 
