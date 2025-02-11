@@ -19,6 +19,8 @@ public class Configuration : IPluginConfiguration
     public bool AnnotateTooltips { get; set; } = true;
     public bool AutoCompleteItems { get; set; } = true;
     public bool AutoScanInventory { get; set; } = true;
+    public bool PluginUpdateInventoryScan { get; set; } = true;
+    public bool StrictMateriaMatching { get; set; } = true;
 
     public Dictionary<ulong, CharacterInfo> CharactersData { get; set; } = [];
 

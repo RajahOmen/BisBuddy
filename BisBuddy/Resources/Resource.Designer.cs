@@ -97,7 +97,7 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Character Inventory.
+        ///   Looks up a localized string similar to Inventory Updates.
         /// </summary>
         internal static string ConfigInventorySectionHeader {
             get {
@@ -601,6 +601,30 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Strict Materia Matching.
+        /// </summary>
+        internal static string StrictMateriaMatchingCheckbox {
+            get {
+                return ResourceManager.GetString("StrictMateriaMatchingCheckbox", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Whether auto assignment treats gearpieces with different materia as unique items
+        ///
+        ///When ON: Each gearpiece entry is considered unique based on its materia. So if you have multiple entries for the same gearpiece with different materia, a single inventory item can only satisfy one of them
+        ///When OFF: Auto assignment ignores the materia differences and only looks at the actual gearpiece. One inventory item can satisfy multiple entries for the same gearpiece even if their materia differ
+        ///
+        ///Example
+        ///Inventory: 1 [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string StrictMateriaMatchingHelp {
+            get {
+                return ResourceManager.GetString("StrictMateriaMatchingHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Sync Inventory.
         /// </summary>
         internal static string SyncInventoryButton {
@@ -637,7 +661,7 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Update on Change.
+        ///   Looks up a localized string similar to Item Changes.
         /// </summary>
         internal static string UpdateOnItemChangeCheckbox {
             get {
@@ -655,7 +679,7 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Update on Login/Load.
+        ///   Looks up a localized string similar to Login/Load.
         /// </summary>
         internal static string UpdateOnLoginLoadCheckbox {
             get {
@@ -664,11 +688,29 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to When logging in, adding new gearsets, or loading plugin, update gearsets with items in inventories (inventory, armoury chest, equipped).
+        ///   Looks up a localized string similar to When logging in or loading {0}, update gearsets with items in inventories (inventory, armoury chest, equipped).
         /// </summary>
         internal static string UpdateOnLoginLoadHelp {
             get {
                 return ResourceManager.GetString("UpdateOnLoginLoadHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Plugin Changes.
+        /// </summary>
+        internal static string UpdateOnPluginChangesCheckbox {
+            get {
+                return ResourceManager.GetString("UpdateOnPluginChangesCheckbox", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to When updating {0} gearsets or settings, update gearsets with items in inventories (inventory, armoury chest, equipped).
+        /// </summary>
+        internal static string UpdateOnPluginChangesHelp {
+            get {
+                return ResourceManager.GetString("UpdateOnPluginChangesHelp", resourceCulture);
             }
         }
     }

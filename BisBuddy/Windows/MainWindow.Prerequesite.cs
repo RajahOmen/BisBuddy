@@ -50,7 +50,9 @@ namespace BisBuddy.Windows
                         {
                             prereq.SetCollected(!prereq.IsCollected, true);
                             Services.Log.Debug($"Set \"{parentGearpiece.ItemName}\" prereq \"{prereq.ItemName}\" to {(prereq.IsCollected ? "collected" : "not collected")}");
-                            plugin.SaveGearsetsWithUpdate();
+
+                            // don't update here. Creates issues with being unable to unassign prereqs reliably due to no manual lock for uncollected
+                            plugin.SaveGearsetsWithUpdate(false);
                         }
                     }
                 }

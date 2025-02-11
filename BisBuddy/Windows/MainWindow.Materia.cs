@@ -51,7 +51,8 @@ namespace BisBuddy.Windows
                             gearpiece.MeldSingleMateria(materiaGroup.Materia.ItemId);
                         }
 
-                        plugin.SaveGearsetsWithUpdate();
+                        // don't update here. Creates issues with being unable to unassign materia reliably due to no manual lock for uncollected.
+                        plugin.SaveGearsetsWithUpdate(false);
                     }
                     if (ImGui.IsItemHovered()) ImGui.SetTooltip($"{meldVerb} {materiaGroup.Materia.ItemName}");
                     if (ImGui.IsItemHovered()) ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);

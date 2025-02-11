@@ -34,7 +34,7 @@ namespace BisBuddy.Windows
                 {
                     gearset.IsActive = isActive;
                     Services.Log.Debug($"{(isActive ? "enabled" : "disabled")} gearset \"{gearset.Name}\"");
-                    plugin.SaveGearsetsWithUpdate();
+                    plugin.SaveGearsetsWithUpdate(true);
                 }
 
                 if (ImGui.IsItemHovered())
@@ -106,7 +106,9 @@ namespace BisBuddy.Windows
                     if (ImGui.Checkbox("###collect_all_gearpieces", ref isAllCollected))
                     {
                         foreach (var gearpiece in gearset.Gearpieces) gearpiece.SetCollected(isAllCollected, true);
-                        plugin.SaveGearsetsWithUpdate();
+
+                        // don't update here. Creates issues with being unable to unassign pieces reliably due to no manual lock for uncollected.
+                        plugin.SaveGearsetsWithUpdate(false);
                     }
                 }
                 if (ImGui.IsItemHovered())
@@ -126,7 +128,7 @@ namespace BisBuddy.Windows
                 if (ImGui.InputText($"##gearset_rename_input", ref gearsetName, 512))
                 {
                     gearset.Name = gearsetName;
-                    plugin.Configuration.Save();
+                    plugin.SaveConfiguration(false);
                 }
                 if (ImGui.IsItemHovered())
                     ImGui.SetTooltip(Resource.RenameGearsetTooltip);

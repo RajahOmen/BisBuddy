@@ -157,19 +157,19 @@
     <value>Lists what gearsets need the item being hovered over in the item tooltip</value>
   </data>
   <data name="ConfigInventorySectionHeader" xml:space="preserve">
-    <value>Character Inventory</value>
+    <value>Inventory Updates</value>
   </data>
   <data name="UpdateOnItemChangeCheckbox" xml:space="preserve">
-    <value>Update on Change</value>
+    <value>Item Changes</value>
   </data>
   <data name="UpdateOnItemChangeHelp" xml:space="preserve">
     <value>When a change is detected in character inventories, update gearsets with items in inventories (inventory, armoury chest, equipped)</value>
   </data>
   <data name="UpdateOnLoginLoadCheckbox" xml:space="preserve">
-    <value>Update on Login/Load</value>
+    <value>Login/Load</value>
   </data>
   <data name="UpdateOnLoginLoadHelp" xml:space="preserve">
-    <value>When logging in, adding new gearsets, or loading plugin, update gearsets with items in inventories (inventory, armoury chest, equipped)</value>
+    <value>When logging in or loading {0}, update gearsets with items in inventories (inventory, armoury chest, equipped)</value>
   </data>
   <data name="ConfigWindowTitle" xml:space="preserve">
     <value>{0} Config</value>
@@ -320,5 +320,28 @@
   </data>
   <data name="UnmeldVerb" xml:space="preserve">
     <value>Unmeld</value>
+  </data>
+  <data name="UpdateOnPluginChangesCheckbox" xml:space="preserve">
+    <value>Plugin Changes</value>
+  </data>
+  <data name="UpdateOnPluginChangesHelp" xml:space="preserve">
+    <value>When updating {0} gearsets or settings, update gearsets with items in inventories (inventory, armoury chest, equipped)</value>
+  </data>
+  <data name="StrictMateriaMatchingCheckbox" xml:space="preserve">
+    <value>Strict Materia Matching</value>
+  </data>
+  <data name="StrictMateriaMatchingHelp" xml:space="preserve">
+    <value>Whether auto assignment treats gearpieces with different materia as unique items
+
+When ON: Each gearpiece entry is considered unique based on its materia. So if you have multiple entries for the same gearpiece with different materia, a single inventory item can only satisfy one of them
+When OFF: Auto assignment ignores the materia differences and only looks at the actual gearpiece. One inventory item can satisfy multiple entries for the same gearpiece even if their materia differ
+
+Example
+Inventory: 1x Archeo Kingdom Ring of Aiming [CRT]
+Gearset 1: 1x Archeo Kingdom Ring of Aiming [CRT, DET]
+Gearset 2: 1x Archeo Kingdom Ring of Aiming [DET, DET]
+
+When ON: Gearset 1 completed, Gearset 2 incomplete
+When OFF: Gearset 1 completed, Gearset 2 completed</value>
   </data>
 </root>

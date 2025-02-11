@@ -69,13 +69,7 @@ public class ImportGearsetWindow : Window, IDisposable
             else
             {
                 plugin.Gearsets.AddRange(newGearsets);
-
-                if (plugin.Configuration.AutoScanInventory)
-                {
-                    plugin.UpdateFromInventory(newGearsets);
-                }
-
-                plugin.SaveGearsetsWithUpdate();
+                plugin.SaveGearsetsWithUpdate(true);
                 Services.Log.Information($"Successfully imported {newGearsets.Count} gearset(s) from {gearsetUrl}");
                 gearsetUrl = string.Empty;
                 webImportStatus = GearsetImportStatusType.Success;
@@ -109,13 +103,7 @@ public class ImportGearsetWindow : Window, IDisposable
             jsonLoading = true;
             var newGearset = Gearset.ImportFromJson(gearsetJson);
             plugin.Gearsets.Add(newGearset);
-
-            if (plugin.Configuration.AutoScanInventory)
-            {
-                plugin.UpdateFromInventory([newGearset]);
-            }
-
-            plugin.SaveGearsetsWithUpdate();
+            plugin.SaveGearsetsWithUpdate(true);
             Services.Log.Information($"Successfully imported gearset json");
             gearsetJson = string.Empty;
             jsonImportStatus = GearsetImportStatusType.Success;
