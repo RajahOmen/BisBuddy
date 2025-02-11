@@ -1,9 +1,12 @@
+using BisBuddy.Gear;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
+using Lumina.Excel.Sheets;
 using System;
 using System.Numerics;
+using BisBuddy.Resources;
 
 namespace BisBuddy.Windows;
 
@@ -12,7 +15,7 @@ public class ConfigWindow : Window, IDisposable
     private readonly Configuration configuration;
     private readonly Plugin plugin;
 
-    public ConfigWindow(Plugin plugin) : base($"{Plugin.PluginName} Config###bisbuddyconfiguration")
+    public ConfigWindow(Plugin plugin) : base($"{string.Format(Resource.ConfigWindowTitle, Plugin.PluginName)}###bisbuddyconfiguration")
     {
         Flags = ImGuiWindowFlags.AlwaysAutoResize
                 | ImGuiWindowFlags.NoScrollbar
@@ -26,14 +29,14 @@ public class ConfigWindow : Window, IDisposable
 
     public override void Draw()
     {
-        ImGui.Text("Item Highlighting");
+        ImGui.Text(Resource.ConfigHighlightingSectionHeader);
         ImGui.Spacing();
 
         using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(3.0f, 4.0f)))
         {
             // COLOR PICKER
             var existingColor = configuration.HighlightColor;
-            if (ImGui.ColorButton($"Color needed items are highlighted in###ColorPickerButton", configuration.HighlightColor))
+            if (ImGui.ColorButton($"{Resource.HighlightColorButtonTooltip}###ColorPickerButton", existingColor))
             {
                 ImGui.OpenPopup($"###ColorPickerPopup");
             }
@@ -55,7 +58,6 @@ public class ConfigWindow : Window, IDisposable
                     {
                         if (existingColor != configuration.HighlightColor)
                         {
-                            Services.Log.Verbose($"color picked");
                             configuration.HighlightColor = existingColor;
                             plugin.SaveGearsetsWithUpdate();
                         }
@@ -63,52 +65,51 @@ public class ConfigWindow : Window, IDisposable
                 }
             }
             ImGui.SameLine();
-            ImGui.TextUnformatted("Highlight Color");
+            ImGui.TextUnformatted(Resource.HighlightColorButtonLabel);
         }
         ImGui.SameLine();
-        ImGuiComponents.HelpMarker("What color to highlight needed items in");
-
+        ImGuiComponents.HelpMarker(Resource.HighlightColorHelp);
 
         // NEED GREED
         var highlightNeedGreed = configuration.HighlightNeedGreed;
-        if (ImGui.Checkbox("Need/Greed Windows", ref highlightNeedGreed))
+        if (ImGui.Checkbox(Resource.HighlightNeedGreedCheckbox, ref highlightNeedGreed))
         {
             configuration.HighlightNeedGreed = highlightNeedGreed;
-            configuration.Save();
+            plugin.SaveConfiguration(false);
             plugin.NeedGreedEventListener.SetListeningStatus(highlightNeedGreed);
         }
         ImGui.SameLine();
-        ImGuiComponents.HelpMarker("Highlights items needed for gearsets in Need/Greed loot windows");
+        ImGuiComponents.HelpMarker(Resource.HighlightNeedGreedHelp);
 
         // SHOPS
         var highlightShops = configuration.HighlightShops;
-        if (ImGui.Checkbox("Shops/Exchanges", ref highlightShops))
+        if (ImGui.Checkbox(Resource.HighlightShopExchangesCheckbox, ref highlightShops))
         {
             configuration.HighlightShops = highlightShops;
-            configuration.Save();
+            plugin.SaveConfiguration(false);
             plugin.ShopExchangeItemEventListener.SetListeningStatus(highlightShops);
             plugin.ShopExchangeCurrencyEventListener.SetListeningStatus(highlightShops);
         }
         ImGui.SameLine();
-        ImGuiComponents.HelpMarker("Highlights items needed for gearsets in NPC shops/item exchanges");
+        ImGuiComponents.HelpMarker(Resource.HighlightShopExchangesHelp);
 
         // MATERIA MELDING
         var highlightMateriaMeld = configuration.HighlightMateriaMeld;
-        if (ImGui.Checkbox("Materia Melding", ref highlightMateriaMeld))
+        if (ImGui.Checkbox(Resource.HighlightMateriaMeldingCheckbox, ref highlightMateriaMeld))
         {
             configuration.HighlightMateriaMeld = highlightMateriaMeld;
-            configuration.Save();
+            plugin.SaveConfiguration(false);
             plugin.MateriaAttachEventListener.SetListeningStatus(highlightMateriaMeld);
         }
         ImGui.SameLine();
-        ImGuiComponents.HelpMarker("Highlights gearpieces needing melds and the materia needed for those gearpieces in melding windows");
+        ImGuiComponents.HelpMarker(Resource.HighlightMateriaMeldingHelp);
 
         // INVENTORIES
         var highlightInventories = configuration.HighlightInventories;
-        if (ImGui.Checkbox("Inventories", ref highlightInventories))
+        if (ImGui.Checkbox(Resource.HighlightInventoriesCheckbox, ref highlightInventories))
         {
             configuration.HighlightInventories = highlightInventories;
-            configuration.Save();
+            plugin.SaveConfiguration(false);
             plugin.InventoryEventListener.SetListeningStatus(highlightInventories);
             plugin.InventoryLargeEventListener.SetListeningStatus(highlightInventories);
             plugin.InventoryExpansionEventListener.SetListeningStatus(highlightInventories);
@@ -117,56 +118,82 @@ public class ConfigWindow : Window, IDisposable
             plugin.InventoryBuddyEventListener.SetListeningStatus(highlightInventories);
         }
         ImGui.SameLine();
-        ImGuiComponents.HelpMarker("Highlights items needed for gearsets in inventories (inventory, retainer, saddlebag)");
+        ImGuiComponents.HelpMarker(Resource.HighlightInventoriesHelp);
 
         // MARKETBOARD
         var highlightMarketboard = configuration.HighlightMarketboard;
-        if (ImGui.Checkbox("Marketboard", ref highlightMarketboard))
+        if (ImGui.Checkbox(Resource.HighlightMarketboardCheckbox, ref highlightMarketboard))
         {
             configuration.HighlightMarketboard = highlightMarketboard;
-            configuration.Save();
+            plugin.SaveConfiguration(false);
             plugin.ItemSearchEventListener.SetListeningStatus(highlightMarketboard);
             plugin.ItemSearchResultEventListener.SetListeningStatus(highlightMarketboard);
         }
         ImGui.SameLine();
-        ImGuiComponents.HelpMarker("Highlights items needed for gearsets on the marketboard");
+        ImGuiComponents.HelpMarker(Resource.HighlightMarketboardHelp);
 
         // ITEM TOOLTIPS
         var annotateTooltips = configuration.AnnotateTooltips;
-        if (ImGui.Checkbox("Item Tooltips", ref annotateTooltips))
+        if (ImGui.Checkbox(Resource.HighlightItemTooltipsCheckbox, ref annotateTooltips))
         {
             configuration.AnnotateTooltips = annotateTooltips;
-            configuration.Save();
+            plugin.SaveConfiguration(false);
             plugin.ItemDetailEventListener.SetListeningStatus(annotateTooltips);
         }
         ImGui.SameLine();
-        ImGuiComponents.HelpMarker("Lists what gearsets need the item being hovered over in the item tooltip");
+        ImGuiComponents.HelpMarker(Resource.HighlightItemTooltipsHelp);
 
         ImGui.Spacing();
         ImGui.Separator();
-        ImGui.Text("Character Inventory");
+        ImGui.Text(Resource.ConfigInventorySectionHeader);
         ImGui.Spacing();
 
         // ITEM COLLECTION
         var enableAutoComplete = configuration.AutoCompleteItems;
-        if (ImGui.Checkbox("Update on Change", ref enableAutoComplete))
+        if (ImGui.Checkbox(Resource.UpdateOnItemChangeCheckbox, ref enableAutoComplete))
         {
             configuration.AutoCompleteItems = enableAutoComplete;
-            configuration.Save();
+            plugin.SaveConfiguration(true);
             plugin.ItemUpdateEventListener.SetListeningStatus(enableAutoComplete);
         }
         ImGui.SameLine();
-        ImGuiComponents.HelpMarker("When a change is detected in character inventories, update gearsets with items in inventories (inventory, armoury chest, equipped)");
+        ImGuiComponents.HelpMarker(Resource.UpdateOnItemChangeHelp);
 
-        // INVENTORY SCAN
+        // INVENTORY SCAN ON LOGIN/LOAD
         var enableAutoScan = configuration.AutoScanInventory;
-        if (ImGui.Checkbox("Update on Login/Load", ref enableAutoScan))
+        if (ImGui.Checkbox(Resource.UpdateOnLoginLoadCheckbox, ref enableAutoScan))
         {
             configuration.AutoScanInventory = enableAutoScan;
-            configuration.Save();
+            plugin.SaveConfiguration(true);
             plugin.LoginLoadEventListener.SetListeningStatus(enableAutoScan);
         }
         ImGui.SameLine();
-        ImGuiComponents.HelpMarker($"When logging in, adding new gearsets, or loading {Plugin.PluginName}, update gearsets with items in inventories (inventory, armoury chest, equipped)");
+        ImGuiComponents.HelpMarker(string.Format(Resource.UpdateOnLoginLoadHelp, Plugin.PluginName));
+
+        // INVENTORY SCAN ON PLUGIN UPDATES
+        var enablePluginUpdateScan = configuration.PluginUpdateInventoryScan;
+        if (ImGui.Checkbox(Resource.UpdateOnPluginChangesCheckbox, ref enablePluginUpdateScan))
+        {
+            configuration.PluginUpdateInventoryScan = enablePluginUpdateScan;
+            plugin.SaveConfiguration(true);
+        }
+        ImGui.SameLine();
+        ImGuiComponents.HelpMarker(string.Format(Resource.UpdateOnPluginChangesHelp, Plugin.PluginName));
+
+        // ASSIGNMENT GROUPING
+        var strictMateriaMatching = configuration.StrictMateriaMatching;
+        if (ImGui.Checkbox(Resource.StrictMateriaMatchingCheckbox, ref strictMateriaMatching))
+        {
+            configuration.StrictMateriaMatching = strictMateriaMatching;
+            plugin.SaveConfiguration(true);
+
+            // if auto scanning enabled, rerun assignments with new configuration
+            if (configuration.AutoScanInventory)
+            {
+                plugin.UpdateFromInventory(plugin.Gearsets);
+            }
+        }
+        ImGui.SameLine();
+        ImGuiComponents.HelpMarker(Resource.StrictMateriaMatchingHelp);
     }
 }

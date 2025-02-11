@@ -21,13 +21,13 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
         // node for the custom highlight on the shop item
         protected abstract uint AddonCustomHighlightNodeId { get; }
         // node for hover highlight on offset shield shop items
-        protected uint AddonShopShieldHoverNodeId = 13;
+        protected abstract uint AddonShopShieldHoverNodeId { get; }
         // node for the scrollbar on the shop item list
         protected abstract uint AddonScrollbarNodeId { get; }
         // node for the button on the scrollbar
         protected abstract uint AddonScrollbarButtonNodeId { get; }
         // node on shield item entries that contains info, and is offset in by L bar
-        protected virtual uint AddonShieldInfoResNodeId { get; } = 3;
+        protected abstract uint AddonShieldInfoResNodeId { get; }
         // if an indented is in the item list, what is item index?
         // should be constant throughout all shops now
         protected int AddonShieldIndex = 1;
@@ -35,14 +35,12 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
         // ADDON ATKVALUE INDEXES
         // index of the number of items in shop
         protected abstract int AtkValueItemCountIndex { get; }
-        // index of the first element in the item name list
-        protected abstract int AtkValueItemNameListStartingIndex { get; }
         // index of the first element in the item id list
         protected abstract int AtkValueItemIdListStartingIndex { get; }
         // index of the first element in the filter display list
-        protected virtual int AtkValueFilteredItemsListStartingIndex { get; } = 1551;
+        protected abstract int AtkValueFilteredItemsListStartingIndex { get; }
         // max value for the filter display list indicating item is visible (diff shops have diff values)
-        protected virtual uint AtkValueFilteredItemsListVisibleMaxValue { get; } = 1;
+        protected abstract uint AtkValueFilteredItemsListVisibleMaxValue { get; }
 
         private readonly HashSet<int> neededShopItemIndexes = [];
         private bool shieldInAtkValues = false;
@@ -172,7 +170,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
             neededShopItemIndexes.Clear();
             shieldInAtkValues = false;
             var shopItemCount = atkValues[AtkValueItemCountIndex].Int;
-            var maxItemIndex = AtkValueItemNameListStartingIndex + shopItemCount;
+            var maxItemIndex = AtkValueItemIdListStartingIndex + shopItemCount;
 
             if (atkValues.Length <= maxItemIndex)
             {

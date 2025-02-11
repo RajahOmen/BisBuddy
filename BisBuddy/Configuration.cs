@@ -20,6 +20,8 @@ public class Configuration : IPluginConfiguration
     public bool AnnotateTooltips { get; set; } = true;
     public bool AutoCompleteItems { get; set; } = true;
     public bool AutoScanInventory { get; set; } = true;
+    public bool PluginUpdateInventoryScan { get; set; } = true;
+    public bool StrictMateriaMatching { get; set; } = true;
 
     // default equivalent to R:0, B:255, G:0, A:100, which which translates to
     // normal nodes: (0, 100, 0)
