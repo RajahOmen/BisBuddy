@@ -2,7 +2,6 @@ using BisBuddy.Gear;
 using Dalamud.Interface;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility.Raii;
-using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using ImGuiNET;
 using System;
 using System.Linq;
@@ -15,7 +14,7 @@ namespace BisBuddy.Windows
     {
         private static readonly Vector4 AlmostObtained = new(1.0f, 1.0f, 0.2f, 1.0f);
 
-        private unsafe void drawGearpiece(Gearpiece gearpiece, Gearset gearset)
+        private void drawGearpiece(Gearpiece gearpiece, Gearset gearset)
         {
             var gearpieceCollected = gearpiece.IsCollected;
             var gearpieceManuallyCollected = gearpiece.IsManuallyCollected;
@@ -55,7 +54,7 @@ namespace BisBuddy.Windows
                 ImGui.SameLine();
 
                 if (ImGuiComponents.IconButton(FontAwesomeIcon.Search))
-                    ItemFinderModule.Instance()->SearchForItem(gearpiece.ItemId, true);
+                    Plugin.SearchItemById(gearpiece.ItemId);
                 if (ImGui.IsItemHovered())
                     ImGui.SetTooltip(string.Format(Resource.SearchInventoryForItemTooltip, gearpiece.ItemName));
 

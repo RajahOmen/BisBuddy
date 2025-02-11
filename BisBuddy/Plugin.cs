@@ -11,6 +11,7 @@ using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin;
+using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using System;
 using System.Collections.Generic;
 
@@ -254,19 +255,18 @@ public sealed partial class Plugin : IDalamudPlugin
         }
     }
 
-    public static void LinkItemById(uint itemId)
+    public static unsafe void SearchItemById(uint itemId)
     {
-        Services.Log.Debug($"Linking item \"{itemId}\" in chat");
-        var itemIsHq = itemId > ItemData.ItemIdHqOffset;
-        var shiftedItemId = itemIsHq ? itemId - ItemData.ItemIdHqOffset : itemId;
-        var itemLink = SeString.CreateItemLink(shiftedItemId, itemIsHq);
-        var entry = new XivChatEntry()
+        try
         {
-            Message = itemLink,
-            Name = SeString.Empty,
-            Type = XivChatType.Echo,
-        };
-        Services.ChatGui.Print(entry);
+            Services.Log.Debug($"Searching for item \"{itemId}\"");
+            ItemFinderModule.Instance()->SearchForItem(itemId, false);
+        }
+        catch (Exception ex)
+        {
+            Services.Log.Error(ex, $"Error searching for \"{itemId}\"");
+
+        }
     }
 
     public void SaveConfiguration(bool pluginUpdate = false)

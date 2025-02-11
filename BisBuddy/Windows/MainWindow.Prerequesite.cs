@@ -57,16 +57,17 @@ namespace BisBuddy.Windows
                     }
                 }
 
-                if (ImGui.IsItemClicked(ImGuiMouseButton.Right)) Plugin.LinkItemById(prereq.ItemId);
+                if (ImGui.IsItemClicked(ImGuiMouseButton.Right))
+                    Plugin.SearchItemById(prereq.ItemId);
                 if (ImGui.IsItemHovered())
                 {
                     if (prereq.IsCollected)
                     {
-                        ImGui.SetTooltip(Resource.AutomaticallyCollectedTooltip);
+                        ImGui.SetTooltip(string.Format(Resource.PrerequesiteTooltipBase, Resource.AutomaticallyCollectedTooltip));
                     }
                     else
                     {
-                        ImGui.SetTooltip(Resource.UncollectedTooltip);
+                        ImGui.SetTooltip(string.Format(Resource.PrerequesiteTooltipBase, Resource.UncollectedTooltip));
                     }
                     ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
                 }
