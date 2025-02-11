@@ -601,6 +601,15 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Search inventory for {0}.
+        /// </summary>
+        internal static string SearchInventoryForItemTooltip {
+            get {
+                return ResourceManager.GetString("SearchInventoryForItemTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Strict Materia Matching.
         /// </summary>
         internal static string StrictMateriaMatchingCheckbox {

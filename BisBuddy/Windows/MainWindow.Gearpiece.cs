@@ -57,7 +57,7 @@ namespace BisBuddy.Windows
                 if (ImGuiComponents.IconButton(FontAwesomeIcon.Search))
                     ItemFinderModule.Instance()->SearchForItem(gearpiece.ItemId, true);
                 if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip("Search for Item in Inventories");
+                    ImGui.SetTooltip(string.Format(Resource.SearchInventoryForItemTooltip, gearpiece.ItemName));
 
                 ImGui.SameLine();
             }
