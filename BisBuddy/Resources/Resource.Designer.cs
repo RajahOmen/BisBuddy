@@ -232,7 +232,10 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to What color to highlight needed items in.
+        ///   Looks up a localized string similar to What color to highlight needed items in
+        ///
+        ///Use alpha channel to adjust highlight intensity on items/icons.
+        ///List menu highlights are not affected.
         /// </summary>
         internal static string HighlightColorHelp {
             get {
