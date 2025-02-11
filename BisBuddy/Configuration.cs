@@ -2,6 +2,7 @@ using BisBuddy.Gear;
 using Dalamud.Configuration;
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 
 namespace BisBuddy;
 
@@ -21,6 +22,11 @@ public class Configuration : IPluginConfiguration
     public bool AutoScanInventory { get; set; } = true;
     public bool PluginUpdateInventoryScan { get; set; } = true;
     public bool StrictMateriaMatching { get; set; } = true;
+
+    // default equivalent to R:0, B:255, G:0, A:100, which which translates to
+    // normal nodes: (0, 100, 0)
+    // custom nodes: (-255, 255, -255)
+    public Vector4 HighlightColor { get; set; } = new Vector4(0.0f, 1.0f, 0.0f, 0.392f);
 
     public Dictionary<ulong, CharacterInfo> CharactersData { get; set; } = [];
 

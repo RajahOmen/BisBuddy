@@ -1,9 +1,11 @@
 using BisBuddy.Gear;
 using Dalamud.Interface.Components;
+using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
 using Lumina.Excel.Sheets;
 using System;
+using System.Numerics;
 using BisBuddy.Resources;
 
 namespace BisBuddy.Windows;
@@ -29,6 +31,44 @@ public class ConfigWindow : Window, IDisposable
     {
         ImGui.Text(Resource.ConfigHighlightingSectionHeader);
         ImGui.Spacing();
+
+        using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(3.0f, 4.0f)))
+        {
+            // COLOR PICKER
+            var existingColor = configuration.HighlightColor;
+            if (ImGui.ColorButton($"{Resource.HighlightColorButtonTooltip}###ColorPickerButton", existingColor))
+            {
+                ImGui.OpenPopup($"###ColorPickerPopup");
+            }
+
+            using (var popup = ImRaii.Popup($"###ColorPickerPopup"))
+            {
+                if (popup)
+                {
+                    if (ImGui.ColorPicker4(
+                        $"###ColorPicker",
+                        ref existingColor,
+                        (
+                            ImGuiColorEditFlags.NoPicker
+                            | ImGuiColorEditFlags.AlphaBar
+                            | ImGuiColorEditFlags.NoSidePreview
+                            | ImGuiColorEditFlags.DisplayRGB
+                            | ImGuiColorEditFlags.NoBorder
+                        )))
+                    {
+                        if (existingColor != configuration.HighlightColor)
+                        {
+                            configuration.HighlightColor = existingColor;
+                            plugin.SaveGearsetsWithUpdate();
+                        }
+                    }
+                }
+            }
+            ImGui.SameLine();
+            ImGui.TextUnformatted(Resource.HighlightColorButtonLabel);
+        }
+        ImGui.SameLine();
+        ImGuiComponents.HelpMarker(Resource.HighlightColorHelp);
 
         // NEED GREED
         var highlightNeedGreed = configuration.HighlightNeedGreed;

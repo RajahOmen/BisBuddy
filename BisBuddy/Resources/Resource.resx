@@ -347,4 +347,16 @@ When OFF: Gearset 1 completed, Gearset 2 completed</value>
   <data name="SearchInventoryForItemTooltip" xml:space="preserve">
     <value>Search inventory for {0}</value>
   </data>
+  <data name="HighlightColorButtonTooltip" xml:space="preserve">
+    <value>Color needed items are highlighted in</value>
+  </data>
+  <data name="HighlightColorButtonLabel" xml:space="preserve">
+    <value>Highlight Color</value>
+  </data>
+  <data name="HighlightColorHelp" xml:space="preserve">
+    <value>What color to highlight needed items in
+
+Use alpha channel to adjust highlight intensity on items/icons
+List menu highlights are not affected</value>
+  </data>
 </root>

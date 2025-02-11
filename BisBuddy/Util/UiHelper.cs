@@ -3,6 +3,7 @@ using FFXIVClientStructs.FFXIV.Component.GUI;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Numerics;
 
 namespace BisBuddy.Util;
 
@@ -11,6 +12,31 @@ namespace BisBuddy.Util;
 
 public static unsafe partial class UiHelper
 {
+
+    private static short vectorToShortColor(float color, float alpha, bool smallScale)
+    {
+        if (smallScale)
+            // scale from 0 to 255
+            return (short)(255 * color * alpha);
+        else
+            // scale from -255 to 255
+            return (short)(((510 * color) - 255) * alpha);
+
+    }
+
+    public static unsafe void SetNodeColor(AtkResNode* node, Vector4 color, bool smallScale)
+    {
+        // if small scale, also scale with alpha (less alpha, less color)
+        // to ensure that custom node highlights are strong enough compared
+        // to the node->Add{Color} properties
+        var alpha = smallScale ? color.W : 1;
+
+        node->AddRed = vectorToShortColor(color.X, alpha, smallScale);
+        node->AddGreen = vectorToShortColor(color.Y, alpha, smallScale);
+        node->AddBlue = vectorToShortColor(color.Z, alpha, smallScale);
+    }
+
+
     public record PartInfo(ushort U, ushort V, ushort Width, ushort Height);
 
     /// <summary>
