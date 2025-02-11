@@ -356,4 +356,15 @@ When OFF: Gearset 1 completed, Gearset 2 completed</value>
 Use alpha channel to adjust highlight intensity on items/icons
 List menu highlights are not affected</value>
   </data>
+  <data name="MateriaTooltip" xml:space="preserve">
+    <value>Left click to {0} {1}
+Right click to search for in inventory</value>
+  </data>
+  <data name="SearchInventoryForItemTooltip" xml:space="preserve">
+    <value>Search inventory for {0}</value>
+  </data>
+  <data name="PrerequesiteTooltipBase" xml:space="preserve">
+    <value>Left click to {0}
+Right click to search for in inventory</value>
+  </data>
 </root>

@@ -53,11 +53,10 @@ namespace BisBuddy.Windows
 
                 ImGui.SameLine();
 
-                if (ImGuiComponents.IconButton(FontAwesomeIcon.ExternalLinkAlt))
-                {
-                    Plugin.LinkItemById(gearpiece.ItemId);
-                }
-                if (ImGui.IsItemHovered()) ImGui.SetTooltip("Link item in chat");
+                if (ImGuiComponents.IconButton(FontAwesomeIcon.Search))
+                    Plugin.SearchItemById(gearpiece.ItemId);
+                if (ImGui.IsItemHovered())
+                    ImGui.SetTooltip(string.Format(Resource.SearchInventoryForItemTooltip, gearpiece.ItemName));
 
                 ImGui.SameLine();
             }

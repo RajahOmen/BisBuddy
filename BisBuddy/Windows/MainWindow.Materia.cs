@@ -54,10 +54,13 @@ namespace BisBuddy.Windows
                         // don't update here. Creates issues with being unable to unassign materia reliably due to no manual lock for uncollected.
                         plugin.SaveGearsetsWithUpdate(false);
                     }
-                    if (ImGui.IsItemHovered()) ImGui.SetTooltip($"{meldVerb} {materiaGroup.Materia.ItemName}");
-                    if (ImGui.IsItemHovered()) ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-                    if (ImGui.IsItemClicked(ImGuiMouseButton.Right)) Plugin.LinkItemById(materiaGroup.Materia.ItemId);
                 }
+                if (ImGui.IsItemHovered())
+                    ImGui.SetTooltip(string.Format(Resource.MateriaTooltip, meldVerb, materiaGroup.Materia.ItemName));
+                if (ImGui.IsItemHovered())
+                    ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+                if (ImGui.IsItemClicked(ImGuiMouseButton.Right))
+                    Plugin.SearchItemById(materiaGroup.Materia.ItemId);
                 ImGui.SameLine();
             }
         }

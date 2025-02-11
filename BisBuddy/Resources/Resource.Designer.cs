@@ -559,6 +559,16 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Left click to {0} {1}
+        ///Right click to search for in inventory.
+        /// </summary>
+        internal static string MateriaTooltip {
+            get {
+                return ResourceManager.GetString("MateriaTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Meld.
         /// </summary>
         internal static string MeldVerb {
@@ -622,11 +632,30 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Left click to {0}
+        ///Right click to search for in inventory.
+        /// </summary>
+        internal static string PrerequesiteTooltipBase {
+            get {
+                return ResourceManager.GetString("PrerequesiteTooltipBase", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Rename Gearset.
         /// </summary>
         internal static string RenameGearsetTooltip {
             get {
                 return ResourceManager.GetString("RenameGearsetTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search inventory for {0}.
+        /// </summary>
+        internal static string SearchInventoryForItemTooltip {
+            get {
+                return ResourceManager.GetString("SearchInventoryForItemTooltip", resourceCulture);
             }
         }
         
