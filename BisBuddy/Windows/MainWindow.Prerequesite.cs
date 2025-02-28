@@ -1,4 +1,6 @@
 using BisBuddy.Gear.Prerequesites;
+using BisBuddy.Resources;
+using Dalamud.Interface;
 using Dalamud.Interface.Utility.Raii;
 using ImGuiNET;
 using System;
@@ -10,13 +12,12 @@ namespace BisBuddy.Windows
     {
         private void drawOrNode(PrerequesiteOrNode node, int parentCount = 1)
         {
-            using var tabBar = ImRaii.TabBar("##or_item_prerequesites");
+            using var tabBar = ImRaii.TabBar($"###or_item_prerequesites_{node.GetHashCode()}");
             if (tabBar)
             {
                 for (var i = 0; i < node.PrerequesiteTree.Count; i++)
                 {
                     var prereq = node.PrerequesiteTree[i];
-                    using var _ = ImRaii.PushId(i);
                     var prereqLabelColorblind = prereq.IsCollected
                         ? ""
                         : prereq.IsObtainable
@@ -31,8 +32,9 @@ namespace BisBuddy.Windows
                     else
                         textColor = UnobtainedColor;
 
+                    using (ImRaii.PushId(i))
                     using (ImRaii.PushColor(ImGuiCol.Text, textColor))
-                    using (var tabItem = ImRaii.TabItem($"Source {i + 1} ({prereq.SourceType}){prereqLabelColorblind}###sourcetabitem"))
+                    using (var tabItem = ImRaii.TabItem($"Source {i + 1} ({prereq.SourceType}){prereqLabelColorblind}###or_node_tab_item_{i}"))
                     {
                         if (tabItem)
                         {
@@ -51,15 +53,15 @@ namespace BisBuddy.Windows
             }
         }
 
-        private void drawAndNode(PrerequesiteAndNode node, int mult = 1)
+        private void drawAndNode(PrerequesiteAndNode node, int parentCount = 1)
         {
             var groupedPrereqs = node.Groups();
 
             for (var i = 0; i < groupedPrereqs.Count; i++)
             {
-                var _ = ImRaii.PushId(i);
+                using var _ = ImRaii.PushId(i);
                 var prereq = groupedPrereqs[i];
-                drawPrerequesiteTree(prereq.Node, prereq.Count * mult);
+                drawPrerequesiteTree(prereq.Node, prereq.Count * parentCount);
             }
         }
 
@@ -85,6 +87,22 @@ namespace BisBuddy.Windows
 
             using (ImRaii.PushColor(ImGuiCol.Text, textColor))
             {
+                if (node.IsManuallyCollected)
+                {
+                    using (ImRaii.PushFont(UiBuilder.IconFont))
+                    {
+                        ImGui.Text(FontAwesomeIcon.Check.ToIconString());
+                    }
+                    if (ImGui.IsItemHovered())
+                    {
+                        using (ImRaii.PushColor(ImGuiCol.Text, new Vector4(1, 1, 1, 1)))
+                        {
+                            ImGui.SetTooltip(Resource.ManuallyCollectedTooltip);
+                        }
+                    }
+
+                    ImGui.SameLine();
+                }
                 if (ImGui.Button($"{countLabel}{node.ItemName}{prereqLabelColorblind}##collect_prereq_button"))
                     node.SetCollected(!node.IsCollected, true);
             }
@@ -94,8 +112,15 @@ namespace BisBuddy.Windows
 
             if (node.PrerequesiteTree.Count == 1 && !node.IsCollected)
             {
-                using (ImRaii.PushIndent(40.0f))
+                var drawList = ImGui.GetWindowDrawList();
+                var curLoc = ImGui.GetCursorScreenPos();
+                var col = ImGui.GetColorU32(textColor);
+                var textHeight = (ImGui.CalcTextSize("HI").Y / 2) + ImGui.GetStyle().FramePadding.Y;
+
+                using (ImRaii.PushIndent(25.0f, scaled: false))
                 {
+                    drawList.AddLine(curLoc + new Vector2(10, 0), curLoc + new Vector2(10, textHeight), col, 2);
+                    drawList.AddLine(curLoc + new Vector2(10, textHeight), curLoc + new Vector2(20, textHeight), col, 2);
                     drawPrerequesiteTree(node.PrerequesiteTree[0], parentCount);
                 }
             }
@@ -105,17 +130,14 @@ namespace BisBuddy.Windows
         {
             if (prerequesiteNode.GetType() == typeof(PrerequesiteOrNode))
             {
-                using var _ = ImRaii.PushId(1);
                 drawOrNode((PrerequesiteOrNode) prerequesiteNode, parentCount);
             }
             else if (prerequesiteNode.GetType() == typeof(PrerequesiteAndNode))
             {
-                using var _ = ImRaii.PushId(2);
                 drawAndNode((PrerequesiteAndNode) prerequesiteNode, parentCount);
             }
             else if (prerequesiteNode.GetType() == typeof(PrerequesiteAtomNode))
             {
-                using var _ = ImRaii.PushId(3);
                 drawAtomNode((PrerequesiteAtomNode) prerequesiteNode, parentCount);
             }
         }
