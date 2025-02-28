@@ -30,7 +30,7 @@ namespace BisBuddy
             GameInventoryType.ArmoryRings,
         ];
 
-        public void UpdateFromInventory(List<Gearset> gearsetsToUpdate)
+        public void UpdateFromInventory(List<Gearset> gearsetsToUpdate, bool saveChanges = true)
         {
             // don't block main thread, queue for execution instead
             itemAssignmentQueue.Enqueue(() =>
@@ -55,7 +55,7 @@ namespace BisBuddy
 
                     Services.Log.Debug($"Updated {updatedGearpieces.Count} gearpieces from inventories");
 
-                    if (updatedGearpieces.Count > 0)
+                    if (updatedGearpieces.Count > 0 && saveChanges)
                     {
                         SaveGearsetsWithUpdate(false);
                     }
