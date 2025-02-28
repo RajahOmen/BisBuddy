@@ -2,7 +2,6 @@ using BisBuddy.Gear.Prerequesites;
 using Dalamud.Interface.Utility.Raii;
 using ImGuiNET;
 using System;
-using System.Linq;
 using System.Numerics;
 
 namespace BisBuddy.Windows
@@ -104,30 +103,20 @@ namespace BisBuddy.Windows
 
         private void drawPrerequesiteTree(PrerequesiteNode prerequesiteNode, int parentCount = 1)
         {
-            Services.Log.Verbose($"=============");
-            Services.Log.Verbose($"FULL: {string.Join(", ", prerequesiteNode.PrerequesiteTree.Select(g => $"{g.ItemName} ({g.GetType().Name}/{g.SourceType})"))}");
-            Services.Log.Verbose($"-------------");
-            //Services.Log.Verbose($"GROUPED: {string.Join(", ", groupedPrereqs.Select(g => $"{g.Item1.ItemName} {g.Item2}"))}");
-
             if (prerequesiteNode.GetType() == typeof(PrerequesiteOrNode))
             {
                 using var _ = ImRaii.PushId(1);
                 drawOrNode((PrerequesiteOrNode) prerequesiteNode, parentCount);
-                return;
             }
-
-            if (prerequesiteNode.GetType() == typeof(PrerequesiteAndNode))
+            else if (prerequesiteNode.GetType() == typeof(PrerequesiteAndNode))
             {
                 using var _ = ImRaii.PushId(2);
                 drawAndNode((PrerequesiteAndNode) prerequesiteNode, parentCount);
-                return;
             }
-
-            if (prerequesiteNode.GetType() == typeof(PrerequesiteAtomNode))
+            else if (prerequesiteNode.GetType() == typeof(PrerequesiteAtomNode))
             {
                 using var _ = ImRaii.PushId(3);
                 drawAtomNode((PrerequesiteAtomNode) prerequesiteNode, parentCount);
-                return;
             }
         }
     }

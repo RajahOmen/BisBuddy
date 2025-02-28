@@ -1,4 +1,3 @@
-using BisBuddy.Gear;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
 using System.Collections.Generic;
@@ -56,26 +55,6 @@ namespace BisBuddy.Items
         private static readonly Regex NormalRaidUpgradeMatRegex = new(@"(One|Two|Four).*special \b(headgear|body gear|arm gear|leg gear|foot gear|accessory)\.");
         // for criterion shops that augment augmented weapons using criterion savage drops
         private static readonly Regex CriterionUpgradeMatRegex = new(@"previously augmented (weaponry)");
-
-        private static List<(uint id, GearpieceType type, uint ilvl, string name)> getCofferInfo(ExcelSheet<Item> itemSheet)
-        {
-            // coffer id, slot type (e.g. body, head, etc.), ilvl, match string (optional)
-            var cofferInfo = new List<(uint id, GearpieceType type, uint ilvl, string name)>();
-
-            foreach (var item in itemSheet)
-            {
-                var cofferMatch = GearCofferRegex.Match(item.Name.ToString());
-                if (
-                    cofferMatch.Success
-                    && GearpieceTypeMapper.TryParse(cofferMatch.Groups[1].Value.Replace("-", null).Replace("Genji ", null), out var cofferType) // matches a gearpiece
-                    && uint.TryParse(cofferMatch.Groups[2].Value, out var cofferIlvl) // parsed ilvl
-                    ) // item is a gear coffer
-                {
-                    cofferInfo.Add((item.RowId, cofferType, cofferIlvl, item.Name.ToString()));
-                }
-            }
-            return cofferInfo;
-        }
 
         private static List<SpecialShop> getRelevantShops(ExcelSheet<SpecialShop> shopSheet)
         {
