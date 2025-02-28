@@ -16,8 +16,8 @@ namespace BisBuddy.ItemAssignment
         private readonly bool strictMateriaMatching;
         private readonly ItemData itemData;
         private readonly List<Gearset> gearsets;
-        private readonly List<GearpieceGroup> gearpiceGroups = [];
-        private readonly List<PrerequesiteGroup> prerequesiteGroups = [];
+        private readonly List<GearpieceAssignmentGroup> gearpiceGroups = [];
+        private readonly List<PrerequesiteAssignmentGroup> prerequesiteGroups = [];
         private readonly List<GameInventoryItem> gearpieceCandidateItems;
         private List<GameInventoryItem> prerequesiteCandidateItems;
         private readonly List<Gearpiece> assignedGearpieces = [];
@@ -58,7 +58,7 @@ namespace BisBuddy.ItemAssignment
             return item.ItemId + ItemData.ItemIdHqOffset;
         }
 
-        private void logSolution(int[] assignments, int[,] edges, List<GameInventoryItem> items, List<IDemandGroup> groups)
+        private void logSolution(int[] assignments, int[,] edges, List<GameInventoryItem> items, List<IAssignmentGroup> groups)
         {
             var rows = edges.GetLength(0);
             var columns = edges.GetLength(1);
@@ -135,9 +135,9 @@ namespace BisBuddy.ItemAssignment
 # if DEBUG
             Services.Log.Debug("Item Assignment Solver Solution");
             Services.Log.Debug("Gearpiece Assignments");
-            logSolution(gearpieceAssignments, gearpieceEdges, gearpieceCandidateItems, gearpiceGroups.Select(g => (IDemandGroup)g).ToList());
+            logSolution(gearpieceAssignments, gearpieceEdges, gearpieceCandidateItems, gearpiceGroups.Select(g => (IAssignmentGroup)g).ToList());
             Services.Log.Debug("Prerequesite Assignments");
-            logSolution(prerequesiteAssignments, prerequesiteEdges ?? new int[0, 0], prerequesiteCandidateItems, prerequesiteGroups.Select(g => (IDemandGroup)g).ToList());
+            logSolution(prerequesiteAssignments, prerequesiteEdges ?? new int[0, 0], prerequesiteCandidateItems, prerequesiteGroups.Select(g => (IAssignmentGroup)g).ToList());
 #endif
             return result;
         }
@@ -186,9 +186,9 @@ namespace BisBuddy.ItemAssignment
             }
         }
 
-        private List<GearpieceGroup> groupGearpieces(List<Gearset> gearsets)
+        private List<GearpieceAssignmentGroup> groupGearpieces(List<Gearset> gearsets)
         {
-            var gearpieceGroups = new List<GearpieceGroup>();
+            var gearpieceGroups = new List<GearpieceAssignmentGroup>();
             var overallGearpieceIdx = -1;
 
             foreach (var gearset in gearsets)
@@ -200,16 +200,16 @@ namespace BisBuddy.ItemAssignment
                     if (gearpieceGroups.Any(group => group.AddMatchingGearpiece(gearpiece, gearset))) continue;
 
                     // if no group was found, create a new one and add this gearpiece
-                    gearpieceGroups.Add(new GearpieceGroup(gearpiece, gearset, overallGearpieceIdx));
+                    gearpieceGroups.Add(new GearpieceAssignmentGroup(gearpiece, gearset, overallGearpieceIdx));
                 }
             }
 
             return gearpieceGroups;
         }
 
-        private List<PrerequesiteGroup> groupPrerequesites(List<Gearset> gearsets)
+        private List<PrerequesiteAssignmentGroup> groupPrerequesites(List<Gearset> gearsets)
         {
-            var prerequesiteGroups = new List<PrerequesiteGroup>();
+            var prerequesiteGroups = new List<PrerequesiteAssignmentGroup>();
             var overallPrereqIdx = -1;
 
             foreach (var gearset in gearsets)
@@ -218,19 +218,28 @@ namespace BisBuddy.ItemAssignment
                 {
                     var gearpiece = gearset.Gearpieces[gearpieceIdx];
 
+                    // has no prerequesites to potentially assign
+                    if (gearpiece.PrerequisiteTree == null)
+                        continue;
+
                     // already assigned in gearpiece assignment solution or is manually collected, don't add this to any group
-                    if (assignedGearpieces.Contains(gearpiece) || gearpiece.IsManuallyCollected) continue;
+                    if (assignedGearpieces.Contains(gearpiece) || gearpiece.IsManuallyCollected)
+                        continue;
 
-                    foreach (var prerequesite in gearpiece.PrerequisiteItems)
-                    {
-                        overallPrereqIdx++;
-                        // try to add prerequesite to existing group
-                        if (prerequesiteGroups.Any(group => group.AddMatchingPrerequesite(prerequesite, gearpiece, gearset))) continue;
+                    overallPrereqIdx++;
 
-                        // if no group was found, create a new one and add this prerequesite
-                        prerequesiteGroups.Add(new PrerequesiteGroup(prerequesite, gearpiece.ItemMateria, overallPrereqIdx, gearpiece, gearset));
-                    }
+                    // try to add prerequesite to existing group
+                    if (prerequesiteGroups.Any(group => group.AddMatchingPrerequesite(gearpiece.PrerequisiteTree, gearpiece, gearset)))
+                        continue;
 
+                    // if no group was found, create a new one and add this prerequesite
+                    prerequesiteGroups.Add(new PrerequesiteAssignmentGroup(
+                        gearpiece.PrerequisiteTree,
+                        gearpiece.ItemMateria,
+                        overallPrereqIdx,
+                        gearpiece,
+                        gearset
+                        ));
                 }
             }
 
@@ -373,8 +382,8 @@ namespace BisBuddy.ItemAssignment
 
                 // get gearset-prerequesite pairing
                 var unassignedPrereqGearsets = unassignedGroup
-                    .GearpiecePrerequesites
-                    .Select(prereq => (prereq, unassignedGroup.Gearsets.First(set => set.Gearpieces.Where(g => g.PrerequisiteItems.Contains(prereq)).Any())))
+                    .PrerequesiteGroups
+                    .Select(prereq => (prereq, unassignedGroup.Gearsets.First(set => set.Gearpieces.Where(g => g.PrerequisiteTree == prereq).Any())))
                     .ToDictionary();
 
                 foreach (var (prerequesite, gearset) in unassignedPrereqGearsets)
@@ -385,14 +394,14 @@ namespace BisBuddy.ItemAssignment
                         if (validAssignedGroup.Gearsets.Contains(gearset))
                             continue;
 
-                        validAssignedGroup.GearpiecePrerequesites.Add(prerequesite);
+                        validAssignedGroup.PrerequesiteGroups.Add(prerequesite);
                         validAssignedGroup.Gearsets.Add(gearset);
-                        unassignedGroup.GearpiecePrerequesites.Remove(prerequesite);
+                        unassignedGroup.PrerequesiteGroups.Remove(prerequesite);
                         break;
                     }
                 }
 
-                if (unassignedGroup.GearpiecePrerequesites.Count == 0)
+                if (unassignedGroup.PrerequesiteGroups.Count == 0)
                 {
                     unassignedGroupIndexes.RemoveAt(i);
                 }

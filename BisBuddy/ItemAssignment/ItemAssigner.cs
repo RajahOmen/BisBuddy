@@ -1,4 +1,5 @@
 using BisBuddy.Gear;
+using BisBuddy.Gear.Prerequesites;
 using BisBuddy.Items;
 using System;
 using System.Collections.Generic;
@@ -78,47 +79,49 @@ namespace BisBuddy.ItemAssignment
             var updatedGearpieces = new List<Gearpiece>();
             foreach (var assignment in assignments)
             {
-                foreach (var assignedGearpiece in gearpiecesToAssign)
+                foreach (var assignableGearpiece in gearpiecesToAssign)
                 {
-                    var gearpiecePrereqUpdateCount = updateGearpiecePrerequesites(assignedGearpiece.PrerequisiteItems, assignment);
+                    // doesn't have any prerequesites to potentially assign, skip this one
+                    if (assignableGearpiece.PrerequisiteTree == null)
+                        continue;
+
+                    var gearpiecePrereqUpdateCount = updateGearpiecePrerequesites(assignableGearpiece.PrerequisiteTree, assignment);
                     // only add "one", for the whole gearpiece having at least one change
-                    if (gearpiecePrereqUpdateCount > 0) updatedGearpieces.Add(assignedGearpiece);
+                    if (gearpiecePrereqUpdateCount > 0) updatedGearpieces.Add(assignableGearpiece);
                 }
             }
             return updatedGearpieces;
         }
 
-        private static int updateGearpiecePrerequesites(List<GearpiecePrerequesite> gearpiecePrereqs, PrerequesitesAssignment assignment)
+        private static int updateGearpiecePrerequesites(PrerequesiteNode gearpiecePrereqs, PrerequesitesAssignment assignment)
         {
             var updateCount = 0;
-            foreach (var prereq in gearpiecePrereqs)
+            if (gearpiecePrereqs == assignment.PrerequesiteGroup)
             {
-                if (prereq == assignment.GearpiecePrerequesite)
+                if (assignment.Item == null)
                 {
-                    if (assignment.Item == null)
-                    {
-                        // already uncollected, or force collected
-                        if (!prereq.IsCollected || prereq.IsManuallyCollected) continue;
-                        // unassign
-                        prereq.SetCollected(false, false);
-                        updateCount++;
-                        return updateCount;
-                    }
-                    else
-                    {
-                        // already collected, ignore
-                        if (prereq.IsCollected) continue;
-                        // colllect
-                        updateCount += (1 + prereq.Prerequesites.Count);
-                        prereq.SetCollected(true, false);
-                        return updateCount;
-                    }
+                    // already uncollected, or force collected
+                    if (!gearpiecePrereqs.IsCollected || gearpiecePrereqs.IsManuallyCollected) return updateCount;
+                    // unassign
+                    gearpiecePrereqs.SetCollected(false, false);
+                    updateCount++;
+                    return updateCount;
                 }
                 else
                 {
-                    // recurse through children
-                    updateCount += updateGearpiecePrerequesites(prereq.Prerequesites, assignment);
+                    // already collected, ignore
+                    if (gearpiecePrereqs.IsCollected) return updateCount;
+                    // colllect
+                    updateCount += (1 + gearpiecePrereqs.PrerequesiteTree.Count);
+                    gearpiecePrereqs.SetCollected(true, false);
+                    return updateCount;
                 }
+            }
+            else
+            {
+                // recurse through children
+                updateCount += gearpiecePrereqs.PrerequesiteTree
+                    .Sum(p => updateGearpiecePrerequesites(p, assignment));
             }
             return updateCount;
         }

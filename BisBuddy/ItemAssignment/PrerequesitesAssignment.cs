@@ -1,12 +1,12 @@
-using BisBuddy.Gear;
+using BisBuddy.Gear.Prerequesites;
 using Dalamud.Game.Inventory;
 
 namespace BisBuddy.ItemAssignment
 {
-    public class PrerequesitesAssignment(GameInventoryItem? item, GearpiecePrerequesite gearpiecePrerequesite)
+    public class PrerequesitesAssignment(GameInventoryItem? item, PrerequesiteNode prerequesiteGroup)
     {
         // null if prerequesites unassigned
         public GameInventoryItem? Item { get; set; } = item;
-        public GearpiecePrerequesite GearpiecePrerequesite { get; set; } = gearpiecePrerequesite;
+        public PrerequesiteNode PrerequesiteGroup { get; set; } = prerequesiteGroup;
     }
 }

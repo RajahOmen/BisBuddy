@@ -1,11 +1,12 @@
 using BisBuddy.Gear;
+using BisBuddy.Gear.Prerequesites;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace BisBuddy.ItemAssignment
 {
-    public class PrerequesiteGroup : IDemandGroup
+    public class PrerequesiteAssignmentGroup : IAssignmentGroup
     {
         // ensure that item->prerequesite group edges are always scored lower than item->gearpiece group edges
         // basically, assign items first, then 'fill in' prerequesites
@@ -19,10 +20,10 @@ namespace BisBuddy.ItemAssignment
         // #3: prioritize filling gearpiece prereqs closer to the start/top of the list
         private static readonly int GearpieceIndexScoreScalar = -1;
 
-        public DemandGroupType Type => DemandGroupType.Prerequesite;
-        public List<GearpiecePrerequesite> GearpiecePrerequesites { get; set; }
+        public AssignmentGroupType Type => AssignmentGroupType.Prerequesite;
+        public List<PrerequesiteNode> PrerequesiteGroups { get; set; }
         public uint ItemId { get; set; }
-        private readonly Dictionary<uint, int> itemIdPrereqCounts = [];
+        private readonly Dictionary<uint, int> neededItemIds;
         public bool IsManuallyCollected { get; set; } = false;
 
         public readonly int minGearpieceIdx;
@@ -41,45 +42,36 @@ namespace BisBuddy.ItemAssignment
             }
         }
 
-        public PrerequesiteGroup(
-            GearpiecePrerequesite gearpiecePrerequesite,
+        public PrerequesiteAssignmentGroup(
+            PrerequesiteNode prerequesiteGroup,
             List<Materia> gearpieceMateria,
             int gearpieceIdx,
             Gearpiece gearpiece,
             Gearset gearset
             )
         {
-            ItemId = gearpiecePrerequesite.ItemId;
-            GearpiecePrerequesites = [gearpiecePrerequesite];
+            ItemId = prerequesiteGroup.ItemId;
+            PrerequesiteGroups = [prerequesiteGroup];
             Gearsets = [gearset];
             MateriaList = new List<Materia>(gearpieceMateria);
-            IsManuallyCollected = gearpiecePrerequesite.IsManuallyCollected;
+            IsManuallyCollected = prerequesiteGroup.IsManuallyCollected;
             minGearpieceIdx = gearpieceIdx;
-            minRemainingPrereqs = gearpiece.PrerequisiteItems.Where(p => !p.IsCollected).Count();
 
-            itemIdPrereqCounts.Add(gearpiecePrerequesite.ItemId, gearpiecePrerequesite.PrerequesiteCount + 1);
-            addQuantityCounts(gearpiecePrerequesite);
+            neededItemIds = [];
+            prerequesiteGroup.AddNeededItemIds(neededItemIds);
         }
 
-        private void addQuantityCounts(GearpiecePrerequesite prereqItem)
-        {
-            foreach (var prereq in prereqItem.Prerequesites)
-            {
-                // add that this item is needed (and to the "level" its needed)
-                itemIdPrereqCounts[prereq.ItemId] = prereq.PrerequesiteCount + 1;
-
-                // propogate update to children
-                addQuantityCounts(prereq);
-            }
-        }
-
-        public bool AddMatchingPrerequesite(GearpiecePrerequesite prereq, Gearpiece prereqGearpiece, Gearset gearset)
+        public bool AddMatchingPrerequesite(PrerequesiteNode prereq, Gearpiece prereqGearpiece, Gearset gearset)
         {
             // tries to add prereq and return true.
             // Returns false if prereq doesn't match this group
 
             // item ids don't match
-            if (prereq.ItemId != ItemId) return false;
+            if (prereq.ItemId != ItemId)
+                return false;
+
+            if (prereqGearpiece.PrerequisiteTree == null)
+                throw new Exception($"Expected PrerequesiteGroup for gearpiece \"{prereqGearpiece.ItemName}\", got null");
 
             // item materia don't match
             if (
@@ -103,18 +95,21 @@ namespace BisBuddy.ItemAssignment
             }
 
             // ids and materia match, add it to group and return true
-            GearpiecePrerequesites.Add(prereq);
+            PrerequesiteGroups.Add(prereq);
             Gearsets.Add(gearset);
-            addQuantityCounts(prereq);
+            prereqGearpiece.PrerequisiteTree.AddNeededItemIds(neededItemIds);
             IsManuallyCollected |= prereq.IsManuallyCollected;
-            minRemainingPrereqs = Math.Min(prereqGearpiece.PrerequisiteItems.Where(p => !p.IsCollected).Count(), minRemainingPrereqs);
+            minRemainingPrereqs = Math.Min(
+                prereqGearpiece.PrerequisiteTree.MinRemainingItems(),
+                minRemainingPrereqs
+                );
 
             return true;
         }
 
         public int CandidateEdgeWeight(uint candidateId, List<Materia> candidateMateria)
         {
-            var prereqsSatisfiedByCandidate = itemIdPrereqCounts.GetValueOrDefault(candidateId, 0);
+            var prereqsSatisfiedByCandidate = neededItemIds.GetValueOrDefault(candidateId, 0);
 
             if (prereqsSatisfiedByCandidate == 0) return ItemAssigmentSolver.NoEdgeWeightValue;
 

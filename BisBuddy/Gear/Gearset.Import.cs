@@ -6,7 +6,6 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Web;
-
 namespace BisBuddy.Gear
 {
     public partial class Gearset
@@ -29,12 +28,6 @@ namespace BisBuddy.Gear
             "fingerL",
             "fingerR",
             ]);
-
-        public static readonly JsonSerializerOptions JsonOptions = new()
-        {
-            PropertyNameCaseInsensitive = true,
-            IncludeFields = true,
-        };
 
         public static async Task<List<Gearset>> ImportFromRemote(string url, ItemData itemData)
         {
@@ -261,14 +254,12 @@ namespace BisBuddy.Gear
                             materiaList.Add(newMateria);
                         }
                     }
-
                 }
-
                 var gearpiece = new Gearpiece(
                     gearpieceId,
                     gearpieceName,
                     gearpieceType,
-                    itemData.BuildGearpiecePrerequesites(gearpieceId),
+                    itemData.BuildGearpiecePrerequesiteGroup(gearpieceId),
                     materiaList
                     );
 
@@ -341,7 +332,7 @@ namespace BisBuddy.Gear
                             gearpieceId,
                             itemData.GetItemNameById(gearpieceId),
                             gearpieceType,
-                            itemData.BuildGearpiecePrerequesites(gearpieceId),
+                            itemData.BuildGearpiecePrerequesiteGroup(gearpieceId),
                             getEtroMateria(materiaProp, gearpieceId.ToString(), typeStr, itemData)
                             );
 
@@ -370,7 +361,7 @@ namespace BisBuddy.Gear
                             relicItemId,
                             relicName,
                             relicType,
-                            itemData.BuildGearpiecePrerequesites(relicItemId),
+                            itemData.BuildGearpiecePrerequesiteGroup(relicItemId),
                             getEtroMateria(materiaProp, relicItemId.ToString(), relic.Name, itemData)
                             );
 

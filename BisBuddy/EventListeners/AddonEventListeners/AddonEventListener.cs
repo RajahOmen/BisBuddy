@@ -178,8 +178,6 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                 {
                     var node = (AtkResNode*)highlightedNodes[0];
 
-                    Services.Log.Verbose($"removing color from {node->NodeId}");
-
                     if (node != null)
                         setAddGreen(node, false);
                 }
