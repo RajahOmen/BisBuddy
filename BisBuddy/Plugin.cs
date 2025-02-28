@@ -79,7 +79,7 @@ public sealed partial class Plugin : IDalamudPlugin
         // instantiate services
         pluginInterface.Create<Services>();
 
-        try
+        Configuration = Configuration.LoadConfig();
         {
             Configuration = Services.PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
         }

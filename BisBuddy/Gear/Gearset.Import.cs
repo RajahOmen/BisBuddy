@@ -70,7 +70,7 @@ namespace BisBuddy.Gear
         {
             try
             {
-                var gearset = JsonSerializer.Deserialize<Gearset>(jsonStr, JsonOptions)
+                var gearset = JsonSerializer.Deserialize<Gearset>(jsonStr, Configuration.JsonOptions)
                     ?? throw new GearsetImportException(GearsetImportStatusType.InvalidJson);
 
                 gearset.Id = Guid.NewGuid().ToString(); // set to a new random uuid\
@@ -466,7 +466,7 @@ namespace BisBuddy.Gear
 
         public string ExportToJsonStr()
         {
-            return JsonSerializer.Serialize(this, JsonOptions);
+            return JsonSerializer.Serialize(this, Configuration.JsonOptions);
         }
     }
 }

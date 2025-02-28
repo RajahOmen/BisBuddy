@@ -2,14 +2,21 @@ using BisBuddy.Gear;
 using Dalamud.Configuration;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Numerics;
+using System.Text.Json;
 
 namespace BisBuddy;
 
 [Serializable]
 public class Configuration : IPluginConfiguration
 {
-    public static readonly int CurrentVersion = 2;
+    public static readonly int CurrentVersion = 3;
+    public static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        IncludeFields = true,
+    };
     public int Version { get; set; } = 1;
 
     public bool HighlightNeedGreed { get; set; } = true;
@@ -49,6 +56,46 @@ public class Configuration : IPluginConfiguration
 
     public void Save()
     {
-        Services.PluginInterface.SavePluginConfig(this);
+        var configText = JsonSerializer.Serialize(this, JsonOptions);
+        File.WriteAllText(Services.PluginInterface.ConfigFile.FullName, configText);
+    }
+
+    public static Configuration LoadConfig()
+    {
+        try
+        {
+            var configText = File.ReadAllText(Services.PluginInterface.ConfigFile.FullName);
+            using (var configJson = JsonDocument.Parse(configText))
+            {
+                var configVersion = configJson
+                    .RootElement
+                    .GetProperty(nameof(Version))
+                    .GetInt32();
+
+                if (configVersion != CurrentVersion)
+                    configText = migrateConfig(configJson, configText, configVersion);
+            }
+            return JsonSerializer.Deserialize<Configuration>(configText, JsonOptions) ?? new Configuration();
+        }
+        catch (FileNotFoundException)
+        {
+            return new Configuration();
+        }
+        catch (JsonException)
+        {
+            // maybe not ideal
+            return new Configuration();
+        }
+        catch (Exception ex)
+        {
+            Services.Log.Fatal(ex, $"Error loading {Plugin.PluginName} configuration");
+            throw;
+        }
+    }
+
+    private static string migrateConfig(JsonDocument configJson, string configText, int configVersion)
+    {
+        // todo
+        return configText;
     }
 }
