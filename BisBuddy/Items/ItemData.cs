@@ -1,59 +1,104 @@
-using BisBuddy.Gear;
+using BisBuddy.Gear.Prerequesites;
 using Dalamud.Game.Inventory;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SheetMateria = Lumina.Excel.Sheets.Materia;
+using GearMateria = BisBuddy.Gear.Materia;
+using System.Threading.Tasks;
 
 namespace BisBuddy.Items
 {
     public partial class ItemData
     {
+        private ILookup<uint, uint>? itemsCoffers = null;
+        private ILookup<uint, List<uint>>? itemsPrerequesites = null;
+
         public static readonly uint ItemIdHqOffset = 1_000_000;
         public static readonly char HqIcon = '';
         public static readonly char GlamourIcon = '';
         public static readonly int MaxItemPrerequesites = 25;
         private ExcelSheet<Item> ItemSheet { get; init; }
         private ExcelSheet<SpecialShop> ShopSheet { get; init; }
-        private ExcelSheet<Lumina.Excel.Sheets.Materia> Materia { get; init; }
-        public Dictionary<uint, uint> ItemsCoffers { get; init; }
+        private ExcelSheet<SheetMateria> Materia { get; init; }
+        public ILookup<uint, uint> ItemsCoffers {
+            get
+            {
+                if (itemsCoffers == null)
+                {
+                    itemsCoffers = generateItemsCoffers();
+                    Task.Run(async () =>
+                    {
+                        await Task.Delay(1000);
+                        itemsCoffers = null;
+                    });
+                }
+                return itemsCoffers;
+            }
+        }
+        public ILookup<uint, List<uint>> ItemsPrerequesites {
+            get
+            {
+                if (itemsPrerequesites == null)
+                {
+                    itemsPrerequesites = generateItemsPrerequesites();
+                    Task.Run(async () =>
+                    {
+                        await Task.Delay(1000);
+                        itemsPrerequesites = null;
+                    });
+                }
+                return itemsPrerequesites;
+            }
+        }
         private Dictionary<string, uint> NameToId { get; init; }
         private Dictionary<string, (string statName, int statLevel, int statQuantity)> MateriaNameToStat { get; init; } = [];
         private Dictionary<(uint materiaId, int materiaGrade), uint> materiaItemIds { get; init; }
-        public Dictionary<uint, List<uint>> ItemPrerequesites { get; init; }
 
         public ItemData(ExcelModule luminaExcelModule)
         {
             ItemSheet = luminaExcelModule.GetSheet<Item>() ?? throw new ArgumentException("Item sheet not found");
             ShopSheet = luminaExcelModule.GetSheet<SpecialShop>() ?? throw new InvalidOperationException("Special shop sheet not found");
-            Materia = luminaExcelModule.GetSheet<Lumina.Excel.Sheets.Materia>() ?? throw new InvalidOperationException("Materia sheet not found");
-
-            var (itemsCoffers, itemsAugments) = generateItemRelations(ItemSheet, ShopSheet); // initialize ItemsCoffers and ItemsAugments
-            ItemsCoffers = itemsCoffers;
-            ItemPrerequesites = itemsAugments;
+            Materia = luminaExcelModule.GetSheet<SheetMateria>() ?? throw new InvalidOperationException("Materia sheet not found");
             NameToId = [];
             materiaItemIds = [];
-        }
+#if DEBUG
+            // minimum item id to display for debug logging. Update with new patches to review generations
+            // filters out most older items for easier debugging
+            uint debugMinItemId = 44500; // lower than most recent to ensure get new items 
 
-        private static GearpieceType? getGearpieceType(Item item)
-        {
-            var slots = item.EquipSlotCategory.Value;
+            Services.Log.Verbose("Coffer Relations Found");
+            foreach (var item in ItemsCoffers)
+            {
+                // only show "new" items
+                if (item.Key < debugMinItemId) continue;
 
-            if (slots.MainHand == 1) return GearpieceType.Weapon;
-            if (slots.OffHand == 1) return GearpieceType.OffHand;
-            if (slots.Head == 1) return GearpieceType.Head;
-            if (slots.Body == 1) return GearpieceType.Body;
-            if (slots.Gloves == 1) return GearpieceType.Hands;
-            if (slots.Legs == 1) return GearpieceType.Legs;
-            if (slots.Feet == 1) return GearpieceType.Feet;
-            if (slots.Ears == 1) return GearpieceType.Ears;
-            if (slots.Neck == 1) return GearpieceType.Neck;
-            if (slots.Wrists == 1) return GearpieceType.Wrists;
-            if (slots.FingerL == 1) return GearpieceType.Finger;
-            if (slots.FingerR == 1) return GearpieceType.Finger;
+                var itemName = ItemSheet.GetRow(item.Key).Name.ToString();
+                foreach (var cofferId in item)
+                {
+                    var cofferName = ItemSheet.GetRow(cofferId).Name.ToString();
+                    ;
+                    Services.Log.Verbose($"{cofferName,-50} => {itemName}");
+                }
+            }
+            Services.Log.Verbose("End Coffer Relations Found");
+            Services.Log.Verbose($"Item Prerequesites Found");
+            foreach (var item in ItemsPrerequesites)
+            {
+                // only show "new" items
+                if (item.Key < debugMinItemId) continue;
 
-            else return null;
+                var recieveItemName = ItemSheet.GetRow(item.Key).Name.ToString();
+                foreach (var itemId in item)
+                {
+                    var prereqItemNames = itemId.Select(id => ItemSheet.GetRow(id).Name.ToString());
+                    Services.Log.Verbose($"{string.Join(" + ", prereqItemNames.GroupBy(n => n).Select(g => $"{g.Count()}x {g.Key}")),-60} => {recieveItemName}");
+                }
+            }
+            Services.Log.Verbose($"End Item Prerequesites Found");
+#endif
         }
 
         public uint ConvertItemIdToHq(uint id)
@@ -136,7 +181,7 @@ namespace BisBuddy.Items
         {
             var data = new byte[0x48];
             var ptr = (byte*)item.Address;
-            for (int i = 0; i < 0x48; i++)
+            for (var i = 0; i < 0x48; i++)
             {
                 data[i] = ptr[i];
             }
@@ -144,10 +189,10 @@ namespace BisBuddy.Items
             Services.Log.Fatal(str);
         }
 
-        public List<Gear.Materia> GetItemMateria(GameInventoryItem item)
+        public List<GearMateria> GetItemMateria(GameInventoryItem item)
         {
             var materiaIds = GetItemMateriaIds(item);
-            var materiaList = new List<Gear.Materia>();
+            var materiaList = new List<GearMateria>();
             foreach (var id in materiaIds)
             {
                 materiaList.Add(BuildMateria(id));
@@ -167,30 +212,125 @@ namespace BisBuddy.Items
             return materiaItem.RowId;
         }
 
-        public List<GearpiecePrerequesite> BuildGearpiecePrerequesites(uint gearpieceId)
+        public PrerequesiteNode? BuildGearpiecePrerequesiteGroup(uint itemId)
         {
-            // returns a list of item ids that are required to obtain the item with the provided id
-            var prerequisites = new List<GearpiecePrerequesite>();
+            var unitPrerequesiteGroup = BuildPrerequesites(itemId);
 
-            // check for coffer
-            if (ItemsCoffers.TryGetValue(gearpieceId, out var cofferId))
+            if (unitPrerequesiteGroup.GetType() != typeof(PrerequesiteAtomNode))
+                throw new Exception($"Item id \"{itemId}\" returned non-unit prereqs group (\"{unitPrerequesiteGroup.GetType().Name}\")");
+
+            // Unit type prerequesite groups should only
+            if (unitPrerequesiteGroup.PrerequesiteTree.Count > 1)
+                throw new Exception($"Item id \"{itemId}\" returned unit prereqs with \"{unitPrerequesiteGroup.PrerequesiteTree.Count}\" prerequesites");
+
+            // no prereqs to unwrap to, don't want empty unit prereq group for gearpiece
+            if (unitPrerequesiteGroup.PrerequesiteTree.Count == 0)
+                return null;
+
+            // unwrap highest layer, the geapiece itself acts as the upper unit prereq group
+            return unitPrerequesiteGroup.PrerequesiteTree[0];
+        }
+
+        private PrerequesiteNode BuildPrerequesites(uint itemId, int depth = 8)
+        {
+            var itemName = GetItemNameById(itemId);
+            var group = new PrerequesiteAtomNode(itemId, itemName, [], PrerequesiteNodeSourceType.Item);
+
+            if (depth <= 0)
+                return group;
+
+            // build list of prerequesites from supplementals data
+            PrerequesiteNode supplementalTree = new PrerequesiteOrNode(itemId, itemName, [], PrerequesiteNodeSourceType.Loot);
+            var supplementalPrereqs = ItemsCoffers[itemId];
+            var hasSupplementalPrereqs = supplementalPrereqs.Any();
+
+            if (supplementalPrereqs.Count() == 1)
             {
-                prerequisites.Add(new GearpiecePrerequesite(cofferId, this));
+                supplementalTree = BuildPrerequesites(supplementalPrereqs.First(), depth - 1);
+                supplementalTree.SourceType = PrerequesiteNodeSourceType.Loot;
+            } else if (supplementalPrereqs.Count() > 1)
+            {
+                supplementalTree.PrerequesiteTree = ItemsCoffers[itemId]
+                    .Select(id => BuildPrerequesites(id, depth - 1))
+                    .ToList();
             }
 
-            // no prerequesites in the table
-            if (!ItemPrerequesites.TryGetValue(gearpieceId, out var directGearpiecePrereqs))
+            // build list of prerequesites from shops/exchanges data
+            PrerequesiteNode exchangesTree = new PrerequesiteOrNode(itemId, itemName, [], PrerequesiteNodeSourceType.Shop);
+            var exchangesPrereqs = ItemsPrerequesites[itemId];
+            var hasExchangesPrereqs = exchangesPrereqs.Any();
+
+            // only exchangable at one shop
+            if (exchangesPrereqs.Count() == 1)
             {
-                return prerequisites;
+                var shopCosts = exchangesPrereqs.First();
+
+                // shop only is requesting one item to exchange
+                if (shopCosts.Count == 1)
+                {
+                    exchangesTree = BuildPrerequesites(shopCosts.First(), depth - 1);
+                    exchangesTree.SourceType = PrerequesiteNodeSourceType.Shop;
+                } else // shop is requesting more than one item to exchange
+                {
+                    var prereqTree = shopCosts
+                        .Select(id => BuildPrerequesites(id, depth - 1))
+                        .ToList();
+
+                    exchangesTree = new PrerequesiteAndNode(
+                        itemId,
+                        itemName,
+                        prereqTree,
+                        PrerequesiteNodeSourceType.Shop
+                        );
+                }
+                
+            } else if (exchangesPrereqs.Count() > 1) // exchangable at more than 1 shop
+            {
+                // build OR list of ANDs. Ex: OR(AND(A, B, C), AND(D, E), ATOM())
+                exchangesTree.PrerequesiteTree = exchangesPrereqs
+                    .Select(shopCostIds => {
+                        // shop costs one items
+                        if (shopCostIds.Count == 1)
+                        {
+                            return BuildPrerequesites(shopCostIds.First(), depth - 1);
+                        }
+
+                        // Shop costs multiple items
+                        return new PrerequesiteAndNode(
+                            itemId,
+                            itemName,
+                            shopCostIds.Select(id => BuildPrerequesites(id, depth - 1)).ToList(),
+                            PrerequesiteNodeSourceType.Shop
+                            );
+                    }).ToList();
             }
 
-            foreach (var prereqId in directGearpiecePrereqs)
+            // build resulting group
+            if (
+                hasSupplementalPrereqs
+                && hasExchangesPrereqs
+                )
             {
-                var prereq = new GearpiecePrerequesite(prereqId, this);
-                prerequisites.Add(prereq);
+                // composed of both shop/exchange sources and supplemental sources
+                var compoundGroup = new PrerequesiteOrNode(
+                    itemId,
+                    itemName,
+                    [supplementalTree, exchangesTree],
+                    PrerequesiteNodeSourceType.Compound
+                    );
+
+                group.PrerequesiteTree = [ compoundGroup ];
+            } else if (hasSupplementalPrereqs)
+            {
+                // only from supplementals
+                group.PrerequesiteTree = [ supplementalTree ]; 
+            } else if (hasExchangesPrereqs)
+            {   
+                // only from shops/exchanges
+                group.PrerequesiteTree = [ exchangesTree ];
             }
 
-            return prerequisites;
+            return group;
         }
 
         public static List<GameInventoryItem> GetGameInventoryItems(GameInventoryType[] sources)
@@ -227,7 +367,7 @@ namespace BisBuddy.Items
             if (MateriaNameToStat.TryGetValue(materiaName, out var value)) return value;
 
             var maxMateriaRow = 40;
-            Lumina.Excel.Sheets.Materia? materiaRow = null;
+            SheetMateria? materiaRow = null;
             var materiaCol = -1;
 
             for (var i = 0; i < maxMateriaRow; i++)
@@ -255,14 +395,12 @@ namespace BisBuddy.Items
             return (statName, materiaCol, statQuantity);
         }
 
-        public Gear.Materia BuildMateria(uint itemId)
+        public GearMateria BuildMateria(uint itemId)
         {
-
             var materiaName = GetItemNameById(itemId);
-
             var (statName, statLevel, statQuantity) = getMateriaInfo(materiaName);
 
-            return new Gear.Materia(
+            return new GearMateria(
                 itemId,
                 materiaName,
                 statLevel,
