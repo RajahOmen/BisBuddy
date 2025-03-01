@@ -1,4 +1,4 @@
-using BisBuddy.Gear.Prerequesites;
+using BisBuddy.Gear.Prerequisites;
 using Dalamud.Game.Inventory;
 using System;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ namespace BisBuddy.ItemAssignment
     public class SolveResult
     {
         public List<GearpiecesAssignment> GearpiecesAssignments { get; set; } = [];
-        public List<PrerequesitesAssignment> PrerequesitesAssignments { get; set; } = [];
+        public List<PrerequisitesAssignment> PrerequisitesAssignments { get; set; } = [];
 
         public void AddAssignment(GameInventoryItem? item, IAssignmentGroup groupAssigned)
         {
@@ -22,16 +22,16 @@ namespace BisBuddy.ItemAssignment
                     };
                     GearpiecesAssignments.Add(gearpiecesAssignments);
                     break;
-                case AssignmentGroupType.Prerequesite:
-                    var prereqGroupAssigned = (PrerequesiteAssignmentGroup)groupAssigned;
-                    AddPrerequesiteAssignments(item, prereqGroupAssigned.PrerequesiteGroups);
+                case AssignmentGroupType.Prerequisite:
+                    var prereqGroupAssigned = (PrerequisiteAssignmentGroup)groupAssigned;
+                    AddPrerequisiteAssignments(item, prereqGroupAssigned.PrerequisiteGroups);
                     break;
                 default:
                     throw new Exception($"Unknown demand group type {groupAssigned.Type}");
             }
         }
 
-        private void AddPrerequesiteAssignments(GameInventoryItem? item, List<PrerequesiteNode> groupPrereqs)
+        private void AddPrerequisiteAssignments(GameInventoryItem? item, List<PrerequisiteNode> groupPrereqs)
         {
             var itemId = item?.ItemId ?? 0;
 
@@ -39,20 +39,20 @@ namespace BisBuddy.ItemAssignment
             {
                 if (groupPrereq.ItemId == itemId)
                 { // this is the item, "assign" & move on (children are automatically assigned)
-                    var prereqAssignment = new PrerequesitesAssignment(
+                    var prereqAssignment = new PrerequisitesAssignment(
                         item,
                         groupPrereq
                     );
-                    PrerequesitesAssignments.Add(prereqAssignment);
+                    PrerequisitesAssignments.Add(prereqAssignment);
                 }
                 else
                 { // this isn't the item. Don't assign, and recurse on children
-                    var prereqAssignment = new PrerequesitesAssignment(
+                    var prereqAssignment = new PrerequisitesAssignment(
                         null,
                         groupPrereq
                     );
-                    PrerequesitesAssignments.Add(prereqAssignment);
-                    AddPrerequesiteAssignments(item, groupPrereq.PrerequesiteTree);
+                    PrerequisitesAssignments.Add(prereqAssignment);
+                    AddPrerequisiteAssignments(item, groupPrereq.PrerequisiteTree);
                 }
             }
         }

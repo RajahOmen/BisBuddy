@@ -363,7 +363,7 @@ Right click to search for in inventory</value>
   <data name="SearchInventoryForItemTooltip" xml:space="preserve">
     <value>Search inventory for {0}</value>
   </data>
-  <data name="PrerequesiteTooltipBase" xml:space="preserve">
+  <data name="PrerequisiteTooltipBase" xml:space="preserve">
     <value>Left click to {0}
 Right click to search for in inventory</value>
   </data>

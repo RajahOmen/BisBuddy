@@ -98,9 +98,9 @@ namespace BisBuddy.Items
             }
         }
 
-        private ILookup<uint, List<uint>> generateItemsPrerequesites()
+        private ILookup<uint, List<uint>> generateItemsPrerequisites()
         {
-            var itemPrerequesiteOptions = new List<(uint ItemId, List<uint> ShopCostIds)>();
+            var itemPrerequisiteOptions = new List<(uint ItemId, List<uint> ShopCostIds)>();
             var itemExchangeShops = getRelevantShops(ShopSheet);
 
             foreach (var shop in itemExchangeShops)
@@ -129,12 +129,12 @@ namespace BisBuddy.Items
 
                     foreach (var receiveItem in shopItem.ReceiveItems)
                     {
-                        itemPrerequesiteOptions.Add((receiveItem.Item.RowId, itemCosts));
+                        itemPrerequisiteOptions.Add((receiveItem.Item.RowId, itemCosts));
                     }
                 }
             }
 
-            return itemPrerequesiteOptions
+            return itemPrerequisiteOptions
                 .DistinctBy(i => $"{i.ItemId} {string.Join("", i.ShopCostIds)}")
                 .ToLookup(i => i.ItemId, i => i.ShopCostIds);
         }

@@ -1,8 +1,8 @@
 
 
-namespace BisBuddy.Gear.Prerequesites
+namespace BisBuddy.Gear.Prerequisites
 {
-    public enum PrerequesiteNodeSourceType
+    public enum PrerequisiteNodeSourceType
     {
         Item,     // this is the 'base' item, cannot be obtained from supported sources
         Compound, // more than one source type

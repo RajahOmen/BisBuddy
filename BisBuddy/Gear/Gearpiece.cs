@@ -1,4 +1,4 @@
-using BisBuddy.Gear.Prerequesites;
+using BisBuddy.Gear.Prerequisites;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +12,7 @@ namespace BisBuddy.Gear
             uint itemId,
             string itemName,
             GearpieceType gearpieceType,
-            PrerequesiteNode? prerequisiteTree,
+            PrerequisiteNode? prerequisiteTree,
             List<Materia>? itemMateria,
             bool isCollected = false
             )
@@ -27,10 +27,10 @@ namespace BisBuddy.Gear
         public uint ItemId { get; set; }
         public string ItemName { get; set; }
         public GearpieceType GearpieceType { get; set; }
-        public PrerequesiteNode? PrerequisiteTree { get; set; } // relations with other items that can be used to obtain this gearpiece
+        public PrerequisiteNode? PrerequisiteTree { get; set; } // relations with other items that can be used to obtain this gearpiece
         public bool IsCollected { get; private set; }
         public bool IsManuallyCollected { get; set; } = false; // If this item was manually marked as collected
-        public bool IsObtainable => PrerequisiteTree?.IsObtainable ?? false; // If no prerequesites known, assume not obtainable
+        public bool IsObtainable => PrerequisiteTree?.IsObtainable ?? false; // If no prerequisites known, assume not obtainable
         public List<Materia> ItemMateria { get; init; }
         private List<(Materia Materia, int Count)>? itemMateriaGrouped = null;
         public List<(Materia Materia, int Count)>? ItemMateriaGrouped
@@ -77,7 +77,7 @@ namespace BisBuddy.Gear
             if (collected && PrerequisiteTree != null)
                 PrerequisiteTree.SetCollected(collected, manualToggle);
 
-            // if clicked by user as uncollected, uncollect all prerequesites as well
+            // if clicked by user as uncollected, uncollect all prerequisites as well
             if (!collected && manualToggle && PrerequisiteTree != null)
                 PrerequisiteTree.SetCollected(false, manualToggle);
         }

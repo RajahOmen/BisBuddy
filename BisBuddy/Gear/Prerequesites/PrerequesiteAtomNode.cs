@@ -2,18 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace BisBuddy.Gear.Prerequesites
+namespace BisBuddy.Gear.Prerequisites
 {
     [Serializable]
-    public class PrerequesiteAtomNode : PrerequesiteNode
+    public class PrerequisiteAtomNode : PrerequisiteNode
     {
         private bool isManuallyCollected = false;
         private bool isCollected = false;
 
         public uint ItemId { get; set; }
         public string ItemName { get; set; }
-        public PrerequesiteNodeSourceType SourceType { get; set; }
-        public List<PrerequesiteNode> PrerequesiteTree { get; set; }
+        public PrerequisiteNodeSourceType SourceType { get; set; }
+        public List<PrerequisiteNode> PrerequisiteTree { get; set; }
 
         public bool IsCollected
         {
@@ -26,13 +26,13 @@ namespace BisBuddy.Gear.Prerequesites
             private set => isManuallyCollected = value;
         }
         public bool IsObtainable =>
-            IsCollected || (PrerequesiteTree.Count > 0 && PrerequesiteTree.All(p => p.IsObtainable));
+            IsCollected || (PrerequisiteTree.Count > 0 && PrerequisiteTree.All(p => p.IsObtainable));
 
-        public PrerequesiteAtomNode(
+        public PrerequisiteAtomNode(
             uint itemId,
             string itemName,
-            List<PrerequesiteNode>? prerequesiteTree,
-            PrerequesiteNodeSourceType sourceType,
+            List<PrerequisiteNode>? prerequisiteTree,
+            PrerequisiteNodeSourceType sourceType,
             bool isCollected = false,
             bool isManuallyCollected = false
             )
@@ -40,7 +40,7 @@ namespace BisBuddy.Gear.Prerequesites
             ItemId = itemId;
             ItemName = itemName;
             SourceType = sourceType;
-            PrerequesiteTree = prerequesiteTree ?? [];
+            PrerequisiteTree = prerequisiteTree ?? [];
             IsCollected = isCollected;
             IsManuallyCollected = isManuallyCollected;
         }
@@ -61,7 +61,7 @@ namespace BisBuddy.Gear.Prerequesites
             if (manualToggle)
                 IsManuallyCollected = collected;
 
-            foreach (var prereq in PrerequesiteTree)
+            foreach (var prereq in PrerequisiteTree)
             {
                 prereq.SetCollected(collected, manualToggle);
             }
@@ -75,7 +75,7 @@ namespace BisBuddy.Gear.Prerequesites
             if (ItemId == itemId)
                 return 1;
 
-            return PrerequesiteTree.Sum(p => p.ItemNeededCount(itemId, ignoreCollected)); // Need all (max of 1 anyway)
+            return PrerequisiteTree.Sum(p => p.ItemNeededCount(itemId, ignoreCollected)); // Need all (max of 1 anyway)
         }
 
         public int MinRemainingItems()
@@ -83,10 +83,10 @@ namespace BisBuddy.Gear.Prerequesites
             if (IsCollected)
                 return 0;
 
-            if (PrerequesiteTree.Count == 0)
+            if (PrerequisiteTree.Count == 0)
                 return 1;
 
-            return PrerequesiteTree.Sum(p => p.MinRemainingItems()); // Need all (max of 1 anyway)
+            return PrerequisiteTree.Sum(p => p.MinRemainingItems()); // Need all (max of 1 anyway)
         }
 
         public void AddNeededItemIds(Dictionary<uint, int> neededCounts)
@@ -96,26 +96,26 @@ namespace BisBuddy.Gear.Prerequesites
             else
                 neededCounts[ItemId] = 1;
 
-            foreach (var prereq in PrerequesiteTree)
+            foreach (var prereq in PrerequisiteTree)
                 prereq.AddNeededItemIds(neededCounts);
         }
 
-        public int PrerequesiteCount()
+        public int PrerequisiteCount()
         {
-            return 1 + PrerequesiteTree.Sum(p => p.PrerequesiteCount());
+            return 1 + PrerequisiteTree.Sum(p => p.PrerequisiteCount());
         }
 
         public string GroupKey()
         {
             return $"""
                 ATOM {ItemId} {IsCollected} {IsManuallyCollected} {SourceType}
-                {string.Join(" ", PrerequesiteTree.Select(p => p.GroupKey()))}
+                {string.Join(" ", PrerequisiteTree.Select(p => p.GroupKey()))}
                 """;
         }
 
         public override string ToString()
         {
-            return $"([UNIT] [{PrerequesiteTree.Count}] {ItemName} => \n{string.Join("\n", PrerequesiteTree.Select(p => p.ToString()))})";
+            return $"([UNIT] [{PrerequisiteTree.Count}] {ItemName} => \n{string.Join("\n", PrerequisiteTree.Select(p => p.ToString()))})";
         }
     }
 }

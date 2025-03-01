@@ -1,4 +1,4 @@
-using BisBuddy.Gear.Prerequesites;
+using BisBuddy.Gear.Prerequisites;
 using Dalamud.Game.Inventory;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
@@ -14,12 +14,12 @@ namespace BisBuddy.Items
     public partial class ItemData
     {
         private ILookup<uint, uint>? itemsCoffers = null;
-        private ILookup<uint, List<uint>>? itemsPrerequesites = null;
+        private ILookup<uint, List<uint>>? itemsPrerequisites = null;
 
         public static readonly uint ItemIdHqOffset = 1_000_000;
         public static readonly char HqIcon = '';
         public static readonly char GlamourIcon = '';
-        public static readonly int MaxItemPrerequesites = 25;
+        public static readonly int MaxItemPrerequisites = 25;
         private ExcelSheet<Item> ItemSheet { get; init; }
         private ExcelSheet<SpecialShop> ShopSheet { get; init; }
         private ExcelSheet<SheetMateria> Materia { get; init; }
@@ -38,19 +38,19 @@ namespace BisBuddy.Items
                 return itemsCoffers;
             }
         }
-        public ILookup<uint, List<uint>> ItemsPrerequesites {
+        public ILookup<uint, List<uint>> ItemsPrerequisites {
             get
             {
-                if (itemsPrerequesites == null)
+                if (itemsPrerequisites == null)
                 {
-                    itemsPrerequesites = generateItemsPrerequesites();
+                    itemsPrerequisites = generateItemsPrerequisites();
                     Task.Run(async () =>
                     {
                         await Task.Delay(1000);
-                        itemsPrerequesites = null;
+                        itemsPrerequisites = null;
                     });
                 }
-                return itemsPrerequesites;
+                return itemsPrerequisites;
             }
         }
         private Dictionary<string, uint> NameToId { get; init; }
@@ -84,8 +84,8 @@ namespace BisBuddy.Items
                 }
             }
             Services.Log.Verbose("End Coffer Relations Found");
-            Services.Log.Verbose($"Item Prerequesites Found");
-            foreach (var item in ItemsPrerequesites)
+            Services.Log.Verbose($"Item Prerequisites Found");
+            foreach (var item in ItemsPrerequisites)
             {
                 // only show "new" items
                 if (item.Key < debugMinItemId) continue;
@@ -97,7 +97,7 @@ namespace BisBuddy.Items
                     Services.Log.Verbose($"{string.Join(" + ", prereqItemNames.GroupBy(n => n).Select(g => $"{g.Count()}x {g.Key}")),-60} => {recieveItemName}");
                 }
             }
-            Services.Log.Verbose($"End Item Prerequesites Found");
+            Services.Log.Verbose($"End Item Prerequisites Found");
 #endif
         }
 
@@ -212,52 +212,52 @@ namespace BisBuddy.Items
             return materiaItem.RowId;
         }
 
-        public PrerequesiteNode? BuildGearpiecePrerequesiteGroup(uint itemId)
+        public PrerequisiteNode? BuildGearpiecePrerequisiteGroup(uint itemId)
         {
-            var unitPrerequesiteGroup = BuildPrerequesites(itemId);
+            var unitPrerequisiteGroup = BuildPrerequisites(itemId);
 
-            if (unitPrerequesiteGroup.GetType() != typeof(PrerequesiteAtomNode))
-                throw new Exception($"Item id \"{itemId}\" returned non-unit prereqs group (\"{unitPrerequesiteGroup.GetType().Name}\")");
+            if (unitPrerequisiteGroup.GetType() != typeof(PrerequisiteAtomNode))
+                throw new Exception($"Item id \"{itemId}\" returned non-unit prereqs group (\"{unitPrerequisiteGroup.GetType().Name}\")");
 
-            // Unit type prerequesite groups should only
-            if (unitPrerequesiteGroup.PrerequesiteTree.Count > 1)
-                throw new Exception($"Item id \"{itemId}\" returned unit prereqs with \"{unitPrerequesiteGroup.PrerequesiteTree.Count}\" prerequesites");
+            // Unit type prerequisite groups should only
+            if (unitPrerequisiteGroup.PrerequisiteTree.Count > 1)
+                throw new Exception($"Item id \"{itemId}\" returned unit prereqs with \"{unitPrerequisiteGroup.PrerequisiteTree.Count}\" prerequisites");
 
             // no prereqs to unwrap to, don't want empty unit prereq group for gearpiece
-            if (unitPrerequesiteGroup.PrerequesiteTree.Count == 0)
+            if (unitPrerequisiteGroup.PrerequisiteTree.Count == 0)
                 return null;
 
             // unwrap highest layer, the geapiece itself acts as the upper unit prereq group
-            return unitPrerequesiteGroup.PrerequesiteTree[0];
+            return unitPrerequisiteGroup.PrerequisiteTree[0];
         }
 
-        private PrerequesiteNode BuildPrerequesites(uint itemId, int depth = 8)
+        private PrerequisiteNode BuildPrerequisites(uint itemId, int depth = 8)
         {
             var itemName = GetItemNameById(itemId);
-            var group = new PrerequesiteAtomNode(itemId, itemName, [], PrerequesiteNodeSourceType.Item);
+            var group = new PrerequisiteAtomNode(itemId, itemName, [], PrerequisiteNodeSourceType.Item);
 
             if (depth <= 0)
                 return group;
 
-            // build list of prerequesites from supplementals data
-            PrerequesiteNode supplementalTree = new PrerequesiteOrNode(itemId, itemName, [], PrerequesiteNodeSourceType.Loot);
+            // build list of prerequisites from supplementals data
+            PrerequisiteNode supplementalTree = new PrerequisiteOrNode(itemId, itemName, [], PrerequisiteNodeSourceType.Loot);
             var supplementalPrereqs = ItemsCoffers[itemId];
             var hasSupplementalPrereqs = supplementalPrereqs.Any();
 
             if (supplementalPrereqs.Count() == 1)
             {
-                supplementalTree = BuildPrerequesites(supplementalPrereqs.First(), depth - 1);
-                supplementalTree.SourceType = PrerequesiteNodeSourceType.Loot;
+                supplementalTree = BuildPrerequisites(supplementalPrereqs.First(), depth - 1);
+                supplementalTree.SourceType = PrerequisiteNodeSourceType.Loot;
             } else if (supplementalPrereqs.Count() > 1)
             {
-                supplementalTree.PrerequesiteTree = ItemsCoffers[itemId]
-                    .Select(id => BuildPrerequesites(id, depth - 1))
+                supplementalTree.PrerequisiteTree = ItemsCoffers[itemId]
+                    .Select(id => BuildPrerequisites(id, depth - 1))
                     .ToList();
             }
 
-            // build list of prerequesites from shops/exchanges data
-            PrerequesiteNode exchangesTree = new PrerequesiteOrNode(itemId, itemName, [], PrerequesiteNodeSourceType.Shop);
-            var exchangesPrereqs = ItemsPrerequesites[itemId];
+            // build list of prerequisites from shops/exchanges data
+            PrerequisiteNode exchangesTree = new PrerequisiteOrNode(itemId, itemName, [], PrerequisiteNodeSourceType.Shop);
+            var exchangesPrereqs = ItemsPrerequisites[itemId];
             var hasExchangesPrereqs = exchangesPrereqs.Any();
 
             // only exchangable at one shop listing
@@ -268,41 +268,41 @@ namespace BisBuddy.Items
                 // shop only is requesting one item to exchange
                 if (shopCosts.Count == 1)
                 {
-                    exchangesTree = BuildPrerequesites(shopCosts.First(), depth - 1);
-                    exchangesTree.SourceType = PrerequesiteNodeSourceType.Shop;
+                    exchangesTree = BuildPrerequisites(shopCosts.First(), depth - 1);
+                    exchangesTree.SourceType = PrerequisiteNodeSourceType.Shop;
                 } else // shop is requesting more than one item to exchange
                 {
                     var prereqTree = shopCosts
-                        .Select(id => BuildPrerequesites(id, depth - 1))
+                        .Select(id => BuildPrerequisites(id, depth - 1))
                         .ToList();
 
-                    exchangesTree = new PrerequesiteAndNode(
+                    exchangesTree = new PrerequisiteAndNode(
                         itemId,
                         itemName,
                         prereqTree,
-                        PrerequesiteNodeSourceType.Shop
+                        PrerequisiteNodeSourceType.Shop
                         );
                 }
                 
             } else if (exchangesPrereqs.Count() > 1) // exchangable at more than 1 shop listing
             {
                 // build OR list of ANDs. Ex: OR(AND(A, B, C), AND(D, E), ATOM())
-                exchangesTree.PrerequesiteTree = exchangesPrereqs
+                exchangesTree.PrerequisiteTree = exchangesPrereqs
                     .Select(shopCostIds => {
                         // shop costs one items
                         if (shopCostIds.Count == 1)
                         {
-                            var prereq = BuildPrerequesites(shopCostIds.First(), depth - 1);
-                            prereq.SourceType = PrerequesiteNodeSourceType.Shop;
+                            var prereq = BuildPrerequisites(shopCostIds.First(), depth - 1);
+                            prereq.SourceType = PrerequisiteNodeSourceType.Shop;
                             return prereq;
                         }
 
                         // Shop costs multiple items
-                        return new PrerequesiteAndNode(
+                        return new PrerequisiteAndNode(
                             itemId,
                             itemName,
-                            shopCostIds.Select(id => BuildPrerequesites(id, depth - 1)).ToList(),
-                            PrerequesiteNodeSourceType.Shop
+                            shopCostIds.Select(id => BuildPrerequisites(id, depth - 1)).ToList(),
+                            PrerequisiteNodeSourceType.Shop
                             );
                     }).ToList();
             }
@@ -314,22 +314,22 @@ namespace BisBuddy.Items
                 )
             {
                 // composed of both shop/exchange sources and supplemental sources
-                var compoundGroup = new PrerequesiteOrNode(
+                var compoundGroup = new PrerequisiteOrNode(
                     itemId,
                     itemName,
                     [supplementalTree, exchangesTree],
-                    PrerequesiteNodeSourceType.Compound
+                    PrerequisiteNodeSourceType.Compound
                     );
 
-                group.PrerequesiteTree = [ compoundGroup ];
+                group.PrerequisiteTree = [ compoundGroup ];
             } else if (hasSupplementalPrereqs)
             {
                 // only from supplementals
-                group.PrerequesiteTree = [ supplementalTree ]; 
+                group.PrerequisiteTree = [ supplementalTree ]; 
             } else if (hasExchangesPrereqs)
             {   
                 // only from shops/exchanges
-                group.PrerequesiteTree = [ exchangesTree ];
+                group.PrerequisiteTree = [ exchangesTree ];
             }
 
             return group;

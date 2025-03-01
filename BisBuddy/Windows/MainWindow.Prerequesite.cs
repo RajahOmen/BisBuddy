@@ -1,5 +1,5 @@
 using BisBuddy.Gear;
-using BisBuddy.Gear.Prerequesites;
+using BisBuddy.Gear.Prerequisites;
 using BisBuddy.Resources;
 using Dalamud.Interface;
 using Dalamud.Interface.Utility.Raii;
@@ -11,14 +11,14 @@ namespace BisBuddy.Windows
 {
     public partial class MainWindow
     {
-        private void drawOrNode(PrerequesiteOrNode node, Gearpiece parentGearpiece, int parentCount = 1)
+        private void drawOrNode(PrerequisiteOrNode node, Gearpiece parentGearpiece, int parentCount = 1)
         {
-            using var tabBar = ImRaii.TabBar($"###or_item_prerequesites_{node.GetHashCode()}");
+            using var tabBar = ImRaii.TabBar($"###or_item_prerequisites_{node.GetHashCode()}");
             if (tabBar)
             {
-                for (var i = 0; i < node.PrerequesiteTree.Count; i++)
+                for (var i = 0; i < node.PrerequisiteTree.Count; i++)
                 {
-                    var prereq = node.PrerequesiteTree[i];
+                    var prereq = node.PrerequisiteTree[i];
                     var prereqLabelColorblind = prereq.IsCollected
                         ? ""
                         : prereq.IsObtainable
@@ -28,7 +28,7 @@ namespace BisBuddy.Windows
                     Vector4 textColor;
                     if (prereq.IsCollected)
                         textColor = ObtainedColor;
-                    else if (prereq.PrerequesiteCount() > 0 && prereq.IsObtainable)
+                    else if (prereq.PrerequisiteCount() > 0 && prereq.IsObtainable)
                         textColor = AlmostObtained;
                     else
                         textColor = UnobtainedColor;
@@ -41,7 +41,7 @@ namespace BisBuddy.Windows
                         {
                             try
                             {
-                                drawPrerequesiteTree(prereq, parentGearpiece, parentCount);
+                                drawPrerequisiteTree(prereq, parentGearpiece, parentCount);
                             }
                             catch (Exception ex)
                             {
@@ -53,7 +53,7 @@ namespace BisBuddy.Windows
             }
         }
 
-        private void drawAndNode(PrerequesiteAndNode node, Gearpiece parentGearpiece, int parentCount = 1)
+        private void drawAndNode(PrerequisiteAndNode node, Gearpiece parentGearpiece, int parentCount = 1)
         {
             var groupedPrereqs = node.Groups();
 
@@ -61,11 +61,11 @@ namespace BisBuddy.Windows
             {
                 using var _ = ImRaii.PushId(i);
                 var prereq = groupedPrereqs[i];
-                drawPrerequesiteTree(prereq.Node, parentGearpiece, prereq.Count * parentCount);
+                drawPrerequisiteTree(prereq.Node, parentGearpiece, prereq.Count * parentCount);
             }
         }
 
-        private void drawAtomNode(PrerequesiteAtomNode node, Gearpiece parentGearpiece, int parentCount = 1)
+        private void drawAtomNode(PrerequisiteAtomNode node, Gearpiece parentGearpiece, int parentCount = 1)
         {
             var prereqLabelColorblind = node.IsCollected
             ? ""
@@ -80,7 +80,7 @@ namespace BisBuddy.Windows
             Vector4 textColor;
             if (node.IsCollected)
                 textColor = ObtainedColor;
-            else if (node.PrerequesiteCount() > 0 && node.IsObtainable)
+            else if (node.PrerequisiteCount() > 0 && node.IsObtainable)
                 textColor = AlmostObtained;
             else
                 textColor = UnobtainedColor;
@@ -119,11 +119,11 @@ namespace BisBuddy.Windows
                 {
                     if (node.IsCollected)
                     {
-                        ImGui.SetTooltip(string.Format(Resource.PrerequesiteTooltipBase, Resource.AutomaticallyCollectedTooltip));
+                        ImGui.SetTooltip(string.Format(Resource.PrerequisiteTooltipBase, Resource.AutomaticallyCollectedTooltip));
                     }
                     else
                     {
-                        ImGui.SetTooltip(string.Format(Resource.PrerequesiteTooltipBase, Resource.UncollectedTooltip));
+                        ImGui.SetTooltip(string.Format(Resource.PrerequisiteTooltipBase, Resource.UncollectedTooltip));
                     }
                     ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
                 }
@@ -131,10 +131,10 @@ namespace BisBuddy.Windows
                     Plugin.SearchItemById(node.ItemId);
             }
 
-            if (node.PrerequesiteTree.Count > 1)
-                throw new Exception($"item {node.ItemName} has too many prerequesites ({node.PrerequesiteTree})");
+            if (node.PrerequisiteTree.Count > 1)
+                throw new Exception($"item {node.ItemName} has too many prerequisites ({node.PrerequisiteTree})");
 
-            if (node.PrerequesiteTree.Count == 1 && !node.IsCollected)
+            if (node.PrerequisiteTree.Count == 1 && !node.IsCollected)
             {
                 // draw a L shape for parent-child relationship
                 var drawList = ImGui.GetWindowDrawList();
@@ -146,24 +146,24 @@ namespace BisBuddy.Windows
 
                 using (ImRaii.PushIndent(25.0f, scaled: false))
                 {
-                    drawPrerequesiteTree(node.PrerequesiteTree[0], parentGearpiece, parentCount);
+                    drawPrerequisiteTree(node.PrerequisiteTree[0], parentGearpiece, parentCount);
                 }
             }
         }
 
-        private void drawPrerequesiteTree(PrerequesiteNode prerequesiteNode, Gearpiece parentGearpiece, int parentCount = 1)
+        private void drawPrerequisiteTree(PrerequisiteNode prerequisiteNode, Gearpiece parentGearpiece, int parentCount = 1)
         {
-            if (prerequesiteNode.GetType() == typeof(PrerequesiteOrNode))
+            if (prerequisiteNode.GetType() == typeof(PrerequisiteOrNode))
             {
-                drawOrNode((PrerequesiteOrNode) prerequesiteNode, parentGearpiece, parentCount);
+                drawOrNode((PrerequisiteOrNode) prerequisiteNode, parentGearpiece, parentCount);
             }
-            else if (prerequesiteNode.GetType() == typeof(PrerequesiteAndNode))
+            else if (prerequisiteNode.GetType() == typeof(PrerequisiteAndNode))
             {
-                drawAndNode((PrerequesiteAndNode) prerequesiteNode, parentGearpiece, parentCount);
+                drawAndNode((PrerequisiteAndNode) prerequisiteNode, parentGearpiece, parentCount);
             }
-            else if (prerequesiteNode.GetType() == typeof(PrerequesiteAtomNode))
+            else if (prerequisiteNode.GetType() == typeof(PrerequisiteAtomNode))
             {
-                drawAtomNode((PrerequesiteAtomNode) prerequesiteNode, parentGearpiece, parentCount);
+                drawAtomNode((PrerequisiteAtomNode) prerequisiteNode, parentGearpiece, parentCount);
             }
         }
     }

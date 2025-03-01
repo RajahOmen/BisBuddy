@@ -1,5 +1,5 @@
 using BisBuddy.Gear;
-using BisBuddy.Gear.Prerequesites;
+using BisBuddy.Gear.Prerequisites;
 using BisBuddy.Resources;
 using Dalamud.Interface;
 using Dalamud.Interface.Components;
@@ -22,7 +22,7 @@ namespace BisBuddy.Windows
             var gearpieceHasMelds = !gearpiece.ItemMateria.Any(m => !m.IsMelded);
             var gearpiecePrereqsCollected =
                 gearpiece.PrerequisiteTree != null
-                && gearpiece.PrerequisiteTree.PrerequesiteTree.All(p => p.IsCollected);
+                && gearpiece.PrerequisiteTree.PrerequisiteTree.All(p => p.IsCollected);
 
             var checkmarkColor = gearpieceManuallyCollected
                 ? ManuallyCollectedColor
@@ -122,9 +122,9 @@ namespace BisBuddy.Windows
 
                         if (gearpiece.PrerequisiteTree != null)
                         {
-                            if (ImGui.CollapsingHeader("Prerequesite Items"))
+                            if (ImGui.CollapsingHeader("Prerequisite Items"))
                             {
-                                drawPrerequesiteTree(gearpiece.PrerequisiteTree, gearpiece);
+                                drawPrerequisiteTree(gearpiece.PrerequisiteTree, gearpiece);
                             }
                             ImGui.Spacing();
                             ImGui.Separator();
