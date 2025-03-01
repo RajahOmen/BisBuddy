@@ -1,3 +1,4 @@
+using BisBuddy.Gear.Prerequisites;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +12,7 @@ namespace BisBuddy.Gear
             uint itemId,
             string itemName,
             GearpieceType gearpieceType,
-            List<GearpiecePrerequesite>? prerequisiteItems,
+            PrerequisiteNode? prerequisiteTree,
             List<Materia>? itemMateria,
             bool isCollected = false
             )
@@ -19,17 +20,17 @@ namespace BisBuddy.Gear
             ItemId = itemId;
             ItemName = itemName;
             GearpieceType = gearpieceType;
-            PrerequisiteItems = prerequisiteItems ?? [];
+            PrerequisiteTree = prerequisiteTree;
             ItemMateria = itemMateria ?? [];
             IsCollected = isCollected;
         }
         public uint ItemId { get; set; }
         public string ItemName { get; set; }
         public GearpieceType GearpieceType { get; set; }
-        public List<GearpiecePrerequesite> PrerequisiteItems { get; set; } // List of item ids that are required to obtain this item
+        public PrerequisiteNode? PrerequisiteTree { get; set; } // relations with other items that can be used to obtain this gearpiece
         public bool IsCollected { get; private set; }
         public bool IsManuallyCollected { get; set; } = false; // If this item was manually marked as collected
-        public bool IsObtainable => PrerequisiteItems.All(p => p.IsCollected);
+        public bool IsObtainable => PrerequisiteTree?.IsObtainable ?? false; // If no prerequisites known, assume not obtainable
         public List<Materia> ItemMateria { get; init; }
         private List<(Materia Materia, int Count)>? itemMateriaGrouped = null;
         public List<(Materia Materia, int Count)>? ItemMateriaGrouped
@@ -65,41 +66,44 @@ namespace BisBuddy.Gear
             IsCollected = collected;
 
             // if toggled by user, set manually collected flag
-            if (manualToggle) IsManuallyCollected = collected;
+            if (manualToggle)
+                IsManuallyCollected = collected;
 
             // if not manually collected, uncollecting item will unmeld all materia
             if (!collected && !IsManuallyCollected)
-            {
                 ItemMateria.ForEach(m => m.IsMelded = false);
-            }
 
             // if collected, mark all prerequisites as collected
-            if (collected) PrerequisiteItems.ForEach(p => p.SetCollected(collected, manualToggle));
+            if (collected && PrerequisiteTree != null)
+                PrerequisiteTree.SetCollected(collected, manualToggle);
 
-            // if clicked by user as uncollected, uncollect all prerequesites as well
-            if (!collected && manualToggle) PrerequisiteItems.ForEach(p => p.SetCollected(false, manualToggle));
+            // if clicked by user as uncollected, uncollect all prerequisites as well
+            if (!collected && manualToggle && PrerequisiteTree != null)
+                PrerequisiteTree.SetCollected(false, manualToggle);
         }
 
 
         // return the number of this item needed for this gearpiece
-        public int NeedsItemId(uint id, bool ignoreCollected, bool includeCollectedPrereqs)
+        public int NeedsItemId(uint candidateItemId, bool ignoreCollected, bool includeCollectedPrereqs)
         {
+            // not a real item, can't be needed
+            if (candidateItemId == 0) return 0;
+
             // Calculate how many of this item are needed as materia (assume item is materia)
             var neededAsMateriaCount = ItemMateria
-                .Where(materia => (!materia.IsMelded || !ignoreCollected) && id == materia.ItemId)
+                .Where(materia => (!materia.IsMelded || !ignoreCollected) && candidateItemId == materia.ItemId)
                 .Count();
 
             // If this item is marked as collected, only way item is needed is if it is materia
             if (IsCollected && ignoreCollected) return neededAsMateriaCount;
 
             // is this the item we need
-            if (id == ItemId) return 1;
+            if (candidateItemId == ItemId) return 1;
 
             // Calculate how many of this item are needed as prereqs
-            var neededAsPrereqCount =
-                includeCollectedPrereqs
-                ? PrerequisiteItems.Where(i => i.ItemId == id).Count()
-                : PrerequisiteItems.Where(i => i.ItemId == id && (!i.IsCollected || !ignoreCollected)).Count();
+            // if includeCollectedPrereqs: false
+            // if not includeCollectedPrereqs: val of ignoreCollected
+            var neededAsPrereqCount = PrerequisiteTree?.ItemNeededCount(candidateItemId, !includeCollectedPrereqs && ignoreCollected) ?? 0;
 
             // If the item is one of the prerequisites. If not, returns 0
             return neededAsMateriaCount + neededAsPrereqCount;

@@ -79,17 +79,9 @@ public sealed partial class Plugin : IDalamudPlugin
         // instantiate services
         pluginInterface.Create<Services>();
 
-        try
-        {
-            Configuration = Services.PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
-        }
-        catch (Exception ex)
-        {
-            Services.Log.Error(ex, "Failed to load configuration");
-            throw;
-        }
-
         ItemData = new ItemData(Services.DataManager.Excel);
+
+        Configuration = Configuration.LoadConfig(ItemData);
 
         // INSTANTIATE WINDOWS
         ConfigWindow = new ConfigWindow(this);
@@ -271,11 +263,8 @@ public sealed partial class Plugin : IDalamudPlugin
     {
         if (Configuration.PluginUpdateInventoryScan && pluginUpdate)
         {
-            UpdateFromInventory(Gearsets);
+            UpdateFromInventory(Gearsets, saveChanges: false);
         }
-        else
-        {
-            Configuration.Save();
-        }
+        Configuration.Save();
     }
 }

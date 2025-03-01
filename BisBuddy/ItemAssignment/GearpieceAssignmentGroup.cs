@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace BisBuddy.ItemAssignment
 {
-    public class GearpieceGroup : IDemandGroup
+    public class GearpieceAssignmentGroup : IAssignmentGroup
     {
         // #0: ensure that if a gearpiece is manually collected, it is extremely highly-valued by auto-solver
         private static readonly int ManualCollectionScore = 100000;
@@ -21,7 +21,7 @@ namespace BisBuddy.ItemAssignment
         public readonly HashSet<Gearset> Gearsets = [];
         private readonly int minGearpieceIdx;
 
-        public DemandGroupType Type => DemandGroupType.Gearpiece;
+        public AssignmentGroupType Type => AssignmentGroupType.Gearpiece;
 
         // the item id of the item this gearpiece group is for
         public uint ItemId { get; set; }
@@ -42,7 +42,7 @@ namespace BisBuddy.ItemAssignment
 
         public bool IsManuallyCollected { get; set; } = false;
 
-        public GearpieceGroup(
+        public GearpieceAssignmentGroup(
             Gearpiece gearpiece,
             Gearset gearset,
             int gearpieceIdx

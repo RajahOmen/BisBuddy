@@ -1,4 +1,5 @@
 using BisBuddy.Gear;
+using BisBuddy.Gear.Prerequisites;
 using BisBuddy.Resources;
 using Dalamud.Interface;
 using Dalamud.Interface.Components;
@@ -20,8 +21,8 @@ namespace BisBuddy.Windows
             var gearpieceManuallyCollected = gearpiece.IsManuallyCollected;
             var gearpieceHasMelds = !gearpiece.ItemMateria.Any(m => !m.IsMelded);
             var gearpiecePrereqsCollected =
-                gearpiece.PrerequisiteItems.Count > 0
-                && gearpiece.PrerequisiteItems.All(p => p.IsCollected);
+                gearpiece.PrerequisiteTree != null
+                && gearpiece.PrerequisiteTree.PrerequisiteTree.All(p => p.IsCollected);
 
             var checkmarkColor = gearpieceManuallyCollected
                 ? ManuallyCollectedColor
@@ -70,7 +71,7 @@ namespace BisBuddy.Windows
                 gearpieceCollectedLabel = "";
                 textColor = ObtainedColor;
             }
-            else if (!gearpieceCollected && !gearpiecePrereqsCollected)
+            else if (!gearpieceCollected && !gearpiecePrereqsCollected && !gearpiece.IsObtainable)
             {
                 gearpieceCollectedLabel = "*";
                 textColor = UnobtainedColor;
@@ -81,7 +82,7 @@ namespace BisBuddy.Windows
                 textColor = AlmostObtained;
             }
 
-            var hasSubItems = gearpiece.ItemMateria.Count > 0 || gearpiece.PrerequisiteItems.Count > 0;
+            var hasSubItems = gearpiece.ItemMateria.Count > 0 || gearpiece.PrerequisiteTree != null;
 
             using (ImRaii.PushColor(ImGuiCol.Text, textColor))
             using (ImRaii.PushColor(ImGuiCol.Button, new Vector4(0, 0, 0, 0)))
@@ -115,24 +116,18 @@ namespace BisBuddy.Windows
                                 )
                             {
                                 drawMateria(gearpiece);
+                                ImGui.Spacing();
                             }
                         }
 
-                        if (gearpiece.PrerequisiteItems.Count > 0)
+                        if (gearpiece.PrerequisiteTree != null)
                         {
-                            var prereqCount = gearpiece.PrerequisiteItems.Sum(p => p.PrerequesiteCount + 1);
-                            var prereqChildHeight = (prereqCount * childHeight) + (childHeightPadding * 2);
-                            using (
-                                ImRaii.Child(
-                                    "gearpiece_prereq_child",
-                                    new Vector2(windowWidth, prereqChildHeight),
-                                    true,
-                                    ImGuiWindowFlags.AlwaysUseWindowPadding
-                                    )
-                                )
+                            if (ImGui.CollapsingHeader("Prerequisite Items"))
                             {
-                                drawPrerequesites(gearpiece.PrerequisiteItems, gearpiece);
+                                drawPrerequisiteTree(gearpiece.PrerequisiteTree, gearpiece);
                             }
+                            ImGui.Spacing();
+                            ImGui.Separator();
                         }
                     }
                     ImGui.Spacing();
