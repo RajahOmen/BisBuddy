@@ -169,7 +169,7 @@ public class ImportGearsetWindow : Window, IDisposable
 
         ImGui.Text(Resource.ImportJsonGearsetText);
 
-        ImGui.InputText($"{Resource.ImportJsonGearsetInputLabel}##importgearsetjson", ref gearsetJson, 20000);
+        ImGui.InputText($"{Resource.ImportJsonGearsetInputLabel}##importgearsetjson", ref gearsetJson, 100000);
 
         using (ImRaii.Disabled(jsonLoading || gearsetJson == string.Empty))
         {

@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "BisBuddy": {
+      "commandName": "Project",
+      "hotReloadEnabled": false,
+      "nativeDebugging": true
+    }
+  }
+}

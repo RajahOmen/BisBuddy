@@ -2,7 +2,13 @@ using BisBuddy.Gear;
 using Dalamud.Configuration;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Numerics;
+using System.Text.Json;
+using Newtonsoft.Json;
+using JsonSerializer = System.Text.Json.JsonSerializer;
+using JsonException = System.Text.Json.JsonException;
+using BisBuddy.Items;
 
 namespace BisBuddy;
 
@@ -10,7 +16,12 @@ namespace BisBuddy;
 public class Configuration : IPluginConfiguration
 {
     public static readonly int CurrentVersion = 2;
-    public int Version { get; set; } = 1;
+    public static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        IncludeFields = true,
+    };
+    public int Version { get; set; } = 2;
 
     public bool HighlightNeedGreed { get; set; } = true;
     public bool HighlightShops { get; set; } = true;
@@ -49,6 +60,94 @@ public class Configuration : IPluginConfiguration
 
     public void Save()
     {
-        Services.PluginInterface.SavePluginConfig(this);
+        var configText = JsonSerializer.Serialize(this, JsonOptions);
+        File.WriteAllText(Services.PluginInterface.ConfigFile.FullName, configText);
+    }
+
+    public static Configuration LoadConfig(ItemData itemData)
+    {
+        try
+        {
+            var configText = File.ReadAllText(Services.PluginInterface.ConfigFile.FullName);
+            using (var configJson = JsonDocument.Parse(configText))
+            {
+                var configVersion = configJson
+                    .RootElement
+                    .GetProperty(nameof(Version))
+                    .GetInt32();
+
+                if (configVersion != CurrentVersion)
+                {
+                    Services.Log.Warning($"Config version {configVersion} found, current {CurrentVersion}. Attempting migration");
+                    return migrateOldConfig(configJson, configText, configVersion, itemData);
+                }
+            }
+            return JsonSerializer.Deserialize<Configuration>(configText, JsonOptions) ?? new Configuration();
+        }
+        catch (FileNotFoundException)
+        {
+            return new Configuration();
+        }
+        catch (JsonException ex)
+        {
+            Services.Log.Error(ex, "Error loading/converting config file, creating new");
+            return new Configuration();
+        }
+        catch (Exception ex)
+        {
+            Services.Log.Fatal(ex, $"Error loading {Plugin.PluginName} configuration");
+            throw;
+        }
+    }
+
+    private static Configuration migrateOldConfig(JsonDocument configJson, string configText, int configVersion, ItemData itemData)
+    {
+        var newConfig = new Configuration(); 
+        for (var version = configVersion; version < CurrentVersion; version++)
+        {
+            newConfig = version switch
+            {
+                1 => migrate1To2(configText, itemData),
+                _ => throw new JsonException($"Invalid version number \"{configVersion}\"")
+            };
+        }
+
+        Services.Log.Info("Config migration success");
+
+        return newConfig;
+    }
+
+    private static Configuration migrate1To2(string configText, ItemData itemData)
+    {
+        /// <summary>
+        /// migrate from newtonsoft to stj
+        /// migrate from PrerequisiteItems to PrerequisiteTree
+        /// </summary>
+        try
+        {
+            var config = JsonConvert.DeserializeObject<Configuration>(configText)
+                ?? throw new JsonException("Old config result is null");
+
+            foreach (var charData in config.CharactersData)
+            {
+                foreach (var gearset in charData.Value.Gearsets)
+                {
+                    foreach (var gearpiece in gearset.Gearpieces)
+                    {
+                        // rebuild prereqs with new system
+                        gearpiece.PrerequisiteTree = itemData.BuildGearpiecePrerequisiteTree(gearpiece.ItemId);
+
+                        // if gearpiece is collected, this will collect prereqs as well
+                        gearpiece.SetCollected(gearpiece.IsCollected, gearpiece.IsManuallyCollected);
+                    }
+                }
+            }
+
+            return config;
+        }
+        catch (Newtonsoft.Json.JsonException ex)
+        {
+            throw new JsonException(ex.Message);
+        }
     }
 }

@@ -42,12 +42,12 @@ namespace BisBuddy.Gear
             Gearpieces.Sort((a, b) => a.GearpieceType.CompareTo(b.GearpieceType));
         }
 
-        public List<(Gearpiece gearpiece, int countNeeded)> GetGearpiecesNeedingItem(uint id, bool ignoreCollected, bool includeCollectedPrereqs)
+        public List<(Gearpiece gearpiece, int countNeeded)> GetGearpiecesNeedingItem(uint candidateItemId, bool ignoreCollected, bool includeCollectedPrereqs)
         {
             List<(Gearpiece gearpiece, int countNeeded)> satisfiedGearpieces = [];
             foreach (var gearpiece in Gearpieces)
             {
-                var countNeeded = gearpiece.NeedsItemId(id, ignoreCollected, includeCollectedPrereqs);
+                var countNeeded = gearpiece.NeedsItemId(candidateItemId, ignoreCollected, includeCollectedPrereqs);
                 if (countNeeded > 0)
                 {
                     satisfiedGearpieces.Add((gearpiece, countNeeded));
