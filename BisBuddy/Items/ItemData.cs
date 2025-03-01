@@ -260,7 +260,7 @@ namespace BisBuddy.Items
             var exchangesPrereqs = ItemsPrerequesites[itemId];
             var hasExchangesPrereqs = exchangesPrereqs.Any();
 
-            // only exchangable at one shop
+            // only exchangable at one shop listing
             if (exchangesPrereqs.Count() == 1)
             {
                 var shopCosts = exchangesPrereqs.First();
@@ -284,7 +284,7 @@ namespace BisBuddy.Items
                         );
                 }
                 
-            } else if (exchangesPrereqs.Count() > 1) // exchangable at more than 1 shop
+            } else if (exchangesPrereqs.Count() > 1) // exchangable at more than 1 shop listing
             {
                 // build OR list of ANDs. Ex: OR(AND(A, B, C), AND(D, E), ATOM())
                 exchangesTree.PrerequesiteTree = exchangesPrereqs
@@ -292,7 +292,9 @@ namespace BisBuddy.Items
                         // shop costs one items
                         if (shopCostIds.Count == 1)
                         {
-                            return BuildPrerequesites(shopCostIds.First(), depth - 1);
+                            var prereq = BuildPrerequesites(shopCostIds.First(), depth - 1);
+                            prereq.SourceType = PrerequesiteNodeSourceType.Shop;
+                            return prereq;
                         }
 
                         // Shop costs multiple items
