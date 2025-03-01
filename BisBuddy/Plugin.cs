@@ -79,9 +79,9 @@ public sealed partial class Plugin : IDalamudPlugin
         // instantiate services
         pluginInterface.Create<Services>();
 
-        Configuration = Configuration.LoadConfig();
-
         ItemData = new ItemData(Services.DataManager.Excel);
+
+        Configuration = Configuration.LoadConfig(ItemData);
 
         // INSTANTIATE WINDOWS
         ConfigWindow = new ConfigWindow(this);

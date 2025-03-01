@@ -259,7 +259,7 @@ namespace BisBuddy.Gear
                     gearpieceId,
                     gearpieceName,
                     gearpieceType,
-                    itemData.BuildGearpiecePrerequisiteGroup(gearpieceId),
+                    itemData.BuildGearpiecePrerequisiteTree(gearpieceId),
                     materiaList
                     );
 
@@ -332,7 +332,7 @@ namespace BisBuddy.Gear
                             gearpieceId,
                             itemData.GetItemNameById(gearpieceId),
                             gearpieceType,
-                            itemData.BuildGearpiecePrerequisiteGroup(gearpieceId),
+                            itemData.BuildGearpiecePrerequisiteTree(gearpieceId),
                             getEtroMateria(materiaProp, gearpieceId.ToString(), typeStr, itemData)
                             );
 
@@ -361,7 +361,7 @@ namespace BisBuddy.Gear
                             relicItemId,
                             relicName,
                             relicType,
-                            itemData.BuildGearpiecePrerequisiteGroup(relicItemId),
+                            itemData.BuildGearpiecePrerequisiteTree(relicItemId),
                             getEtroMateria(materiaProp, relicItemId.ToString(), relic.Name, itemData)
                             );
 
