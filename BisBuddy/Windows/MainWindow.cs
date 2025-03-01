@@ -29,6 +29,8 @@ public partial class MainWindow : Window, IDisposable
             MinimumSize = new Vector2(530, 250),
             MaximumSize = new Vector2(1000, float.MaxValue)
         };
+        Size = new Vector2(530, 500);
+        SizeCondition = ImGuiCond.Appearing;
 
         this.plugin = plugin;
     }
