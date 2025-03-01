@@ -116,27 +116,18 @@ namespace BisBuddy.Windows
                                 )
                             {
                                 drawMateria(gearpiece);
+                                ImGui.Spacing();
                             }
                         }
 
                         if (gearpiece.PrerequisiteTree != null)
                         {
-                            drawPrerequesiteTree(gearpiece.PrerequisiteTree);
+                            if (ImGui.CollapsingHeader("Prerequesite Items"))
+                            {
+                                drawPrerequesiteTree(gearpiece.PrerequisiteTree, gearpiece);
+                            }
                             ImGui.Spacing();
                             ImGui.Separator();
-                            //var prereqCount = gearpiece.Prerequisites.PrerequesiteCount();
-                            //var prereqChildHeight = (prereqCount * childHeight) + (childHeightPadding * 2);
-                            //using (
-                            //    ImRaii.Child(
-                            //        "gearpiece_prereq_child",
-                            //        new Vector2(windowWidth, prereqChildHeight),
-                            //        true,
-                            //        ImGuiWindowFlags.AlwaysUseWindowPadding
-                            //        )
-                            //    )
-                            //{
-                                
-                            //}
                         }
                     }
                     ImGui.Spacing();
