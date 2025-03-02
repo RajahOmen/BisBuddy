@@ -20,9 +20,6 @@ namespace BisBuddy.Windows
             var gearpieceCollected = gearpiece.IsCollected;
             var gearpieceManuallyCollected = gearpiece.IsManuallyCollected;
             var gearpieceHasMelds = !gearpiece.ItemMateria.Any(m => !m.IsMelded);
-            var gearpiecePrereqsCollected =
-                gearpiece.PrerequisiteTree != null
-                && gearpiece.PrerequisiteTree.PrerequisiteTree.All(p => p.IsCollected);
 
             var checkmarkColor = gearpieceManuallyCollected
                 ? ManuallyCollectedColor
@@ -71,7 +68,7 @@ namespace BisBuddy.Windows
                 gearpieceCollectedLabel = "";
                 textColor = ObtainedColor;
             }
-            else if (!gearpieceCollected && !gearpiecePrereqsCollected && !gearpiece.IsObtainable)
+            else if (!gearpieceCollected && !gearpiece.IsObtainable)
             {
                 gearpieceCollectedLabel = "*";
                 textColor = UnobtainedColor;
