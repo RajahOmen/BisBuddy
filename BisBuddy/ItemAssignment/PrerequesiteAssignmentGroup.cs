@@ -74,25 +74,12 @@ namespace BisBuddy.ItemAssignment
                 throw new Exception($"Expected PrerequisiteGroup for gearpiece \"{prereqGearpiece.ItemName}\", got null");
 
             // item materia don't match
-            if (
-                !prereqGearpiece
-                .ItemMateria
-                .OrderByDescending(m => m.ItemId)
-                .Select(m => m.ItemId)
-                .SequenceEqual(
-                    MateriaList
-                    .Select(m => m.ItemId)
-                    )
-                )
-            {
+            if (!Materia.MateriaListCanSatisfy(MateriaList, prereqGearpiece.ItemMateria))
                 return false;
-            }
 
+            // if gearset already added, return false
             if (Gearsets.Contains(gearset))
-            {
-                // gearset already added, return false
                 return false;
-            }
 
             // ids and materia match, add it to group and return true
             PrerequisiteGroups.Add(prereq);
@@ -103,6 +90,10 @@ namespace BisBuddy.ItemAssignment
                 prereqGearpiece.PrerequisiteTree.MinRemainingItems(),
                 minRemainingPrereqs
                 );
+
+            // gearpiece has MORE Materia required than on current group, overwrite
+            if (prereqGearpiece.ItemMateria.Count > MateriaList.Count)
+                MateriaList = new List<Materia>(prereqGearpiece.ItemMateria);
 
             return true;
         }

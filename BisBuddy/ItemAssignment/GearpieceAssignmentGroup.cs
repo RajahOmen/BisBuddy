@@ -61,33 +61,25 @@ namespace BisBuddy.ItemAssignment
             // tries to add gearpiece and return true. Returns false if gearpiece doesn't match this group
 
             // item ids don't match
-            if (gearpiece.ItemId != ItemId) return false;
+            if (gearpiece.ItemId != ItemId)
+                return false;
 
             // item materia don't match
-            if (
-                !gearpiece
-                .ItemMateria
-                .OrderByDescending(m => m.ItemId)
-                .Select(m => m.ItemId)
-                .SequenceEqual(
-                    MateriaList
-                    .Select(m => m.ItemId)
-                    )
-                )
-            {
+            if (!Materia.MateriaListCanSatisfy(MateriaList, gearpiece.ItemMateria))
                 return false;
-            }
 
+            // gearset already added, return false
             if (Gearsets.Contains(gearset))
-            {
-                // gearset already added, return false
                 return false;
-            }
 
             // ids and materia match, add it to group and return true
             Gearpieces.Add(gearpiece);
             Gearsets.Add(gearset);
             IsManuallyCollected |= gearpiece.IsManuallyCollected;
+
+            // gearpiece has MORE Materia required than on current group, overwrite
+            if (gearpiece.ItemMateria.Count > MateriaList.Count)
+                MateriaList = new List<Materia>(gearpiece.ItemMateria);
 
             return true;
         }

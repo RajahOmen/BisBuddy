@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace BisBuddy.Gear
 {
@@ -73,6 +74,25 @@ namespace BisBuddy.Gear
             }
 
             return matchingMateria;
+        }
+
+        public static bool MateriaListCanSatisfy(List<Materia> availableList, List<Materia> requiredList)
+        {
+            // none required, any list satisfies
+            if (requiredList.Count == 0)
+                return true;
+
+            // no restrictions on source, thus list satisfies
+            if (availableList.Count == 0)
+                return true;
+
+            // returns true if the availableList has all the materia in the requiredList, false otherwise
+            var remainingList = requiredList.Select(m => m.ItemId).ToList();
+
+            for (var i = 0; i < availableList.Count; i++)
+                remainingList.Remove(availableList[i].ItemId);
+
+            return remainingList.Count == 0;
         }
     }
 }
