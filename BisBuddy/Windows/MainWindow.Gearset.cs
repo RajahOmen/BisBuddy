@@ -160,7 +160,6 @@ namespace BisBuddy.Windows
                 }
 
                 ImGui.Spacing();
-                ImGui.Spacing();
                 ImGui.Separator();
                 ImGui.Spacing();
 
@@ -169,6 +168,7 @@ namespace BisBuddy.Windows
                     var drawingLeftSide = (gearset.Gearpieces[0].GearpieceType & GearpieceType.LeftSide) != 0;
                     var drawingRightSide = (gearset.Gearpieces[0].GearpieceType & GearpieceType.RightSide) != 0;
 
+                    using (ImRaii.PushIndent(20.0f))
                     using (ImRaii.Disabled(!gearset.IsActive))
                     {
                         for (var i = 0; i < gearset.Gearpieces.Count; i++)
