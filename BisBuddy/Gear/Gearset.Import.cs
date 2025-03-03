@@ -156,7 +156,10 @@ namespace BisBuddy.Gear
                                 sourceUrl.Contains(XivgearSetIndexBase)
                                 ? sourceUrl
                                 : sourceUrl + XivgearSetIndexBase + setIdx;
-                            gearsets.Add(GearsetFromXivgear(setSourceUrl, set, itemData, job));
+
+                            var newGearset = GearsetFromXivgear(setSourceUrl, set, itemData, job);
+                            if (newGearset != null)
+                                gearsets.Add(newGearset);
                         }
                         catch (Exception e)
                         {
@@ -166,7 +169,9 @@ namespace BisBuddy.Gear
                 }
                 else if (json.TryGetProperty("items", out var items))
                 {
-                    gearsets.Add(GearsetFromXivgear(sourceUrl, json, itemData, null));
+                    var newGearset = GearsetFromXivgear(sourceUrl, json, itemData, null);
+                    if (newGearset != null)
+                        gearsets.Add(newGearset);
                 }
                 else
                 {
@@ -193,7 +198,7 @@ namespace BisBuddy.Gear
             }
         }
 
-        protected static Gearset GearsetFromXivgear(string sourceUrl, JsonElement setJson, ItemData itemData, string? gearsetNameOverride)
+        protected static Gearset? GearsetFromXivgear(string sourceUrl, JsonElement setJson, ItemData itemData, string? gearsetNameOverride)
         {
             // set gearset name
             var gearsetName = DefaultName;
@@ -267,8 +272,11 @@ namespace BisBuddy.Gear
                 gearpieces.Add(gearpiece);
             }
 
-            gearset.Gearpieces.Sort((a, b) => a.GearpieceType.CompareTo(b.GearpieceType));
+            // no gearpieces in this gearset
+            if (gearset.Gearpieces.Count == 0)
+                return null;
 
+            gearset.Gearpieces.Sort((a, b) => a.GearpieceType.CompareTo(b.GearpieceType));
             return gearset;
         }
 
@@ -372,7 +380,8 @@ namespace BisBuddy.Gear
 
                 gearset.Gearpieces.Sort((a, b) => a.GearpieceType.CompareTo(b.GearpieceType));
 
-                gearsets.Add(gearset);
+                if (gearset.Gearpieces.Count > 0)
+                    gearsets.Add(gearset);
 
                 Services.Log.Debug($"Imported {gearsets.Count} gearset(s) from {apiUrl}");
                 return gearsets;
