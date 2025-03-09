@@ -128,13 +128,14 @@ namespace BisBuddy.Import
                 {
                     // parse gearpiece properties
                     var gearpieceType = GearpieceTypeMapper.Parse(typeStr);
-                    var gearpieceId = itemData.ConvertItemIdToHq(gearpieceIdJson.GetUInt32());
+                    var gearpieceId = gearpieceIdJson.GetUInt32();
+                    var hqGearpieceId = itemData.ConvertItemIdToHq(gearpieceId);
                     // etro only provides NQ items, convert to HQ
                     var gearpiece = new Gearpiece(
-                        gearpieceId,
-                        itemData.GetItemNameById(gearpieceId),
+                        hqGearpieceId,
+                        itemData.GetItemNameById(hqGearpieceId),
                         gearpieceType,
-                        itemData.BuildGearpiecePrerequisiteTree(gearpieceId),
+                        itemData.BuildGearpiecePrerequisiteTree(hqGearpieceId),
                         parseMateria(materiaProp, gearpieceId.ToString(), typeStr)
                         );
 
