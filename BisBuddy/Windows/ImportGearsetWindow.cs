@@ -19,6 +19,7 @@ public class ImportGearsetWindow : Window, IDisposable
     private ImportSourceType gearsetSourceType = ImportSourceType.Xivgear;
     private bool importLoading = false;
     private GearsetImportStatusType? importStatus;
+    private int importedGearsetCount = -1;
 
     private static readonly Dictionary<GearsetImportStatusType, string> ImportStatusTypeMessage = new()
     {
@@ -74,6 +75,7 @@ public class ImportGearsetWindow : Window, IDisposable
             var importResult = await Services.ImportGearsetService.ImportGearsets(gearsetSourceType, gearsetSourceString);
             gearsetSourceString = string.Empty;
             importStatus = importResult.StatusType;
+            importedGearsetCount = importResult.Gearsets != null ? importResult.Gearsets.Count : -1;
         }
         catch (Exception ex)
         {
@@ -94,6 +96,7 @@ public class ImportGearsetWindow : Window, IDisposable
         gearsetSourceString = string.Empty;
         importStatus = null;
         importLoading = false;
+        importedGearsetCount = -1;
     }
 
     public override void Draw()
@@ -117,6 +120,7 @@ public class ImportGearsetWindow : Window, IDisposable
                 {
                     gearsetSourceType = source;
                     importStatus = null;
+                    importedGearsetCount = -1;
                 }
 
                 if (ImGui.IsItemHovered())
@@ -156,6 +160,7 @@ public class ImportGearsetWindow : Window, IDisposable
             if (ImGui.Button($"{string.Format(Resource.ImportGearsetButton, sourceName)}###import gearset button"))
             {
                 importStatus = null;
+                importedGearsetCount = -1;
                 _ = ImportNewGearsets();
             }
 
@@ -167,7 +172,7 @@ public class ImportGearsetWindow : Window, IDisposable
         if (importStatus != null)
         {
             var message = ImportStatusTypeMessage[importStatus.Value];
-            ImGui.Text(string.Format(message, Resource.ImportFailBase, sourceName));
+            ImGui.Text(string.Format(message, Resource.ImportFailBase, sourceName, importedGearsetCount));
         }
         else if (importLoading)
         {

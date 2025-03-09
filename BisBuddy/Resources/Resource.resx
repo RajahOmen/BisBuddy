@@ -178,7 +178,7 @@
     <value>Import Fail:</value>
   </data>
   <data name="ImportSuccess" xml:space="preserve">
-    <value>Import Success</value>
+    <value>Import Success: {2} gearset(s) imported</value>
   </data>
   <data name="ImportFailInternalError" xml:space="preserve">
     <value>{0} Internal error</value>
