@@ -109,6 +109,17 @@ namespace BisBuddy.Gear
             return neededAsMateriaCount + neededAsPrereqCount;
         }
 
+        public List<uint> ManuallyCollectedItemIds()
+        {
+            if (IsManuallyCollected)
+                return [ItemId];
+
+            if (PrerequisiteTree == null)
+                return [];
+
+            return PrerequisiteTree.ManuallyCollectedItemIds();
+        }
+
         public void MeldSingleMateria(uint materiaId)
         {
             itemMateriaGrouped = null;
@@ -124,12 +135,12 @@ namespace BisBuddy.Gear
             }
         }
 
-        public int MeldMultipleMateria(List<uint> materiaList)
+        public int MeldMultipleMateria(List<Materia> materiaList)
         {
             itemMateriaGrouped = null;
 
             // copy, since this will be modified here
-            materiaList = new List<uint>(materiaList);
+            var materiaIdList = new List<uint>(materiaList.Select(m => m.ItemId).ToList());
 
             var slottedCount = 0;
 
@@ -140,9 +151,9 @@ namespace BisBuddy.Gear
                 var assignedIdx = -1;
 
                 // iterate over candidate materia list
-                for (var candidateIdx = 0; candidateIdx < materiaList.Count; candidateIdx++)
+                for (var candidateIdx = 0; candidateIdx < materiaIdList.Count; candidateIdx++)
                 {
-                    var candidateItemId = materiaList[candidateIdx];
+                    var candidateItemId = materiaIdList[candidateIdx];
 
                     // gearpiece slot requires this candidate materia id
                     if (candidateItemId == materiaSlot.ItemId)
@@ -164,7 +175,7 @@ namespace BisBuddy.Gear
                 // remove candidate from list if it was assigned
                 if (assignedIdx > -1)
                 {
-                    materiaList.RemoveAt(assignedIdx);
+                    materiaIdList.RemoveAt(assignedIdx);
                 }
                 else
                 {

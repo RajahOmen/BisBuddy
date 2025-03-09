@@ -50,11 +50,11 @@ namespace BisBuddy
                     // add ALL active gearsets to solver (not just ones being updated)
                     var activeGearsets = Gearsets.Where(g => g.IsActive).ToList();
 
-                    var solver = new ItemAssigmentSolver(activeGearsets, itemsList, ItemData, Configuration.StrictMateriaMatching);
+                    var solver = new ItemAssigmentSolver(activeGearsets, gearsetsToUpdate, itemsList, ItemData, Configuration.StrictMateriaMatching);
 
-                    var solveResult = solver.Solve();
+                    var solveAssignments = solver.Solve();
 
-                    var updatedGearpieces = ItemAssigner.makeItemAssignments(solveResult, gearpiecesToUpdate, ItemData);
+                    var updatedGearpieces = ItemAssigner.MakeItemAssignments(solveAssignments, gearpiecesToUpdate, ItemData);
 
                     Services.Log.Debug($"Updated {updatedGearpieces.Count} gearpieces from inventories");
 
@@ -65,8 +65,8 @@ namespace BisBuddy
 
                     if (manualUpdate)
                     {
-                    MainWindow.InventoryScanUpdateCount = updatedGearpieces.Count;
-                }
+                        MainWindow.InventoryScanUpdateCount = updatedGearpieces.Count;
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -74,8 +74,8 @@ namespace BisBuddy
 
                     if (manualUpdate)
                     {
-                    MainWindow.InventoryScanUpdateCount = 0;
-                }
+                        MainWindow.InventoryScanUpdateCount = 0;
+                    }
                 }
                 finally
                 {

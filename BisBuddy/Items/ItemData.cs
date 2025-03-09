@@ -344,7 +344,9 @@ namespace BisBuddy.Items
 
                 foreach (var item in items)
                 {
-                    if (item.ItemId == 0) continue;
+                    if (item.ItemId == 0)
+                        continue;
+
                     for (var i = 0; i < item.Quantity; i++)
                     {
                         // add each item in stack individually
@@ -355,7 +357,7 @@ namespace BisBuddy.Items
             return itemsList;
         }
 
-        public static uint GameInventoryItemId(GameInventoryItem item)
+        public static uint GetGameInventoryItemId(GameInventoryItem item)
         {
             // 'normal' item
             if (!item.IsHq) return item.ItemId;

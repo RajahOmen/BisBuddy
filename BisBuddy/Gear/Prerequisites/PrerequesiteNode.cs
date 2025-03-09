@@ -14,12 +14,15 @@ namespace BisBuddy.Gear.Prerequisites
         public bool IsManuallyCollected { get; }
         public bool IsObtainable { get; }
         public List<PrerequisiteNode> PrerequisiteTree { get; set; }
+        public HashSet<PrerequisiteNode> ChildNodes { get; }
         public PrerequisiteNodeSourceType SourceType { get; set; }
 
         public void SetCollected(bool collected, bool manualToggle);
         public int ItemNeededCount(uint itemId, bool ignoreCollected);
-        public int MinRemainingItems();
-        public void AddNeededItemIds(Dictionary<uint, int> neededCounts);
+        public int MinRemainingItems(uint? newItemId = null);
+        public void AddNeededItemIds(Dictionary<uint, (int MinDepth, int Count)> neededCounts, int startDepth = 0);
+        public PrerequisiteNode? AssignItemId(uint itemId);
+        public List<uint> ManuallyCollectedItemIds();
         public int PrerequisiteCount();
         public string GroupKey();
     }
