@@ -30,7 +30,7 @@ namespace BisBuddy
             GameInventoryType.ArmoryRings,
         ];
 
-        public void UpdateFromInventory(List<Gearset> gearsetsToUpdate, bool saveChanges = true)
+        public void ScheduleUpdateFromInventory(List<Gearset> gearsetsToUpdate, bool saveChanges = true, bool manualUpdate = false)
         {
             // don't block main thread, queue for execution instead
             itemAssignmentQueue.Enqueue(() =>
@@ -40,6 +40,9 @@ namespace BisBuddy
                 {
                     if (!Services.ClientState.IsLoggedIn) return;
                     if (gearsetsToUpdate.Count == 0) return;
+
+                    // display loading state in main menu
+                    MainWindow.InventoryScanRunning = true;
 
                     var itemsList = ItemData.GetGameInventoryItems(InventorySources);
                     var gearpiecesToUpdate = Gearset.GetGearpiecesFromGearsets(gearsetsToUpdate);
@@ -59,12 +62,20 @@ namespace BisBuddy
                     {
                         SaveGearsetsWithUpdate(false);
                     }
+
+                    if (manualUpdate)
+                    {
                     MainWindow.InventoryScanUpdateCount = updatedGearpieces.Count;
+                }
                 }
                 catch (Exception ex)
                 {
                     Services.Log.Error(ex, "Failed to update gearsets from inventory");
+
+                    if (manualUpdate)
+                    {
                     MainWindow.InventoryScanUpdateCount = 0;
+                }
                 }
                 finally
                 {

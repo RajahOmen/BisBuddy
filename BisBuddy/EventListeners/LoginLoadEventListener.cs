@@ -20,7 +20,7 @@ namespace BisBuddy.EventListeners
                 if (Services.ClientState.IsLoggedIn)
                 {
                     Services.Log.Verbose($"Initialized while logged in. Initiating inventory scan.");
-                    Plugin.UpdateFromInventory(Plugin.Gearsets); // scan on initialization
+                    Plugin.ScheduleUpdateFromInventory(Plugin.Gearsets); // scan on initialization
                 }
             }
         }
@@ -51,7 +51,7 @@ namespace BisBuddy.EventListeners
                 if (!Services.ClientState.IsLoggedIn)
                     throw new Exception("Auto complete item event triggered while logged out");
 
-                Plugin.UpdateFromInventory(Plugin.Gearsets);
+                Plugin.ScheduleUpdateFromInventory(Plugin.Gearsets);
             }
             catch (Exception ex)
             {
