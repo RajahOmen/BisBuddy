@@ -1,4 +1,5 @@
 using BisBuddy.Gear;
+using Dalamud.Game.Inventory;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,8 +8,6 @@ namespace BisBuddy.ItemAssignment
 {
     public class GearpieceAssignmentGroup : IAssignmentGroup
     {
-        // #0: ensure that if a gearpiece is manually collected, it is extremely highly-valued by auto-solver
-        private static readonly int ManualCollectionScore = 100000;
         // #1: maximize materia count in common
         private static readonly int MateriaCountScoreScalar = 15000;
         // #2: maximize group size. has a max value to prevent group size from dominating score
@@ -56,6 +55,11 @@ namespace BisBuddy.ItemAssignment
             IsManuallyCollected = gearpiece.IsManuallyCollected;
         }
 
+        public bool NeedsItemId(uint candidateItemId)
+        {
+            return ItemId == candidateItemId;
+        }
+
         public bool AddMatchingGearpiece(Gearpiece gearpiece, Gearset gearset)
         {
             // tries to add gearpiece and return true. Returns false if gearpiece doesn't match this group
@@ -88,20 +92,38 @@ namespace BisBuddy.ItemAssignment
         public int CandidateEdgeWeight(uint candidateId, List<Materia> candidateMateria)
         {
             // candidate item id must match this group's item id, else no edge
-            if (candidateId != ItemId) return ItemAssigmentSolver.NoEdgeWeightValue;
+            if (candidateId != ItemId)
+                return ItemAssigmentSolver.NoEdgeWeightValue;
 
             // assign itemCandidateMateria to group materia, 1-1, preserving duplicates
             var materiaInCommon = Materia.GetMatchingMateria(MateriaList, candidateMateria.Select(m => m.ItemId).ToList());
 
             // get the sub-scores from the common materia etc.
-            var manuallyCollectedScore = IsManuallyCollected ? ManualCollectionScore : 0;
-            var materiaCountScore = materiaInCommon.Count * MateriaCountScoreScalar;
-            var groupSizeScore = Math.Min(Gearpieces.Count * GroupSizeScoreScalar, MaxGroupSizeScore);
-            var gearpieceIdxScore = minGearpieceIdx * GearpieceIndexScoreScalar;
+            var subScores = new Dictionary<string, int>()
+            {
+                {
+                    "materiaCountScore",
+                    materiaInCommon.Count * MateriaCountScoreScalar
+                },
+                {
+                    "groupSizeScore",
+                    Math.Min(Gearpieces.Count * GroupSizeScoreScalar, MaxGroupSizeScore)
+                },
+                {
+                    "gearpieceIdxScore",
+                    minGearpieceIdx * GearpieceIndexScoreScalar
+                },
+            };
+
+            var totalScore = subScores.Values.Sum();
+
+#if DEBUG
+            var subScoreLog = string.Join("\n", subScores.Select(subScore => $"{subScore.Key}: {subScore.Value}"));
+            Services.Log.Verbose($"gearpiece group item id: {ItemId}. Candidate item id: {candidateId}\n{subScoreLog}\ntotal score: {totalScore}");
+#endif
 
             // return sum of sub-scores
-            // 0 << 1 < 2 < 3
-            return manuallyCollectedScore + materiaCountScore + groupSizeScore + gearpieceIdxScore;
+            return totalScore;
         }
     }
 }

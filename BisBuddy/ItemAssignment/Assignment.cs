@@ -1,13 +1,13 @@
 using BisBuddy.Gear;
-using Dalamud.Game.Inventory;
 using System.Collections.Generic;
 
 namespace BisBuddy.ItemAssignment
 {
-    public class GearpiecesAssignment
+    public class Assignment
     {
         // null if gearpieces unassigned
-        public GameInventoryItem? Item { get; set; }
+        public uint? ItemId { get; set; }
+        public List<Materia> MateriaList { get; set; } = [];
         public List<Gearpiece> Gearpieces { get; set; } = [];
     }
 }

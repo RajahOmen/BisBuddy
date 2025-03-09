@@ -50,7 +50,7 @@ namespace BisBuddy.EventListeners
                 if (Gearset.GetGearsetsNeedingItemById(addedArgs.Item.ItemId, Plugin.Gearsets).Count == 0) return;
 
                 // added to type we track, update gearsets
-                Plugin.UpdateFromInventory(Plugin.Gearsets);
+                Plugin.ScheduleUpdateFromInventory(Plugin.Gearsets);
             }
             catch (Exception ex)
             {
@@ -71,7 +71,7 @@ namespace BisBuddy.EventListeners
                 if (Gearset.GetGearsetsNeedingItemById(removedArgs.Item.ItemId, Plugin.Gearsets).Count == 0) return;
 
                 // removed from type we track, update gearsets
-                Plugin.UpdateFromInventory(Plugin.Gearsets);
+                Plugin.ScheduleUpdateFromInventory(Plugin.Gearsets);
             }
             catch (Exception ex)
             {
@@ -92,7 +92,7 @@ namespace BisBuddy.EventListeners
                 if (Gearset.GetGearsetsNeedingItemById(changedArgs.Item.ItemId, Plugin.Gearsets, ignoreCollected: false).Count == 0) return;
 
                 // changed in a type we track, update gearsets
-                Plugin.UpdateFromInventory(Plugin.Gearsets);
+                Plugin.ScheduleUpdateFromInventory(Plugin.Gearsets);
             }
             catch (Exception ex)
             {
@@ -114,7 +114,7 @@ namespace BisBuddy.EventListeners
                 if (Gearset.GetGearsetsNeedingItemById(movedArgs.Item.ItemId, Plugin.Gearsets).Count == 0) return;
 
                 // moved untracked -> tracked or tracked -> untracked, update gearsets
-                Plugin.UpdateFromInventory(Plugin.Gearsets);
+                Plugin.ScheduleUpdateFromInventory(Plugin.Gearsets);
             }
             catch (Exception ex)
             {

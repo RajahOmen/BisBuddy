@@ -188,7 +188,7 @@ public class ConfigWindow : Window, IDisposable
             // if auto scanning enabled, rerun assignments with new configuration
             if (configuration.AutoScanInventory)
             {
-                plugin.UpdateFromInventory(plugin.Gearsets);
+                plugin.ScheduleUpdateFromInventory(plugin.Gearsets);
             }
         }
         ImGui.SameLine();
