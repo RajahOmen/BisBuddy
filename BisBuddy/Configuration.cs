@@ -21,6 +21,8 @@ public class Configuration : IPluginConfiguration
         PropertyNameCaseInsensitive = true,
         IncludeFields = true,
     };
+    public static readonly string DefaultGearsetName = "New Gearset";
+
     public int Version { get; set; } = 2;
 
     public bool HighlightNeedGreed { get; set; } = true;

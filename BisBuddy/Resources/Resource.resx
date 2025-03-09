@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -175,60 +175,24 @@
     <value>{0} Config</value>
   </data>
   <data name="ImportFailBase" xml:space="preserve">
-    <value>Import Fail: </value>
+    <value>Import Fail:</value>
   </data>
   <data name="ImportSuccess" xml:space="preserve">
     <value>Import Success</value>
   </data>
-  <data name="ImportInternalError" xml:space="preserve">
-    <value>Internal Error</value>
-  </data>
-  <data name="ImportNoJson" xml:space="preserve">
-    <value>No JSON to Import</value>
-  </data>
-  <data name="ImportInvalidJson" xml:space="preserve">
-    <value>Invalid JSON</value>
+  <data name="ImportFailInternalError" xml:space="preserve">
+    <value>{0} Internal error</value>
   </data>
   <data name="ImportInvalidUrl" xml:space="preserve">
     <value>Invalid URL</value>
   </data>
-  <data name="ImportNoWebResponse" xml:space="preserve">
-    <value>No Response from URL</value>
-  </data>
-  <data name="ImportInvalidWebResponse" xml:space="preserve">
-    <value>Invalid Response from URL</value>
-  </data>
   <data name="ImportNoGearsets" xml:space="preserve">
     <value>No Gearsets Found</value>
-  </data>
-  <data name="ImportTooManyGearsets" xml:space="preserve">
-    <value>Maximum of {0} gearsets</value>
   </data>
   <data name="ImportWindowTitle" xml:space="preserve">
     <value>Add New Gearset</value>
   </data>
-  <data name="ImportWebGearsetText" xml:space="preserve">
-    <value>Import gearset(s) from Xivgear.app or Etro.gg</value>
-  </data>
-  <data name="ImportWebGearsetInputLabel" xml:space="preserve">
-    <value>URL</value>
-  </data>
-  <data name="ImportWebGearsetButton" xml:space="preserve">
-    <value>Import</value>
-  </data>
-  <data name="ImportWebGearsetLoading" xml:space="preserve">
-    <value>Loading...</value>
-  </data>
-  <data name="ImportJsonGearsetText" xml:space="preserve">
-    <value>Import gearset from JSON</value>
-  </data>
-  <data name="ImportJsonGearsetInputLabel" xml:space="preserve">
-    <value>JSON</value>
-  </data>
-  <data name="ImportJsonGearsetButton" xml:space="preserve">
-    <value>Import</value>
-  </data>
-  <data name="ImportJsonGearsetLoading" xml:space="preserve">
+  <data name="ImportGearsetLoading" xml:space="preserve">
     <value>Loading...</value>
   </data>
   <data name="MeldWindowHeader" xml:space="preserve">
@@ -237,8 +201,8 @@
   <data name="NewGearsetButton" xml:space="preserve">
     <value>New Gearset</value>
   </data>
-  <data name="NewGearsetTooltip" xml:space="preserve">
-    <value>Import a new gearset</value>
+  <data name="ImportGearsetTooltip" xml:space="preserve">
+    <value>Import a new gearset from {0}</value>
   </data>
   <data name="NewGearsetTooltipMaxGearsets" xml:space="preserve">
     <value>Maximum of {0} gearsets</value>
@@ -366,5 +330,44 @@ Right click to search for in inventory</value>
   <data name="PrerequisiteTooltipBase" xml:space="preserve">
     <value>Left click to {0}
 Right click to search for in inventory</value>
+  </data>
+  <data name="ImportXivgearTooltip" xml:space="preserve">
+    <value>Gearset sheet link exported from Xivgear.app
+ex: https://xivgear.app/?page=sl%%7C9ee61d69-7daa-41bd-9c28-8a0f0055f90f</value>
+  </data>
+  <data name="ImportEtroTooltip" xml:space="preserve">
+    <value>Gearset sheet link from Etro.gg
+ex: https://etro.gg/gearset/4b5f4ed3-4832-4fd5-b134-3429ea8caf37</value>
+  </data>
+  <data name="ImportJsonTooltip" xml:space="preserve">
+    <value>Gearset JSON exported from existing plugin gearset
+ex: {"Id":"50399235-5794-4ccb-906f-ddd9...</value>
+  </data>
+  <data name="ImportTeamcraftTooltip" xml:space="preserve">
+    <value>Plaintext gearset exported from Teamcraft
+ex:
+**Everseeker's Pickaxe HQ**
+        
+- Gatherer's Guile Materia X
+
+**Everseeker's Coat of Gath...</value>
+  </data>
+  <data name="ImportGearsetButton" xml:space="preserve">
+    <value>Import from {0}</value>
+  </data>
+  <data name="ImportFailInvalidInput" xml:space="preserve">
+    <value>{0} Invalid input for {1}</value>
+  </data>
+  <data name="ImportFailInvalidResponse" xml:space="preserve">
+    <value>{0} Invalid response received</value>
+  </data>
+  <data name="ImportFailNoGearsets" xml:space="preserve">
+    <value>{0} No gearsets found/imported</value>
+  </data>
+  <data name="ImportFailTooManyGearsets" xml:space="preserve">
+    <value>{0} Import would exceed gearset limit</value>
+  </data>
+  <data name="NewGearsetTooltip" xml:space="preserve">
+    <value>Import a new gearset</value>
   </data>
 </root>

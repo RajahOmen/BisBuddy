@@ -3,45 +3,38 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace BisBuddy.Import
 {
     public class JsonSource : ImportSource
     {
-        public ImportSourceType SourceType => throw new NotImplementedException();
+        public ImportSourceType SourceType => ImportSourceType.Json;
 
-        public Task<List<Gearset>> ImportGearsets(string importString)
-        {
-            throw new NotImplementedException();
-        }
-
-
-        public static Gearset ImportFromJson(string jsonStr)
+        public async Task<List<Gearset>> ImportGearsets(string importString)
         {
             try
             {
-                var gearset = JsonSerializer.Deserialize<Gearset>(jsonStr, Configuration.JsonOptions)
-                    ?? throw new GearsetImportException(GearsetImportStatusType.InternalError);
+                var task = new Task<List<Gearset>>(() =>
+                {
+                    var gearset = JsonSerializer.Deserialize<Gearset>(importString, Configuration.JsonOptions)
+                        ?? throw new GearsetImportException(GearsetImportStatusType.InvalidInput);
 
-                gearset.Id = Guid.NewGuid().ToString(); // set to a new random uuid\
-                Services.Log.Debug($"Imported 1 gearset from {jsonStr}");
-                return gearset;
+                    gearset.Id = Guid.NewGuid().ToString(); // set to a new random uuid
+                    return [gearset];
+                });
+
+                task.RunSynchronously(TaskScheduler.Default);
+                return await task;
             }
-            catch (ArgumentNullException)
+            catch (ArgumentNullException ex)
             {
-                Services.Log.Error($"Gearset Import Null JSON: {jsonStr}");
-                throw new GearsetImportException(GearsetImportStatusType.InternalError);
+                throw new GearsetImportException(GearsetImportStatusType.InvalidInput, ex.Message);
             }
             catch (Exception ex) when (ex is JsonException || ex is NotSupportedException)
             {
-                Services.Log.Error(ex, $"Gearset Import Invalid JSON: {jsonStr}");
-                throw new GearsetImportException(GearsetImportStatusType.InternalError);
-            }
-            catch (Exception ex)
-            {
-                Services.Log.Error(ex, $"Gearset Import Internal Error for JSON: {jsonStr}");
-                throw new GearsetImportException(GearsetImportStatusType.InternalError);
+                throw new GearsetImportException(GearsetImportStatusType.InvalidInput, ex.Message);
             }
         }
     }

@@ -9,7 +9,7 @@ namespace BisBuddy.Import
 {
     public class TeamcraftPlaintextSource : ImportSource
     {
-        public ImportSourceType SourceType => throw new NotImplementedException();
+        public ImportSourceType SourceType => ImportSourceType.TeamcraftPlaintext;
 
         public Task<List<Gearset>> ImportGearsets(string importString)
         {

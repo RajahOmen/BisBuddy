@@ -352,7 +352,17 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Import Fail: .
+        ///   Looks up a localized string similar to Gearset sheet link from Etro.gg
+        ///ex: https://etro.gg/gearset/4b5f4ed3-4832-4fd5-b134-3429ea8caf37.
+        /// </summary>
+        internal static string ImportEtroTooltip {
+            get {
+                return ResourceManager.GetString("ImportEtroTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Import Fail:.
         /// </summary>
         internal static string ImportFailBase {
             get {
@@ -361,20 +371,74 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Internal Error.
+        ///   Looks up a localized string similar to {0} Internal error.
         /// </summary>
-        internal static string ImportInternalError {
+        internal static string ImportFailInternalError {
             get {
-                return ResourceManager.GetString("ImportInternalError", resourceCulture);
+                return ResourceManager.GetString("ImportFailInternalError", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid JSON.
+        ///   Looks up a localized string similar to {0} Invalid input for {1}.
         /// </summary>
-        internal static string ImportInvalidJson {
+        internal static string ImportFailInvalidInput {
             get {
-                return ResourceManager.GetString("ImportInvalidJson", resourceCulture);
+                return ResourceManager.GetString("ImportFailInvalidInput", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} Invalid response received.
+        /// </summary>
+        internal static string ImportFailInvalidResponse {
+            get {
+                return ResourceManager.GetString("ImportFailInvalidResponse", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} No gearsets found/imported.
+        /// </summary>
+        internal static string ImportFailNoGearsets {
+            get {
+                return ResourceManager.GetString("ImportFailNoGearsets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} Import would exceed gearset limit.
+        /// </summary>
+        internal static string ImportFailTooManyGearsets {
+            get {
+                return ResourceManager.GetString("ImportFailTooManyGearsets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Import from {0}.
+        /// </summary>
+        internal static string ImportGearsetButton {
+            get {
+                return ResourceManager.GetString("ImportGearsetButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Loading....
+        /// </summary>
+        internal static string ImportGearsetLoading {
+            get {
+                return ResourceManager.GetString("ImportGearsetLoading", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Import a new gearset from {0}.
+        /// </summary>
+        internal static string ImportGearsetTooltip {
+            get {
+                return ResourceManager.GetString("ImportGearsetTooltip", resourceCulture);
             }
         }
         
@@ -388,47 +452,12 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid Response from URL.
+        ///   Looks up a localized string similar to Gearset JSON exported from existing plugin gearset
+        ///ex: {&quot;Id&quot;:&quot;50399235-5794-4ccb-906f-ddd9....
         /// </summary>
-        internal static string ImportInvalidWebResponse {
+        internal static string ImportJsonTooltip {
             get {
-                return ResourceManager.GetString("ImportInvalidWebResponse", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Import.
-        /// </summary>
-        internal static string ImportJsonGearsetButton {
-            get {
-                return ResourceManager.GetString("ImportJsonGearsetButton", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to JSON.
-        /// </summary>
-        internal static string ImportJsonGearsetInputLabel {
-            get {
-                return ResourceManager.GetString("ImportJsonGearsetInputLabel", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Loading....
-        /// </summary>
-        internal static string ImportJsonGearsetLoading {
-            get {
-                return ResourceManager.GetString("ImportJsonGearsetLoading", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Import gearset from JSON.
-        /// </summary>
-        internal static string ImportJsonGearsetText {
-            get {
-                return ResourceManager.GetString("ImportJsonGearsetText", resourceCulture);
+                return ResourceManager.GetString("ImportJsonTooltip", resourceCulture);
             }
         }
         
@@ -442,24 +471,6 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to No JSON to Import.
-        /// </summary>
-        internal static string ImportNoJson {
-            get {
-                return ResourceManager.GetString("ImportNoJson", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to No Response from URL.
-        /// </summary>
-        internal static string ImportNoWebResponse {
-            get {
-                return ResourceManager.GetString("ImportNoWebResponse", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Import Success.
         /// </summary>
         internal static string ImportSuccess {
@@ -469,47 +480,17 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Maximum of {0} gearsets.
+        ///   Looks up a localized string similar to Plaintext gearset exported from Teamcraft
+        ///ex:
+        ///**Everseeker&apos;s Pickaxe HQ**
+        ///        
+        ///- Gatherer&apos;s Guile Materia X
+        ///
+        ///**Everseeker&apos;s Coat of Gath....
         /// </summary>
-        internal static string ImportTooManyGearsets {
+        internal static string ImportTeamcraftTooltip {
             get {
-                return ResourceManager.GetString("ImportTooManyGearsets", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Import.
-        /// </summary>
-        internal static string ImportWebGearsetButton {
-            get {
-                return ResourceManager.GetString("ImportWebGearsetButton", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to URL.
-        /// </summary>
-        internal static string ImportWebGearsetInputLabel {
-            get {
-                return ResourceManager.GetString("ImportWebGearsetInputLabel", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Loading....
-        /// </summary>
-        internal static string ImportWebGearsetLoading {
-            get {
-                return ResourceManager.GetString("ImportWebGearsetLoading", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Import gearset(s) from Xivgear.app or Etro.gg.
-        /// </summary>
-        internal static string ImportWebGearsetText {
-            get {
-                return ResourceManager.GetString("ImportWebGearsetText", resourceCulture);
+                return ResourceManager.GetString("ImportTeamcraftTooltip", resourceCulture);
             }
         }
         
@@ -519,6 +500,16 @@ namespace BisBuddy.Resources {
         internal static string ImportWindowTitle {
             get {
                 return ResourceManager.GetString("ImportWindowTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Gearset sheet link exported from Xivgear.app
+        ///ex: https://xivgear.app/?page=sl%%7C9ee61d69-7daa-41bd-9c28-8a0f0055f90f.
+        /// </summary>
+        internal static string ImportXivgearTooltip {
+            get {
+                return ResourceManager.GetString("ImportXivgearTooltip", resourceCulture);
             }
         }
         

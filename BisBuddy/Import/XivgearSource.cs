@@ -1,9 +1,8 @@
 using BisBuddy.Gear;
+using BisBuddy.Items;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
-using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Web;
@@ -12,84 +11,36 @@ namespace BisBuddy.Import
 {
     public class XivgearSource : ImportSource
     {
-        public ImportSourceType SourceType => throw new NotImplementedException();
+        public ImportSourceType SourceType => ImportSourceType.Xivgear;
 
+        private static readonly string UriHost = "xivgear.app";
         private static readonly string XivgearApiBase = "https://api.xivgear.app/shortlink/";
         private static readonly string XivgearSetIndexBase = "&onlySetIndex=";
 
-        public Task<List<Gearset>> ImportGearsets(string importString)
+        private readonly ItemData itemData;
+        private readonly HttpClient httpClient;
+
+        public XivgearSource(ItemData itemData, HttpClient httpClient)
         {
-            throw new NotImplementedException();
+            this.itemData = itemData;
+            this.httpClient = httpClient;
         }
 
-
-        private static (string? apiUrl, GearsetSourceType? type) SafeUrl(string url)
+        public async Task<List<Gearset>> ImportGearsets(string importString)
         {
-            if (Uri.TryCreate(url, UriKind.Absolute, out var uri))
-            {
-                switch (uri.Host)
-                {
-                    case "etro.gg":
-                        var etroSetUuid = uri.AbsolutePath.Split("/").LastOrDefault();
-                        if (etroSetUuid == string.Empty) return (null, null);
-                        return (EtroApiBase + etroSetUuid, GearsetSourceType.Etro);
-                    case "xivgear.app":
-                        // get relevant part of query string
-                        var page = HttpUtility.ParseQueryString(uri.Query).Get("page");
-                        if (string.IsNullOrEmpty(page) || !page.Contains('|')) return (null, null);
+            var apiUrl = safeUrl(importString) ??
+                throw new GearsetImportException(GearsetImportStatusType.InvalidInput, message: "Invalid URL");
 
-                        // Split the string and return the part after '|' appended to base
-                        var xivgearSetUuid = page.Split('|')[1].Split('&')[0];
-                        return (XivgearApiBase + xivgearSetUuid, GearsetSourceType.Xivgear);
-                    default: return (null, null);
-                }
-            }
-            return (null, null);
-        }
-
-
-        public static async Task<List<Gearset>> ImportFromRemote(string url, ItemData itemData)
-        {
-            var apiUrl = string.Empty;
-            GearsetSourceType? urlType = null;
             try
             {
-                (apiUrl, urlType) = SafeUrl(url);
-                if (apiUrl == null || urlType == null)
-                {
-                    throw new GearsetImportException(GearsetImportStatusType.InternalError);
-                }
-
-                return urlType switch
-                {
-                    GearsetSourceType.Xivgear => await ImportFromXivgear(apiUrl, url, itemData),
-                    GearsetSourceType.Etro => await ImportFromEtro(apiUrl, url, itemData),
-                    _ => throw new GearsetImportException(GearsetImportStatusType.InternalError),
-                };
-            }
-            catch (GearsetImportException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                Services.Log.Error(ex, $"Gearset Import Internal Error for URL: {apiUrl} [{urlType}]");
-                throw new GearsetImportException(GearsetImportStatusType.InternalError);
-            }
-        }
-
-
-        protected static async Task<List<Gearset>> ImportFromXivgear(string apiUrl, string sourceUrl, ItemData itemData)
-        {
-            try
-            {
-                var onlyImportSetIdx = sourceUrl.Contains(XivgearSetIndexBase)
-                    ? int.Parse(sourceUrl.Split(XivgearSetIndexBase)[1])
+                // query can limit what gearset is displayed, so only import that one if the query term is provided
+                var onlyImportSetIdx = importString.Contains(XivgearSetIndexBase)
+                    ? int.Parse(importString.Split(XivgearSetIndexBase)[1])
                     : -1;
 
                 var gearsets = new List<Gearset>();
                 using var client = new HttpClient();
-                var response = await client.GetAsync(apiUrl);
+                var response = await httpClient.GetAsync(apiUrl);
                 response.EnsureSuccessStatusCode();
 
                 var jsonString = await response.Content.ReadAsStringAsync();
@@ -98,85 +49,115 @@ namespace BisBuddy.Import
                     throw new GearsetImportException(GearsetImportStatusType.InternalError);
 
                 using var jsonDoc = JsonDocument.Parse(jsonString);
-                var json = jsonDoc.RootElement;
+                var jsonRootElement = jsonDoc.RootElement;
 
-                // Ignore links that are for pages with multiple sets
-                if (json.TryGetProperty("sets", out var sets))
+                // page has multiple gearsets on it, handle appropriately
+                if (jsonRootElement.TryGetProperty("sets", out var setsElement))
                 {
-                    var setIdx = -1;
-                    foreach (var set in sets.EnumerateArray())
-                    {
-                        try
-                        {
-                            setIdx++;
-                            // importing a specific set, ignore the rest
-                            if (onlyImportSetIdx >= 0 && setIdx != onlyImportSetIdx) continue;
-
-                            string? job = null;
-                            if (
-                                json.TryGetProperty("job", out var jobProp)
-                                && jobProp.ValueKind == JsonValueKind.String
-                                )
-                            {
-                                job = jobProp.GetString();
-                            }
-                            var setSourceUrl =
-                                sourceUrl.Contains(XivgearSetIndexBase)
-                                ? sourceUrl
-                                : sourceUrl + XivgearSetIndexBase + setIdx;
-                            gearsets.Add(GearsetFromXivgear(setSourceUrl, set, itemData, job));
-                        }
-                        catch (Exception e)
-                        {
-                            Services.Log.Warning($"Failed to import gearset of gearsets: " + e.Message);
-                        }
-                    }
+                    gearsets = parseMultipleGearsets(setsElement, jsonRootElement, importString, onlyImportSetIdx);
                 }
-                else if (json.TryGetProperty("items", out var items))
+                // one gearset page
+                else if (jsonRootElement.TryGetProperty("items", out var items))
                 {
-                    gearsets.Add(GearsetFromXivgear(sourceUrl, json, itemData, null));
+                    var gearset = parseGearset(importString, jsonRootElement, null);
+                    if (gearset != null)
+                        gearsets.Add(gearset);
                 }
                 else
                 {
                     throw new GearsetImportException(GearsetImportStatusType.NoGearsets);
                 }
 
-                Services.Log.Debug($"Imported {gearsets.Count} gearset(s) from {apiUrl}");
                 return gearsets;
             }
             catch (HttpRequestException ex)
             {
-                Services.Log.Error(ex, $"Gearset Import Http Status Error [{ex.StatusCode}]: {apiUrl}");
-                throw new GearsetImportException(GearsetImportStatusType.InternalError);
+                throw new GearsetImportException(GearsetImportStatusType.InvalidInput, ex.Message);
             }
             catch (Exception ex) when (ex is JsonException || ex is ArgumentException || ex is InvalidOperationException)
             {
-                Services.Log.Error(ex, $"Gearset Import Error for URL: {apiUrl}");
-                throw new GearsetImportException(GearsetImportStatusType.InternalError);
-            }
-            catch (Exception ex)
-            {
-                Services.Log.Error(ex, $"Gearset Import Internal Error for URL: {apiUrl}");
-                throw new GearsetImportException(GearsetImportStatusType.InternalError);
+                throw new GearsetImportException(GearsetImportStatusType.InvalidResponse, ex.Message);
             }
         }
 
-        protected static Gearset GearsetFromXivgear(string sourceUrl, JsonElement setJson, ItemData itemData, string? gearsetNameOverride)
+        private static string? safeUrl(string url)
+        {
+            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
+                return null;
+
+            if (uri.Host != UriHost)
+                return null;
+
+            // get relevant part of query string
+            var page = HttpUtility.ParseQueryString(uri.Query).Get("page");
+            if (string.IsNullOrEmpty(page) || !page.Contains('|'))
+                return null;
+
+            // Split the string and return the part after '|' appended to base
+            var xivgearSetUuid = page.Split('|')[1].Split('&')[0];
+            return XivgearApiBase + xivgearSetUuid;
+        }
+
+        private List<Gearset> parseMultipleGearsets(
+            JsonElement setsElement,
+            JsonElement rootElement,
+            string importString,
+            int onlyImportSetIdx
+            )
+        {
+            var gearsets = new List<Gearset>();
+            var setIdx = -1;
+            foreach (var setElement in setsElement.EnumerateArray())
+            {
+                try
+                {
+                    setIdx++;
+                    // importing a specific set, ignore the rest
+                    if (onlyImportSetIdx >= 0 && setIdx != onlyImportSetIdx)
+                        continue;
+
+                    string? job = null;
+                    if (
+                        rootElement.TryGetProperty("job", out var jobProp)
+                        && jobProp.ValueKind == JsonValueKind.String
+                        )
+                    {
+                        job = jobProp.GetString();
+                    }
+                    var setSourceUrl =
+                        importString.Contains(XivgearSetIndexBase)
+                        ? importString
+                        : importString + XivgearSetIndexBase + setIdx;
+
+                    var gearset = parseGearset(setSourceUrl, setElement, job);
+                    if (gearset != null)
+                        gearsets.Add(gearset);
+                }
+                catch (Exception ex)
+                {
+                    Services.Log.Warning($"Failed to import gearset of gearsets: " + ex.Message);
+                }
+            }
+
+            return gearsets;
+        }
+
+        private Gearset? parseGearset(string sourceUrl, JsonElement setElement, string? gearsetJobOverride)
         {
             // set gearset name
-            var gearsetName = DefaultName;
+            var gearsetName = Configuration.DefaultGearsetName;
             if (
-                setJson.TryGetProperty("name", out var nameProp)
+                setElement.TryGetProperty("name", out var nameProp)
                 && nameProp.ValueKind == JsonValueKind.String
                 )
             {
-                gearsetName = nameProp.GetString() ?? DefaultName;
+                gearsetName = nameProp.GetString() ?? Configuration.DefaultGearsetName;
             }
 
-            var gearsetJob = gearsetNameOverride ?? "???";
+            var gearsetJob = gearsetJobOverride ?? "???";
             if (
-                gearsetNameOverride == null
-                && setJson.TryGetProperty("job", out var jobProp)
+                gearsetJobOverride == null
+                && setElement.TryGetProperty("job", out var jobProp)
                 && jobProp.ValueKind == JsonValueKind.String
                 )
             {
@@ -184,11 +165,11 @@ namespace BisBuddy.Import
             }
 
             // get items from json
-            if (!setJson.TryGetProperty("items", out var slots))
+            if (!setElement.TryGetProperty("items", out var slots))
                 throw new JsonException($"No items found in {gearsetName}");
 
             var gearpieces = new List<Gearpiece>();
-            var gearset = new Gearset(gearsetName, gearpieces, gearsetJob, sourceUrl, GearsetSourceType.Xivgear);
+            var gearset = new Gearset(gearsetName, gearpieces, gearsetJob, sourceUrl, ImportSourceType.Xivgear);
 
             foreach (var slot in slots.EnumerateObject())
             {
@@ -235,8 +216,11 @@ namespace BisBuddy.Import
                 gearpieces.Add(gearpiece);
             }
 
-            gearset.Gearpieces.Sort((a, b) => a.GearpieceType.CompareTo(b.GearpieceType));
+            // don't return a gearset if it has no gearpieces
+            if (gearset.Gearpieces.Count == 0)
+                return null;
 
+            gearset.Gearpieces.Sort((a, b) => a.GearpieceType.CompareTo(b.GearpieceType));
             return gearset;
         }
     }

@@ -31,7 +31,7 @@ namespace BisBuddy.Items
                     itemsCoffers = generateItemsCoffers();
                     Task.Run(async () =>
                     {
-                        await Task.Delay(1000);
+                        await Task.Delay(3000);
                         itemsCoffers = null;
                     });
                 }
@@ -46,7 +46,7 @@ namespace BisBuddy.Items
                     itemsPrerequisites = generateItemsPrerequisites();
                     Task.Run(async () =>
                     {
-                        await Task.Delay(1000);
+                        await Task.Delay(3000);
                         itemsPrerequisites = null;
                     });
                 }

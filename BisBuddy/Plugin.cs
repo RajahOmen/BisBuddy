@@ -3,6 +3,7 @@ using BisBuddy.EventListeners.AddonEventListeners;
 using BisBuddy.EventListeners.AddonEventListeners.Containers;
 using BisBuddy.EventListeners.AddonEventListeners.ShopExchange;
 using BisBuddy.Gear;
+using BisBuddy.Import;
 using BisBuddy.ItemAssignment;
 using BisBuddy.Items;
 using BisBuddy.Windows;
@@ -43,7 +44,7 @@ public sealed partial class Plugin : IDalamudPlugin
     // plugin windows
     public readonly WindowSystem WindowSystem = new(PluginName);
     private ConfigWindow ConfigWindow { get; init; }
-    private MainWindow MainWindow { get; init; }
+    public MainWindow MainWindow { get; init; }
     private ImportGearsetWindow ImportGearsetWindow { get; init; }
     private MeldPlanSelectorWindow MeldPlanSelectorWindow { get; init; }
 
@@ -80,6 +81,13 @@ public sealed partial class Plugin : IDalamudPlugin
         pluginInterface.Create<Services>();
 
         ItemData = new ItemData(Services.DataManager.Excel);
+
+        Services.HttpClient = new System.Net.Http.HttpClient();
+        Services.ImportGearsetService = new ImportGearsetService(this)
+            .RegisterSource(ImportSourceType.Xivgear, new XivgearSource(ItemData, Services.HttpClient))
+            .RegisterSource(ImportSourceType.Etro, new EtroSource(ItemData, Services.HttpClient))
+            .RegisterSource(ImportSourceType.TeamcraftPlaintext, new TeamcraftPlaintextSource())
+            .RegisterSource(ImportSourceType.Json, new JsonSource());
 
         Configuration = Configuration.LoadConfig(ItemData);
 
@@ -177,6 +185,9 @@ public sealed partial class Plugin : IDalamudPlugin
 
         // stop worker thread
         itemAssignmentQueue.Stop();
+
+        // dispose of http client
+        Services.HttpClient.Dispose();
     }
 
     private void OnCommand(string command, string args)
