@@ -38,12 +38,12 @@ namespace BisBuddy.Gear.Prerequisites
 
         public int ItemNeededCount(uint itemId, bool ignoreCollected)
         {
-            return PrerequisiteTree.Max(p => p.ItemNeededCount(itemId, ignoreCollected));   // only need one, pick max needed
+            return PrerequisiteTree.Max(p => p.ItemNeededCount(itemId, ignoreCollected) as int?) ?? 0;   // only need one, pick max needed
         }
 
         public int MinRemainingItems(uint? newItemId = null)
         {
-            return PrerequisiteTree.Min(p => p.MinRemainingItems(newItemId));   // only need one, pick min needed
+            return PrerequisiteTree.Min(p => p.MinRemainingItems(newItemId) as int?) ?? 0;   // only need one, pick min needed
         }
 
         public void AddNeededItemIds(Dictionary<uint, (int MinDepth, int Count)> neededCounts, int startDepth = 0)
