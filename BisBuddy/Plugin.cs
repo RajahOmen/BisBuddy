@@ -132,7 +132,7 @@ public sealed partial class Plugin : IDalamudPlugin
 
         Services.CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
         {
-            HelpMessage = $"View existing or add new gearsets\n      [config/c] - Open {PluginName} configuration",
+            HelpMessage = $"View existing or add new gearsets\n      [config/c] - Open {PluginName} configuration\n      [new/n] - Add a new gearset",
             ShowInHelp = true,
         });
         Services.CommandManager.AddHandler(CommandNameAlias, new CommandInfo(OnCommand)
@@ -195,6 +195,10 @@ public sealed partial class Plugin : IDalamudPlugin
         if (args == "config" || args == "c")
         {
             ToggleConfigUI();
+        }
+        else if (args == "new" || args == "n")
+        {
+            ToggleImportGearsetUI();
         }
         else
         {
