@@ -30,7 +30,7 @@ namespace BisBuddy
             GameInventoryType.ArmoryRings,
         ];
 
-        public void UpdateFromInventory(List<Gearset> gearsetsToUpdate, bool saveChanges = true)
+        public void ScheduleUpdateFromInventory(List<Gearset> gearsetsToUpdate, bool saveChanges = true, bool manualUpdate = false)
         {
             // don't block main thread, queue for execution instead
             itemAssignmentQueue.Enqueue(() =>
@@ -41,17 +41,20 @@ namespace BisBuddy
                     if (!Services.ClientState.IsLoggedIn) return;
                     if (gearsetsToUpdate.Count == 0) return;
 
+                    // display loading state in main menu
+                    MainWindow.InventoryScanRunning = true;
+
                     var itemsList = ItemData.GetGameInventoryItems(InventorySources);
                     var gearpiecesToUpdate = Gearset.GetGearpiecesFromGearsets(gearsetsToUpdate);
 
                     // add ALL active gearsets to solver (not just ones being updated)
                     var activeGearsets = Gearsets.Where(g => g.IsActive).ToList();
 
-                    var solver = new ItemAssigmentSolver(activeGearsets, itemsList, ItemData, Configuration.StrictMateriaMatching);
+                    var solver = new ItemAssigmentSolver(activeGearsets, gearsetsToUpdate, itemsList, ItemData, Configuration.StrictMateriaMatching);
 
-                    var solveResult = solver.Solve();
+                    var solveAssignments = solver.Solve();
 
-                    var updatedGearpieces = ItemAssigner.makeItemAssignments(solveResult, gearpiecesToUpdate, ItemData);
+                    var updatedGearpieces = ItemAssigner.MakeItemAssignments(solveAssignments, gearpiecesToUpdate, ItemData);
 
                     Services.Log.Debug($"Updated {updatedGearpieces.Count} gearpieces from inventories");
 
@@ -59,12 +62,20 @@ namespace BisBuddy
                     {
                         SaveGearsetsWithUpdate(false);
                     }
-                    MainWindow.InventoryScanUpdateCount = updatedGearpieces.Count;
+
+                    if (manualUpdate)
+                    {
+                        MainWindow.InventoryScanUpdateCount = updatedGearpieces.Count;
+                    }
                 }
                 catch (Exception ex)
                 {
                     Services.Log.Error(ex, "Failed to update gearsets from inventory");
-                    MainWindow.InventoryScanUpdateCount = 0;
+
+                    if (manualUpdate)
+                    {
+                        MainWindow.InventoryScanUpdateCount = 0;
+                    }
                 }
                 finally
                 {

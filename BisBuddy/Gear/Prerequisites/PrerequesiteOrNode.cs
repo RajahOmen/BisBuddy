@@ -15,6 +15,7 @@ namespace BisBuddy.Gear.Prerequisites
         public bool IsCollected => PrerequisiteTree.Any(p => p.IsCollected);
         public bool IsManuallyCollected => PrerequisiteTree.Any(p => p.IsManuallyCollected);
         public bool IsObtainable => IsCollected || PrerequisiteTree.Any(p => p.IsObtainable);
+        public HashSet<PrerequisiteNode> ChildNodes => [..PrerequisiteTree, .. PrerequisiteTree.SelectMany(p => p.ChildNodes)];
 
         public PrerequisiteOrNode(
             uint itemId,
@@ -37,37 +38,51 @@ namespace BisBuddy.Gear.Prerequisites
 
         public int ItemNeededCount(uint itemId, bool ignoreCollected)
         {
-            if (ignoreCollected && IsCollected)
-                return 0;
-
-            if (ItemId == itemId)
-                return 1;
-
             return PrerequisiteTree.Max(p => p.ItemNeededCount(itemId, ignoreCollected));   // only need one, pick max needed
         }
 
-        public int MinRemainingItems()
+        public int MinRemainingItems(uint? newItemId = null)
         {
-            if (IsCollected)
-                return 0;
-
-            if (PrerequisiteTree.Count == 0)
-                return 1;
-
-            return PrerequisiteTree.Min(p => p.MinRemainingItems());   // only need one, pick min needed
+            return PrerequisiteTree.Min(p => p.MinRemainingItems(newItemId));   // only need one, pick min needed
         }
 
-        public void AddNeededItemIds(Dictionary<uint, int> neededCounts)
+        public void AddNeededItemIds(Dictionary<uint, (int MinDepth, int Count)> neededCounts, int startDepth = 0)
         {
+            // don't need anything if OR is already satisfied
+            if (IsCollected)
+                return;
+
             foreach (var prereq in PrerequisiteTree)
-                prereq.AddNeededItemIds(neededCounts);
+                prereq.AddNeededItemIds(neededCounts, startDepth);
         }
 
         public int PrerequisiteCount()
         {
             // ignore this group, it isn't a real prerequisite
-            return
-                PrerequisiteTree.Sum(p => p.PrerequisiteCount());
+            return PrerequisiteTree.Sum(p => p.PrerequisiteCount());
+        }
+
+        public PrerequisiteNode? AssignItemId(uint itemId)
+        {
+            // don't assign if OR is already satisfied
+            if (IsCollected)
+                return null;
+
+            foreach (var prereq in PrerequisiteTree)
+            {
+                var assignResult = prereq.AssignItemId(itemId);
+                if (assignResult != null)
+                    return assignResult;
+            }
+
+            return null;
+        }
+
+        public List<uint> ManuallyCollectedItemIds()
+        {
+            return PrerequisiteTree
+                .SelectMany(p => p.ManuallyCollectedItemIds())
+                .ToList();
         }
 
         public string GroupKey()

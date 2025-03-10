@@ -74,7 +74,7 @@ public partial class MainWindow : Window, IDisposable
                 if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.Sync, $"{Resource.SyncInventoryButton}##scaninventory"))
                 {
                     InventoryScanRunning = true;
-                    plugin.UpdateFromInventory(plugin.Gearsets);
+                    plugin.ScheduleUpdateFromInventory(plugin.Gearsets, manualUpdate: true);
                 }
                 if (ImGui.IsItemHovered()) ImGui.SetTooltip(Resource.SyncInventoryTooltip);
             }

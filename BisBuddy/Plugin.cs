@@ -274,7 +274,7 @@ public sealed partial class Plugin : IDalamudPlugin
     {
         if (Configuration.PluginUpdateInventoryScan && pluginUpdate)
         {
-            UpdateFromInventory(Gearsets, saveChanges: false);
+            ScheduleUpdateFromInventory(Gearsets, saveChanges: false);
         }
         Configuration.Save();
     }

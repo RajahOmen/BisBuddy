@@ -145,6 +145,7 @@ public class Configuration : IPluginConfiguration
                 }
             }
 
+            config.Version = 2;
             return config;
         }
         catch (Newtonsoft.Json.JsonException ex)

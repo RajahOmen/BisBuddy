@@ -15,6 +15,7 @@ namespace BisBuddy.Gear.Prerequisites
         public bool IsCollected => PrerequisiteTree.All(p => p.IsCollected);
         public bool IsManuallyCollected => PrerequisiteTree.All(p => p.IsManuallyCollected);
         public bool IsObtainable => IsCollected || PrerequisiteTree.All(p => p.IsObtainable);
+        public HashSet<PrerequisiteNode> ChildNodes => [..PrerequisiteTree, .. PrerequisiteTree.SelectMany(p => p.ChildNodes)];
 
         public List<(PrerequisiteNode Node, int Count)> Groups()
         {
@@ -47,36 +48,66 @@ namespace BisBuddy.Gear.Prerequisites
 
         public int ItemNeededCount(uint itemId, bool ignoreCollected)
         {
-            if (ignoreCollected && IsCollected)
-                return 0;
-
-            if (ItemId == itemId)
-                return 1;
-
             return PrerequisiteTree.Sum(p => p.ItemNeededCount(itemId, ignoreCollected));   // need all
         }
 
-        public int MinRemainingItems()
+        public int MinRemainingItems(uint? newItemId = null)
         {
-            if (IsCollected)
-                return 0;
+            var totalRemainingItems = 0;
 
-            if (PrerequisiteTree.Count == 0)
-                return 1;
+            // is new item still available to use for this loop
+            var itemAvailable = newItemId != null;
+            foreach (var prereq in PrerequisiteTree)
+            {
+                // calculate how many items remaining with no item provided
+                var minNoItem = prereq.MinRemainingItems();
+                if (!itemAvailable)
+                {
+                    totalRemainingItems += minNoItem;
+                    continue;
+                }
 
-            return PrerequisiteTree.Sum(p => p.MinRemainingItems());   // need all
+                // calculate how many items remaining with provided item
+                var minWithItem = prereq.MinRemainingItems(newItemId);
+                if (minNoItem != minWithItem)
+                    // if not equal, then must be able to use this item for this prereq
+                    // and no longer be able to be used for future prereqs in node
+                    itemAvailable = false;
+
+                totalRemainingItems += minWithItem;
+            }
+            return totalRemainingItems;
         }
 
-        public void AddNeededItemIds(Dictionary<uint, int> neededCounts)
+        public void AddNeededItemIds(Dictionary<uint, (int MinDepth, int Count)> neededCounts, int startDepth = 0)
         {
             foreach (var prereq in PrerequisiteTree)
-                prereq.AddNeededItemIds(neededCounts);
+                prereq.AddNeededItemIds(neededCounts, startDepth);
         }
 
         public int PrerequisiteCount()
         {
             // ignore this group, it isn't a real prerequisite
             return PrerequisiteTree.Sum(p => p.PrerequisiteCount());
+        }
+
+        public PrerequisiteNode? AssignItemId(uint itemId)
+        {
+            foreach (var prereq in PrerequisiteTree)
+            {
+                var assignResult = prereq.AssignItemId(itemId);
+                if (assignResult != null)
+                    return assignResult;
+            }
+
+            return null;
+        }
+
+        public List<uint> ManuallyCollectedItemIds()
+        {
+            return PrerequisiteTree
+                .SelectMany(p => p.ManuallyCollectedItemIds())
+                .ToList();
         }
 
         public string GroupKey()
