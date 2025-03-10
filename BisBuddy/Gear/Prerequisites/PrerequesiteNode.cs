@@ -8,13 +8,14 @@ namespace BisBuddy.Gear.Prerequisites
     [JsonDerivedType(typeof(PrerequisiteOrNode), typeDiscriminator: "or")]
     public interface PrerequisiteNode
     {
+        public string NodeId { get; }
         public uint ItemId { get; set; }
         public string ItemName { get; set; }
         public bool IsCollected { get; }
         public bool IsManuallyCollected { get; }
         public bool IsObtainable { get; }
         public List<PrerequisiteNode> PrerequisiteTree { get; set; }
-        public HashSet<PrerequisiteNode> ChildNodes { get; }
+        public HashSet<string> ChildNodeIds { get; }
         public PrerequisiteNodeSourceType SourceType { get; set; }
 
         public void SetCollected(bool collected, bool manualToggle);

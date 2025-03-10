@@ -2,6 +2,7 @@ using BisBuddy.Gear.Prerequisites;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace BisBuddy.Gear
 {
@@ -30,6 +31,7 @@ namespace BisBuddy.Gear
         public PrerequisiteNode? PrerequisiteTree { get; set; } // relations with other items that can be used to obtain this gearpiece
         public bool IsCollected { get; private set; }
         public bool IsManuallyCollected { get; set; } = false; // If this item was manually marked as collected
+        [JsonIgnore]
         public bool IsObtainable => PrerequisiteTree?.IsObtainable ?? false; // If no prerequisites known, assume not obtainable
         public List<Materia> ItemMateria { get; init; }
         private List<(Materia Materia, int Count)>? itemMateriaGrouped = null;

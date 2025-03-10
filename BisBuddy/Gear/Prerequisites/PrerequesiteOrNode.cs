@@ -1,29 +1,37 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace BisBuddy.Gear.Prerequisites
 {
     [Serializable]
     public class PrerequisiteOrNode : PrerequisiteNode
     {
+        public string NodeId { get; init; }
         public uint ItemId { get; set; }
         public string ItemName { get; set; }
         public PrerequisiteNodeSourceType SourceType { get; set; }
         public List<PrerequisiteNode> PrerequisiteTree { get; set; }
 
+        [JsonIgnore]
         public bool IsCollected => PrerequisiteTree.Any(p => p.IsCollected);
+        [JsonIgnore]
         public bool IsManuallyCollected => PrerequisiteTree.Any(p => p.IsManuallyCollected);
+        [JsonIgnore]
         public bool IsObtainable => IsCollected || PrerequisiteTree.Any(p => p.IsObtainable);
-        public HashSet<PrerequisiteNode> ChildNodes => [..PrerequisiteTree, .. PrerequisiteTree.SelectMany(p => p.ChildNodes)];
+        [JsonIgnore]
+        public HashSet<string> ChildNodeIds => [.. PrerequisiteTree.Select(p => p.NodeId), .. PrerequisiteTree.SelectMany(p => p.ChildNodeIds)];
 
         public PrerequisiteOrNode(
             uint itemId,
             string itemName,
             List<PrerequisiteNode>? prerequisiteTree,
-            PrerequisiteNodeSourceType sourceType
+            PrerequisiteNodeSourceType sourceType,
+            string? nodeId = null
             )
         {
+            NodeId = nodeId ?? Guid.NewGuid().ToString();
             ItemId = itemId;
             ItemName = itemName;
             SourceType = sourceType;

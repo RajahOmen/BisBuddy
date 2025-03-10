@@ -1,5 +1,4 @@
 using BisBuddy.Gear;
-using Dalamud.Game.Inventory;
 using System;
 using System.Collections.Generic;
 using System.Linq;

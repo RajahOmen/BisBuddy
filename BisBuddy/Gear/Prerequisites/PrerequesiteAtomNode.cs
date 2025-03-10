@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace BisBuddy.Gear.Prerequisites
 {
@@ -10,6 +11,7 @@ namespace BisBuddy.Gear.Prerequisites
         private bool isManuallyCollected = false;
         private bool isCollected = false;
 
+        public string NodeId { get; init; }
         public uint ItemId { get; set; }
         public string ItemName { get; set; }
         public PrerequisiteNodeSourceType SourceType { get; set; }
@@ -25,9 +27,11 @@ namespace BisBuddy.Gear.Prerequisites
             get => isManuallyCollected;
             private set => isManuallyCollected = value;
         }
+        [JsonIgnore]
         public bool IsObtainable =>
             IsCollected || (PrerequisiteTree.Count > 0 && PrerequisiteTree.All(p => p.IsObtainable));
-        public HashSet<PrerequisiteNode> ChildNodes => [..PrerequisiteTree, ..PrerequisiteTree.SelectMany(p => p.ChildNodes)];
+        [JsonIgnore]
+        public HashSet<string> ChildNodeIds => [.. PrerequisiteTree.Select(p => p.NodeId), .. PrerequisiteTree.SelectMany(p => p.ChildNodeIds)];
 
         public PrerequisiteAtomNode(
             uint itemId,
@@ -35,9 +39,11 @@ namespace BisBuddy.Gear.Prerequisites
             List<PrerequisiteNode>? prerequisiteTree,
             PrerequisiteNodeSourceType sourceType,
             bool isCollected = false,
-            bool isManuallyCollected = false
+            bool isManuallyCollected = false,
+            string? nodeId = null
             )
         {
+            NodeId = nodeId ?? Guid.NewGuid().ToString();
             ItemId = itemId;
             ItemName = itemName;
             SourceType = sourceType;

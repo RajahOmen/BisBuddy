@@ -2,7 +2,6 @@ using BisBuddy.Gear;
 using BisBuddy.Gear.Prerequisites;
 using BisBuddy.Items;
 using Dalamud.Game.Inventory;
-using Lumina.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -95,10 +94,10 @@ namespace BisBuddy.ItemAssignment
                 var previousAssignments = DirectlyAssignedNodes.GetValueOrDefault(gearpiece, []);
                 previousAssignments.Add((nodeAssigned, item));
 
-                var childNodes = nodeAssigned.ChildNodes;
+                var childNodeIds = nodeAssigned.ChildNodeIds;
                 var childAssignments = previousAssignments
                     .Where(assign =>
-                        childNodes.Contains(assign.Node)
+                        childNodeIds.Contains(assign.Node.NodeId)
                         );
 
                 DirectlyAssignedNodes[gearpiece] = previousAssignments

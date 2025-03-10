@@ -198,6 +198,7 @@ public sealed partial class Plugin : IDalamudPlugin
         }
         else if (args == "new" || args == "n")
         {
+            Configuration.LoadConfig(ItemData);
             ToggleImportGearsetUI();
         }
         else
