@@ -1,5 +1,4 @@
 using BisBuddy.Gear;
-using BisBuddy.Gear.Prerequisites;
 using BisBuddy.Resources;
 using Dalamud.Interface;
 using Dalamud.Interface.Components;

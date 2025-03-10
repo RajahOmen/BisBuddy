@@ -1,16 +1,13 @@
-
-namespace BisBuddy.Gear
+namespace BisBuddy.Import
 {
     public enum GearsetImportStatusType
     {
         Success,
         InternalError,
-        InvalidUrl,
-        NoWebResponse,
-        InvalidWebResponse,
+        InvalidInput,
+        NoResponse,
+        InvalidResponse,
         NoGearsets,
-        NoJson,
-        InvalidJson,
         TooManyGearsets,
     }
 }

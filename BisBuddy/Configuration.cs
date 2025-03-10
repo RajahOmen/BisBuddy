@@ -1,14 +1,14 @@
 using BisBuddy.Gear;
+using BisBuddy.Items;
 using Dalamud.Configuration;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using System.Text.Json;
-using Newtonsoft.Json;
-using JsonSerializer = System.Text.Json.JsonSerializer;
 using JsonException = System.Text.Json.JsonException;
-using BisBuddy.Items;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace BisBuddy;
 
@@ -21,6 +21,8 @@ public class Configuration : IPluginConfiguration
         PropertyNameCaseInsensitive = true,
         IncludeFields = true,
     };
+    public static readonly string DefaultGearsetName = "New Gearset";
+
     public int Version { get; set; } = 2;
 
     public bool HighlightNeedGreed { get; set; } = true;
@@ -102,7 +104,7 @@ public class Configuration : IPluginConfiguration
 
     private static Configuration migrateOldConfig(JsonDocument configJson, string configText, int configVersion, ItemData itemData)
     {
-        var newConfig = new Configuration(); 
+        var newConfig = new Configuration();
         for (var version = configVersion; version < CurrentVersion; version++)
         {
             newConfig = version switch

@@ -1,5 +1,7 @@
+using BisBuddy.Import;
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 
 namespace BisBuddy.Gear
 {
@@ -14,27 +16,32 @@ namespace BisBuddy.Gear
         public bool IsActive { get; set; } = true;
         public string Name { get; set; } = "New Gearset";
         public List<Gearpiece> Gearpieces { get; init; } = [];
+        // for links to externally sourced sites
         public string? SourceUrl { get; set; } = null;
-        public GearsetSourceType? SourceType { get; set; }
+        // for local representations of the gearset that aren't native JSON (ex: teamcraft plaintext)
+        public string? SourceString { get; set; } = null;
+        public ImportSourceType? SourceType { get; set; }
         public string JobAbbrv { get; set; } = "???";
 
-        public Gearset(string name, string? sourceUrl, GearsetSourceType? sourceType)
+        public Gearset(string name, string? sourceUrl, ImportSourceType? sourceType)
         {
             Name = name;
             SourceUrl = sourceUrl;
             SourceType = sourceType;
         }
 
-        protected Gearset(
+        internal Gearset(
             string name,
             List<Gearpiece> gearpieces,
             string jobAbbrv,
-            string? sourceUrl,
-            GearsetSourceType? sourceType
+            ImportSourceType? sourceType,
+            string? sourceUrl = null,
+            string? sourceString = null
             )
         {
             Name = name;
             SourceUrl = sourceUrl;
+            SourceString = sourceString;
             SourceType = sourceType;
             Gearpieces = gearpieces;
             JobAbbrv = jobAbbrv;
@@ -54,6 +61,11 @@ namespace BisBuddy.Gear
                 }
             }
             return satisfiedGearpieces;
+        }
+
+        public string ExportToJsonStr()
+        {
+            return JsonSerializer.Serialize(this, Configuration.JsonOptions);
         }
     }
 }

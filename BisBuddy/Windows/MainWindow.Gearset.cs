@@ -147,6 +147,19 @@ namespace BisBuddy.Windows
                         ImGui.SetTooltip(string.Format(Resource.GearsetUrlTooltip, gearset.SourceType));
                     }
                 }
+                // don't support simultaneous source urls and strings for now
+                else if (gearset.SourceString != null)
+                {
+                    ImGui.SameLine();
+                    if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.Copy, $"{Resource.GearsetStringButton}##copy_gearset_string"))
+                    {
+                        ImGui.SetClipboardText(gearset.SourceString);
+                    }
+                    if (ImGui.IsItemHovered())
+                    {
+                        ImGui.SetTooltip(string.Format(Resource.GearsetStringTooltip, gearset.SourceType));
+                    }
+                }
 
                 ImGui.SameLine();
 

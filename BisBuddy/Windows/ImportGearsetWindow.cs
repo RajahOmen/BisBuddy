@@ -1,8 +1,8 @@
-
-using BisBuddy.Gear;
+using BisBuddy.Import;
 using BisBuddy.Resources;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
+using Dalamud.Utility;
 using ImGuiNET;
 using System;
 using System.Collections.Generic;
@@ -13,114 +13,76 @@ namespace BisBuddy.Windows;
 
 public class ImportGearsetWindow : Window, IDisposable
 {
-    private readonly Plugin plugin;
-
-    private string gearsetUrl = string.Empty;
-
-    private string gearsetJson = string.Empty;
-
-    private bool webLoading = false;
-    private bool jsonLoading = false;
-
-    private GearsetImportStatusType? webImportStatus;
-
-    private GearsetImportStatusType? jsonImportStatus;
+    private string gearsetSourceString = string.Empty;
+    private ImportSourceType gearsetSourceType = ImportSourceType.Xivgear;
+    private bool importLoading = false;
+    private GearsetImportStatusType? importStatus;
+    private int importedGearsetCount = -1;
 
     private static readonly Dictionary<GearsetImportStatusType, string> ImportStatusTypeMessage = new()
     {
         { GearsetImportStatusType.Success, Resource.ImportSuccess },
-        { GearsetImportStatusType.InternalError, $"{Resource.ImportFailBase}{Resource.ImportInternalError}" },
-        { GearsetImportStatusType.NoJson, $"{Resource.ImportFailBase}{Resource.ImportNoJson}" },
-        { GearsetImportStatusType.InvalidJson, $"{Resource.ImportFailBase}{Resource.ImportInvalidJson}" },
-        { GearsetImportStatusType.InvalidUrl, $"{Resource.ImportFailBase}{Resource.ImportInvalidUrl}" },
-        { GearsetImportStatusType.NoWebResponse, $"{Resource.ImportFailBase}{Resource.ImportNoWebResponse}" },
-        { GearsetImportStatusType.InvalidWebResponse, $"{Resource.ImportFailBase}{Resource.ImportInvalidWebResponse}" },
-        { GearsetImportStatusType.NoGearsets, $"{Resource.ImportFailBase}{Resource.ImportNoGearsets}" },
-        { GearsetImportStatusType.TooManyGearsets, $"{Resource.ImportFailBase}{string.Format(Resource.ImportTooManyGearsets, Plugin.MaxGearsetCount)}" }
+        { GearsetImportStatusType.InternalError, Resource.ImportFailInternalError },
+        { GearsetImportStatusType.InvalidInput, Resource.ImportFailInvalidInput },
+        { GearsetImportStatusType.InvalidResponse, Resource.ImportFailInvalidResponse },
+        { GearsetImportStatusType.NoGearsets, Resource.ImportFailNoGearsets },
+        { GearsetImportStatusType.TooManyGearsets, Resource.ImportFailTooManyGearsets },
+    };
+
+    private static readonly Dictionary<ImportSourceType, string> ImportSourceTypeNames = new()
+    {
+        { ImportSourceType.Xivgear, "Xivgear.app" },
+        { ImportSourceType.Etro, "Etro.gg" },
+        { ImportSourceType.Json, $"JSON" },
+        { ImportSourceType.Teamcraft, "Teamcraft" },
+    };
+
+    private static readonly Dictionary<ImportSourceType, string> ImportSourceTypeTooltips = new()
+    {
+        { ImportSourceType.Xivgear, Resource.ImportXivgearTooltip },
+        { ImportSourceType.Etro, Resource.ImportEtroTooltip },
+        { ImportSourceType.Json, Resource.ImportJsonTooltip },
+        { ImportSourceType.Teamcraft, Resource.ImportTeamcraftTooltip },
     };
 
     public ImportGearsetWindow(Plugin plugin)
         : base($"{Resource.ImportWindowTitle}##bisbuddy import gearset", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
-        this.plugin = plugin;
-
         SizeConstraints = new WindowSizeConstraints
         {
-            MinimumSize = new Vector2(500, 200),
-            MaximumSize = new Vector2(1000, 200)
+            MinimumSize = new Vector2(370, 135),
+            MaximumSize = new Vector2(1000, 1000)
         };
+
+        Size = new Vector2(500, 180);
+        SizeCondition = ImGuiCond.Appearing;
     }
 
-    private async Task ImportNewWebGearset()
+    private async Task ImportNewGearsets()
     {
         try
         {
-            if (gearsetUrl == string.Empty) return; // no gearset to import
-            webLoading = true;
-            var newGearsets = await Gearset.ImportFromRemote(gearsetUrl, plugin.ItemData);
-            if (newGearsets.Count == 0)
+            // no gearset to import
+            if (gearsetSourceString.IsNullOrEmpty())
             {
-                throw new GearsetImportException(GearsetImportStatusType.NoGearsets);
+                importStatus = GearsetImportStatusType.InvalidInput;
+                return;
             }
-            else if (newGearsets.Count + plugin.Gearsets.Count > Plugin.MaxGearsetCount)
-            {
-                throw new GearsetImportException(GearsetImportStatusType.TooManyGearsets);
-            }
-            else
-            {
-                plugin.Gearsets.AddRange(newGearsets);
-                plugin.SaveGearsetsWithUpdate(true);
-                Services.Log.Information($"Successfully imported {newGearsets.Count} gearset(s) from {gearsetUrl}");
-                gearsetUrl = string.Empty;
-                webImportStatus = GearsetImportStatusType.Success;
-            }
-        }
-        catch (GearsetImportException ex)
-        {
-            Services.Log.Error(ImportStatusTypeMessage.GetValueOrDefault(ex.FailStatusType) ?? "Unknown GearsetImportException");
-            webImportStatus = ex.FailStatusType;
+
+            importLoading = true;
+            var importResult = await Services.ImportGearsetService.ImportGearsets(gearsetSourceType, gearsetSourceString);
+            gearsetSourceString = string.Empty;
+            importStatus = importResult.StatusType;
+            importedGearsetCount = importResult.Gearsets != null ? importResult.Gearsets.Count : -1;
         }
         catch (Exception ex)
         {
             Services.Log.Error(ex, $"Internal Error");
-            webImportStatus = GearsetImportStatusType.InternalError;
+            importStatus = GearsetImportStatusType.InternalError;
         }
         finally
         {
-            webLoading = false;
-        }
-    }
-
-    private void ImportNewJsonGearset()
-    {
-        try
-        {
-            if (gearsetJson == string.Empty) return; // no gearset to import
-            if (plugin.Gearsets.Count >= Plugin.MaxGearsetCount)
-            {
-                throw new GearsetImportException(GearsetImportStatusType.TooManyGearsets);
-            }
-            jsonLoading = true;
-            var newGearset = Gearset.ImportFromJson(gearsetJson);
-            plugin.Gearsets.Add(newGearset);
-            plugin.SaveGearsetsWithUpdate(true);
-            Services.Log.Information($"Successfully imported gearset json");
-            gearsetJson = string.Empty;
-            jsonImportStatus = GearsetImportStatusType.Success;
-        }
-        catch (GearsetImportException ex)
-        {
-            Services.Log.Error(ImportStatusTypeMessage.GetValueOrDefault(ex.FailStatusType) ?? "Unknown GearsetImportException");
-            jsonImportStatus = ex.FailStatusType;
-        }
-        catch (Exception ex)
-        {
-            Services.Log.Error(ex, $"Internal Error");
-            jsonImportStatus = GearsetImportStatusType.InternalError;
-        }
-        finally
-        {
-            jsonLoading = false;
+            importLoading = false;
         }
     }
 
@@ -129,65 +91,87 @@ public class ImportGearsetWindow : Window, IDisposable
     public override void OnClose()
     {
         base.OnClose();
-        gearsetUrl = string.Empty;
-        gearsetJson = string.Empty;
-        webImportStatus = null;
-        jsonImportStatus = null;
-        webLoading = false;
-        jsonLoading = false;
+        gearsetSourceString = string.Empty;
+        importStatus = null;
+        importLoading = false;
+        importedGearsetCount = -1;
     }
 
     public override void Draw()
     {
-        ImGui.Spacing();
-
-        ImGui.Text(Resource.ImportWebGearsetText);
-        ImGui.InputText($"{Resource.ImportWebGearsetInputLabel}###gearseturl", ref gearsetUrl, 512, ImGuiInputTextFlags.None);
-
-        using (ImRaii.Disabled(webLoading || gearsetUrl == string.Empty))
+        var sourceOptions = Services.ImportGearsetService.RegisteredSources();
+        using (var sourceOptionsTable = ImRaii.Table("Source options", sourceOptions.Count, ImGuiTableFlags.BordersInnerV))
+        using (ImRaii.PushStyle(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.5f, 0.5f)))
         {
-            if (ImGui.Button($"{Resource.ImportWebGearsetButton}###import web button"))
+            if (!sourceOptionsTable || sourceOptions.Count == 0)
+                return;
+
+            foreach (var source in sourceOptions)
             {
-                webImportStatus = null;
-                _ = ImportNewWebGearset();
+                ImGui.TableNextColumn();
+
+                var sourceSelected = gearsetSourceType == source;
+                if (ImGui.Selectable(ImportSourceTypeNames.GetValueOrDefault(source, "Unknown Source"), sourceSelected))
+                {
+                    gearsetSourceType = source;
+                    importStatus = null;
+                    importedGearsetCount = -1;
+                }
+
+                if (ImGui.IsItemHovered())
+                    ImGui.SetTooltip(ImportSourceTypeTooltips.GetValueOrDefault(source, "Unknown Source"));
             }
         }
 
-        ImGui.SameLine();
-        if (webImportStatus != null)
-        {
-            ImGui.Text(ImportStatusTypeMessage[webImportStatus.Value]);
-        }
-        else if (webLoading)
-        {
-            ImGui.Text(Resource.ImportWebGearsetLoading);
-        }
-
         ImGui.Spacing();
-        ImGui.Spacing();
+        ImGui.Separator();
         ImGui.Spacing();
 
-        ImGui.Text(Resource.ImportJsonGearsetText);
+        var sizeAvailable = ImGui.GetContentRegionAvail();
+        var footerHeight =
+            ImGui.GetTextLineHeightWithSpacing()
+            + ImGui.GetStyle().FramePadding.Y * 2
+            + ImGui.GetStyle().ItemSpacing.Y * 3;
 
-        ImGui.InputText($"{Resource.ImportJsonGearsetInputLabel}##importgearsetjson", ref gearsetJson, 100000);
+        // {Resource.ImportWebGearsetInputLabel}
+        ImGui.InputTextMultiline(
+            $"###gearsetimportstring",
+            ref gearsetSourceString,
+            100000,
+            new Vector2(sizeAvailable.X, sizeAvailable.Y - footerHeight)
+            );
 
-        using (ImRaii.Disabled(jsonLoading || gearsetJson == string.Empty))
+        if (ImGui.IsItemHovered())
+            ImGui.SetTooltip(ImportSourceTypeTooltips.GetValueOrDefault(gearsetSourceType, "Unknown Source"));
+
+        ImGui.Spacing();
+        ImGui.Separator();
+        ImGui.Spacing();
+
+        var sourceName = ImportSourceTypeNames.GetValueOrDefault(gearsetSourceType, "Unknown Source");
+
+        using (ImRaii.Disabled(importLoading || gearsetSourceString == string.Empty))
         {
-            if (ImGui.Button($"{Resource.ImportJsonGearsetButton}###import json button"))
+            if (ImGui.Button($"{string.Format(Resource.ImportGearsetButton, sourceName)}###import gearset button"))
             {
-                jsonImportStatus = null;
-                ImportNewJsonGearset();
+                importStatus = null;
+                importedGearsetCount = -1;
+                _ = ImportNewGearsets();
             }
+
+            if (ImGui.IsItemHovered())
+                ImGui.SetTooltip(string.Format(Resource.ImportGearsetTooltip, sourceName));
         }
 
         ImGui.SameLine();
-        if (jsonImportStatus != null)
+        if (importStatus != null)
         {
-            ImGui.Text(ImportStatusTypeMessage[jsonImportStatus.Value]);
+            var message = ImportStatusTypeMessage[importStatus.Value];
+            ImGui.Text(string.Format(message, Resource.ImportFailBase, sourceName, importedGearsetCount));
         }
-        else if (jsonLoading)
+        else if (importLoading)
         {
-            ImGui.Text(Resource.ImportJsonGearsetLoading);
+            ImGui.Text(Resource.ImportGearsetLoading);
         }
     }
 }

@@ -1,6 +1,8 @@
+using BisBuddy.Import;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
+using System.Net.Http;
 
 namespace BisBuddy
 {
@@ -17,5 +19,7 @@ namespace BisBuddy
         [PluginService] public static IAddonLifecycle AddonLifecycle { get; set; }
         [PluginService] public static IDataManager DataManager { get; set; }
         [PluginService] public static IClientState ClientState { get; set; }
+        public static ImportGearsetService ImportGearsetService { get; set; }
+        public static HttpClient HttpClient { get; set; }
     }
 }

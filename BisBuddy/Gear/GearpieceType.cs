@@ -20,5 +20,6 @@ namespace BisBuddy.Gear
         Finger = 1 << 10,
         LeftSide = Head | Body | Hands | Legs | Feet,
         RightSide = Ears | Neck | Wrists | Finger,
+        Waist = 1 << 11 // for compat with game data / lumina
     }
 }
