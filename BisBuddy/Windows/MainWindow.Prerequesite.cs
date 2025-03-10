@@ -155,15 +155,15 @@ namespace BisBuddy.Windows
         {
             if (prerequisiteNode.GetType() == typeof(PrerequisiteOrNode))
             {
-                drawOrNode((PrerequisiteOrNode) prerequisiteNode, parentGearpiece, parentCount);
+                drawOrNode((PrerequisiteOrNode)prerequisiteNode, parentGearpiece, parentCount);
             }
             else if (prerequisiteNode.GetType() == typeof(PrerequisiteAndNode))
             {
-                drawAndNode((PrerequisiteAndNode) prerequisiteNode, parentGearpiece, parentCount);
+                drawAndNode((PrerequisiteAndNode)prerequisiteNode, parentGearpiece, parentCount);
             }
             else if (prerequisiteNode.GetType() == typeof(PrerequisiteAtomNode))
             {
-                drawAtomNode((PrerequisiteAtomNode) prerequisiteNode, parentGearpiece, parentCount);
+                drawAtomNode((PrerequisiteAtomNode)prerequisiteNode, parentGearpiece, parentCount);
             }
         }
     }

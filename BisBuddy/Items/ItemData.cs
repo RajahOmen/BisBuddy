@@ -1,3 +1,4 @@
+using BisBuddy.Gear;
 using BisBuddy.Gear.Prerequisites;
 using Dalamud.Game.Inventory;
 using Lumina.Excel;
@@ -5,9 +6,10 @@ using Lumina.Excel.Sheets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using SheetMateria = Lumina.Excel.Sheets.Materia;
-using GearMateria = BisBuddy.Gear.Materia;
+using System.Reflection;
 using System.Threading.Tasks;
+using GearMateria = BisBuddy.Gear.Materia;
+using SheetMateria = Lumina.Excel.Sheets.Materia;
 
 namespace BisBuddy.Items
 {
@@ -23,7 +25,8 @@ namespace BisBuddy.Items
         private ExcelSheet<Item> ItemSheet { get; init; }
         private ExcelSheet<SpecialShop> ShopSheet { get; init; }
         private ExcelSheet<SheetMateria> Materia { get; init; }
-        public ILookup<uint, uint> ItemsCoffers {
+        public ILookup<uint, uint> ItemsCoffers
+        {
             get
             {
                 if (itemsCoffers == null)
@@ -38,7 +41,8 @@ namespace BisBuddy.Items
                 return itemsCoffers;
             }
         }
-        public ILookup<uint, List<uint>> ItemsPrerequisites {
+        public ILookup<uint, List<uint>> ItemsPrerequisites
+        {
             get
             {
                 if (itemsPrerequisites == null)
@@ -105,9 +109,11 @@ namespace BisBuddy.Items
         {
             // return the hq version of the item with the provided id
             // if no hq version exists, return the nq version
-            var item = ItemSheet.GetRow(id);
+            if (!tryGetItemRowById(id, out var item))
+                return 0;
 
-            if (!item.CanBeHq) return id;
+            if (!item.CanBeHq)
+                return id;
 
             return id + ItemIdHqOffset;
         }
@@ -127,6 +133,14 @@ namespace BisBuddy.Items
 
             NameToId[itemName] = id;
             return itemName;
+        }
+
+        private bool tryGetItemRowById(uint itemId, out Item item)
+        {
+            if (itemId > ItemIdHqOffset)
+                itemId -= ItemIdHqOffset;
+
+            return ItemSheet.TryGetRow(itemId, out item);
         }
 
         public uint GetItemIdByName(string name)
@@ -248,7 +262,8 @@ namespace BisBuddy.Items
             {
                 supplementalTree = buildPrerequisites(supplementalPrereqs.First(), depth - 1);
                 supplementalTree.SourceType = PrerequisiteNodeSourceType.Loot;
-            } else if (supplementalPrereqs.Count() > 1)
+            }
+            else if (supplementalPrereqs.Count() > 1)
             {
                 supplementalTree.PrerequisiteTree = ItemsCoffers[itemId]
                     .Select(id => buildPrerequisites(id, depth - 1))
@@ -270,7 +285,8 @@ namespace BisBuddy.Items
                 {
                     exchangesTree = buildPrerequisites(shopCosts.First(), depth - 1);
                     exchangesTree.SourceType = PrerequisiteNodeSourceType.Shop;
-                } else // shop is requesting more than one item to exchange
+                }
+                else // shop is requesting more than one item to exchange
                 {
                     var prereqTree = shopCosts
                         .Select(id => buildPrerequisites(id, depth - 1))
@@ -283,12 +299,14 @@ namespace BisBuddy.Items
                         PrerequisiteNodeSourceType.Shop
                         );
                 }
-                
-            } else if (exchangesPrereqs.Count() > 1) // exchangable at more than 1 shop listing
+
+            }
+            else if (exchangesPrereqs.Count() > 1) // exchangable at more than 1 shop listing
             {
                 // build OR list of ANDs. Ex: OR(AND(A, B, C), AND(D, E), ATOM())
                 exchangesTree.PrerequisiteTree = exchangesPrereqs
-                    .Select(shopCostIds => {
+                    .Select(shopCostIds =>
+                    {
                         // shop costs one items
                         if (shopCostIds.Count == 1)
                         {
@@ -321,15 +339,17 @@ namespace BisBuddy.Items
                     PrerequisiteNodeSourceType.Compound
                     );
 
-                group.PrerequisiteTree = [ compoundGroup ];
-            } else if (hasSupplementalPrereqs)
+                group.PrerequisiteTree = [compoundGroup];
+            }
+            else if (hasSupplementalPrereqs)
             {
                 // only from supplementals
-                group.PrerequisiteTree = [ supplementalTree ]; 
-            } else if (hasExchangesPrereqs)
-            {   
+                group.PrerequisiteTree = [supplementalTree];
+            }
+            else if (hasExchangesPrereqs)
+            {
                 // only from shops/exchanges
-                group.PrerequisiteTree = [ exchangesTree ];
+                group.PrerequisiteTree = [exchangesTree];
             }
 
             return group;
@@ -418,6 +438,69 @@ namespace BisBuddy.Items
 
             // item is equippable to only the shield slot
             return itemRow.EquipSlotCategory.RowId == 2u;
+        }
+
+        /// <summary>
+        /// Use an item's corresponding ClassJobCategory to return the list of job abbreviations that
+        /// can equip the item
+        /// </summary>
+        /// <param name="itemId">The RowId or HQ-Offset RowId for the item</param>
+        /// <returns>The set of 3-letter job abbreviations that can equip the item</returns>
+        public HashSet<string> GetItemClassJobCategories(uint itemId)
+        {
+            if (!tryGetItemRowById(itemId, out var itemRow))
+                return [];
+
+            var classJobCategory = itemRow.ClassJobCategory.Value;
+            var jobs = new HashSet<string>();
+
+            var properties = typeof(ClassJobCategory).GetProperties(BindingFlags.Instance | BindingFlags.Public);
+            foreach (var property in properties)
+            {
+                // only check bool fields
+                if (property.PropertyType == typeof(bool))
+                {
+                    var value = property.GetValue(classJobCategory);
+                    if (value != null && (bool)value)
+                    {
+                        jobs.Add(property.Name);
+                    }
+                }
+            }
+
+            return jobs;
+        }
+
+        /// <summary>
+        /// Use an item's corresponding EquipSlotCategory to find it's GearpieceType
+        /// </summary>
+        /// <param name="itemId">The RowId or HQ-Offset RowId for the item</param>
+        /// <returns>The corresponding GearpieceType</returns>
+        public GearpieceType GetItemGearpieceType(uint itemId)
+        {
+            if (!tryGetItemRowById(itemId, out var itemRow))
+                return GearpieceType.None;
+
+            var equipSlotCategory = itemRow.EquipSlotCategory.Value;
+
+            var properties = typeof(EquipSlotCategory).GetProperties(BindingFlags.Instance | BindingFlags.Public);
+            foreach (var property in properties)
+            {
+                // only check sbyte fields
+                if (property.PropertyType == typeof(sbyte))
+                {
+                    var value = property.GetValue(equipSlotCategory);
+                    if (value != null && (sbyte)value == 1)
+                    {
+                        // return first gearpiece type match
+                        if (GearpieceTypeMapper.TryParse(property.Name, out var type))
+                            return type;
+                    }
+                }
+            }
+
+            // none found
+            return GearpieceType.None;
         }
     }
 }

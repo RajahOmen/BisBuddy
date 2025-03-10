@@ -2,7 +2,6 @@ using BisBuddy.Gear;
 using BisBuddy.Gear.Prerequisites;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace BisBuddy.ItemAssignment
 {

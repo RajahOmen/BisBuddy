@@ -1,5 +1,3 @@
-
-using BisBuddy.Gear;
 using BisBuddy.Import;
 using BisBuddy.Resources;
 using Dalamud.Interface.Utility.Raii;
@@ -36,7 +34,7 @@ public class ImportGearsetWindow : Window, IDisposable
         { ImportSourceType.Xivgear, "Xivgear.app" },
         { ImportSourceType.Etro, "Etro.gg" },
         { ImportSourceType.Json, $"JSON" },
-        { ImportSourceType.TeamcraftPlaintext, "Teamcraft" },
+        { ImportSourceType.Teamcraft, "Teamcraft" },
     };
 
     private static readonly Dictionary<ImportSourceType, string> ImportSourceTypeTooltips = new()
@@ -44,7 +42,7 @@ public class ImportGearsetWindow : Window, IDisposable
         { ImportSourceType.Xivgear, Resource.ImportXivgearTooltip },
         { ImportSourceType.Etro, Resource.ImportEtroTooltip },
         { ImportSourceType.Json, Resource.ImportJsonTooltip },
-        { ImportSourceType.TeamcraftPlaintext, Resource.ImportTeamcraftTooltip },
+        { ImportSourceType.Teamcraft, Resource.ImportTeamcraftTooltip },
     };
 
     public ImportGearsetWindow(Plugin plugin)
@@ -70,7 +68,7 @@ public class ImportGearsetWindow : Window, IDisposable
                 importStatus = GearsetImportStatusType.InvalidInput;
                 return;
             }
-            
+
             importLoading = true;
             var importResult = await Services.ImportGearsetService.ImportGearsets(gearsetSourceType, gearsetSourceString);
             gearsetSourceString = string.Empty;

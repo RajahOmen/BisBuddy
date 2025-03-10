@@ -7,7 +7,7 @@ namespace BisBuddy.Import
     {
         Xivgear = 0,
         Etro = 1,
-        Json,
-        TeamcraftPlaintext
+        Json = 2,
+        Teamcraft = 3,
     }
 }

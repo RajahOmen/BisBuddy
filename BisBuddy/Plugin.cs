@@ -86,7 +86,7 @@ public sealed partial class Plugin : IDalamudPlugin
         Services.ImportGearsetService = new ImportGearsetService(this)
             .RegisterSource(ImportSourceType.Xivgear, new XivgearSource(ItemData, Services.HttpClient))
             .RegisterSource(ImportSourceType.Etro, new EtroSource(ItemData, Services.HttpClient))
-            .RegisterSource(ImportSourceType.TeamcraftPlaintext, new TeamcraftPlaintextSource())
+            .RegisterSource(ImportSourceType.Teamcraft, new TeamcraftPlaintextSource(ItemData))
             .RegisterSource(ImportSourceType.Json, new JsonSource());
 
         Configuration = Configuration.LoadConfig(ItemData);

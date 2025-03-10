@@ -1,7 +1,5 @@
-using Dalamud.Plugin;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace BisBuddy.Import
@@ -29,7 +27,8 @@ namespace BisBuddy.Import
                 if (sourceString.Length == 0)
                     throw new GearsetImportException(GearsetImportStatusType.InvalidInput);
 
-                Services.Log.Debug($"Attempting to import {sourceType} gearset from \"{sourceString[.. Math.Min(sourceString.Length, 100)]}\"");
+                var loggedSourceString = sourceString[..Math.Min(sourceString.Length, 100)].Replace("\n", "");
+                Services.Log.Debug($"Attempting to import {sourceType} gearset from \"{loggedSourceString}\"");
 
                 // don't have a source registered for this type
                 if (!sources.TryGetValue(sourceType, out var source))

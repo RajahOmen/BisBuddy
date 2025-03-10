@@ -16,7 +16,10 @@ namespace BisBuddy.Gear
         public bool IsActive { get; set; } = true;
         public string Name { get; set; } = "New Gearset";
         public List<Gearpiece> Gearpieces { get; init; } = [];
+        // for links to externally sourced sites
         public string? SourceUrl { get; set; } = null;
+        // for local representations of the gearset that aren't native JSON (ex: teamcraft plaintext)
+        public string? SourceString { get; set; } = null;
         public ImportSourceType? SourceType { get; set; }
         public string JobAbbrv { get; set; } = "???";
 
@@ -31,12 +34,14 @@ namespace BisBuddy.Gear
             string name,
             List<Gearpiece> gearpieces,
             string jobAbbrv,
-            string? sourceUrl,
-            ImportSourceType? sourceType
+            ImportSourceType? sourceType,
+            string? sourceUrl = null,
+            string? sourceString = null
             )
         {
             Name = name;
             SourceUrl = sourceUrl;
+            SourceString = sourceString;
             SourceType = sourceType;
             Gearpieces = gearpieces;
             JobAbbrv = jobAbbrv;

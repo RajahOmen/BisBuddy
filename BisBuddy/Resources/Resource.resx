@@ -370,4 +370,10 @@ ex:
   <data name="NewGearsetTooltip" xml:space="preserve">
     <value>Import a new gearset</value>
   </data>
+  <data name="GearsetStringButton" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="GearsetStringTooltip" xml:space="preserve">
+    <value>Copy {0} text to clipboard</value>
+  </data>
 </root>

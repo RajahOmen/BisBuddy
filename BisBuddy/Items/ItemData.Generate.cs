@@ -1,11 +1,11 @@
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
+using LuminaSupplemental.Excel.Model;
+using LuminaSupplemental.Excel.Services;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System;
-using LuminaSupplemental.Excel.Model;
-using LuminaSupplemental.Excel.Services;
 
 namespace BisBuddy.Items
 {

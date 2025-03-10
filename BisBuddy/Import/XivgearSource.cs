@@ -169,7 +169,13 @@ namespace BisBuddy.Import
                 throw new JsonException($"No items found in {gearsetName}");
 
             var gearpieces = new List<Gearpiece>();
-            var gearset = new Gearset(gearsetName, gearpieces, gearsetJob, sourceUrl, ImportSourceType.Xivgear);
+            var gearset = new Gearset(
+                gearsetName,
+                gearpieces,
+                gearsetJob,
+                ImportSourceType.Xivgear,
+                sourceUrl: sourceUrl
+                );
 
             foreach (var slot in slots.EnumerateObject())
             {

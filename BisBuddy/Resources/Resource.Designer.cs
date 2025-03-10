@@ -196,6 +196,24 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Text.
+        /// </summary>
+        internal static string GearsetStringButton {
+            get {
+                return ResourceManager.GetString("GearsetStringButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Copy {0} text to clipboard.
+        /// </summary>
+        internal static string GearsetStringTooltip {
+            get {
+                return ResourceManager.GetString("GearsetStringTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Link.
         /// </summary>
         internal static string GearsetUrlButton {

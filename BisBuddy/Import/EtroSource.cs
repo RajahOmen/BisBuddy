@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -117,7 +116,7 @@ namespace BisBuddy.Import
             }
 
             var gearpieces = new List<Gearpiece>();
-            var gearset = new Gearset(gearsetName, gearpieces, job, importString, ImportSourceType.Etro);
+            var gearset = new Gearset(gearsetName, gearpieces, job, ImportSourceType.Etro, sourceUrl: importString);
 
             foreach (var typeStr in EtroGearpieceTypeFieldNames)
             {

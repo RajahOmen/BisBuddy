@@ -29,6 +29,8 @@ namespace BisBuddy.Gear
             { "Kote", GearpieceType.Hands },            // Deltascape
             { "arm gear", GearpieceType.Hands },        // normal raid gear tokens
 
+            { "Waist", GearpieceType.Waist },           // for compat with old items/game data
+
             { "Legs", GearpieceType.Legs },
             { "Leg", GearpieceType.Legs },
             { "Tsutsuhakama", GearpieceType.Legs },     // Deltascape
