@@ -1,8 +1,6 @@
 using BisBuddy.Gear;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -16,26 +14,25 @@ namespace BisBuddy.Import
         {
             try
             {
-                var task = new Task<List<Gearset>>(() =>
-                {
-                    var gearset = JsonSerializer.Deserialize<Gearset>(importString, Configuration.JsonOptions)
-                        ?? throw new GearsetImportException(GearsetImportStatusType.InvalidInput);
+                var gearset = await Task.Run(() => parseGearset(importString))
+                    ?? throw new GearsetImportException(GearsetImportStatusType.InvalidInput);
 
-                    gearset.Id = Guid.NewGuid().ToString(); // set to a new random uuid
-                    return [gearset];
-                });
-
-                task.RunSynchronously(TaskScheduler.Default);
-                return await task;
+                return [gearset];
             }
-            catch (ArgumentNullException ex)
+            catch (Exception ex) when (ex is JsonException || ex is NotSupportedException || ex is ArgumentNullException)
             {
                 throw new GearsetImportException(GearsetImportStatusType.InvalidInput, ex.Message);
             }
-            catch (Exception ex) when (ex is JsonException || ex is NotSupportedException)
-            {
-                throw new GearsetImportException(GearsetImportStatusType.InvalidInput, ex.Message);
-            }
+        }
+
+        private Gearset? parseGearset(string importString)
+        {
+            var gearset = JsonSerializer.Deserialize<Gearset>(importString, Configuration.JsonOptions);
+            if (gearset == null)
+                return null;
+
+            gearset.Id = Guid.NewGuid().ToString(); // set to a new random uuid
+            return gearset;
         }
     }
 }
