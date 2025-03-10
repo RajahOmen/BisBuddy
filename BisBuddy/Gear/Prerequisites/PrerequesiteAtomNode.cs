@@ -77,7 +77,7 @@ namespace BisBuddy.Gear.Prerequisites
 
         public int MinRemainingItems(uint? newItemId = null)
         {
-            if (IsManuallyCollected)
+            if (IsCollected)
                 return 0;
 
             if (newItemId == ItemId)
@@ -91,8 +91,8 @@ namespace BisBuddy.Gear.Prerequisites
 
         public void AddNeededItemIds(Dictionary<uint, (int MinDepth, int Count)> neededCounts, int startDepth = 0)
         {
-            // this is manually collected, so it needs no items
-            if (IsManuallyCollected)
+            // this is collected, so it needs no items
+            if (IsCollected)
                 return;
 
             if (neededCounts.TryGetValue(ItemId, out var value))

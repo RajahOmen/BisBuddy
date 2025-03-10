@@ -48,6 +48,10 @@ namespace BisBuddy.Gear.Prerequisites
 
         public void AddNeededItemIds(Dictionary<uint, (int MinDepth, int Count)> neededCounts, int startDepth = 0)
         {
+            // don't need anything if OR is already satisfied
+            if (IsCollected)
+                return;
+
             foreach (var prereq in PrerequisiteTree)
                 prereq.AddNeededItemIds(neededCounts, startDepth);
         }
@@ -55,12 +59,15 @@ namespace BisBuddy.Gear.Prerequisites
         public int PrerequisiteCount()
         {
             // ignore this group, it isn't a real prerequisite
-            return
-                PrerequisiteTree.Sum(p => p.PrerequisiteCount());
+            return PrerequisiteTree.Sum(p => p.PrerequisiteCount());
         }
 
         public PrerequisiteNode? AssignItemId(uint itemId)
         {
+            // don't assign if OR is already satisfied
+            if (IsCollected)
+                return null;
+
             foreach (var prereq in PrerequisiteTree)
             {
                 var assignResult = prereq.AssignItemId(itemId);

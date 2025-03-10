@@ -108,6 +108,10 @@ namespace BisBuddy.ItemAssignment
                 shadowedAssignments.AddRange(childAssignments.Select(assign => assign.Item));
             }
 
+            // remake needed dictionary after item assignment(s)
+            neededItemIds.Clear();
+            Gearpieces.ForEach(gearpiece => gearpiece.PrerequisiteTree?.AddNeededItemIds(neededItemIds));
+
             return shadowedAssignments;
         }
 
