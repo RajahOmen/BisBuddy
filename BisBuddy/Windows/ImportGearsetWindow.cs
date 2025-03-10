@@ -99,9 +99,6 @@ public class ImportGearsetWindow : Window, IDisposable
 
     public override void Draw()
     {
-
-        //ImGui.Text(Resource.ImportWebGearsetText);
-
         var sourceOptions = Services.ImportGearsetService.RegisteredSources();
         using (var sourceOptionsTable = ImRaii.Table("Source options", sourceOptions.Count, ImGuiTableFlags.BordersInnerV))
         using (ImRaii.PushStyle(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.5f, 0.5f)))
