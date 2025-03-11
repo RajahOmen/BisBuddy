@@ -92,6 +92,7 @@ public class ConfigWindow : Window, IDisposable
         ImGuiComponents.HelpMarker(Resource.HighlightShopExchangesHelp);
 
         // MATERIA MELDING
+        // toggle highlighting
         var highlightMateriaMeld = configuration.HighlightMateriaMeld;
         if (ImGui.Checkbox(Resource.HighlightMateriaMeldingCheckbox, ref highlightMateriaMeld))
         {
@@ -101,6 +102,30 @@ public class ConfigWindow : Window, IDisposable
         }
         ImGui.SameLine();
         ImGuiComponents.HelpMarker(Resource.HighlightMateriaMeldingHelp);
+
+        // next materia vs all materia
+        using (ImRaii.Disabled(!highlightMateriaMeld))
+        {
+            // draw a L shape for parent-child relationship
+            var drawList = ImGui.GetWindowDrawList();
+            var curLoc = ImGui.GetCursorScreenPos();
+            var col = ImGui.GetColorU32(new Vector4(1, 1, 1, 1));
+            var halfButtonHeight = (ImGui.CalcTextSize("HI").Y / 2) + ImGui.GetStyle().FramePadding.Y;
+            drawList.AddLine(curLoc + new Vector2(10, 0), curLoc + new Vector2(10, halfButtonHeight), col, 2);
+            drawList.AddLine(curLoc + new Vector2(10, halfButtonHeight), curLoc + new Vector2(20, halfButtonHeight), col, 2);
+
+            using (ImRaii.PushIndent(25.0f, scaled: false))
+            {
+                var highlightNextMateria = configuration.HighlightNextMateria;
+                if (ImGui.Checkbox(Resource.HighlightNextMateriaCheckbox, ref highlightNextMateria))
+                {
+                    configuration.HighlightNextMateria = highlightNextMateria;
+                    plugin.SaveGearsetsWithUpdate(false);
+                }
+                ImGui.SameLine();
+                ImGuiComponents.HelpMarker(Resource.HighlightNextMateriaHelp);
+            }
+        }
 
         // INVENTORIES
         var highlightInventories = configuration.HighlightInventories;

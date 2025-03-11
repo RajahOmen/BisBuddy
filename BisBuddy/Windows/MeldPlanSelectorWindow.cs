@@ -1,5 +1,6 @@
 using BisBuddy.Gear;
 using BisBuddy.Resources;
+using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Windowing;
 using FFXIVClientStructs.FFXIV.Component.GUI;
@@ -16,7 +17,7 @@ public unsafe class MeldPlanSelectorWindow : Window, IDisposable
     // maximum length of gearset name for a plan
     public static readonly int MaxMeldPlanNameLength = 30;
     // how far down from the top of the addon to render the window
-    private static readonly int WindowYValueOffset = 102;
+    private static readonly int WindowYValueOffset = 76;
 
     private readonly Configuration configuration;
     private readonly Plugin plugin;
@@ -97,6 +98,17 @@ public unsafe class MeldPlanSelectorWindow : Window, IDisposable
         if (curIdx >= MeldPlans.Count) return;
 
         ImGui.Text(Resource.MeldWindowHeader);
+
+        // copy next materia setting from config for convenience
+        var highlightNextMateria = configuration.HighlightNextMateria;
+        if (ImGui.Checkbox(Resource.HighlightNextMateriaCheckbox, ref highlightNextMateria))
+        {
+            configuration.HighlightNextMateria = highlightNextMateria;
+            plugin.SaveGearsetsWithUpdate(false);
+        }
+        ImGui.SameLine();
+        ImGuiComponents.HelpMarker(Resource.HighlightNextMateriaHelp);
+
         ImGui.Separator();
         ImGui.Spacing();
 

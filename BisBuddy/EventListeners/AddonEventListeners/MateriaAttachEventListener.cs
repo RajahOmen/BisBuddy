@@ -52,6 +52,9 @@ namespace BisBuddy.EventListeners.AddonEventListeners
         // value for index of page selected (Gets overwritten when list element hovered/clicked)
         public static readonly int AtkValuePageIndexSelectedIndex = 4;
 
+        // for Next Materia behavior
+        private readonly Configuration configuration = plugin.Configuration;
+
         private string selectedItemName = string.Empty;
         private readonly HashSet<int> unmeldedItemIndexes = [];
         private readonly HashSet<int> neededMateriaIndexes = [];
@@ -163,15 +166,24 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                 selectedMeldPlanIndex
                 );
 
+            // bad index
+            if (selectedMeldPlanIndex >= meldPlans.Count)
+            {
+                neededMateriaNames = [];
+                return;
+            }
+
             // update list of materia names that are needed
-            neededMateriaNames =
-                meldPlans.Count > selectedMeldPlanIndex
-                ? meldPlans[selectedMeldPlanIndex]
-                    .Materia
-                    .Where(m => !m.IsMelded)
-                    .Select(m => m.ItemName)
-                    .ToHashSet()
-                : [];
+            var materiaNames = meldPlans[selectedMeldPlanIndex]
+                .Materia
+                .Where(m => !m.IsMelded)
+                .Select(m => m.ItemName);
+
+            // limit to next materia to meld if configured
+            if (configuration.HighlightNextMateria)
+                materiaNames = materiaNames.Take(1);
+
+            neededMateriaNames = materiaNames.ToHashSet();
         }
 
         private unsafe bool updatePageIndex(AtkUnitBase* addon)

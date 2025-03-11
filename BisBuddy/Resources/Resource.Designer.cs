@@ -352,6 +352,34 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Next Materia Only.
+        /// </summary>
+        internal static string HighlightNextMateriaCheckbox {
+            get {
+                return ResourceManager.GetString("HighlightNextMateriaCheckbox", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Whether to only highlight the next materia, or to highlight all available materia to meld. Useful for advanced melding
+        ///Note: Ensure no erroneous materia is already melded for most accurate highlighting
+        ///
+        ///When ON: All materia a gearpiece needs is highlighted in the melding window
+        ///When OFF: Only the next materia a gearpiece needs to meld is highlighted
+        ///
+        ///Example
+        ///Gearpiece needs the following melds: [+36 CRT, +36 DET]
+        ///
+        ///When ON: +36 CRT and +36 DET are highlighted
+        ///When OFF: +36 CRT is highlighted.
+        /// </summary>
+        internal static string HighlightNextMateriaHelp {
+            get {
+                return ResourceManager.GetString("HighlightNextMateriaHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Shops/Exchanges.
         /// </summary>
         internal static string HighlightShopExchangesCheckbox {

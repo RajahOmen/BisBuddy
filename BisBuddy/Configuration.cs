@@ -28,6 +28,7 @@ public class Configuration : IPluginConfiguration
     public bool HighlightNeedGreed { get; set; } = true;
     public bool HighlightShops { get; set; } = true;
     public bool HighlightMateriaMeld { get; set; } = true;
+    public bool HighlightNextMateria { get; set; } = false;
     public bool HighlightInventories { get; set; } = true;
     public bool HighlightMarketboard { get; set; } = true;
     public bool AnnotateTooltips { get; set; } = true;
