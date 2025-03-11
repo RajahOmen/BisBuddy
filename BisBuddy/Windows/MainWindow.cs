@@ -18,8 +18,8 @@ public partial class MainWindow : Window, IDisposable
     public bool InventoryScanRunning = false;
     public int InventoryScanUpdateCount = -1;
 
-    private static Vector4 UnobtainedColor = new(1.0f, 0.2f, 0.2f, 1.0f);
-    private static Vector4 ObtainedColor = new(0.2f, 1.0f, 0.2f, 1.0f);
+    public static readonly Vector4 UnobtainedColor = new(1.0f, 0.2f, 0.2f, 1.0f);
+    public static readonly Vector4 ObtainedColor = new(0.2f, 1.0f, 0.2f, 1.0f);
 
     public MainWindow(Plugin plugin)
         : base($"{Plugin.PluginName}##bisbuddymainwindow")
