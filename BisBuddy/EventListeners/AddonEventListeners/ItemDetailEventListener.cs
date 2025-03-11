@@ -45,7 +45,9 @@ namespace BisBuddy.EventListeners.AddonEventListeners
         // max width for custom text when the item name is two lines
         public static readonly int CustomNodeMaxTextWidthTwoLines = 230;
         // how long a gearset name can be before it is truncated
-        public static readonly int CustomNodeMaxGearsetNameCharCount = 12;
+        public static readonly int CustomNodeMaxGearsetNameLength = 12;
+        // Additional length to add to gearset name if there are a small number of gearsets that need the item
+        public static readonly int CustomNodeGearsetNameLengthShortList = 20;
 
         // list of gearset names that need the currently hovered item
         private List<(Gearset gearset, int countNeeded)> neededGearsets = [];
@@ -121,6 +123,11 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             ushort textHeight = 0;
             List<(string name, string countNeeded, string separator)> neededStrings = [(startStr, string.Empty, string.Empty)];
 
+            // if only 2 or less gearsets need, make max gearset length longer to better use the space
+            var maxGearsetNameLength = neededGearsets.Count > 2
+                ? CustomNodeMaxGearsetNameLength
+                : CustomNodeGearsetNameLengthShortList;
+
             // add gearset names to output string
             for (var i = 0; i < neededGearsets.Count; i++)
             {
@@ -129,8 +136,8 @@ namespace BisBuddy.EventListeners.AddonEventListeners
 
                 // truncate name if its too long
                 var outputGearsetName =
-                    fullGearsetName.Length > CustomNodeMaxGearsetNameCharCount - gearsetCount.Length
-                    ? fullGearsetName[..(CustomNodeMaxGearsetNameCharCount - (2 + gearsetCount.Length))] + truncateStr
+                    fullGearsetName.Length > maxGearsetNameLength - gearsetCount.Length
+                    ? fullGearsetName[..(maxGearsetNameLength - (2 + gearsetCount.Length))] + truncateStr
                     : fullGearsetName;
 
                 var separatorLength = (ushort)endStr.Length;
