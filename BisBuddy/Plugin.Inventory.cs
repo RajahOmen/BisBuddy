@@ -58,7 +58,7 @@ namespace BisBuddy
 
                     Services.Log.Debug($"Updated {updatedGearpieces.Count} gearpieces from inventories");
 
-                    if (updatedGearpieces.Count > 0 && saveChanges)
+                    if (saveChanges)
                     {
                         SaveGearsetsWithUpdate(false);
                     }
