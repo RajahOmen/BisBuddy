@@ -96,14 +96,9 @@ public unsafe class MeldPlanSelectorWindow : Window, IDisposable
             using var _ = ImRaii.PushId(i);
             var plan = MeldPlans[i];
 
-            var isSelected = plugin.MateriaAttachEventListener.selectedMeldPlanIndex == i;
-            var planSelectableSize = new Vector2(
-                ImGui.GetWindowContentRegionMax().X - ImGui.GetWindowContentRegionMin().X,
-                ImGui.CalcTextSize("HI\nHI").Y + ImGui.GetStyle().FramePadding.Y   // two lines
-                );
-
             var selectablePos = ImGui.GetCursorPos();
 
+            var isSelected = plugin.MateriaAttachEventListener.selectedMeldPlanIndex == i;
             if (ImGui.Selectable($" \n ###materia_plan_selectable", isSelected, ImGuiSelectableFlags.SpanAllColumns))
             {
                 plugin.TriggerSelectedMeldPlanChange(i);
