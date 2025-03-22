@@ -40,7 +40,7 @@ namespace BisBuddy.Gear
             var statFullNameTrunc = statFullName.Length > 0
                 ? statFullName[..Math.Min(3, statFullName.Length)]
                 : "???";
-            var statShortName = StatFullToShortName
+            var statShortName = StatIdToShortName
                 .GetValueOrDefault(
                     statFullName,
                     statFullNameTrunc

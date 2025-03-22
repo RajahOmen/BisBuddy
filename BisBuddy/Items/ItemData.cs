@@ -3,6 +3,7 @@ using BisBuddy.Gear.Prerequisites;
 using Dalamud.Game.Inventory;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
+using Lumina.Text.ReadOnly;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -79,11 +80,10 @@ namespace BisBuddy.Items
                 // only show "new" items
                 if (item.Key < debugMinItemId) continue;
 
-                var itemName = ItemSheet.GetRow(item.Key).Name.ToString();
+                var itemName = SeStringToString(ItemSheet.GetRow(item.Key).Name);
                 foreach (var cofferId in item)
                 {
-                    var cofferName = ItemSheet.GetRow(cofferId).Name.ToString();
-                    ;
+                    var cofferName = SeStringToString(ItemSheet.GetRow(cofferId).Name);
                     Services.Log.Verbose($"{cofferName,-50} => {itemName}");
                 }
             }
@@ -94,10 +94,10 @@ namespace BisBuddy.Items
                 // only show "new" items
                 if (item.Key < debugMinItemId) continue;
 
-                var recieveItemName = ItemSheet.GetRow(item.Key).Name.ToString();
+                var recieveItemName = SeStringToString(ItemSheet.GetRow(item.Key).Name);
                 foreach (var itemId in item)
                 {
-                    var prereqItemNames = itemId.Select(id => ItemSheet.GetRow(id).Name.ToString());
+                    var prereqItemNames = itemId.Select(id => SeStringToString(ItemSheet.GetRow(id).Name));
                     Services.Log.Verbose($"{string.Join(" + ", prereqItemNames.GroupBy(n => n).Select(g => $"{g.Count()}x {g.Key}")),-60} => {recieveItemName}");
                 }
             }
@@ -118,6 +118,11 @@ namespace BisBuddy.Items
             return id + ItemIdHqOffset;
         }
 
+        public static string SeStringToString(ReadOnlySeString input)
+        {
+            return input.ExtractText().Replace("\u00AD", string.Empty);
+        }
+
         public string GetItemNameById(uint id)
         {
             // check if item is HQ, change Id to NQ if it is
@@ -126,7 +131,7 @@ namespace BisBuddy.Items
             if (itemIsHq) modifiedId -= ItemIdHqOffset;
 
             // returns the name of the item with the provided id
-            var itemName = ItemSheet.GetRow(modifiedId).Name.ToString();
+            var itemName = SeStringToString(ItemSheet.GetRow(modifiedId).Name);
 
             // add Hq icon to the item name if it is hq
             if (itemIsHq) itemName = $"{itemName} {HqIcon}";
@@ -152,7 +157,7 @@ namespace BisBuddy.Items
             if (itemIsHq) name = name[..^2]; // remove hq icon (remove hq icon and space)
 
             // get from item sheet if not cached
-            var id = ItemSheet.FirstOrDefault(item => item.Name.ToString() == name).RowId;
+            var id = ItemSheet.FirstOrDefault(item => SeStringToString(item.Name) == name).RowId;
 
             // convert to HQ id if item is HQ
             if (itemIsHq) id += ItemIdHqOffset;
@@ -400,7 +405,7 @@ namespace BisBuddy.Items
                 for (var j = 0; j < 16; j++)
                 {
                     var col = row.Item[j];
-                    if (col.Value.Name.ExtractText() == materiaName)
+                    if (SeStringToString(col.Value.Name) == materiaName)
                     {
                         materiaRow = row;
                         materiaCol = j;
@@ -413,7 +418,7 @@ namespace BisBuddy.Items
             if (materiaRow == null || materiaCol < 0)
                 throw new InvalidOperationException($"Materia {materiaName} not found in materia sheet");
 
-            var statName = materiaRow.Value.BaseParam.Value.Name.ExtractText();
+            var statName = SeStringToString(materiaRow.Value.BaseParam.Value.Name);
             var statQuantity = materiaRow.Value.Value[materiaCol];
 
             return (statName, materiaCol, statQuantity);
