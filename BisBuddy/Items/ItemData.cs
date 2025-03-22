@@ -59,7 +59,7 @@ namespace BisBuddy.Items
             }
         }
         private Dictionary<string, uint> NameToId { get; init; }
-        private Dictionary<string, (string statName, int statLevel, int statQuantity)> MateriaNameToStat { get; init; } = [];
+        private Dictionary<string, (uint statId, string statName, int statLevel, int statQuantity)> MateriaNameToStat { get; init; } = [];
         private Dictionary<(uint materiaId, int materiaGrade), uint> materiaItemIds { get; init; }
 
         public ItemData(ExcelModule luminaExcelModule)
@@ -391,7 +391,7 @@ namespace BisBuddy.Items
             return item.ItemId + ItemIdHqOffset;
         }
 
-        private (string statName, int statLevel, int statQuantity) getMateriaInfo(string materiaName)
+        private (uint statId, string statName, int statLevel, int statQuantity) getMateriaInfo(string materiaName)
         {
             if (MateriaNameToStat.TryGetValue(materiaName, out var value)) return value;
 
@@ -421,18 +421,19 @@ namespace BisBuddy.Items
             var statName = SeStringToString(materiaRow.Value.BaseParam.Value.Name);
             var statQuantity = materiaRow.Value.Value[materiaCol];
 
-            return (statName, materiaCol, statQuantity);
+            return (materiaRow.Value.RowId, statName, materiaCol, statQuantity);
         }
 
         public GearMateria BuildMateria(uint itemId)
         {
             var materiaName = GetItemNameById(itemId);
-            var (statName, statLevel, statQuantity) = getMateriaInfo(materiaName);
+            var (statId, statName, statLevel, statQuantity) = getMateriaInfo(materiaName);
 
             return new GearMateria(
                 itemId,
                 materiaName,
                 statLevel,
+                statId,
                 statName,
                 statQuantity,
                 false

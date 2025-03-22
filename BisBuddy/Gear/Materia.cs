@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace BisBuddy.Gear
 {
@@ -15,37 +16,65 @@ namespace BisBuddy.Gear
         public readonly int StatQuantity;
         public bool IsMelded;
 
-        public static readonly Dictionary<string, string> StatFullToShortName = new()
+        public static readonly Dictionary<uint, string> StatFullToShortName = new()
         {
             // DoW/DoM
-            { "Critical Hit", "CRT" },
-            { "Direct Hit Rate", "DHT" },
-            { "Determination", "DET" },
-            { "Skill Speed", "SKS" },
-            { "Spell Speed", "SPS" },
-            { "Piety", "PIE" },
-            { "Tenacity", "TNC" },
-            // DoH (abbrevs from etro)
-            { "Craftsmanship", "CRFT" },
-            { "Control", "CNTL" },
-            { "CP", "CP" },
+            { 14, "DHT" },
+            { 15, "CRT" },
+            { 16, "DET" },
+            {  7, "PIE" },
+            { 17, "TNC" },
+            { 24, "SKS" },
+            { 25, "SPS" },
             // DoL (abbrevs from etro)
-            { "Gathering", "GATH" },
-            { "Perception", "PERC" },
-            { "GP", "GP" },
+            { 18, "GATH" },
+            { 19, "PERC" },
+            { 20, "GP" },
+            // DoH (abbrevs from etro)
+            { 21, "CRFT" },
+            { 22, "CP" },
+            { 23, "CNTL" },
         };
 
-        public Materia(uint itemId, string itemName, int materiaLevel, string statFullName, int statQuantity, bool isMelded)
+        public Materia(
+            uint itemId,
+            string itemName,
+            int materiaLevel,
+            uint statId,
+            string statFullName,
+            int statQuantity,
+            bool isMelded
+            )
         {
             var statFullNameTrunc = statFullName.Length > 0
                 ? statFullName[..Math.Min(3, statFullName.Length)]
                 : "???";
-            var statShortName = StatIdToShortName
+            var statShortName = StatFullToShortName
                 .GetValueOrDefault(
-                    statFullName,
+                    statId,
                     statFullNameTrunc
                 );
 
+            ItemId = itemId;
+            IsMelded = isMelded;
+            ItemName = itemName;
+            StatFullName = statFullName;
+            StatShortName = statShortName;
+            MateriaLevel = materiaLevel;
+            StatQuantity = statQuantity;
+        }
+
+        [JsonConstructor]
+        public Materia(
+            uint itemId,
+            string itemName,
+            int materiaLevel,
+            string statShortName,
+            string statFullName,
+            int statQuantity,
+            bool isMelded
+            )
+        {
             ItemId = itemId;
             IsMelded = isMelded;
             ItemName = itemName;
