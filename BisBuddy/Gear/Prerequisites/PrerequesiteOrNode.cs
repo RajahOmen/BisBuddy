@@ -56,10 +56,6 @@ namespace BisBuddy.Gear.Prerequisites
 
         public void AddNeededItemIds(Dictionary<uint, (int MinDepth, int Count)> neededCounts, int startDepth = 0)
         {
-            // don't need anything if OR is already satisfied
-            if (IsCollected)
-                return;
-
             foreach (var prereq in PrerequisiteTree)
                 prereq.AddNeededItemIds(neededCounts, startDepth);
         }

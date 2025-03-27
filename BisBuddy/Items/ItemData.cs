@@ -72,7 +72,7 @@ namespace BisBuddy.Items
 #if DEBUG
             // minimum item id to display for debug logging. Update with new patches to review generations
             // filters out most older items for easier debugging
-            uint debugMinItemId = 44500; // lower than most recent to ensure get new items 
+            uint debugMinItemId = 46000; // lower than most recent to ensure get new items 
 
             Services.Log.Verbose("Coffer Relations Found");
             foreach (var item in ItemsCoffers)
