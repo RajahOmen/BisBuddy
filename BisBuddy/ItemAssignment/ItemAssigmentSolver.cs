@@ -12,6 +12,8 @@ namespace BisBuddy.ItemAssignment
     {
         // NOT no edge, because want to ensure solver runs, even for "no solution" cases
         public static readonly int NoEdgeWeightValue = int.MinValue + 1;
+        // for edges between for dummy group assignments and their items
+        public static readonly int DummyEdgeWeightValue = NoEdgeWeightValue + 1;
 
         private readonly bool strictMateriaMatching;
         private readonly ItemData itemData;
@@ -50,12 +52,15 @@ namespace BisBuddy.ItemAssignment
                 .ToList();
 
             // add dummy groups to fill out groups to ensure every candidate has one group to be assigned to
-            var extraCandidateItems = gearpieceCandidateItems.Count - gearpieceGroups.Count;
-            if (extraCandidateItems > 0)
+            var extraCandidateItemCount = gearpieceCandidateItems.Count - gearpieceGroups.Count;
+            if (extraCandidateItemCount > 0)
             {
-                gearpieceGroups.AddRange(Enumerable.Repeat(
-                        new GearpieceAssignmentGroup(),
-                        extraCandidateItems));
+                var groupItems = gearpieceGroups.Select(g => g.ItemId).ToList();
+                var extraCandidateItems = gearpieceCandidateItems.Select(ItemData.GetGameInventoryItemId).ToList();
+
+                groupItems.ForEach(groupItemId => extraCandidateItems.Remove(groupItemId));
+
+                gearpieceGroups.AddRange(extraCandidateItems.Select(itemId => new GearpieceAssignmentGroup(itemId)));
             }
 
             gearpieceEdges = new int[gearpieceGroups.Count, gearpieceCandidateItems.Count];
@@ -128,6 +133,8 @@ namespace BisBuddy.ItemAssignment
                         $"{$"{(
                             edges[row, col] == NoEdgeWeightValue
                             ? (col == assIdx ? "------ [*]" : "----------")
+                            : edges[row, col] == DummyEdgeWeightValue
+                            ? (col == assIdx ? "-DUMMY [*]" : "--DUMMY---")
                             : $"{edges[row, col]}{(col == assIdx ? " [*]" : "")}"
                         )}",12}"
                     ));

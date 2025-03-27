@@ -18,6 +18,7 @@ namespace BisBuddy.ItemAssignment
         private List<Materia> materiaList = [];
         public readonly HashSet<Gearset> Gearsets = [];
         private readonly int minGearpieceIdx;
+        private bool isDummy = false;
 
         public AssignmentGroupType Type => AssignmentGroupType.Gearpiece;
 
@@ -57,10 +58,10 @@ namespace BisBuddy.ItemAssignment
         /// <summary>
         /// Dummy group, used to ensure extra candidate items in assignment don't break the solver
         /// </summary>
-        public GearpieceAssignmentGroup()
+        public GearpieceAssignmentGroup(uint itemId)
         {
-            // dont want matching with real items
-            ItemId = 0;
+            ItemId = itemId;
+            isDummy = true;
         }
 
         public bool NeedsItemId(uint candidateItemId)
@@ -99,6 +100,10 @@ namespace BisBuddy.ItemAssignment
         // the edge score from candidate->gearpiece group. Values materia count first, then materia stat quantity
         public int CandidateEdgeWeight(uint candidateId, List<Materia> candidateMateria)
         {
+            // if group is dummy for this item id, ensure slightly prioritized over no-edge assignments
+            if (ItemId == candidateId && isDummy)
+                return ItemAssigmentSolver.DummyEdgeWeightValue;
+
             // candidate item id must match this group's item id, else no edge
             if (candidateId != ItemId)
                 return ItemAssigmentSolver.NoEdgeWeightValue;
