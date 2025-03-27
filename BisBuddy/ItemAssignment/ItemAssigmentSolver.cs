@@ -47,8 +47,14 @@ namespace BisBuddy.ItemAssignment
 
             removeManuallyCollectedItems(allGearsets, inventoryItems);
 
+            // filter out unused candidate items
             gearpieceCandidateItems = inventoryItems
                 .Where(item => gearpieceGroups.Any(g => g.NeedsItemId(ItemData.GetGameInventoryItemId(item))))
+                .ToList();
+
+            // filter out groups that can't be assigned due to having no matching candidate items
+            gearpieceGroups = gearpieceGroups
+                .Where(group => gearpieceCandidateItems.Any(item => group.NeedsItemId(ItemData.GetGameInventoryItemId(item))))
                 .ToList();
 
             // add dummy groups to fill out groups to ensure every candidate has one group to be assigned to
@@ -58,7 +64,11 @@ namespace BisBuddy.ItemAssignment
                 var groupItems = gearpieceGroups.Select(g => g.ItemId).ToList();
                 var extraCandidateItems = gearpieceCandidateItems.Select(ItemData.GetGameInventoryItemId).ToList();
 
+                Services.Log.Verbose($"items1: {string.Join(", ", extraCandidateItems)}");
+
                 groupItems.ForEach(groupItemId => extraCandidateItems.Remove(groupItemId));
+
+                Services.Log.Verbose($"items2: {string.Join(", ", extraCandidateItems)}");
 
                 gearpieceGroups.AddRange(extraCandidateItems.Select(itemId => new GearpieceAssignmentGroup(itemId)));
             }
@@ -147,7 +157,22 @@ namespace BisBuddy.ItemAssignment
         {
             // stage 1: assign gearpieces
             generateGearpieceEdges();
-            var gearpieceAssignments = Solver.Solve(gearpieceEdges, maximize: true).RowAssignment;
+            int[] gearpieceAssignments;
+            try
+            {
+                gearpieceAssignments = Solver.Solve(gearpieceEdges, maximize: true).RowAssignment;
+            } catch (InvalidOperationException)
+            {
+                logSolution(
+                    [],
+                    gearpieceEdges,
+                    gearpieceCandidateItems,
+                    gearpieceGroups
+                        .Select(g => (IAssignmentGroup)g)
+                        .ToList()
+                        );
+                throw;
+            }
             // this removes candidate items from prereq list as well
             addGearpieceAssignments(gearpieceAssignments);
 
