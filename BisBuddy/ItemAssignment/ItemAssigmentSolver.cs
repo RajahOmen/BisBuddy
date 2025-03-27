@@ -64,11 +64,7 @@ namespace BisBuddy.ItemAssignment
                 var groupItems = gearpieceGroups.Select(g => g.ItemId).ToList();
                 var extraCandidateItems = gearpieceCandidateItems.Select(ItemData.GetGameInventoryItemId).ToList();
 
-                Services.Log.Verbose($"items1: {string.Join(", ", extraCandidateItems)}");
-
                 groupItems.ForEach(groupItemId => extraCandidateItems.Remove(groupItemId));
-
-                Services.Log.Verbose($"items2: {string.Join(", ", extraCandidateItems)}");
 
                 gearpieceGroups.AddRange(extraCandidateItems.Select(itemId => new GearpieceAssignmentGroup(itemId)));
             }
