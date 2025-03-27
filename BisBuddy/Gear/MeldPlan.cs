@@ -29,7 +29,6 @@ namespace BisBuddy.Gear
         private static List<(string MateriaText, bool IsMelded)> BuildMateriaInfo(List<Materia> materia)
         {
             return materia
-                .OrderByDescending(m => m.StatQuantity)
                 .Select(m => (
                     // MateriaText
                     $"+{m.StatQuantity} {m.StatShortName}{(m.IsMelded ? "" : UnmeldedColorblindIndicator)}",
