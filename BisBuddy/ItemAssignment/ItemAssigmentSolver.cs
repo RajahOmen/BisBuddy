@@ -49,6 +49,15 @@ namespace BisBuddy.ItemAssignment
                 .Where(item => gearpieceGroups.Any(g => g.NeedsItemId(ItemData.GetGameInventoryItemId(item))))
                 .ToList();
 
+            // add dummy groups to fill out groups to ensure every candidate has one group to be assigned to
+            var extraCandidateItems = gearpieceCandidateItems.Count - gearpieceGroups.Count;
+            if (extraCandidateItems > 0)
+            {
+                gearpieceGroups.AddRange(Enumerable.Repeat(
+                        new GearpieceAssignmentGroup(),
+                        extraCandidateItems));
+            }
+
             gearpieceEdges = new int[gearpieceGroups.Count, gearpieceCandidateItems.Count];
 
             // set to all items, filter after gearpiece assignment

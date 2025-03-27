@@ -54,6 +54,15 @@ namespace BisBuddy.ItemAssignment
             IsManuallyCollected = gearpiece.IsManuallyCollected;
         }
 
+        /// <summary>
+        /// Dummy group, used to ensure extra candidate items in assignment don't break the solver
+        /// </summary>
+        public GearpieceAssignmentGroup()
+        {
+            // dont want matching with real items
+            ItemId = 0;
+        }
+
         public bool NeedsItemId(uint candidateItemId)
         {
             return ItemId == candidateItemId;
