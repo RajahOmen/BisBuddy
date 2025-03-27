@@ -217,7 +217,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
         {
             // get if the item name is split over two lines or not
             var itemNameTextNode = addon->GetTextNodeById(AddonItemNameTextNodeId);
-            var itemName = MemoryHelper.ReadSeStringNullTerminated((nint)itemNameTextNode->GetText()).TextValue;
+            var itemName = SeString.Parse((byte*)itemNameTextNode->GetText()).TextValue;
             return itemName.Contains("\r\n");
         }
 
