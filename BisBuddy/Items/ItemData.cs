@@ -382,15 +382,6 @@ namespace BisBuddy.Items
             return itemsList;
         }
 
-        public static uint GetGameInventoryItemId(GameInventoryItem item)
-        {
-            // 'normal' item
-            if (!item.IsHq) return item.ItemId;
-
-            // hq item
-            return item.ItemId + ItemIdHqOffset;
-        }
-
         private (uint statId, string statName, int statLevel, int statQuantity) getMateriaInfo(string materiaName)
         {
             if (MateriaNameToStat.TryGetValue(materiaName, out var value)) return value;
