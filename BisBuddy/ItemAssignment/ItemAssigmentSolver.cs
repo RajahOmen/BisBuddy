@@ -52,8 +52,6 @@ namespace BisBuddy.ItemAssignment
                 .Where(item => gearpieceGroups.Any(g => g.NeedsItemId(item.ItemId)))
                 .ToList();
 
-            Services.Log.Verbose($"after {string.Join(", ", gearpieceCandidateItems.Select(i => i.ItemId))}");
-
             // add dummy groups to fill out groups to ensure every candidate has one group to be assigned to
             var groupItems = gearpieceGroups.Select(g => g.ItemId).ToList();
             var extraCandidateItems = gearpieceCandidateItems.Select(i => i.ItemId).ToList();
