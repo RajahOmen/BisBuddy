@@ -404,7 +404,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             {
                 var itemNodeComponent = parentNodeComponent->ItemRendererList[i].AtkComponentListItemRenderer;
                 var itemNeeded = highlightedIndexList.Contains(itemNodeComponent->ListItemIndex);
-                setNodeNeededMark((AtkResNode*)itemNodeComponent->OwnerNode, itemNeeded, true, true);
+                setNodeNeededMark((AtkResNode*)itemNodeComponent->OwnerNode, itemNeeded, true, false);
             }
         }
 
