@@ -136,8 +136,9 @@ namespace BisBuddy.EventListeners.AddonEventListeners
 
             allNodesUnmarked &= !toEnable; // if any node is enabled, at least one node is marked
 
-            customNode.AddColor = Plugin.Configuration.CustomNodeAddColor;
-            customNode.Alpha = Plugin.Configuration.CustomNodeAlpha;
+            if (customNode.IsVisible == toEnable)
+                return false;
+
             customNode.IsVisible = toEnable;
             return true;
         }
