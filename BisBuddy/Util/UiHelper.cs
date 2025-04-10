@@ -1,5 +1,8 @@
 using FFXIVClientStructs.FFXIV.Client.System.Memory;
 using FFXIVClientStructs.FFXIV.Component.GUI;
+using KamiToolKit.Extensions;
+using KamiToolKit.Nodes;
+using KamiToolKit.Nodes.Parts;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -12,28 +15,11 @@ namespace BisBuddy.Util;
 
 public static unsafe partial class UiHelper
 {
-
-    private static short vectorToShortColor(float color, float alpha, bool smallScale)
+    public static unsafe void SetNodeColor(AtkResNode* node, Vector4 color)
     {
-        if (smallScale)
-            // scale from 0 to 255
-            return (short)(255 * color * alpha);
-        else
-            // scale from -255 to 255
-            return (short)(((510 * color) - 255) * alpha);
-
-    }
-
-    public static unsafe void SetNodeColor(AtkResNode* node, Vector4 color, bool smallScale)
-    {
-        // if small scale, also scale with alpha (less alpha, less color)
-        // to ensure that custom node highlights are strong enough compared
-        // to the node->Add{Color} properties
-        var alpha = smallScale ? color.W : 1;
-
-        node->AddRed = vectorToShortColor(color.X, alpha, smallScale);
-        node->AddGreen = vectorToShortColor(color.Y, alpha, smallScale);
-        node->AddBlue = vectorToShortColor(color.Z, alpha, smallScale);
+        node->AddRed = (short)Math.Round(255 * color.X * color.W);
+        node->AddGreen = (short)Math.Round(255 * color.Y * color.W);
+        node->AddBlue = (short)Math.Round(255 * color.Z * color.W);
     }
 
 
@@ -107,36 +93,65 @@ public static unsafe partial class UiHelper
 
         return textNode;
     }
-    public static unsafe AtkNineGridNode* CloneNineGridNode(uint id, AtkNineGridNode* clonedNode)
+    public static unsafe NineGridNode? CloneNineGridNode(
+        uint newNodeId,
+        AtkNineGridNode* clonedNode,
+        Vector3 addColor,
+        Vector3 multiplyColor,
+        float alpha
+        )
     {
-        // allocate memory and assign node id and type
-        if (!TryMakeNineGridNode(id, out var newHighlightNode)) return null;
+        NineGridNode? newNode = null;
 
         try
         {
-            newHighlightNode->NodeFlags = clonedNode->NodeFlags;
-            newHighlightNode->X = clonedNode->X;
-            newHighlightNode->Y = clonedNode->Y;
-            newHighlightNode->OriginX = clonedNode->OriginX;
-            newHighlightNode->OriginY = clonedNode->OriginY;
-            newHighlightNode->ScaleX = clonedNode->ScaleX;
-            newHighlightNode->ScaleY = clonedNode->ScaleY;
-            newHighlightNode->TopOffset = clonedNode->TopOffset;
-            newHighlightNode->BottomOffset = clonedNode->BottomOffset;
-            newHighlightNode->LeftOffset = clonedNode->LeftOffset;
-            newHighlightNode->RightOffset = clonedNode->RightOffset;
-            newHighlightNode->Priority = clonedNode->Priority;
-            newHighlightNode->Depth = clonedNode->Depth;
-            newHighlightNode->Width = clonedNode->Width;
-            newHighlightNode->Color = clonedNode->Color;
-            newHighlightNode->Height = clonedNode->Height;
-            newHighlightNode->PartsList = clonedNode->PartsList;
-            return newHighlightNode;
+            var hoverNodePart = clonedNode->PartsList->Parts[0];
+
+            // get the texture string of the selected highlight texture
+            var textureString = hoverNodePart.UldAsset
+                ->AtkTexture.Resource
+                ->TexFileResourceHandle
+                ->ResourceHandle.FileName;
+
+            // initialize new custom ninegridnode to show the highlight
+            newNode = new NineGridNode()
+            {
+                NodeID = newNodeId,
+                NodeFlags = NodeFlags.Enabled | NodeFlags.Visible | NodeFlags.AnchorTop | NodeFlags.AnchorLeft,
+                Width = clonedNode->Width,
+                Height = clonedNode->Height,
+                Scale = new(clonedNode->ScaleX, clonedNode->ScaleY),
+                X = clonedNode->X,
+                Y = clonedNode->Y,
+                Rotation = clonedNode->Rotation,
+                Offsets = new(clonedNode->TopOffset, clonedNode->BottomOffset, clonedNode->LeftOffset, clonedNode->RightOffset),
+                BlendMode = clonedNode->BlendMode,
+                PartsRenderType = (PartsRenderType)clonedNode->PartsTypeRenderType,
+                Color = clonedNode->Color.ToVector4(),
+                AddColor = addColor,
+                MultiplyColor = multiplyColor,
+                Alpha = alpha,
+            };
+
+            // construct and add texture part to the node
+            var part = new Part()
+            {
+                U = hoverNodePart.U,
+                V = hoverNodePart.V,
+                Width = hoverNodePart.Width,
+                Height = hoverNodePart.Height,
+                Id = 0,
+            };
+
+            part.LoadTexture(textureString.ToString());
+            newNode.AddPart(part);
+
+            return newNode;
         }
         catch (Exception)
         {
-            FreeNineGridNode(newHighlightNode);
-            throw;
+            newNode?.Dispose();
+            return null;
         }
     }
 

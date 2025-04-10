@@ -2,6 +2,7 @@ using BisBuddy.Import;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
+using KamiToolKit;
 using System.Net.Http;
 
 namespace BisBuddy
@@ -21,5 +22,6 @@ namespace BisBuddy
         [PluginService] public static IClientState ClientState { get; set; }
         public static ImportGearsetService ImportGearsetService { get; set; }
         public static HttpClient HttpClient { get; set; }
+        public static NativeController NativeController { get; set; }
     }
 }

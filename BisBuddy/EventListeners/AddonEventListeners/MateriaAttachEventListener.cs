@@ -4,6 +4,8 @@ using Dalamud.Game.Addon.Lifecycle;
 using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
 using Dalamud.Game.Text.SeStringHandling;
 using FFXIVClientStructs.FFXIV.Component.GUI;
+using KamiToolKit.Classes;
+using KamiToolKit.Nodes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -404,13 +406,13 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             {
                 var itemNodeComponent = parentNodeComponent->ItemRendererList[i].AtkComponentListItemRenderer;
                 var itemNeeded = highlightedIndexList.Contains(itemNodeComponent->ListItemIndex);
-                setNodeNeededMark((AtkResNode*)itemNodeComponent->OwnerNode, itemNeeded, true, false);
+                setNodeNeededMark((AtkResNode*)itemNodeComponent->OwnerNode, itemNeeded, true, true);
             }
         }
 
-        protected override unsafe nint initializeCustomNode(nint parentNodePtr)
+        protected override unsafe NodeBase? initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon)
         {
-            AtkNineGridNode* customHighlightNode = null;
+            NineGridNode? customNode = null;
             try
             {
                 var parentNode = (AtkComponentNode*)parentNodePtr;
@@ -424,29 +426,41 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                     .SearchNodeById(hoverNodeId)
                     ->GetAsAtkNineGridNode();
 
-                customHighlightNode = UiHelper.CloneNineGridNode(AddonCustomNodeId, hoverNode);
-                customHighlightNode->SetAlpha(255);
-                customHighlightNode->DrawFlags |= 0x01; // force a redraw ("dirty flag")
-                UiHelper.LinkNodeAfterTargetNode((AtkResNode*)customHighlightNode, parentNode, (AtkResNode*)hoverNode);
+                customNode = UiHelper.CloneNineGridNode(
+                    AddonCustomNodeId,
+                    hoverNode,
+                    Plugin.Configuration.CustomNodeAddColor,
+                    Plugin.Configuration.CustomNodeMultiplyColor,
+                    Plugin.Configuration.CustomNodeAlpha
+                    ) ?? throw new Exception($"Could not clone node \"{hoverNodeId}\"");
 
-                return (nint)customHighlightNode;
+                // mark as dirty
+                customNode.InternalNode->DrawFlags |= 0x1;
+
+                // attach it to the addon
+                Services.NativeController.AttachToComponent(customNode, addon, parentNode->Component, (AtkResNode*)hoverNode, NodePosition.BeforeTarget);
+
+                return customNode;
             }
             catch (Exception ex)
             {
-                if (customHighlightNode != null) UiHelper.FreeNineGridNode(customHighlightNode);
+                customNode?.Dispose();
                 Services.Log.Error(ex, "Failed to initialize custom node");
-                return nint.Zero;
+                return null;
             }
         }
 
-        protected override unsafe void unlinkCustomNode(nint nodePtr)
+        protected override unsafe void unlinkCustomNode(nint parentNodePtr, NodeBase node)
         {
-            var node = (AtkResNode*)nodePtr;
-            var addon = (AtkUnitBase*)Services.GameGui.GetAddonByName(AddonName);
-            if (addon == null) return; // addon isn't loaded, nothing to unlink
-            if (node->ParentNode == null) return; // node isn't linked, nothing to unlink
+            var addon = Services.GameGui.GetAddonByName(AddonName);
 
-            UiHelper.UnlinkNode(node, (AtkComponentNode*)node->ParentNode);
+            if (addon == nint.Zero)
+                return;
+
+            if (parentNodePtr == nint.Zero)
+                return;
+
+            Services.NativeController.DetachFromComponent(node, (AtkUnitBase*)addon, ((AtkComponentNode*)parentNodePtr)->Component);
         }
     }
 }

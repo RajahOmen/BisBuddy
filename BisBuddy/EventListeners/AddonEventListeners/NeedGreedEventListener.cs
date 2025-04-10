@@ -3,6 +3,7 @@ using Dalamud.Game.Addon.Lifecycle;
 using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Component.GUI;
+using KamiToolKit.Nodes;
 using System;
 using System.Collections.Generic;
 
@@ -76,14 +77,16 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             }
         }
 
-        protected override nint initializeCustomNode(nint parentNodePtr)
+        protected override unsafe NodeBase? initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon)
         {
-            throw new NotImplementedException();
+            // doesn't use custom nodes
+            return null;
         }
 
-        protected override unsafe void unlinkCustomNode(nint nodePtr)
+        protected override void unlinkCustomNode(nint parentNodePtr, NodeBase node)
         {
-            throw new NotImplementedException();
+            // doesn't use custom nodes
+            return;
         }
     }
 }

@@ -2,18 +2,20 @@ using BisBuddy.Util;
 using Dalamud.Game.Addon.Lifecycle;
 using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
 using FFXIVClientStructs.FFXIV.Component.GUI;
+using KamiToolKit.Nodes;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 
 namespace BisBuddy.EventListeners.AddonEventListeners
 {
     public abstract class AddonEventListener : EventListener
     {
-        private readonly List<nint> customNodes = [];
+        private readonly Dictionary<nint, NodeBase> customNodes = [];
         private readonly List<nint> highlightedNodes = [];
-        protected IReadOnlyList<nint> CustomNodes => customNodes.AsReadOnly();
-        public virtual uint AddonCustomNodeId => 420;
+        protected IReadOnlyList<NodeBase> CustomNodes => customNodes.Values.ToList().AsReadOnly();
+        public virtual uint AddonCustomNodeId => 420000;
         public abstract string AddonName { get; }
         private bool allNodesUnmarked = false;
 
@@ -24,9 +26,9 @@ namespace BisBuddy.EventListeners.AddonEventListeners
 
         public abstract void handleManualUpdate();
 
-        protected abstract unsafe void unlinkCustomNode(nint nodePtr);
+        protected abstract unsafe NodeBase? initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon);
 
-        protected abstract unsafe nint initializeCustomNode(nint parentNodePtr);
+        protected abstract unsafe void unlinkCustomNode(nint parentNodePtr, NodeBase node);
 
         protected abstract void registerAddonListeners();
         protected abstract void unregisterAddonListeners();
@@ -67,8 +69,12 @@ namespace BisBuddy.EventListeners.AddonEventListeners
         private unsafe void handleUpdateHighlightColor()
         {
             foreach (var node in highlightedNodes)
+                UiHelper.SetNodeColor((AtkResNode*)node, Plugin.Configuration.HighlightColor);
+
+            foreach (var customNode in customNodes.Values)
             {
-                UiHelper.SetNodeColor((AtkResNode*)node, Plugin.Configuration.HighlightColor, true);
+                customNode.AddColor = Plugin.Configuration.CustomNodeAddColor;
+                customNode.Alpha = Plugin.Configuration.CustomNodeAlpha;
             }
         }
 
@@ -78,30 +84,14 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             destroyNodes();
         }
 
-        protected unsafe AtkResNode* getCustomNodeByParent(AtkResNode* parent)
+        protected unsafe NodeBase createCustomNode(AtkResNode* parentNode, AtkUnitBase* addon)
         {
-            for (var i = 0; i < customNodes.Count; i++)
-            {
-                var customHighlightNode = (AtkResNode*)customNodes[i];
-                if (customHighlightNode->ParentNode == parent)
-                {
-                    return customHighlightNode;
-                }
-            }
+            Services.Log.Verbose($"Creating custom node \"{AddonCustomNodeId}\" (parent node \"{parentNode->NodeId}\") in \"{AddonName}\"");
 
-            return null;
-        }
+            var customNode = initializeCustomNode(parentNode, addon)
+                ?? throw new Exception($"Failed to create custom node for \"{AddonName}\"");
 
-        protected nint createCustomNode(nint parentNode)
-        {
-            var customNode = initializeCustomNode(parentNode);
-
-            if (customNode == nint.Zero)
-            {
-                throw new Exception($"Failed to create custom node for \"{AddonName}\"");
-            }
-
-            customNodes.Add(customNode);
+            customNodes.Add((nint)parentNode, customNode);
             return customNode;
         }
 
@@ -127,42 +117,46 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                 ? Plugin.Configuration.HighlightColor
                 : new Vector4(0.0f, 0.0f, 0.0f, 1.0f); // reset color, eqv. to (0, 0, 0, 255)
 
-            UiHelper.SetNodeColor(node, color, true);
+            UiHelper.SetNodeColor(node, color);
 
             return true;
         }
 
         private unsafe bool setCustomNodeVisibility(AtkResNode* parentNode, bool toEnable)
         {
-            var customNode = customNodes.Count > 0 ? getCustomNodeByParent(parentNode) : null;
-            if (customNode == null) // create if doesn't exist & should be enabled
+            if (!customNodes.TryGetValue((nint)parentNode, out var customNode))
             {
-                if (!toEnable) return false; // no need to create a node if it's not going to be enabled
-                Services.Log.Verbose($"Creating custom node \"{AddonCustomNodeId}\" (parent node \"{parentNode->NodeId}\") in \"{AddonName}\"");
-                customNode = (AtkResNode*)createCustomNode((nint)parentNode);
+                // no need to create a node if it's not going to be enabled
+                if (!toEnable)
+                    return false;
+
+                var addon = (AtkUnitBase*)Services.GameGui.GetAddonByName(AddonName);
+                customNode = createCustomNode(parentNode, addon);
             }
 
             allNodesUnmarked &= !toEnable; // if any node is enabled, at least one node is marked
 
-            UiHelper.SetNodeColor(customNode, Plugin.Configuration.HighlightColor, false);
-
-            if (customNode->IsVisible() == toEnable) return false;
-
-            customNode->ToggleVisibility(toEnable);
+            customNode.AddColor = Plugin.Configuration.CustomNodeAddColor;
+            customNode.Alpha = Plugin.Configuration.CustomNodeAlpha;
+            customNode.IsVisible = toEnable;
             return true;
         }
 
         protected unsafe void setNodeNeededMark(AtkResNode* parentNode, bool toEnable, bool highlightParent, bool useCustomNode)
         {
-            if (parentNode == null) return; // node parent is null
+            // node parent is null
+            if (parentNode == null)
+                return;
 
             var changeMade = false;
 
             // normal highlighting logic
-            if (highlightParent) changeMade = setAddGreen(parentNode, toEnable);
+            if (highlightParent)
+                changeMade = setAddGreen(parentNode, toEnable);
 
             // custom node logic
-            if (useCustomNode) changeMade |= setCustomNodeVisibility(parentNode, toEnable);
+            if (useCustomNode)
+                changeMade |= setCustomNodeVisibility(parentNode, toEnable);
 
             if (changeMade)
                 Services.Log.Verbose($"Set node \"{parentNode->NodeId}\" in \"{AddonName}\" marking to {(toEnable ? "enabled" : "disabled")}");
@@ -184,12 +178,9 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                 if (highlightedNodesCount > 0)
                     Services.Log.Verbose($"Unhighlighted all {highlightedNodesCount} node(s) in \"{AddonName}\"");
 
-                for (var i = 0; i < customNodes.Count; i++)
+                foreach (var customNode in customNodes.Values)
                 {
-                    var customNode = (AtkResNode*)customNodes[i];
-                    if (customNode == null) continue;
-                    if (!customNode->IsVisible()) continue;
-                    customNode->ToggleVisibility(false);
+                    customNode.IsVisible = false;
                 }
                 if (customNodes.Count > 0)
                     Services.Log.Verbose($"Hid all {customNodes.Count} custom node(s) in \"{AddonName}\"");
@@ -204,28 +195,21 @@ namespace BisBuddy.EventListeners.AddonEventListeners
         protected unsafe void destroyNodes()
         {
             var count = customNodes.Count;
-            for (var i = 0; i < count; i++)
+            var customNodesList = customNodes.ToList();
+            foreach (var customNodeEntry in customNodesList)
             {
-                var nodeInfo = customNodes[0];
-                var customNode = (AtkResNode*)nodeInfo;
-                if (customNode == null) continue; // node is null
+                unlinkCustomNode(customNodeEntry.Key, customNodeEntry.Value);
 
-                unlinkCustomNode(nodeInfo); // if the node is still linked, unlink it
+                customNodeEntry.Value.Dispose();
 
-                UiHelper.FreeNode(customNode);
-
-                customNodes.RemoveAt(0);
+                customNodes.Remove(customNodeEntry.Key);
             }
 
             if (customNodes.Count > 0)
-            {
                 throw new Exception($"Not all nodes destroyed in \"{AddonName}\". {customNodes.Count} nodes remaining.");
-            }
 
             if (count > 0)
-            {
                 Services.Log.Verbose($"Destroyed all {count} custom nodes in \"{AddonName}\"");
-            }
         }
     }
 }
