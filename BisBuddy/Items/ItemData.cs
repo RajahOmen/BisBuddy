@@ -32,7 +32,7 @@ namespace BisBuddy.Items
             {
                 if (itemsCoffers == null)
                 {
-                    itemsCoffers = generateItemsCoffers();
+                    itemsCoffers = generateItemsCoffers(ItemSheet);
                     Task.Run(async () =>
                     {
                         await Task.Delay(3000);
