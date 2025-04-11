@@ -12,6 +12,8 @@ namespace BisBuddy.ItemAssignment
     {
         // NOT no edge, because want to ensure solver runs, even for "no solution" cases
         public static readonly int NoEdgeWeightValue = int.MinValue + 1;
+        // for edges between for dummy group assignments and their items
+        public static readonly int DummyEdgeWeightValue = NoEdgeWeightValue + 1;
 
         private readonly bool strictMateriaMatching;
         private readonly ItemData itemData;
@@ -45,9 +47,16 @@ namespace BisBuddy.ItemAssignment
 
             removeManuallyCollectedItems(allGearsets, inventoryItems);
 
+            // filter out unused candidate items
             gearpieceCandidateItems = inventoryItems
-                .Where(item => gearpieceGroups.Any(g => g.NeedsItemId(ItemData.GetGameInventoryItemId(item))))
+                .Where(item => gearpieceGroups.Any(g => g.NeedsItemId(item.ItemId)))
                 .ToList();
+
+            // add dummy groups to fill out groups to ensure every candidate has one group to be assigned to
+            var groupItems = gearpieceGroups.Select(g => g.ItemId).ToList();
+            var extraCandidateItems = gearpieceCandidateItems.Select(i => i.ItemId).ToList();
+            groupItems.ForEach(groupItemId => extraCandidateItems.Remove(groupItemId));
+            gearpieceGroups.AddRange(extraCandidateItems.Select(itemId => new GearpieceAssignmentGroup(itemId)));
 
             gearpieceEdges = new int[gearpieceGroups.Count, gearpieceCandidateItems.Count];
 
@@ -69,7 +78,7 @@ namespace BisBuddy.ItemAssignment
                 for (var invItemIdx = inventoryItems.Count - 1; invItemIdx >= 0; invItemIdx--)
                 {
                     var invItem = inventoryItems[invItemIdx];
-                    if (ItemData.GetGameInventoryItemId(invItem) == itemId)
+                    if (invItem.ItemId == itemId)
                     {
                         inventoryItems.RemoveAt(invItemIdx);
                         break;
@@ -119,6 +128,8 @@ namespace BisBuddy.ItemAssignment
                         $"{$"{(
                             edges[row, col] == NoEdgeWeightValue
                             ? (col == assIdx ? "------ [*]" : "----------")
+                            : edges[row, col] == DummyEdgeWeightValue
+                            ? (col == assIdx ? "-DUMMY [*]" : "--DUMMY---")
                             : $"{edges[row, col]}{(col == assIdx ? " [*]" : "")}"
                         )}",12}"
                     ));
@@ -131,7 +142,23 @@ namespace BisBuddy.ItemAssignment
         {
             // stage 1: assign gearpieces
             generateGearpieceEdges();
-            var gearpieceAssignments = Solver.Solve(gearpieceEdges, maximize: true).RowAssignment;
+            int[] gearpieceAssignments;
+            try
+            {
+                gearpieceAssignments = Solver.Solve(gearpieceEdges, maximize: true).RowAssignment;
+            }
+            catch (InvalidOperationException)
+            {
+                logSolution(
+                    [],
+                    gearpieceEdges,
+                    gearpieceCandidateItems,
+                    gearpieceGroups
+                        .Select(g => (IAssignmentGroup)g)
+                        .ToList()
+                        );
+                throw;
+            }
             // this removes candidate items from prereq list as well
             addGearpieceAssignments(gearpieceAssignments);
 
@@ -140,7 +167,7 @@ namespace BisBuddy.ItemAssignment
             prerequisiteGroups.AddRange(groupPrerequisites(allGearsets));
             // filter item list to only needed items
             prerequisiteCandidateItems = prerequisiteCandidateItems
-                .Where(item => prerequisiteGroups.Any(g => g.NeedsItemId(ItemData.GetGameInventoryItemId(item))))
+                .Where(item => prerequisiteGroups.Any(g => g.NeedsItemId(item.ItemId)))
                 .ToList();
 
             // stage 3: assign remaining valid items as prerequisites
@@ -202,7 +229,6 @@ namespace BisBuddy.ItemAssignment
 
                 // pop first item id to be assigned in queue
                 var itemToAssign = candidateItemList[0];
-                var itemIdToAssign = ItemData.GetGameInventoryItemId(candidateItemList[0]);
                 candidateItemList.RemoveAt(0);
                 var itemIdx = prerequisiteCandidateItems.IndexOf(itemToAssign);
 
@@ -213,7 +239,7 @@ namespace BisBuddy.ItemAssignment
                 for (var groupIdx = 0; groupIdx < prerequisiteGroups.Count; groupIdx++)
                 {
                     var prereqGroup = prerequisiteGroups[groupIdx];
-                    var assignScore = prereqGroup.CandidateEdgeWeight(itemIdToAssign, []);
+                    var assignScore = prereqGroup.CandidateEdgeWeight(itemToAssign.ItemId, []);
 
                     if (loopCount < itemCount)
                         prerequisiteEdges[groupIdx, loopCount] = assignScore;
@@ -258,9 +284,8 @@ namespace BisBuddy.ItemAssignment
                     var candidate = gearpieceCandidateItems[candIdx];
 
                     // item ids match, set edge to weight score calculated by group for this candidate
-                    var candidateId = ItemData.GetGameInventoryItemId(candidate);
                     var candidateMateria = itemData.GetItemMateria(candidate);
-                    var edgeWeight = group.CandidateEdgeWeight(candidateId, candidateMateria);
+                    var edgeWeight = group.CandidateEdgeWeight(candidate.ItemId, candidateMateria);
                     gearpieceEdges[groupIdx, candIdx] = edgeWeight;
                 }
             }
@@ -366,7 +391,7 @@ namespace BisBuddy.ItemAssignment
                 assignments.Add(
                     new Assignment
                     {
-                        ItemId = ItemData.GetGameInventoryItemId(candidate),
+                        ItemId = candidate.ItemId,
                         MateriaList = itemData.GetItemMateria(candidate),
                         Gearpieces = groupToAssign.Gearpieces
                     });

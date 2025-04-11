@@ -1,4 +1,5 @@
 using BisBuddy.Gear;
+using BisBuddy.Items;
 using Dalamud.Game.Inventory;
 using Dalamud.Game.Inventory.InventoryEventArgTypes;
 using System;
@@ -44,10 +45,12 @@ namespace BisBuddy.EventListeners
                 var addedArgs = (InventoryItemAddedArgs)args;
 
                 // not added to a inventory type we track, ignore
-                if (!Plugin.InventorySources.Contains(addedArgs.Inventory)) return;
+                if (!Plugin.InventorySources.Contains(addedArgs.Inventory))
+                    return;
 
                 // item not needed in any gearsets, ignore
-                if (Gearset.GetGearsetsNeedingItemById(addedArgs.Item.ItemId, Plugin.Gearsets).Count == 0) return;
+                if (Gearset.GetGearsetsNeedingItemById(addedArgs.Item.ItemId, Plugin.Gearsets, ignoreCollected: false, includeCollectedPrereqs: true).Count == 0)
+                    return;
 
                 // added to type we track, update gearsets
                 Plugin.ScheduleUpdateFromInventory(Plugin.Gearsets);
@@ -65,10 +68,12 @@ namespace BisBuddy.EventListeners
                 var removedArgs = (InventoryItemRemovedArgs)args;
 
                 // not removed from a inventory type we track, ignore
-                if (!Plugin.InventorySources.Contains(removedArgs.Inventory)) return;
+                if (!Plugin.InventorySources.Contains(removedArgs.Inventory))
+                    return;
 
                 // item not needed in any gearsets, ignore
-                if (Gearset.GetGearsetsNeedingItemById(removedArgs.Item.ItemId, Plugin.Gearsets).Count == 0) return;
+                if (Gearset.GetGearsetsNeedingItemById(removedArgs.Item.ItemId, Plugin.Gearsets, ignoreCollected: false, includeCollectedPrereqs: true).Count == 0)
+                    return;
 
                 // removed from type we track, update gearsets
                 Plugin.ScheduleUpdateFromInventory(Plugin.Gearsets);
@@ -86,10 +91,12 @@ namespace BisBuddy.EventListeners
                 var changedArgs = (InventoryItemChangedArgs)args;
 
                 // not changed in a inventory type we track, ignore
-                if (!Plugin.InventorySources.Contains(changedArgs.Inventory)) return;
+                if (!Plugin.InventorySources.Contains(changedArgs.Inventory))
+                    return;
 
                 // item not needed in any gearsets, ignore
-                if (Gearset.GetGearsetsNeedingItemById(changedArgs.Item.ItemId, Plugin.Gearsets, ignoreCollected: false).Count == 0) return;
+                if (Gearset.GetGearsetsNeedingItemById(changedArgs.Item.ItemId, Plugin.Gearsets, ignoreCollected: false, includeCollectedPrereqs: true).Count == 0)
+                    return;
 
                 // changed in a type we track, update gearsets
                 Plugin.ScheduleUpdateFromInventory(Plugin.Gearsets);
@@ -111,7 +118,8 @@ namespace BisBuddy.EventListeners
                     return;
 
                 // item not needed in any gearsets, ignore
-                if (Gearset.GetGearsetsNeedingItemById(movedArgs.Item.ItemId, Plugin.Gearsets).Count == 0) return;
+                if (Gearset.GetGearsetsNeedingItemById(movedArgs.Item.ItemId, Plugin.Gearsets, ignoreCollected: false, includeCollectedPrereqs: true).Count == 0)
+                    return;
 
                 // moved untracked -> tracked or tracked -> untracked, update gearsets
                 Plugin.ScheduleUpdateFromInventory(Plugin.Gearsets);

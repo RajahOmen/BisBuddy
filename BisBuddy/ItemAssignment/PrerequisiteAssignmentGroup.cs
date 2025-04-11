@@ -84,9 +84,7 @@ namespace BisBuddy.ItemAssignment
                 if (gearpiece.PrerequisiteTree == null)
                     continue;
 
-                var itemId = ItemData.GetGameInventoryItemId(item);
-
-                var nodeAssigned = gearpiece.PrerequisiteTree.AssignItemId(itemId);
+                var nodeAssigned = gearpiece.PrerequisiteTree.AssignItemId(item.ItemId);
 
                 if (nodeAssigned == null)
                     continue;

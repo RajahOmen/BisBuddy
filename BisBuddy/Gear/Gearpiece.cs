@@ -45,8 +45,6 @@ namespace BisBuddy.Gear
                         m.IsMelded,
                         m.ItemId,
                     }).OrderBy(g => g.Key.IsMelded)
-                    .ThenByDescending(g => g.First().StatQuantity)
-                    .ThenBy(g => g.First().StatShortName)
                     .Select(g => (g.First(), g.Count()))
                     .ToList();
                 return itemMateriaGrouped;

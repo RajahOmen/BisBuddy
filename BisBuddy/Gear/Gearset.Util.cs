@@ -53,7 +53,7 @@ namespace BisBuddy.Gear
                     }
 
                     // if there are any melds needed, add this 'meld plan' to the list
-                    if (gearpieceMateria.Count > 0)
+                    if (gearpieceMateria.Any(m => !m.IsMelded))
                         neededMeldPlans.Add(new MeldPlan(gearset, gearpiece, gearpieceMateria));
                 }
             }

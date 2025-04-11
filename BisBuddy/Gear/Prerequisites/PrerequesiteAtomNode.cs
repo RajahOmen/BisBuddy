@@ -97,10 +97,6 @@ namespace BisBuddy.Gear.Prerequisites
 
         public void AddNeededItemIds(Dictionary<uint, (int MinDepth, int Count)> neededCounts, int startDepth = 0)
         {
-            // this is collected, so it needs no items
-            if (IsCollected)
-                return;
-
             if (neededCounts.TryGetValue(ItemId, out var value))
             {
                 var newDepth = Math.Min(value.MinDepth, startDepth);

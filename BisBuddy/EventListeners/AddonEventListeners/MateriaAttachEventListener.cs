@@ -235,7 +235,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                 }
 
                 // parse to regular string
-                var itemNameString = SeString.Parse(itemNameSeString.String).TextValue;
+                var itemNameString = SeString.Parse((byte*)itemNameSeString.String).TextValue;
 
                 // item hasn't changed since last update
                 if (itemNameString == selectedItemName) return false;
@@ -288,7 +288,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                         break;
                     }
 
-                    var itemNameStr = SeString.Parse(itemName.String).TextValue;
+                    var itemNameStr = SeString.Parse((byte*)itemName.String).TextValue;
 
                     if (neededNames.Contains(itemNameStr))
                     {
@@ -404,7 +404,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             {
                 var itemNodeComponent = parentNodeComponent->ItemRendererList[i].AtkComponentListItemRenderer;
                 var itemNeeded = highlightedIndexList.Contains(itemNodeComponent->ListItemIndex);
-                setNodeNeededMark((AtkResNode*)itemNodeComponent->OwnerNode, itemNeeded, true, true);
+                setNodeNeededMark((AtkResNode*)itemNodeComponent->OwnerNode, itemNeeded, true, false);
             }
         }
 
