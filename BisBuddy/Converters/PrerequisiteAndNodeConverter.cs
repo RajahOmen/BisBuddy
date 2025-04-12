@@ -2,16 +2,14 @@ using BisBuddy.Gear.Prerequisites;
 using BisBuddy.Items;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace BisBuddy.Converters
 {
     internal class PrerequisiteAndNodeConverter(ItemData itemData) : JsonConverter<PrerequisiteAndNode>
     {
+        public const string TypeDescriminatorValue = "and";
         private readonly ItemData itemData = itemData;
 
         public override PrerequisiteAndNode? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -67,6 +65,7 @@ namespace BisBuddy.Converters
         {
             writer.WriteStartObject();
 
+            writer.WriteString(PrerequisiteNodeConverter.TypeDescriminatorPropertyName, TypeDescriminatorValue);
             writer.WriteString(nameof(PrerequisiteNode.NodeId), value.NodeId);
             writer.WriteNumber(nameof(PrerequisiteNode.ItemId), value.ItemId);
             writer.WriteNumber(nameof(PrerequisiteNode.SourceType), (int)value.SourceType);

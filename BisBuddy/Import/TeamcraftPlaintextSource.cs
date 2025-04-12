@@ -142,7 +142,7 @@ namespace BisBuddy.Import
             var itemMateria = materiaNames
                 .Select(itemData.GetItemIdByName)
                 .Where(id => id > 0)
-                .Select(itemData.BuildMateria)
+                .Select(id => itemData.BuildMateria(id))
                 .ToList();
 
             var gearpiece = new Gearpiece(

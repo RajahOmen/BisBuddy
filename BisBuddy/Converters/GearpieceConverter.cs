@@ -36,13 +36,13 @@ namespace BisBuddy.Converters
                         itemId = reader.GetUInt32();
                         break;
                     case nameof(Gearpiece.PrerequisiteTree):
-                        prerequisiteTree = JsonSerializer.Deserialize<PrerequisiteNode>(ref reader);
+                        prerequisiteTree = JsonSerializer.Deserialize<PrerequisiteNode>(ref reader, options);
                         break;
                     case nameof(Gearpiece.IsCollected):
                         isCollected = reader.GetBoolean();
                         break;
                     case nameof(Gearpiece.ItemMateria):
-                        itemMateria = JsonSerializer.Deserialize<List<Materia>>(ref reader);
+                        itemMateria = JsonSerializer.Deserialize<List<Materia>>(ref reader, options);
                         break;
                     default:
                         reader.Skip();

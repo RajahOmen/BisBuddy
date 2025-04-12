@@ -9,6 +9,7 @@ namespace BisBuddy.Converters
 {
     internal class PrerequisiteOrNodeConverter(ItemData itemData) : JsonConverter<PrerequisiteOrNode>
     {
+        public const string TypeDescriminatorValue = "or";
         private readonly ItemData itemData = itemData;
 
         public override PrerequisiteOrNode? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -64,6 +65,7 @@ namespace BisBuddy.Converters
         {
             writer.WriteStartObject();
 
+            writer.WriteString(PrerequisiteNodeConverter.TypeDescriminatorPropertyName, TypeDescriminatorValue);
             writer.WriteString(nameof(PrerequisiteNode.NodeId), value.NodeId);
             writer.WriteNumber(nameof(PrerequisiteNode.ItemId), value.ItemId);
             writer.WriteNumber(nameof(PrerequisiteNode.SourceType), (int)value.SourceType);

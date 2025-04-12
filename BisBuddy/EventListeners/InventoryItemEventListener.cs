@@ -1,5 +1,4 @@
 using BisBuddy.Gear;
-using BisBuddy.Items;
 using Dalamud.Game.Inventory;
 using Dalamud.Game.Inventory.InventoryEventArgTypes;
 using System;

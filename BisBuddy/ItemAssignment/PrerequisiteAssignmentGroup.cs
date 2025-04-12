@@ -1,6 +1,5 @@
 using BisBuddy.Gear;
 using BisBuddy.Gear.Prerequisites;
-using BisBuddy.Items;
 using Dalamud.Game.Inventory;
 using System;
 using System.Collections.Generic;

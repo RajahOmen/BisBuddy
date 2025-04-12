@@ -2,16 +2,14 @@ using BisBuddy.Gear.Prerequisites;
 using BisBuddy.Items;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace BisBuddy.Converters
 {
     internal class PrerequisiteAtomNodeConverter(ItemData itemData) : JsonConverter<PrerequisiteAtomNode>
     {
+        public const string TypeDescriminatorValue = "atom";
         private readonly ItemData itemData = itemData;
 
         public override PrerequisiteAtomNode? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -62,6 +60,14 @@ namespace BisBuddy.Converters
                 }
             }
 
+            // if no children, try to extend this leaf with new nodes
+            if (prerequisiteTree?.Count == 0 && itemId != null)
+            {
+                var extendedPrerequisites = itemData.BuildGearpiecePrerequisiteTree(itemId!.Value);
+                if (extendedPrerequisites != null)
+                    prerequisiteTree.Add(extendedPrerequisites);
+            }
+
             return new PrerequisiteAtomNode(
                 itemId ?? throw new JsonException("No itemId found for PrerequisiteAtomNode"),
                 itemName ?? throw new JsonException("No itemName found for PrerequisiteAtomNode"),
@@ -77,6 +83,7 @@ namespace BisBuddy.Converters
         {
             writer.WriteStartObject();
 
+            writer.WriteString(PrerequisiteNodeConverter.TypeDescriminatorPropertyName, TypeDescriminatorValue);
             writer.WriteString(nameof(PrerequisiteNode.NodeId), value.NodeId);
             writer.WriteNumber(nameof(PrerequisiteNode.ItemId), value.ItemId);
             writer.WriteNumber(nameof(PrerequisiteNode.SourceType), (int)value.SourceType);
