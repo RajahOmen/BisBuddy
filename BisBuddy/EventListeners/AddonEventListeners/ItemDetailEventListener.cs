@@ -1,12 +1,15 @@
 using BisBuddy.Gear;
-using BisBuddy.Util;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using FFXIVClientStructs.FFXIV.Client.Graphics;
 using FFXIVClientStructs.FFXIV.Component.GUI;
+using KamiToolKit.Classes;
+using KamiToolKit.Extensions;
+using KamiToolKit.Nodes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 
 namespace BisBuddy.EventListeners.AddonEventListeners
 {
@@ -18,15 +21,14 @@ namespace BisBuddy.EventListeners.AddonEventListeners
         // ADDON NODE IDS
         // text node for the name of the name of the item being hovered over
         public static readonly uint AddonItemNameTextNodeId = 33;
-        // text node for the name of the character that crafted the item
-        public static readonly uint AddonCrafterNameTextNodeId = 4;
+        // root node
+        public static readonly uint AddonParentNodeId = 1;
 
         // CUSTOM NODE PARAMETERS
         public static readonly ushort CustomNodeWidth = 298;
         public static readonly ushort CustomNodeHeight = 16;
         // top left corner of the custom node
-        public static readonly short CustomNodeX = 66;
-        public static readonly short CustomNodeY = 45;
+        public static readonly Vector2 CustomNodePosition = new(66, 45);
         // color of the custom text (green, same as color for what jobs/player level the item is)
         // note: because of the forming of custom se strings and ui color payloads, this is ignored
         // but it has to be something, or else the text doesnt render.
@@ -69,10 +71,10 @@ namespace BisBuddy.EventListeners.AddonEventListeners
 
         private unsafe void handleHoveredItemChanged(object? sender, ulong itemId)
         {
+            if (itemId == 0)
+                return;
             try
             {
-                if (itemId == 0) return;
-
                 if (itemId > uint.MaxValue)
                 {
                     Services.Log.Warning($"{GetType().Name} HoveredItem itemId too large {itemId} > {uint.MaxValue}");
@@ -81,7 +83,9 @@ namespace BisBuddy.EventListeners.AddonEventListeners
 
                 var namesUpdated = updateNeededGearsetNames((uint)itemId);
 
-                if (!namesUpdated) return; // no change
+                // no change
+                if (!namesUpdated)
+                    return;
 
                 // update node visibility
                 if (neededGearsets.Count == 0)
@@ -93,7 +97,8 @@ namespace BisBuddy.EventListeners.AddonEventListeners
 
                 var addonPtr = (AtkUnitBase*)Services.GameGui.GetAddonByName(AddonName);
 
-                if (addonPtr == null || !addonPtr->IsVisible) return;
+                if (addonPtr == null || !addonPtr->IsVisible)
+                    return;
 
                 var itemNameIsTwoLines = isItemNameTwoLines(addonPtr);
 
@@ -107,7 +112,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
         }
 
         public SeString usedInSeString(
-            AtkTextNode* node,
+            TextNode node,
             bool twoLines
             )
         {
@@ -151,7 +156,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                 var newOutputSeString = new SeString(new TextPayload(newOutputStr)).Encode();
                 fixed (byte* newOutputPtr = newOutputSeString)
                 {
-                    node->GetTextDrawSize(&textWidth, &textHeight, newOutputPtr);
+                    node.InternalNode->GetTextDrawSize(&textWidth, &textHeight, newOutputPtr);
                 }
 
                 if (textWidth + separatorLength <= maxLength)
@@ -166,33 +171,39 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                 }
             }
 
-            var outputSeString = new SeString(new UIForegroundPayload(CustomNodeNormalTextColorType));
+            var outputBuilder = new SeStringBuilder();
+            outputBuilder.AddUiForeground(CustomNodeNormalTextColorType);
 
             foreach (var (gearsetName, gearsetCount, separator) in neededStrings)
             {
-                var namePayload = new TextPayload(gearsetName);
-                outputSeString.Append(namePayload);
+                outputBuilder.AddText(gearsetName);
                 if (gearsetCount != string.Empty)
                 {
-                    var countColorPayload = new UIForegroundPayload(CustomNodeCountTextColorType);
-                    var countPayload = new TextPayload(gearsetCount);
-                    var normalColorPayload = new UIForegroundPayload(CustomNodeNormalTextColorType);
-                    outputSeString.Append([countColorPayload, countPayload, normalColorPayload]);
+                    outputBuilder.AddUiForeground(CustomNodeCountTextColorType);
+                    outputBuilder.AddText(gearsetCount);
+                    outputBuilder.AddUiForegroundOff();
                 }
-                var sepatatorPayload = new TextPayload(separator);
-                outputSeString.Append(sepatatorPayload);
+                outputBuilder.AddText(separator);
             }
 
-            return outputSeString;
+            return outputBuilder.Build();
         }
 
         private void setNodeVisibility(bool setVisible)
         {
-            var customTextNode = CustomNodes.Count > 0 ? (AtkTextNode*)CustomNodes[0] : null;
-            if (customTextNode == null) return; // doesn't exist, nothing to hide
-            if (customTextNode->ParentNode == null) return; // no parent node, unconnected from an addon
+            var customTextNode = CustomNodes.Count > 0 ? CustomNodes[0] : null;
+            if (customTextNode == null)
+                return; // doesn't exist, nothing to hide
 
-            setNodeNeededMark(customTextNode->ParentNode, setVisible, false, true);
+            var addon = (AtkUnitBase*)Services.GameGui.GetAddonByName(AddonName);
+            if (addon == null)
+                return; // addon doesn't exist somehow
+
+            var parentNode = addon->GetNodeById(AddonParentNodeId);
+            if (parentNode == null)
+                return; // parent node doesn't exist somehow
+
+            setNodeNeededMark(parentNode, setVisible, false, true);
         }
 
         private bool updateNeededGearsetNames(uint itemId)
@@ -204,9 +215,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                 newNeededGearsets.Count == neededGearsets.Count
                 && newNeededGearsets.SequenceEqual(neededGearsets)
                 )
-            {
-                return false; // no change
-            }
+                return false;
 
             neededGearsets = newNeededGearsets;
             return true;
@@ -222,61 +231,62 @@ namespace BisBuddy.EventListeners.AddonEventListeners
 
         private unsafe void updateCustomNode(AtkUnitBase* addon, bool itemNameTwoLines)
         {
-            var customTextNode = CustomNodes.Count > 0 ? (AtkTextNode*)CustomNodes[0] : null;
             // assign custom text to node
-            if (customTextNode == null) // doesn't exist, create it
-            {
-                customTextNode = (AtkTextNode*)createCustomNode((nint)addon);
-            }
+            var customTextNode = CustomNodes.Count > 0
+                ? (TextNode)CustomNodes[0]
+                : (TextNode)createCustomNode(addon->GetNodeById(AddonParentNodeId), addon);  // doesn't exist, create it
 
             // get the formatted text to display in the custom node
             var customSeString = usedInSeString(customTextNode, itemNameTwoLines);
 
             // update node text
-            customTextNode->SetText(customSeString.EncodeWithNullTerminator());
+            customTextNode.Text = customSeString;
         }
 
-        protected override nint initializeCustomNode(nint parentNodePtr)
+        protected override NodeBase? initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon)
         {
-            var customTextNode = UiHelper.MakeTextNode(AddonCustomNodeId);
-            if (customTextNode == null)
-            {
-                Services.Log.Error($"{GetType().Name}: Failed to create custom text node");
-                return 0;
-            }
-
+            TextNode? customTextNode = null;
             try
             {
-                // text propreties
-                customTextNode->TextColor = CustomNodeTextColor;
-                customTextNode->FontSize = CustomNodeTextSize;
-                customTextNode->FontType = CustomNodeTextFont;
-                customTextNode->AlignmentType = AlignmentType.Right;
-                // location properties
-                customTextNode->SetHeight(CustomNodeHeight);
-                customTextNode->SetWidth(CustomNodeWidth);
-                customTextNode->SetPositionShort(CustomNodeX, CustomNodeY);
-                // general properties
-                customTextNode->NodeFlags |= NodeFlags.AnchorTop | NodeFlags.AnchorLeft;
-                customTextNode->DrawFlags |= 0x01; // redraw
+                customTextNode = new TextNode()
+                {
+                    NodeID = AddonCustomNodeId,
+                    // text propreties
+                    TextColor = CustomNodeTextColor.ToVector4(),
+                    FontSize = CustomNodeTextSize,
+                    FontType = CustomNodeTextFont,
+                    AlignmentType = AlignmentType.Right,
+                    TextFlags = TextFlags.AutoAdjustNodeSize,
+                    // location/scale properties
+                    Height = CustomNodeHeight,
+                    Width = CustomNodeWidth,
+                    Position = CustomNodePosition,
+                    // general properties
+                    NodeFlags = NodeFlags.AnchorTop | NodeFlags.AnchorLeft | NodeFlags.Visible | NodeFlags.Enabled,
+                };
 
-                UiHelper.LinkNodeAtEnd((AtkResNode*)customTextNode, (AtkUnitBase*)parentNodePtr);
-                return (nint)customTextNode;
+                Services.NativeController.AttachToAddon(customTextNode, addon, (AtkResNode*)parentNodePtr, NodePosition.AsLastChild);
+                return customTextNode;
             }
             catch (Exception ex)
             {
-                if (customTextNode != null) UiHelper.FreeTextNode(customTextNode);
+                customTextNode?.Dispose();
                 Services.Log.Error(ex, "Failed to initialize custom node");
-                return nint.Zero;
+                return null;
             }
         }
 
-        protected override unsafe void unlinkCustomNode(nint nodePtr)
+        protected override unsafe void unlinkCustomNode(nint parentNodePtr, NodeBase node)
         {
-            var addon = (AtkUnitBase*)Services.GameGui.GetAddonByName(AddonName);
-            if (addon == null) return; // addon isn't loaded, nothing to unlink
+            var addon = Services.GameGui.GetAddonByName(AddonName);
 
-            UiHelper.UnlinkNode((AtkResNode*)nodePtr, addon);
+            if (addon == nint.Zero)
+                return;
+
+            if (parentNodePtr == nint.Zero)
+                return;
+
+            Services.NativeController.DetachFromAddon(node, (AtkUnitBase*)addon);
         }
     }
 }

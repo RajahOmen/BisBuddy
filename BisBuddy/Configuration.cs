@@ -36,6 +36,14 @@ public class Configuration : IPluginConfiguration
     // normal nodes: (0, 100, 0)
     // custom nodes: (-255, 255, -255)
     public Vector4 HighlightColor { get; set; } = new Vector4(0.0f, 1.0f, 0.0f, 0.392f);
+    // scale between -1.0f and 1.0f. (ex: 0.0f -> -1.0f, 0.5f -> 0.0f, 1.0f -> 1.0f)
+    public Vector3 CustomNodeAddColor => new(
+        (HighlightColor.X * 2) - 1,
+        (HighlightColor.Y * 2) - 1,
+        (HighlightColor.Z * 2) - 1
+        );
+    public readonly float CustomNodeAlpha = 1.0f;
+    public readonly Vector3 CustomNodeMultiplyColor = new(0.393f, 0.393f, 0.393f);
 
     public Dictionary<ulong, CharacterInfo> CharactersData { get; set; } = [];
 

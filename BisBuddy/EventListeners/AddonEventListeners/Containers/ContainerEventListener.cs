@@ -5,6 +5,7 @@ using Dalamud.Game.Inventory;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using FFXIVClientStructs.FFXIV.Component.GUI;
+using KamiToolKit.Nodes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -250,15 +251,15 @@ namespace BisBuddy.EventListeners.AddonEventListeners.Containers
             return container->GetInventorySlot(item->Slot);
         }
 
-        protected override nint initializeCustomNode(nint parentNodePtr)
+        protected override unsafe NodeBase? initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon)
         {
             // doesn't use custom nodes
-            return nint.Zero;
+            return null;
         }
 
-        protected override void unlinkCustomNode(nint nodePtr)
+        protected override void unlinkCustomNode(nint parentNodePtr, NodeBase node)
         {
-            // no nodes to unlink
+            // doesn't use custom nodes
             return;
         }
     }

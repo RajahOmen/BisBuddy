@@ -12,6 +12,7 @@ using Dalamud.Game.Command;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
+using KamiToolKit;
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
@@ -105,6 +106,7 @@ public sealed partial class Plugin : IDalamudPlugin
             .RegisterSource(ImportSourceType.Etro, new EtroSource(ItemData, Services.HttpClient))
             .RegisterSource(ImportSourceType.Teamcraft, new TeamcraftPlaintextSource(ItemData))
             .RegisterSource(ImportSourceType.Json, new JsonSource(jsonOptions));
+        Services.NativeController = new NativeController(pluginInterface);
 
         Configuration = Configuration.LoadConfig(ItemData, jsonOptions);
 
@@ -205,6 +207,9 @@ public sealed partial class Plugin : IDalamudPlugin
 
         // dispose of http client
         Services.HttpClient.Dispose();
+
+        // dispose of native UI controller
+        Services.NativeController.Dispose();
     }
 
     private void OnCommand(string command, string args)
