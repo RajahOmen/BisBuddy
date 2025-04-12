@@ -60,16 +60,28 @@ namespace BisBuddy.Converters
                 }
             }
 
-            // if no children, try to extend this leaf with new nodes
-            if (prerequisiteTree?.Count == 0 && itemId != null)
-            {
-                var extendedPrerequisites = itemData.BuildGearpiecePrerequisiteTree(itemId!.Value);
-                if (extendedPrerequisites != null)
-                    prerequisiteTree.Add(extendedPrerequisites);
-            }
+            if (itemId == null)
+                throw new JsonException("No itemId found for PrerequisiteAtomNode");
+
+            // try to extend this tree with new options
+            var prerequisiteNode = prerequisiteTree != null
+                ? prerequisiteTree.Count > 0
+                ? prerequisiteTree[0]
+                : null
+                : null;
+
+            var newPrerequisiteNode = itemData.ExtendItemPrerequisites(
+                itemId!.Value,
+                prerequisiteNode,
+                isCollected ?? false,
+                isManuallyCollected ?? false
+                );
+
+            if (newPrerequisiteNode != null)
+                prerequisiteTree = [newPrerequisiteNode];
 
             return new PrerequisiteAtomNode(
-                itemId ?? throw new JsonException("No itemId found for PrerequisiteAtomNode"),
+                itemId!.Value,
                 itemName ?? throw new JsonException("No itemName found for PrerequisiteAtomNode"),
                 prerequisiteTree,
                 sourceType ?? throw new JsonException("No sourceType found for PrerequisiteAtomNode"),

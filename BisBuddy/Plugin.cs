@@ -306,6 +306,6 @@ public sealed partial class Plugin : IDalamudPlugin
 
     public string ExportGearsetToJsonStr(Gearset gearset)
     {
-        return JsonSerializer.Serialize(this, jsonOptions);
+        return JsonSerializer.Serialize(gearset, jsonOptions);
     }
 }
