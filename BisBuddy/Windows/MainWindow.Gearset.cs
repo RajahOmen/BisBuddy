@@ -165,7 +165,7 @@ namespace BisBuddy.Windows
 
                 if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.FileExport, $"{Resource.GearsetJsonButton}##export_gearset_json"))
                 {
-                    ImGui.SetClipboardText(gearset.ExportToJsonStr());
+                    ImGui.SetClipboardText(plugin.ExportGearsetToJsonStr(gearset));
                 }
                 if (ImGui.IsItemHovered())
                 {

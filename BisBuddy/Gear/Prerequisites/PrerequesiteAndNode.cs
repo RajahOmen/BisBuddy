@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json.Serialization;
 
 namespace BisBuddy.Gear.Prerequisites
 {
@@ -14,13 +13,9 @@ namespace BisBuddy.Gear.Prerequisites
         public PrerequisiteNodeSourceType SourceType { get; set; }
         public List<PrerequisiteNode> PrerequisiteTree { get; set; }
 
-        [JsonIgnore]
         public bool IsCollected => PrerequisiteTree.All(p => p.IsCollected);
-        [JsonIgnore]
         public bool IsManuallyCollected => PrerequisiteTree.All(p => p.IsManuallyCollected);
-        [JsonIgnore]
         public bool IsObtainable => IsCollected || PrerequisiteTree.All(p => p.IsObtainable);
-        [JsonIgnore]
         public HashSet<string> ChildNodeIds => [.. PrerequisiteTree.Select(p => p.NodeId), .. PrerequisiteTree.SelectMany(p => p.ChildNodeIds)];
 
         public List<(PrerequisiteNode Node, int Count)> Groups()
