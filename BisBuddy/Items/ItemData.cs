@@ -231,6 +231,79 @@ namespace BisBuddy.Items
             return materiaItem.RowId;
         }
 
+        /// <summary>   
+        /// Extends the given PrerequisiteNode with new leaves at the node's direct child level according to current
+        /// data. Used on config loading to automatically add new prerequisite information that wasn't available when the gearset
+        /// was being added. Will never remove prerequisites, only add. It will also retain state for old nodes that already
+        /// exist in the tree.
+        /// </summary>
+        /// <param name="itemId">The id of the item to extend prerequisites for</param>
+        /// <param name="oldPrerequisiteNode">The old tree of prerequisites for this item</param>
+        /// <param name="isCollected">If the config has this node set as collected</param>
+        /// <param name="isManuallyCollected">If the config has this node set as manually collected</param>
+        /// <returns>The most up-to-date PrerequisiteNode. Could be the unmodified original if no changes were made</returns>
+        public PrerequisiteNode? ExtendItemPrerequisites(uint itemId, PrerequisiteNode? oldPrerequisiteNode, bool isCollected, bool isManuallyCollected)
+        {
+
+            // retrieve what current data has for this item
+            var newPrerequisiteNode = BuildGearpiecePrerequisiteTree(itemId, isCollected, isManuallyCollected);
+
+            // didn't have anything previously, return whatever we have now
+            if (oldPrerequisiteNode == null)
+                return newPrerequisiteNode;
+
+            // somehow new data has no prerequisites, return what we had before
+            if (newPrerequisiteNode == null)
+                return oldPrerequisiteNode;
+
+            // only want to add possibly-new alternatives, can only be when new is an OR node
+            if (newPrerequisiteNode is not PrerequisiteOrNode)
+                return oldPrerequisiteNode;
+
+            // a new OR layer should be added
+            if (oldPrerequisiteNode is not PrerequisiteOrNode)
+            {
+                // find node matching the old node in the new or node
+                var oldNodeIndex = newPrerequisiteNode
+                    .PrerequisiteTree
+                    .FindIndex(node =>
+                        node.ItemId == oldPrerequisiteNode.ItemId
+                        && node.GetType() == oldPrerequisiteNode.GetType()
+                    );
+
+                Services.Log.Verbose($"New alternative found for \"{itemId}\", added as new {nameof(PrerequisiteOrNode)} layer");
+
+                // add to new node. If no index found, insert at start
+                if (oldNodeIndex >= 0)
+                    newPrerequisiteNode.PrerequisiteTree[oldNodeIndex] = oldPrerequisiteNode;
+                else
+                    newPrerequisiteNode.PrerequisiteTree.Insert(0, oldPrerequisiteNode);
+
+                return newPrerequisiteNode;
+            }
+            else // compare OR contents, add any new contents to old OR node
+            {
+                foreach (var newChildNode in newPrerequisiteNode.PrerequisiteTree)
+                {
+                    // add nodes that exist in new tree to old tree
+                    var existsInOldNode = oldPrerequisiteNode
+                        .PrerequisiteTree
+                        .Any(node =>
+                            node.ItemId == newChildNode.ItemId
+                            && node.GetType() == newChildNode.GetType()
+                        );
+
+                    if (!existsInOldNode)
+                    {
+                        Services.Log.Verbose($"New alternative found for \"{itemId}\", added to existing {nameof(PrerequisiteOrNode)} layer");
+                        oldPrerequisiteNode.PrerequisiteTree.Add(newChildNode);
+                    }
+
+                }
+                return oldPrerequisiteNode;
+            }
+        }
+
         public PrerequisiteNode? BuildGearpiecePrerequisiteTree(uint itemId, bool isCollected = false, bool isManuallyCollected = false)
         {
             var unitPrerequisiteGroup = buildPrerequisites(itemId, isCollected: isCollected, isManuallyCollected: isManuallyCollected);

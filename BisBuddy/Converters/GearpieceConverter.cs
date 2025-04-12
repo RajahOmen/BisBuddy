@@ -57,6 +57,14 @@ namespace BisBuddy.Converters
             if (itemId == null)
                 throw new JsonException("No itemId found for Gearpiece");
 
+            // try to extend this tree with new options
+            prerequisiteTree = itemData.ExtendItemPrerequisites(
+                itemId!.Value,
+                prerequisiteTree,
+                isCollected ?? false,
+                isManuallyCollected ?? false
+                );
+
             return itemData.BuildGearpiece(
                 itemId!.Value,
                 prerequisiteTree,
