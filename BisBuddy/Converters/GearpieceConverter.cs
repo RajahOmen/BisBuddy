@@ -21,6 +21,7 @@ namespace BisBuddy.Converters
             PrerequisiteNode? prerequisiteTree = null;
             List<Materia>? itemMateria = null;
             bool? isCollected = null;
+            bool? isManuallyCollected = null;
 
             while (reader.Read())
             {
@@ -38,11 +39,14 @@ namespace BisBuddy.Converters
                     case nameof(Gearpiece.PrerequisiteTree):
                         prerequisiteTree = JsonSerializer.Deserialize<PrerequisiteNode>(ref reader, options);
                         break;
+                    case nameof(Gearpiece.ItemMateria):
+                        itemMateria = JsonSerializer.Deserialize<List<Materia>>(ref reader, options);
+                        break;
                     case nameof(Gearpiece.IsCollected):
                         isCollected = reader.GetBoolean();
                         break;
-                    case nameof(Gearpiece.ItemMateria):
-                        itemMateria = JsonSerializer.Deserialize<List<Materia>>(ref reader, options);
+                    case nameof(Gearpiece.IsManuallyCollected):
+                        isManuallyCollected = reader.GetBoolean();
                         break;
                     default:
                         reader.Skip();
@@ -50,11 +54,15 @@ namespace BisBuddy.Converters
                 }
             }
 
+            if (itemId == null)
+                throw new JsonException("No itemId found for Gearpiece");
+
             return itemData.BuildGearpiece(
-                itemId ?? throw new JsonException("No itemId found for Gearpiece"),
+                itemId!.Value,
                 prerequisiteTree,
                 itemMateria ?? throw new JsonException("No itemMateria found for Gearpiece"),
-                isCollected ?? throw new JsonException("No isCollected found for Gearpiece")
+                isCollected ?? throw new JsonException("No isCollected found for Gearpiece"),
+                isManuallyCollected ?? false
                 );
         }
 
@@ -64,6 +72,7 @@ namespace BisBuddy.Converters
 
             writer.WriteNumber(nameof(Gearpiece.ItemId), value.ItemId);
             writer.WriteBoolean(nameof(Gearpiece.IsCollected), value.IsCollected);
+            writer.WriteBoolean(nameof(Gearpiece.IsManuallyCollected), value.IsManuallyCollected);
             writer.WriteNumber(nameof(Gearpiece.GearpieceType), (int)value.GearpieceType);
 
             writer.WritePropertyName(nameof(Gearpiece.ItemMateria));

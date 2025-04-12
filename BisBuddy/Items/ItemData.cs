@@ -419,7 +419,8 @@ namespace BisBuddy.Items
             uint itemId,
             PrerequisiteNode? prerequisiteTree,
             List<GearMateria> itemMateria,
-            bool isCollected = false
+            bool isCollected = false,
+            bool isManuallyCollected = false
             )
         {
             return new Gearpiece(
@@ -428,7 +429,8 @@ namespace BisBuddy.Items
                 GetItemGearpieceType(itemId),
                 prerequisiteTree,
                 itemMateria,
-                isCollected
+                isCollected,
+                isManuallyCollected
                 );
         }
 
