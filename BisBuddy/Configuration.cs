@@ -16,11 +16,6 @@ namespace BisBuddy;
 public class Configuration : IPluginConfiguration
 {
     public static readonly int CurrentVersion = 2;
-    public static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNameCaseInsensitive = true,
-        IncludeFields = true,
-    };
     public static readonly string DefaultGearsetName = "New Gearset";
 
     public int Version { get; set; } = 2;
@@ -52,7 +47,7 @@ public class Configuration : IPluginConfiguration
 
     public Dictionary<ulong, CharacterInfo> CharactersData { get; set; } = [];
 
-    public List<Gearset> GetCharacterGearsets(ulong characterId)
+    public List<Gearset> GetCharacterGearsets(ulong characterId, JsonSerializerOptions jsonOptions)
     {
         // if not logged in, return a dummy list
         if (!Services.ClientState.IsLoggedIn)
@@ -65,17 +60,17 @@ public class Configuration : IPluginConfiguration
         // no existing gearsets found for character, creating new one
         var newCharacterInfo = new CharacterInfo(characterId, []);
         CharactersData.Add(characterId, newCharacterInfo);
-        Save();
+        Save(jsonOptions);
         return newCharacterInfo.Gearsets;
     }
 
-    public void Save()
+    public void Save(JsonSerializerOptions jsonOptions)
     {
-        var configText = JsonSerializer.Serialize(this, JsonOptions);
+        var configText = JsonSerializer.Serialize(this, jsonOptions);
         File.WriteAllText(Services.PluginInterface.ConfigFile.FullName, configText);
     }
 
-    public static Configuration LoadConfig(ItemData itemData)
+    public static Configuration LoadConfig(ItemData itemData, JsonSerializerOptions jsonOptions)
     {
         try
         {
@@ -93,7 +88,9 @@ public class Configuration : IPluginConfiguration
                     return migrateOldConfig(configJson, configText, configVersion, itemData);
                 }
             }
-            return JsonSerializer.Deserialize<Configuration>(configText, JsonOptions) ?? new Configuration();
+
+            Services.Log.Verbose($"Loading config...");
+            return JsonSerializer.Deserialize<Configuration>(configText, jsonOptions) ?? new Configuration();
         }
         catch (FileNotFoundException)
         {

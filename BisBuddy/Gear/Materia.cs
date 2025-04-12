@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json.Serialization;
 
 namespace BisBuddy.Gear
 {
@@ -55,26 +54,6 @@ namespace BisBuddy.Gear
                     statFullNameTrunc
                 );
 
-            ItemId = itemId;
-            IsMelded = isMelded;
-            ItemName = itemName;
-            StatFullName = statFullName;
-            StatShortName = statShortName;
-            MateriaLevel = materiaLevel;
-            StatQuantity = statQuantity;
-        }
-
-        [JsonConstructor]
-        public Materia(
-            uint itemId,
-            string itemName,
-            int materiaLevel,
-            string statShortName,
-            string statFullName,
-            int statQuantity,
-            bool isMelded
-            )
-        {
             ItemId = itemId;
             IsMelded = isMelded;
             ItemName = itemName;

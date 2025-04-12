@@ -6,9 +6,10 @@ using System.Threading.Tasks;
 
 namespace BisBuddy.Import
 {
-    public class JsonSource : ImportSource
+    public class JsonSource(JsonSerializerOptions jsonOptions) : ImportSource
     {
         public ImportSourceType SourceType => ImportSourceType.Json;
+        private JsonSerializerOptions jsonOptions = jsonOptions;
 
         public async Task<List<Gearset>> ImportGearsets(string importString)
         {
@@ -27,7 +28,7 @@ namespace BisBuddy.Import
 
         private Gearset? parseGearset(string importString)
         {
-            var gearset = JsonSerializer.Deserialize<Gearset>(importString, Configuration.JsonOptions);
+            var gearset = JsonSerializer.Deserialize<Gearset>(importString, jsonOptions);
             if (gearset == null)
                 return null;
 

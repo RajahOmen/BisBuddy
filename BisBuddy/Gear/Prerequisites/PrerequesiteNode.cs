@@ -1,11 +1,7 @@
 using System.Collections.Generic;
-using System.Text.Json.Serialization;
 
 namespace BisBuddy.Gear.Prerequisites
 {
-    [JsonDerivedType(typeof(PrerequisiteAtomNode), typeDiscriminator: "atom")]
-    [JsonDerivedType(typeof(PrerequisiteAndNode), typeDiscriminator: "and")]
-    [JsonDerivedType(typeof(PrerequisiteOrNode), typeDiscriminator: "or")]
     public interface PrerequisiteNode
     {
         public string NodeId { get; }

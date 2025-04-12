@@ -32,7 +32,7 @@ namespace BisBuddy.Items
             {
                 if (itemsCoffers == null)
                 {
-                    itemsCoffers = generateItemsCoffers();
+                    itemsCoffers = generateItemsCoffers(ItemSheet);
                     Task.Run(async () =>
                     {
                         await Task.Delay(3000);
@@ -231,9 +231,9 @@ namespace BisBuddy.Items
             return materiaItem.RowId;
         }
 
-        public PrerequisiteNode? BuildGearpiecePrerequisiteTree(uint itemId)
+        public PrerequisiteNode? BuildGearpiecePrerequisiteTree(uint itemId, bool isCollected = false, bool isManuallyCollected = false)
         {
-            var unitPrerequisiteGroup = buildPrerequisites(itemId);
+            var unitPrerequisiteGroup = buildPrerequisites(itemId, isCollected: isCollected, isManuallyCollected: isManuallyCollected);
 
             if (unitPrerequisiteGroup.GetType() != typeof(PrerequisiteAtomNode))
                 throw new Exception($"Item id \"{itemId}\" returned non-unit prereqs group (\"{unitPrerequisiteGroup.GetType().Name}\")");
@@ -250,10 +250,10 @@ namespace BisBuddy.Items
             return unitPrerequisiteGroup.PrerequisiteTree[0];
         }
 
-        private PrerequisiteNode buildPrerequisites(uint itemId, int depth = 8)
+        private PrerequisiteNode buildPrerequisites(uint itemId, bool isCollected, bool isManuallyCollected, int depth = 8)
         {
             var itemName = GetItemNameById(itemId);
-            var group = new PrerequisiteAtomNode(itemId, itemName, [], PrerequisiteNodeSourceType.Item);
+            var group = new PrerequisiteAtomNode(itemId, itemName, [], PrerequisiteNodeSourceType.Item, isCollected, isManuallyCollected);
 
             if (depth <= 0)
                 return group;
@@ -265,13 +265,13 @@ namespace BisBuddy.Items
 
             if (supplementalPrereqs.Count() == 1)
             {
-                supplementalTree = buildPrerequisites(supplementalPrereqs.First(), depth - 1);
+                supplementalTree = buildPrerequisites(supplementalPrereqs.First(), isCollected, isManuallyCollected, depth - 1);
                 supplementalTree.SourceType = PrerequisiteNodeSourceType.Loot;
             }
             else if (supplementalPrereqs.Count() > 1)
             {
                 supplementalTree.PrerequisiteTree = ItemsCoffers[itemId]
-                    .Select(id => buildPrerequisites(id, depth - 1))
+                    .Select(id => buildPrerequisites(id, isCollected, isManuallyCollected, depth - 1))
                     .ToList();
             }
 
@@ -288,13 +288,13 @@ namespace BisBuddy.Items
                 // shop only is requesting one item to exchange
                 if (shopCosts.Count == 1)
                 {
-                    exchangesTree = buildPrerequisites(shopCosts.First(), depth - 1);
+                    exchangesTree = buildPrerequisites(shopCosts.First(), isCollected, isManuallyCollected, depth - 1);
                     exchangesTree.SourceType = PrerequisiteNodeSourceType.Shop;
                 }
                 else // shop is requesting more than one item to exchange
                 {
                     var prereqTree = shopCosts
-                        .Select(id => buildPrerequisites(id, depth - 1))
+                        .Select(id => buildPrerequisites(id, isCollected, isManuallyCollected, depth - 1))
                         .ToList();
 
                     exchangesTree = new PrerequisiteAndNode(
@@ -315,7 +315,7 @@ namespace BisBuddy.Items
                         // shop costs one items
                         if (shopCostIds.Count == 1)
                         {
-                            var prereq = buildPrerequisites(shopCostIds.First(), depth - 1);
+                            var prereq = buildPrerequisites(shopCostIds.First(), isCollected, isManuallyCollected, depth - 1);
                             prereq.SourceType = PrerequisiteNodeSourceType.Shop;
                             return prereq;
                         }
@@ -324,7 +324,7 @@ namespace BisBuddy.Items
                         return new PrerequisiteAndNode(
                             itemId,
                             itemName,
-                            shopCostIds.Select(id => buildPrerequisites(id, depth - 1)).ToList(),
+                            shopCostIds.Select(id => buildPrerequisites(id, isCollected, isManuallyCollected, depth - 1)).ToList(),
                             PrerequisiteNodeSourceType.Shop
                             );
                     }).ToList();
@@ -415,7 +415,24 @@ namespace BisBuddy.Items
             return (materiaRow.Value.RowId, statName, materiaCol, statQuantity);
         }
 
-        public GearMateria BuildMateria(uint itemId)
+        public Gearpiece BuildGearpiece(
+            uint itemId,
+            PrerequisiteNode? prerequisiteTree,
+            List<GearMateria> itemMateria,
+            bool isCollected = false
+            )
+        {
+            return new Gearpiece(
+                itemId,
+                GetItemNameById(itemId),
+                GetItemGearpieceType(itemId),
+                prerequisiteTree,
+                itemMateria,
+                isCollected
+                );
+        }
+
+        public GearMateria BuildMateria(uint itemId, bool isMelded = false)
         {
             var materiaName = GetItemNameById(itemId);
             var (statId, statName, statLevel, statQuantity) = getMateriaInfo(materiaName);
@@ -427,7 +444,7 @@ namespace BisBuddy.Items
                 statId,
                 statName,
                 statQuantity,
-                false
+                isMelded
                 );
         }
 

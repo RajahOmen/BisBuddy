@@ -1,11 +1,9 @@
 using BisBuddy.Import;
 using System;
 using System.Collections.Generic;
-using System.Text.Json;
 
 namespace BisBuddy.Gear
 {
-
     [Serializable]
     public partial class Gearset
     {
@@ -61,11 +59,6 @@ namespace BisBuddy.Gear
                 }
             }
             return satisfiedGearpieces;
-        }
-
-        public string ExportToJsonStr()
-        {
-            return JsonSerializer.Serialize(this, Configuration.JsonOptions);
         }
     }
 }

@@ -1,3 +1,4 @@
+using BisBuddy.Converters;
 using BisBuddy.EventListeners;
 using BisBuddy.EventListeners.AddonEventListeners;
 using BisBuddy.EventListeners.AddonEventListeners.Containers;
@@ -14,6 +15,7 @@ using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using KamiToolKit;
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 
 namespace BisBuddy;
 
@@ -21,9 +23,12 @@ public sealed partial class Plugin : IDalamudPlugin
 {
     public static readonly string PluginName = "BISBuddy";
     public static readonly int MaxGearsetCount = 25;
+    private readonly JsonSerializerOptions jsonOptions;
 
     private const string CommandName = "/bisbuddy";
     private const string CommandNameAlias = "/bis";
+    private static readonly string MainCommandHelpMessage = $"View existing or add new gearsets\n      [config/c] - Open {PluginName} configuration\n      [new/n] - Add a new gearset";
+    private static readonly string AliasCommandHelpMessage = "Alias for /bisbuddy";
 
     private ulong playerContentId = 0;
     public ulong PlayerContentId
@@ -34,7 +39,7 @@ public sealed partial class Plugin : IDalamudPlugin
             playerContentId = value;
 
             // update Gearsets to new character's gearsets
-            Gearsets = Configuration.GetCharacterGearsets(value);
+            Gearsets = Configuration.GetCharacterGearsets(value, jsonOptions);
         }
     }
     public Configuration Configuration { get; set; }
@@ -83,15 +88,27 @@ public sealed partial class Plugin : IDalamudPlugin
 
         ItemData = new ItemData(Services.DataManager.Excel);
 
+        jsonOptions = new()
+        {
+            PropertyNameCaseInsensitive = true,
+            IncludeFields = true,
+        };
+        jsonOptions.Converters.Add(new GearpieceConverter(ItemData));
+        jsonOptions.Converters.Add(new MateriaConverter(ItemData));
+        jsonOptions.Converters.Add(new PrerequisiteNodeConverter());
+        jsonOptions.Converters.Add(new PrerequisiteAndNodeConverter(ItemData));
+        jsonOptions.Converters.Add(new PrerequisiteAtomNodeConverter(ItemData));
+        jsonOptions.Converters.Add(new PrerequisiteOrNodeConverter(ItemData));
+
         Services.HttpClient = new System.Net.Http.HttpClient();
         Services.ImportGearsetService = new ImportGearsetService(this)
             .RegisterSource(ImportSourceType.Xivgear, new XivgearSource(ItemData, Services.HttpClient))
             .RegisterSource(ImportSourceType.Etro, new EtroSource(ItemData, Services.HttpClient))
             .RegisterSource(ImportSourceType.Teamcraft, new TeamcraftPlaintextSource(ItemData))
-            .RegisterSource(ImportSourceType.Json, new JsonSource());
+            .RegisterSource(ImportSourceType.Json, new JsonSource(jsonOptions));
         Services.NativeController = new NativeController(pluginInterface);
 
-        Configuration = Configuration.LoadConfig(ItemData);
+        Configuration = Configuration.LoadConfig(ItemData, jsonOptions);
 
         // INSTANTIATE WINDOWS
         ConfigWindow = new ConfigWindow(this);
@@ -134,12 +151,12 @@ public sealed partial class Plugin : IDalamudPlugin
 
         Services.CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
         {
-            HelpMessage = $"View existing or add new gearsets\n      [config/c] - Open {PluginName} configuration\n      [new/n] - Add a new gearset",
+            HelpMessage = MainCommandHelpMessage,
             ShowInHelp = true,
         });
         Services.CommandManager.AddHandler(CommandNameAlias, new CommandInfo(OnCommand)
         {
-            HelpMessage = $"Alias for /bisbuddy",
+            HelpMessage = AliasCommandHelpMessage,
             ShowInHelp = true,
         });
 
@@ -203,7 +220,6 @@ public sealed partial class Plugin : IDalamudPlugin
         }
         else if (args == "new" || args == "n")
         {
-            Configuration.LoadConfig(ItemData);
             ToggleImportGearsetUI();
         }
         else
@@ -285,6 +301,11 @@ public sealed partial class Plugin : IDalamudPlugin
         if (Configuration.PluginUpdateInventoryScan && pluginUpdate)
             ScheduleUpdateFromInventory(Gearsets, saveChanges: true);
         else
-            Configuration.Save();
+            Configuration.Save(jsonOptions);
+    }
+
+    public string ExportGearsetToJsonStr(Gearset gearset)
+    {
+        return JsonSerializer.Serialize(this, jsonOptions);
     }
 }
