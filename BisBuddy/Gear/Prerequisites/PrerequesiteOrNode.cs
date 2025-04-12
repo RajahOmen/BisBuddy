@@ -84,6 +84,13 @@ namespace BisBuddy.Gear.Prerequisites
                 .ToList();
         }
 
+        public HashSet<string> MeldableItemNames()
+        {
+            return PrerequisiteTree
+                .SelectMany(p => p.MeldableItemNames())
+                .ToHashSet();
+        }
+
         public string GroupKey()
         {
             return $"""

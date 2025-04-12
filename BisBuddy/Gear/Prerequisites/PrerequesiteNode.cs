@@ -21,6 +21,7 @@ namespace BisBuddy.Gear.Prerequisites
         public PrerequisiteNode? AssignItemId(uint itemId);
         public List<uint> ManuallyCollectedItemIds();
         public int PrerequisiteCount();
+        public HashSet<string> MeldableItemNames();
         public string GroupKey();
     }
 }

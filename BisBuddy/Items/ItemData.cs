@@ -230,6 +230,19 @@ namespace BisBuddy.Items
 
             return materiaItem.RowId;
         }
+        
+        /// <summary>
+        /// Returns if an item can have materia attached to it
+        /// </summary>
+        /// <param name="itemId">The item id to check</param>
+        /// <returns>If it can be melded. If invalid item id, returns false.</returns>
+        public bool ItemIsMeldable(uint itemId)
+        {
+            if (!ItemSheet.TryGetRow(itemId, out var itemRow))
+                return false;
+
+            return itemRow.MateriaSlotCount > 0;
+        }
 
         /// <summary>   
         /// Extends the given PrerequisiteNode with new leaves at the node's direct child level according to current

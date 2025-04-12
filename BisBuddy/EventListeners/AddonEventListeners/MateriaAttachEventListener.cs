@@ -90,10 +90,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
 
         public override unsafe void handleManualUpdate()
         {
-            unmeldedGearpieceNames = Gearset
-                .GetUnmeldedGearpieces(Plugin.Gearsets)
-                .Select(g => g.ItemName)
-                .ToHashSet();
+            unmeldedGearpieceNames = Gearset.GetUnmeldedItemNames(Plugin.Gearsets);
 
             var addon = (AtkUnitBase*)Services.GameGui.GetAddonByName(AddonName);
             if (addon == null || !addon->IsVisible) return;
@@ -103,10 +100,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
 
         public unsafe void handlePostSetup(AddonEvent type, AddonArgs args)
         {
-            unmeldedGearpieceNames = Gearset
-                .GetUnmeldedGearpieces(Plugin.Gearsets)
-                .Select(g => g.ItemName)
-                .ToHashSet();
+            unmeldedGearpieceNames = Gearset.GetUnmeldedItemNames(Plugin.Gearsets);
 
             updateState((AtkUnitBase*)args.Addon);
         }

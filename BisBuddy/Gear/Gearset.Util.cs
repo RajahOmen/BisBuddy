@@ -42,15 +42,14 @@ namespace BisBuddy.Gear
 
                 foreach (var gearpiece in gearset.Gearpieces)
                 {
-                    // item we have isn't this gearpiece
-                    if (gearpiece.ItemId != itemId) continue;
+                    // this gearpiece doesn't need this item
+                    if (gearpiece.NeedsItemId(itemId, false, true) == 0)
+                        continue;
 
                     // look at what materia is needed for this gearpiece
                     var gearpieceMateria = new List<Materia>();
                     foreach (var materia in gearpiece.ItemMateria)
-                    {
                         gearpieceMateria.Add(materia);
-                    }
 
                     // if there are any melds needed, add this 'meld plan' to the list
                     if (gearpieceMateria.Any(m => !m.IsMelded))
@@ -61,28 +60,30 @@ namespace BisBuddy.Gear
             return neededMeldPlans;
         }
 
-        public static List<Gearpiece> GetUnmeldedGearpieces(List<Gearset> gearsets)
+        public static HashSet<string> GetUnmeldedItemNames(List<Gearset> gearsets)
         {
-            // return list of gearpieces that are not fully melded
-            var gearpieces = new List<Gearpiece>();
+            // return list of meldable item names for gearpieces that aren't fully melded
+            var itemNames = new HashSet<string>();
 
             foreach (var gearset in gearsets)
             {
                 if (!gearset.IsActive) continue;
                 foreach (var gearpiece in gearset.Gearpieces)
                 {
-                    foreach (var materia in gearpiece.ItemMateria)
-                    {
-                        if (!materia.IsMelded)
-                        {
-                            gearpieces.Add(gearpiece);
-                            break;
-                        }
-                    }
+                    // all gearpiece materia is melded, no melds required
+                    if (gearpiece.ItemMateria.All(m => m.IsMelded))
+                        continue;
+
+                    // add item itself to list
+                    itemNames.Add(gearpiece.ItemName);
+
+                    // try to find any meldable items in prereq tree and add those names
+                    if (gearpiece.PrerequisiteTree != null)
+                        itemNames.UnionWith(gearpiece.PrerequisiteTree.MeldableItemNames());
                 }
             }
 
-            return gearpieces;
+            return itemNames;
         }
 
         public static List<Gearpiece> GetGearpiecesFromGearsets(List<Gearset> sourceGearsets)
