@@ -298,7 +298,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
                 customNode.InternalNode->DrawFlags |= 0x1;
 
                 // attach it to the addon
-                Services.NativeController.AttachToComponent(customNode, addon, ((AtkComponentNode*)parentNodePtr)->Component, (AtkResNode*)hoverNode, NodePosition.BeforeTarget);
+                Services.NativeController.AttachToAddon(customNode, addon, addon->RootNode, NodePosition.AsLastChild);
 
                 return customNode;
             }
@@ -320,7 +320,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
             if (parentNodePtr == nint.Zero)
                 return;
 
-            Services.NativeController.DetachFromComponent(node, (AtkUnitBase*)addon, ((AtkComponentNode*)parentNodePtr)->Component);
+            Services.NativeController.DetachFromAddon(node, (AtkUnitBase*)addon);
         }
     }
 }
