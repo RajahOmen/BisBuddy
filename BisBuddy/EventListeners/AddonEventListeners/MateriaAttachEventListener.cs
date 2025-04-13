@@ -8,6 +8,7 @@ using KamiToolKit.Classes;
 using KamiToolKit.Nodes;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
 
@@ -64,27 +65,19 @@ namespace BisBuddy.EventListeners.AddonEventListeners
         private HashSet<string> neededMateriaNames = [];
 
         public List<MeldPlan> meldPlans { get; private set; } = [];
-        private float previousItemScrollbarY = -1.0f;
-        private float previousMateriaScrollbarY = -1.0f;
-        private int previousItemPageIndex = -1;
-
         public int selectedMeldPlanIndex = 0;
 
-        protected override void registerAddonListeners()
+        protected override void registerAddonListeners()    
         {
             Plugin.OnSelectedMeldPlanIdxChange += handleSelectedMateriaPlanIdxChange;
-            Services.AddonLifecycle.RegisterListener(AddonEvent.PostSetup, AddonName, handlePostSetup);
-            Services.AddonLifecycle.RegisterListener(AddonEvent.PostUpdate, AddonName, handlePostUpdate);
-            Services.AddonLifecycle.RegisterListener(AddonEvent.PostRefresh, AddonName, handlePostRefresh);
+            Services.AddonLifecycle.RegisterListener(AddonEvent.PostDraw, AddonName, handlePostDraw);
             Services.AddonLifecycle.RegisterListener(AddonEvent.PreFinalize, AddonName, handlePreFinalize);
         }
 
         protected override void unregisterAddonListeners()
         {
             Plugin.OnSelectedMeldPlanIdxChange -= handleSelectedMateriaPlanIdxChange;
-            Services.AddonLifecycle.UnregisterListener(handlePostSetup);
-            Services.AddonLifecycle.UnregisterListener(handlePostUpdate);
-            Services.AddonLifecycle.UnregisterListener(handlePostRefresh);
+            Services.AddonLifecycle.UnregisterListener(handlePostDraw);
             Services.AddonLifecycle.UnregisterListener(handlePreFinalize);
         }
 
@@ -101,42 +94,19 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             updateState(addon);
         }
 
-        public unsafe void handlePostSetup(AddonEvent type, AddonArgs args)
-        {
-            unmeldedGearpieceNames = Gearset
-                .GetUnmeldedGearpieces(Plugin.Gearsets)
-                .Select(g => g.ItemName)
-                .ToHashSet();
-
-            updateState((AtkUnitBase*)args.Addon);
-        }
-
-        public unsafe void handlePostRefresh(AddonEvent type, AddonArgs args)
-        {
-            var addon = (AtkUnitBase*)args.Addon;
-            if (addon == null || !addon->IsVisible) return;
-
-            if (!addon->IsReady)
-            {
-                Services.Log.Error($"\"{AddonName}\" isn't ready at \"{GetType().Name}.handlePostRefresh\"");
-                return;
-            }
-
-            updateState(addon);
-        }
-
         private void handlePreFinalize(AddonEvent type, AddonArgs? args)
         {
             // disable meld selector window
             Plugin.UpdateMeldPlanSelectorWindow([]);
         }
 
-        private unsafe void handlePostUpdate(AddonEvent type, AddonArgs args)
+        private unsafe void handlePostDraw(AddonEvent type, AddonArgs args)
         {
-            var updateArgs = (AddonUpdateArgs)args;
+            var updateArgs = (AddonDrawArgs)args;
             var addon = (AtkUnitBase*)updateArgs.Addon;
             if (addon == null || !addon->IsVisible) return;
 
+            updateState(addon);
             handleUpdate(addon);
         }
 
@@ -186,18 +156,6 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                 materiaNames = materiaNames.Take(1);
 
             neededMateriaNames = materiaNames.ToHashSet();
-        }
-
-        private unsafe bool updatePageIndex(AtkUnitBase* addon)
-        {
-            if (addon->AtkValuesCount < AtkValuePageIndexSelectedIndex) return false;
-
-            var newPageIndex = addon->AtkValues[AtkValuePageIndexSelectedIndex].Int;
-
-            if (previousItemPageIndex == newPageIndex) return false;
-
-            previousItemPageIndex = newPageIndex;
-            return true;
         }
 
         private unsafe bool updateItemSelected(AtkUnitBase* addon)
@@ -331,15 +289,12 @@ namespace BisBuddy.EventListeners.AddonEventListeners
         private unsafe void updateState(AtkUnitBase* addon)
         {
             // left side state updates
-            updatePageIndex(addon);
             updateItemSelected(addon);
             updateUnmeldedItemIndexes(addon);
-            previousItemScrollbarY = -1.0f;
 
             // right side state updates
             updateMateriaMeldPlans();
             updateNeededMateriaIndexes(addon);
-            previousMateriaScrollbarY = -1.0f;
         }
 
         private unsafe void handleUpdate(AtkUnitBase* addon)
@@ -350,29 +305,9 @@ namespace BisBuddy.EventListeners.AddonEventListeners
 
                 var addonNode = new BaseNode(addon);
 
-                var itemScrollbar = addonNode.GetNestedNode<AtkResNode>([
-                    AddonGearpieceListNodeId,
-                    AddonGearpieceScrollbarNodeId,
-                    AddonGearpieceScrollbarButtonNodeId
-                    ]);
+                updateItemHighlights(addonNode);
 
-                var materiaScrollbar = addonNode.GetNestedNode<AtkResNode>([
-                    AddonMateriaListNodeId,
-                    AddonMateriaScrollbarNodeId,
-                    AddonMateriaScrollbarButtonNodeId
-                    ]);
-
-                if (itemScrollbar == null || itemScrollbar->Y != previousItemScrollbarY)
-                {
-                    if (itemScrollbar != null) previousItemScrollbarY = itemScrollbar->Y;
-                    updateItemHighlights(addonNode);
-                }
-
-                if (materiaScrollbar == null || materiaScrollbar->Y != previousMateriaScrollbarY)
-                {
-                    if (materiaScrollbar != null) previousMateriaScrollbarY = materiaScrollbar->Y;
-                    updateMateriaHighlights(addonNode);
-                }
+                updateMateriaHighlights(addonNode);
             }
             catch (Exception ex)
             {
