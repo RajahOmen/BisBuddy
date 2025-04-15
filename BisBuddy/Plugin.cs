@@ -264,22 +264,8 @@ public sealed partial class Plugin : IDalamudPlugin
 
     public void UpdateMeldPlanSelectorWindow(List<MeldPlan> meldPlans)
     {
-
-        if (meldPlans.Count == 0)
-        {
-            if (MeldPlanSelectorWindow.IsOpen)
-            {
-                MeldPlanSelectorWindow.Toggle();
-            }
-        }
-        else
-        {
-            MeldPlanSelectorWindow.MeldPlans = meldPlans;
-            if (!MeldPlanSelectorWindow.IsOpen)
-            {
-                MeldPlanSelectorWindow.Toggle();
-            }
-        }
+        MeldPlanSelectorWindow.MeldPlans = meldPlans;
+        MeldPlanSelectorWindow.IsOpen = meldPlans.Count > 0;
     }
 
     public static unsafe void SearchItemById(uint itemId)

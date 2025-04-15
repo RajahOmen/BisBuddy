@@ -30,6 +30,8 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
         protected abstract uint AddonScrollbarButtonNodeId { get; }
         // node on shield item entries that contains info, and is offset in by L bar
         protected abstract uint AddonShieldInfoResNodeId { get; }
+        // text node that displays when there are no items to be listed
+        protected abstract uint NoItemsTextNodeId { get; }
         // if an indented is in the item list, what is item index?
         // should be constant throughout all shops now
         protected int AddonShieldIndex = 1;
@@ -46,105 +48,39 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
 
         private readonly HashSet<int> neededShopItemIndexes = [];
         private bool shieldInAtkValues = false;
-        // the previous Y value of the scrollbar
-        private float previousScrollbarY = -1.0f;
 
         protected override void registerAddonListeners()
         {
-            Services.AddonLifecycle.RegisterListener(AddonEvent.PostSetup, AddonName, handlePostSetup);
-            Services.AddonLifecycle.RegisterListener(AddonEvent.PostRefresh, AddonName, handlePostRefresh);
-            Services.AddonLifecycle.RegisterListener(AddonEvent.PostUpdate, AddonName, handlePostUpdate);
+            Services.AddonLifecycle.RegisterListener(AddonEvent.PreDraw, AddonName, handlePreDraw);
         }
 
         protected override void unregisterAddonListeners()
         {
-            Services.AddonLifecycle.UnregisterListener(handlePostSetup);
-            Services.AddonLifecycle.UnregisterListener(handlePostRefresh);
-            Services.AddonLifecycle.UnregisterListener(handlePostUpdate);
+            Services.AddonLifecycle.UnregisterListener(handlePreDraw);
         }
 
-        public override unsafe void handleManualUpdate()
+        private unsafe void handlePreDraw(AddonEvent type, AddonArgs args)
         {
             try
             {
-                // get the addon
-                var addon = (AtkUnitBase*)Services.GameGui.GetAddonByName(AddonName);
-                if (addon == null || !addon->IsVisible) return;
+                var addon = (AtkUnitBase*)((AddonDrawArgs)args).Addon;
 
-                var atkValuesSpan = new Span<AtkValue>(addon->AtkValues, addon->AtkValuesCount);
+                var shopExchangeNode = new BaseNode(addon);
 
-                // update list of items needed from shop
-                updateNeededShopItemIndexes(atkValuesSpan);
+                var noEntriesTextNode = shopExchangeNode.GetNode<AtkTextNode>(NoItemsTextNodeId);
 
-                // reset cache of previous item names to force redraw highlight
-                previousScrollbarY = -1.0f;
-            }
-            catch (Exception e)
-            {
-                Services.Log.Error(e, $"Failed to handle GearsetsUpdate for {AddonName}");
-            }
-        }
-
-        private unsafe void handlePostSetup(AddonEvent type, AddonArgs args)
-        {
-            try
-            {
-                // skip if type is not correct
-                if (type != AddonEvent.PostSetup) return;
-                var setupArgs = (AddonSetupArgs)args;
-                previousScrollbarY = -1.0f;
-                updateNeededShopItemIndexes(setupArgs.AtkValueSpan);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, $"Error in handlePostSetup");
-            }
-        }
-
-        private unsafe void handlePostRefresh(AddonEvent type, AddonArgs args)
-        {
-            try
-            {
-                // skip if type is not correct
-                if (type != AddonEvent.PostRefresh) return;
-                var receiveEventArgs = (AddonRefreshArgs)args;
-                previousScrollbarY = -1.0f;
-                updateNeededShopItemIndexes(receiveEventArgs.AtkValueSpan);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Error in handlePostRefresh");
-            }
-        }
-
-        private unsafe void handlePostUpdate(AddonEvent type, AddonArgs args)
-        {
-            try
-            {
+                updateNeededShopItemIndexes(addon->AtkValuesSpan);
                 // skip if no items are needed in this shop
-                if (neededShopItemIndexes.Count == 0)
+                if (neededShopItemIndexes.Count == 0 || (noEntriesTextNode != null && noEntriesTextNode->IsVisible()))
                 {
                     // remove highlight on all items if there are no items needed
-                    unmarkAllNodes();
+                    unmarkNodes();
                     return;
                 };
 
-                var addon = (AtkUnitBase*)Services.GameGui.GetAddonByName(AddonName);
                 if (addon == null || !addon->IsVisible) return;
 
-                var shopExchangeItemNode = new BaseNode(addon);
-
-                var scrollbarNode = shopExchangeItemNode.GetNestedNode<AtkResNode>([
-                    AddonShopItemListNodeId,
-                    AddonScrollbarNodeId,
-                    AddonScrollbarButtonNodeId
-                    ]);
-
-                // check if scroll location is the same, quit out if so
-                if (scrollbarNode->Y == previousScrollbarY) return;
-                previousScrollbarY = scrollbarNode->Y;
-
-                var itemTreeListComponent = (AtkComponentTreeList*)shopExchangeItemNode
+                var itemTreeListComponent = (AtkComponentTreeList*)shopExchangeNode
                     .GetComponentNode(AddonShopItemListNodeId)
                     .GetPointer()->Component;
 
@@ -194,10 +130,8 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
                 shieldInAtkValues = true;
 
                 // add if needed
-                if (Gearset.GetGearsetsNeedingItemById(endOfItemIdList.UInt, Plugin.Gearsets).Count > 0)
-                {
+                if (Gearset.GearsetsNeedItemId(endOfItemIdList.UInt, Plugin.Gearsets))
                     neededShopItemIndexes.Add(AddonShieldIndex);
-                }
             }
 
             // handle other items
@@ -213,14 +147,12 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
                     ? 1  // shield visible and idx after where shield goes
                     : 0; // either shield not visible or before where shield goes
 
-                if (Gearset.GetGearsetsNeedingItemById(itemId, Plugin.Gearsets).Count > 0)
+                if (Gearset.GearsetsNeedItemId(itemId, Plugin.Gearsets))
                 {
                     var filteredIndex = getFilteredIndex(i, atkValues);
                     if (filteredIndex >= 0) neededShopItemIndexes.Add(filteredIndex + shieldOffset);
                 }
             }
-
-            Services.Log.Debug($"Found {neededShopItemIndexes.Count} item(s) needed in shop");
         }
 
         private unsafe int getFilteredIndex(int index, Span<AtkValue> atkValues)
@@ -298,7 +230,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
                 customNode.InternalNode->DrawFlags |= 0x1;
 
                 // attach it to the addon
-                Services.NativeController.AttachToComponent(customNode, addon, ((AtkComponentNode*)parentNodePtr)->Component, (AtkResNode*)hoverNode, NodePosition.BeforeTarget);
+                Services.NativeController.AttachToAddon(customNode, addon, addon->RootNode, NodePosition.AsLastChild);
 
                 return customNode;
             }
@@ -320,7 +252,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
             if (parentNodePtr == nint.Zero)
                 return;
 
-            Services.NativeController.DetachFromComponent(node, (AtkUnitBase*)addon, ((AtkComponentNode*)parentNodePtr)->Component);
+            Services.NativeController.DetachFromAddon(node, (AtkUnitBase*)addon);
         }
     }
 }
