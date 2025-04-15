@@ -94,7 +94,11 @@ namespace BisBuddy.EventListeners.AddonEventListeners
         {
             var updateArgs = (AddonDrawArgs)args;
             var addon = (AtkUnitBase*)updateArgs.Addon;
-            if (addon == null || !addon->IsVisible) return;
+            if (addon == null || !addon->IsVisible || !addon->WindowNode->IsVisible())
+            {
+                unmarkNodes();
+                return;
+            }
 
             updateState(addon);
             handleUpdate(addon);
@@ -300,7 +304,6 @@ namespace BisBuddy.EventListeners.AddonEventListeners
         private unsafe void updateItemHighlights(BaseNode addonNode)
         {
             var gearListNode = addonNode.GetComponentNode(AddonGearpieceListNodeId).GetPointer();
-
             HighlightItems(unmeldedItemIndexes, gearListNode, AddonGearpieceSelectedHighlightNodeId);
         }
 
