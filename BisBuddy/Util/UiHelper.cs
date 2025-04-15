@@ -123,6 +123,8 @@ public static unsafe partial class UiHelper
                 Scale = new(clonedNode->ScaleX, clonedNode->ScaleY),
                 X = clonedNode->X,
                 Y = clonedNode->Y,
+                ScreenX = clonedNode->ScreenX,
+                ScreenY = clonedNode->ScreenY,
                 Rotation = clonedNode->Rotation,
                 Offsets = new(clonedNode->TopOffset, clonedNode->BottomOffset, clonedNode->LeftOffset, clonedNode->RightOffset),
                 BlendMode = clonedNode->BlendMode,

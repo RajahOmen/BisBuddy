@@ -48,7 +48,7 @@ namespace BisBuddy.EventListeners
                     return;
 
                 // item not needed in any gearsets, ignore
-                if (Gearset.GetGearsetsNeedingItemById(addedArgs.Item.ItemId, Plugin.Gearsets, ignoreCollected: false, includeCollectedPrereqs: true).Count == 0)
+                if (!Gearset.GearsetsNeedItemId(addedArgs.Item.ItemId, Plugin.Gearsets, ignoreCollected: false, includeCollectedPrereqs: true))
                     return;
 
                 // added to type we track, update gearsets
@@ -71,7 +71,7 @@ namespace BisBuddy.EventListeners
                     return;
 
                 // item not needed in any gearsets, ignore
-                if (Gearset.GetGearsetsNeedingItemById(removedArgs.Item.ItemId, Plugin.Gearsets, ignoreCollected: false, includeCollectedPrereqs: true).Count == 0)
+                if (!Gearset.GearsetsNeedItemId(removedArgs.Item.ItemId, Plugin.Gearsets, ignoreCollected: false, includeCollectedPrereqs: true))
                     return;
 
                 // removed from type we track, update gearsets
@@ -94,7 +94,7 @@ namespace BisBuddy.EventListeners
                     return;
 
                 // item not needed in any gearsets, ignore
-                if (Gearset.GetGearsetsNeedingItemById(changedArgs.Item.ItemId, Plugin.Gearsets, ignoreCollected: false, includeCollectedPrereqs: true).Count == 0)
+                if (!Gearset.GearsetsNeedItemId(changedArgs.Item.ItemId, Plugin.Gearsets, ignoreCollected: false, includeCollectedPrereqs: true))
                     return;
 
                 // changed in a type we track, update gearsets
@@ -117,7 +117,7 @@ namespace BisBuddy.EventListeners
                     return;
 
                 // item not needed in any gearsets, ignore
-                if (Gearset.GetGearsetsNeedingItemById(movedArgs.Item.ItemId, Plugin.Gearsets, ignoreCollected: false, includeCollectedPrereqs: true).Count == 0)
+                if (!Gearset.GearsetsNeedItemId(movedArgs.Item.ItemId, Plugin.Gearsets, ignoreCollected: false, includeCollectedPrereqs: true))
                     return;
 
                 // moved untracked -> tracked or tracked -> untracked, update gearsets

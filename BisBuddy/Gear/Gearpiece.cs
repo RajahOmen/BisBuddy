@@ -82,9 +82,30 @@ namespace BisBuddy.Gear
                 PrerequisiteTree.SetCollected(false, manualToggle);
         }
 
+        public bool NeedsItemId(uint candidateItemId, bool ignoreCollected, bool includeCollectedPrereqs)
+        {
+            // not a real item, can't be needed
+            if (candidateItemId == 0)
+                return false;
+
+            // If this item is marked as collected, only way item is needed is if it is materia
+            if (IsCollected && ignoreCollected)
+                return ItemMateria.Any(materia => (!materia.IsMelded || !ignoreCollected) && candidateItemId == materia.ItemId);
+
+            // is this the gearpiece itself
+            if (candidateItemId == ItemId)
+                return true;
+
+            // only can be needed as materia or a prerequisite
+            return (
+                ItemMateria.Any(materia => (!materia.IsMelded || !ignoreCollected) && candidateItemId == materia.ItemId)
+                || (PrerequisiteTree?.ItemNeededCount(candidateItemId, !includeCollectedPrereqs && ignoreCollected) ?? 0) > 0
+                );
+        }
+
 
         // return the number of this item needed for this gearpiece
-        public int NeedsItemId(uint candidateItemId, bool ignoreCollected, bool includeCollectedPrereqs)
+        public int NeedsItemIdCount(uint candidateItemId, bool ignoreCollected, bool includeCollectedPrereqs)
         {
             // not a real item, can't be needed
             if (candidateItemId == 0) return 0;

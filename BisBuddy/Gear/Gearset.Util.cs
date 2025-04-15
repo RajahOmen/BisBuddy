@@ -30,6 +30,24 @@ namespace BisBuddy.Gear
             return satisfiedGearsets;
         }
 
+        /// <summary>
+        /// Whether a list of gearsets need a specific item id in some way (as the gearpiece, as a gearpiece prerequisite, or as a materia).
+        /// Ignores gearsets marked as inactive in the list.
+        /// </summary>
+        /// <param name="itemId">The item id to check</param>
+        /// <param name="gearsets">The list of gearsets to check if the item is needed in</param>
+        /// <param name="ignoreCollected">Whether to ignore gearpieces that are marked as collected when checking needed status</param>
+        /// <param name="includeCollectedPrereqs">Whether to include prerequisites marked as collected. True for 'internal' inventory sources.
+        /// False for external sources outside of player inventory</param>
+        /// <returns>If the item is needed in any way by any of the gearsets listed</returns>
+        public static bool GearsetsNeedItemId(
+            uint itemId,
+            List<Gearset> gearsets,
+            bool ignoreCollected = true,
+            bool includeCollectedPrereqs = false
+            ) =>
+            gearsets.Any(gearset => gearset.NeedsItemId(itemId, ignoreCollected, includeCollectedPrereqs));
+
         public static List<MeldPlan> GetNeededItemMeldPlans(uint itemId, List<Gearset> gearsets)
         {
             var neededMeldPlans = new List<MeldPlan>();

@@ -8,6 +8,7 @@ using KamiToolKit.Classes;
 using KamiToolKit.Nodes;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
 
@@ -21,28 +22,16 @@ namespace BisBuddy.EventListeners.AddonEventListeners
 
         // ADDON NODE IDS
         // node ids for gearpiece side
-        // left side of the melding window (gearpieces)
-        public static readonly uint AddonGearpieceComponentNodeId = 2;
         // list of gearpieces to meld materia to
         public static readonly uint AddonGearpieceListNodeId = 13;
         // hover highlight node for gearpieces
         public static readonly uint AddonGearpieceSelectedHighlightNodeId = 12;
 
         // node ids for materia side
-        // right side of the melding window (materia)
-        public static readonly uint AddonMateriaComponentNodeId = 16;
         // list of materia to meld to the selected gear
         public static readonly uint AddonMateriaListNodeId = 23;
         // hover highlight node for materia
         public static readonly uint AddonMateriaSelectedHighlightNodeId = 7;
-        // scrollbar node for the item list
-        public static readonly uint AddonGearpieceScrollbarNodeId = 5;
-        // scrollbar button node for the item list
-        public static readonly uint AddonGearpieceScrollbarButtonNodeId = 2;
-        // scrollbar node for the materia list
-        public static readonly uint AddonMateriaScrollbarNodeId = 5;
-        // scrollbar button node for the materia list
-        public static readonly uint AddonMateriaScrollbarButtonNodeId = 2;
 
         // ADDON ATKVALUE INDEXES
         // index of the item selected in the gearpiece list
@@ -60,63 +49,33 @@ namespace BisBuddy.EventListeners.AddonEventListeners
         private string selectedItemName = string.Empty;
         private readonly HashSet<int> unmeldedItemIndexes = [];
         private readonly HashSet<int> neededMateriaIndexes = [];
-        private HashSet<string> unmeldedGearpieceNames = [];
+        private HashSet<string> unmeldedGearpieceNames = Gearset.GetUnmeldedItemNames(plugin.Gearsets);
         private HashSet<string> neededMateriaNames = [];
 
         public List<MeldPlan> meldPlans { get; private set; } = [];
-        private float previousItemScrollbarY = -1.0f;
-        private float previousMateriaScrollbarY = -1.0f;
-        private int previousItemPageIndex = -1;
-
         public int selectedMeldPlanIndex = 0;
+
+        protected override float CustomNodeMaxY => 324f;
 
         protected override void registerAddonListeners()
         {
             Plugin.OnSelectedMeldPlanIdxChange += handleSelectedMateriaPlanIdxChange;
-            Services.AddonLifecycle.RegisterListener(AddonEvent.PostSetup, AddonName, handlePostSetup);
-            Services.AddonLifecycle.RegisterListener(AddonEvent.PostUpdate, AddonName, handlePostUpdate);
-            Services.AddonLifecycle.RegisterListener(AddonEvent.PostRefresh, AddonName, handlePostRefresh);
+            Plugin.OnGearsetsUpdate += handleManualUpdate;
+            Services.AddonLifecycle.RegisterListener(AddonEvent.PreDraw, AddonName, handlePreDraw);
             Services.AddonLifecycle.RegisterListener(AddonEvent.PreFinalize, AddonName, handlePreFinalize);
         }
 
         protected override void unregisterAddonListeners()
         {
             Plugin.OnSelectedMeldPlanIdxChange -= handleSelectedMateriaPlanIdxChange;
-            Services.AddonLifecycle.UnregisterListener(handlePostSetup);
-            Services.AddonLifecycle.UnregisterListener(handlePostUpdate);
-            Services.AddonLifecycle.UnregisterListener(handlePostRefresh);
+            Plugin.OnGearsetsUpdate -= handleManualUpdate;
+            Services.AddonLifecycle.UnregisterListener(handlePreDraw);
             Services.AddonLifecycle.UnregisterListener(handlePreFinalize);
         }
 
-        public override unsafe void handleManualUpdate()
+        private void handleManualUpdate()
         {
             unmeldedGearpieceNames = Gearset.GetUnmeldedItemNames(Plugin.Gearsets);
-
-            var addon = (AtkUnitBase*)Services.GameGui.GetAddonByName(AddonName);
-            if (addon == null || !addon->IsVisible) return;
-
-            updateState(addon);
-        }
-
-        public unsafe void handlePostSetup(AddonEvent type, AddonArgs args)
-        {
-            unmeldedGearpieceNames = Gearset.GetUnmeldedItemNames(Plugin.Gearsets);
-
-            updateState((AtkUnitBase*)args.Addon);
-        }
-
-        public unsafe void handlePostRefresh(AddonEvent type, AddonArgs args)
-        {
-            var addon = (AtkUnitBase*)args.Addon;
-            if (addon == null || !addon->IsVisible) return;
-
-            if (!addon->IsReady)
-            {
-                Services.Log.Error($"\"{AddonName}\" isn't ready at \"{GetType().Name}.handlePostRefresh\"");
-                return;
-            }
-
-            updateState(addon);
         }
 
         private void handlePreFinalize(AddonEvent type, AddonArgs? args)
@@ -125,33 +84,31 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             Plugin.UpdateMeldPlanSelectorWindow([]);
         }
 
-        private unsafe void handlePostUpdate(AddonEvent type, AddonArgs args)
+        private unsafe void handlePreDraw(AddonEvent type, AddonArgs args)
         {
-            var updateArgs = (AddonUpdateArgs)args;
+            var updateArgs = (AddonDrawArgs)args;
             var addon = (AtkUnitBase*)updateArgs.Addon;
-            if (addon == null || !addon->IsVisible) return;
+            if (addon == null || !addon->IsVisible || !addon->WindowNode->IsVisible())
+            {
+                unmarkNodes();
+                return;
+            }
 
+            updateState(addon);
             handleUpdate(addon);
         }
 
         public unsafe void handleSelectedMateriaPlanIdxChange(int newIdx)
-        {
-            if (selectedMeldPlanIndex != newIdx)
-            {
-                selectedMeldPlanIndex = newIdx;
-                var addon = (AtkUnitBase*)Services.GameGui.GetAddonByName(AddonName);
-                if (addon == null || !addon->IsVisible) return;
-
-                updateState(addon);
-            }
-        }
+            => selectedMeldPlanIndex = newIdx;
 
         private void updateMateriaMeldPlans()
         {
-            var newMeldPlans = Gearset.GetNeededItemMeldPlans(Plugin.ItemData.GetItemIdByName(selectedItemName), Plugin.Gearsets);
+            if (selectedItemName != string.Empty)
+                meldPlans = Gearset.GetNeededItemMeldPlans(Plugin.ItemData.GetItemIdByName(selectedItemName), Plugin.Gearsets);
+            else
+                meldPlans.Clear();
 
-            meldPlans = newMeldPlans;
-            Plugin.UpdateMeldPlanSelectorWindow(newMeldPlans);
+            Plugin.UpdateMeldPlanSelectorWindow(meldPlans);
 
             // ensure index within new bounds
             selectedMeldPlanIndex = Math.Min(
@@ -180,18 +137,6 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                 materiaNames = materiaNames.Take(1);
 
             neededMateriaNames = materiaNames.ToHashSet();
-        }
-
-        private unsafe bool updatePageIndex(AtkUnitBase* addon)
-        {
-            if (addon->AtkValuesCount < AtkValuePageIndexSelectedIndex) return false;
-
-            var newPageIndex = addon->AtkValues[AtkValuePageIndexSelectedIndex].Int;
-
-            if (previousItemPageIndex == newPageIndex) return false;
-
-            previousItemPageIndex = newPageIndex;
-            return true;
         }
 
         private unsafe bool updateItemSelected(AtkUnitBase* addon)
@@ -325,15 +270,12 @@ namespace BisBuddy.EventListeners.AddonEventListeners
         private unsafe void updateState(AtkUnitBase* addon)
         {
             // left side state updates
-            updatePageIndex(addon);
             updateItemSelected(addon);
             updateUnmeldedItemIndexes(addon);
-            previousItemScrollbarY = -1.0f;
 
             // right side state updates
             updateMateriaMeldPlans();
             updateNeededMateriaIndexes(addon);
-            previousMateriaScrollbarY = -1.0f;
         }
 
         private unsafe void handleUpdate(AtkUnitBase* addon)
@@ -344,29 +286,8 @@ namespace BisBuddy.EventListeners.AddonEventListeners
 
                 var addonNode = new BaseNode(addon);
 
-                var itemScrollbar = addonNode.GetNestedNode<AtkResNode>([
-                    AddonGearpieceListNodeId,
-                    AddonGearpieceScrollbarNodeId,
-                    AddonGearpieceScrollbarButtonNodeId
-                    ]);
-
-                var materiaScrollbar = addonNode.GetNestedNode<AtkResNode>([
-                    AddonMateriaListNodeId,
-                    AddonMateriaScrollbarNodeId,
-                    AddonMateriaScrollbarButtonNodeId
-                    ]);
-
-                if (itemScrollbar == null || itemScrollbar->Y != previousItemScrollbarY)
-                {
-                    if (itemScrollbar != null) previousItemScrollbarY = itemScrollbar->Y;
-                    updateItemHighlights(addonNode);
-                }
-
-                if (materiaScrollbar == null || materiaScrollbar->Y != previousMateriaScrollbarY)
-                {
-                    if (materiaScrollbar != null) previousMateriaScrollbarY = materiaScrollbar->Y;
-                    updateMateriaHighlights(addonNode);
-                }
+                updateMateriaHighlights(addonNode);
+                updateItemHighlights(addonNode);
             }
             catch (Exception ex)
             {
@@ -377,14 +298,12 @@ namespace BisBuddy.EventListeners.AddonEventListeners
         private unsafe void updateItemHighlights(BaseNode addonNode)
         {
             var gearListNode = addonNode.GetComponentNode(AddonGearpieceListNodeId).GetPointer();
-
             HighlightItems(unmeldedItemIndexes, gearListNode, AddonGearpieceSelectedHighlightNodeId);
         }
 
         private unsafe void updateMateriaHighlights(BaseNode addonNode)
         {
             var materiaListNode = addonNode.GetComponentNode(AddonMateriaListNodeId).GetPointer();
-
             HighlightItems(neededMateriaIndexes, materiaListNode, AddonMateriaSelectedHighlightNodeId);
         }
 
@@ -395,6 +314,9 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             )
         {
             var parentNodeComponent = (AtkComponentList*)parentNode->Component;
+
+            if (parentNodeComponent->ListLength == 0)
+                unmarkNodes((AtkResNode*)parentNode);
 
             for (var i = 0; i < parentNodeComponent->ListLength; i++)
             {
@@ -432,7 +354,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                 customNode.InternalNode->DrawFlags |= 0x1;
 
                 // attach it to the addon
-                Services.NativeController.AttachToComponent(customNode, addon, parentNode->Component, (AtkResNode*)hoverNode, NodePosition.BeforeTarget);
+                Services.NativeController.AttachToAddon(customNode, addon, addon->RootNode, NodePosition.AsLastChild);
 
                 return customNode;
             }
@@ -454,7 +376,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             if (parentNodePtr == nint.Zero)
                 return;
 
-            Services.NativeController.DetachFromComponent(node, (AtkUnitBase*)addon, ((AtkComponentNode*)parentNodePtr)->Component);
+            Services.NativeController.DetachFromAddon(node, (AtkUnitBase*)addon);
         }
     }
 }

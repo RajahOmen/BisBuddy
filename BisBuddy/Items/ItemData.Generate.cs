@@ -122,8 +122,8 @@ namespace BisBuddy.Items
                 // group items by EquipSlotCategory/ClassJobCategory pair, since cannot contain multiple from each grouping from 1 coffer
                 var groupedItemsAtIlvl = itemsAtIlvl
                     .GroupBy(
-                        item => new 
-                        { 
+                        item => new
+                        {
                             equipSlotCategory = item.EquipSlotCategory.RowId,
                             classJobCategory = item.ClassJobCategory.RowId,
                         });
