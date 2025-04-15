@@ -49,7 +49,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
         private string selectedItemName = string.Empty;
         private readonly HashSet<int> unmeldedItemIndexes = [];
         private readonly HashSet<int> neededMateriaIndexes = [];
-        private HashSet<string> unmeldedGearpieceNames = Gearset.GetUnmeldedItemNames(plugin.Gearsets);
+        private HashSet<string> unmeldedItemNames = Gearset.GetUnmeldedItemNames(plugin.Gearsets);
         private HashSet<string> neededMateriaNames = [];
 
         public List<MeldPlan> meldPlans { get; private set; } = [];
@@ -63,6 +63,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             Plugin.OnGearsetsUpdate += handleManualUpdate;
             Services.AddonLifecycle.RegisterListener(AddonEvent.PreDraw, AddonName, handlePreDraw);
             Services.AddonLifecycle.RegisterListener(AddonEvent.PreFinalize, AddonName, handlePreFinalize);
+            unmeldedItemNames = Gearset.GetUnmeldedItemNames(plugin.Gearsets);
         }
 
         protected override void unregisterAddonListeners()
@@ -75,7 +76,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
 
         private void handleManualUpdate()
         {
-            unmeldedGearpieceNames = Gearset.GetUnmeldedItemNames(Plugin.Gearsets);
+            unmeldedItemNames = Gearset.GetUnmeldedItemNames(Plugin.Gearsets);
         }
 
         private void handlePreFinalize(AddonEvent type, AddonArgs? args)
@@ -251,7 +252,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             updateRequiredIndexes(
                 addon,
                 unmeldedItemIndexes,
-                unmeldedGearpieceNames,
+                unmeldedItemNames,
                 AtkValueItemNameListStartIndex
                 );
         }
