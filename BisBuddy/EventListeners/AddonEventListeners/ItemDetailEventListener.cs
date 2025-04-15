@@ -53,17 +53,21 @@ namespace BisBuddy.EventListeners.AddonEventListeners
         // list of gearset names that need the currently hovered item
         private List<(Gearset gearset, int countNeeded)> neededGearsets = [];
 
+        protected override float CustomNodeMaxY => float.MaxValue;
+
         protected override void registerAddonListeners()
         {
+            Plugin.OnGearsetsUpdate += handleManualUpdate;
             Services.GameGui.HoveredItemChanged += handleHoveredItemChanged;
         }
 
         protected override void unregisterAddonListeners()
         {
+            Plugin.OnGearsetsUpdate -= handleManualUpdate;
             Services.GameGui.HoveredItemChanged -= handleHoveredItemChanged;
             neededGearsets = [];
         }
-        public override void handleManualUpdate()
+        private void handleManualUpdate()
         {
             // manually trigger refresh
             handleHoveredItemChanged(null, Services.GameGui.HoveredItem);

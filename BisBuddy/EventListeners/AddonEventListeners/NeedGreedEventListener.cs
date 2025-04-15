@@ -20,28 +20,21 @@ namespace BisBuddy.EventListeners.AddonEventListeners
 
         public override string AddonName => "NeedGreed";
 
+        protected override float CustomNodeMaxY => float.MaxValue;
+
         protected override void registerAddonListeners()
         {
-            Services.AddonLifecycle.RegisterListener(AddonEvent.PostRequestedUpdate, AddonName, handlePostRefresh);
+            Services.AddonLifecycle.RegisterListener(AddonEvent.PreDraw, AddonName, handlePreDraw);
         }
 
         protected override void unregisterAddonListeners()
         {
-            Services.AddonLifecycle.UnregisterListener(handlePostRefresh);
+            Services.AddonLifecycle.UnregisterListener(handlePreDraw);
         }
 
-        public override unsafe void handleManualUpdate()
+        private unsafe void handlePreDraw(AddonEvent type, AddonArgs args)
         {
-            handleUpdate((AddonNeedGreed*)Services.GameGui.GetAddonByName(AddonName));
-        }
-
-        private unsafe void handlePostRefresh(AddonEvent type, AddonArgs args)
-        {
-            handleUpdate((AddonNeedGreed*)args.Addon);
-        }
-
-        private unsafe void handleUpdate(AddonNeedGreed* addon)
-        {
+            var addon = (AddonNeedGreed*)args.Addon;
             try
             {
                 if (addon == null || !addon->IsVisible) return;
@@ -50,10 +43,8 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                 for (var itemIdx = 0; itemIdx < addon->NumItems; itemIdx++)
                 {
                     var lootItem = addon->Items[itemIdx];
-                    if (Gearset.GetGearsetsNeedingItemById(lootItem.ItemId, Plugin.Gearsets).Count > 0)
-                    {
+                    if (Gearset.GearsetsNeedItemId(lootItem.ItemId, Plugin.Gearsets))
                         itemIndexesToHighlight.Add(itemIdx);
-                    }
                 }
 
                 highlightItems(itemIndexesToHighlight, addon);

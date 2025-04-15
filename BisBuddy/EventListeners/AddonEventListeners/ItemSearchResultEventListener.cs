@@ -26,61 +26,32 @@ namespace BisBuddy.EventListeners.AddonEventListeners
         public static readonly uint AddonItemQualityImageNodeId = 3;
         // id of the hover highlight node
         public static readonly uint AddonHoverHighlightNodeId = 14;
-        // id of the list of items being displayed (and the scrollbar)
-        public static readonly uint AddonItemListNodeId = 26;
-        // id of the scrollbar in the list of items
-        public static readonly uint AddonItemScrollbarNodeId = 5;
-        // id of the scroll button on the bar
-        public static readonly uint AddonItemScrollButtonNodeId = 2;
         // id of the text node containing the quantity of the item being sold in the result
         public static readonly uint AddonItemQuantityNodeId = 6;
-
 
         // if nq or hq is needed for the selected item
         private int nqNeeded = 0;
         private int hqNeeded = 0;
-        // the previous Y value of the scrollbar
-        private float previousScrollbarY = -1.0f;
+
+        protected override float CustomNodeMaxY => 240f;
 
         protected override void registerAddonListeners()
         {
-            Services.AddonLifecycle.RegisterListener(AddonEvent.PostRequestedUpdate, AddonName, handleRequestedUpdate);
-            Services.AddonLifecycle.RegisterListener(AddonEvent.PostRefresh, AddonName, handlePostRefresh);
             Services.AddonLifecycle.RegisterListener(AddonEvent.PreDraw, AddonName, handlePreDraw);
         }
         protected override void unregisterAddonListeners()
         {
-            Services.AddonLifecycle.UnregisterListener(handleRequestedUpdate);
             Services.AddonLifecycle.UnregisterListener(handlePreDraw);
         }
 
-        public override void handleManualUpdate()
-        {
-            updateNeedQualities();
-        }
-
-        private unsafe void handleRequestedUpdate(AddonEvent type, AddonArgs args)
-        {
-            updateNeedQualities();
-        }
-
-        private unsafe void handlePostRefresh(AddonEvent type, AddonArgs args)
-        {
-            updateNeedQualities();
-        }
-
-        private void handlePreDraw(AddonEvent type, AddonArgs args)
-        {
-            handleUpdate();
-        }
-
-        private unsafe void handleUpdate()
+        private unsafe void handlePreDraw(AddonEvent type, AddonArgs args)
         {
             try
             {
+                updateNeedQualities();
                 if (hqNeeded == 0 && nqNeeded == 0)
                 { // no variant needed for this selection, unmark and quit
-                    unmarkAllNodes();
+                    unmarkNodes();
                     return;
                 };
                 var addon = (AddonItemSearchResult*)Services.GameGui.GetAddonByName(AddonName);
@@ -96,24 +67,6 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                 var listingList = addon->Results;
 
                 var addonNode = new BaseNode(&addon->AtkUnitBase);
-                var scrollbarNode = addonNode.GetNestedNode<AtkResNode>([
-                    AddonItemListNodeId,
-                    AddonItemScrollbarNodeId,
-                    AddonItemScrollButtonNodeId
-                    ]);
-
-                if (scrollbarNode == null)
-                {
-                    Services.Log.Warning($"{GetType().Name}: Failed to find scrollbar node");
-                }
-                else
-                {
-                    // scrollbar in same position, nodes haven't changed
-                    if (scrollbarNode->Y == previousScrollbarY)
-                        return;
-
-                    previousScrollbarY = scrollbarNode->Y;
-                }
 
                 var listings = new List<ListItem>();
 
@@ -133,9 +86,10 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                 }
 
                 // sort such that first list item at beginning
-                listings = listings
-                    .OrderBy(item => item.AtkComponentListItemRenderer->ListItemIndex)
-                    .ToList();
+                listings.Sort(
+                    (item1, item2) =>
+                    (item1.AtkComponentListItemRenderer->ListItemIndex > item2.AtkComponentListItemRenderer->ListItemIndex) ? 1 : -1
+                    );
 
                 var nqNeededRem = nqNeeded;
                 var hqNeededRem = hqNeeded;
@@ -148,6 +102,13 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                     var itemIsHq = itemQualityImageNode->IsVisible();
 
                     var listingNode = (AtkResNode*)listItem.AtkComponentListItemRenderer->OwnerNode;
+
+                    //if (listItem.AtkComponentListItemRenderer->OwnerNode->Y < 0)
+                    //{
+                    //    setNodeNeededMark(listingNode, false, true, true);
+                    //    continue;
+                    //}
+
 
                     if (nqNeededRem > 0 && !itemIsHq) // needed nq
                     {
@@ -200,10 +161,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                 nqNeeded = Gearset.GetGearsetsNeedingItemById(nqItemId, Plugin.Gearsets).Sum(gearset => gearset.countNeeded);
                 hqNeeded = hqItemId != nqItemId
                     ? Gearset.GetGearsetsNeedingItemById(hqItemId, Plugin.Gearsets).Sum(gearset => gearset.countNeeded)
-                    : 0;
-
-                // ensure this update refreshes the draws by resetting caches
-                previousScrollbarY = -1.0f;
+                    : nqNeeded;
             }
             catch (Exception ex)
             {

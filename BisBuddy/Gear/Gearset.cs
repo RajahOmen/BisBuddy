@@ -1,6 +1,7 @@
 using BisBuddy.Import;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace BisBuddy.Gear
 {
@@ -52,7 +53,7 @@ namespace BisBuddy.Gear
             List<(Gearpiece gearpiece, int countNeeded)> satisfiedGearpieces = [];
             foreach (var gearpiece in Gearpieces)
             {
-                var countNeeded = gearpiece.NeedsItemId(candidateItemId, ignoreCollected, includeCollectedPrereqs);
+                var countNeeded = gearpiece.NeedsItemIdCount(candidateItemId, ignoreCollected, includeCollectedPrereqs);
                 if (countNeeded > 0)
                 {
                     satisfiedGearpieces.Add((gearpiece, countNeeded));
@@ -60,5 +61,8 @@ namespace BisBuddy.Gear
             }
             return satisfiedGearpieces;
         }
+
+        public bool NeedsItemId(uint candidateItemId, bool ignoreCollected, bool includeCollectedPrereqs) =>
+            IsActive && Gearpieces.Any(gearpiece => gearpiece.NeedsItemId(candidateItemId, ignoreCollected, includeCollectedPrereqs));
     }
 }

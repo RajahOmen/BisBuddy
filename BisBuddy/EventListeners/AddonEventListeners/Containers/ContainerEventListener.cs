@@ -34,51 +34,28 @@ namespace BisBuddy.EventListeners.AddonEventListeners.Containers
 
         protected abstract List<nint> getDragDropComponents(nint gridAddon);
 
+        protected override float CustomNodeMaxY => float.MaxValue;
+
         protected override unsafe void registerAddonListeners()
         {
-            Services.AddonLifecycle.RegisterListener(AddonEvent.PostRefresh, AddonName, handlePostRefresh);
-            Services.AddonLifecycle.RegisterListener(AddonEvent.PostRequestedUpdate, AddonName, handlePostRequestedUpdate);
-            Services.AddonLifecycle.RegisterListener(AddonEvent.PostReceiveEvent, AddonName, handlePostRecieveEvent);
+            Services.AddonLifecycle.RegisterListener(AddonEvent.PreDraw, AddonName, handlePreDraw);
 
             // ensure updates listened for for all addons (incl. children)
             foreach (var dragDropAddonName in dragDropGridAddonNames)
             {
-                Services.AddonLifecycle.RegisterListener(AddonEvent.PostReceiveEvent, dragDropAddonName, handlePostRecieveEvent);
+                Services.AddonLifecycle.RegisterListener(AddonEvent.PreDraw, dragDropAddonName, handlePreDraw);
             }
         }
 
         protected override void unregisterAddonListeners()
         {
-            Services.AddonLifecycle.UnregisterListener(handlePostRecieveEvent);
-            Services.AddonLifecycle.UnregisterListener(handlePostRefresh);
-            Services.AddonLifecycle.UnregisterListener(handlePostRequestedUpdate);
+            Services.AddonLifecycle.UnregisterListener(handlePreDraw);
         }
 
-        public override unsafe void handleManualUpdate()
+        private unsafe void handlePreDraw(AddonEvent type, AddonArgs args)
         {
             try
             {
-                // clear old data out
-                neededItemIndexes.Clear();
-                dragDropComponentNodes.Clear();
-
-                updateAddonData();
-                updateHighlights();
-            }
-            catch (Exception ex)
-            {
-                Services.Log.Error(ex, $"Error in {GetType().Name} manual update");
-            }
-        }
-
-        private unsafe void handlePostRefresh(AddonEvent type, AddonArgs args)
-        {
-            try
-            {
-                // clear old data out
-                neededItemIndexes.Clear();
-                dragDropComponentNodes.Clear();
-
                 updateAddonData();
                 updateHighlights();
             }
@@ -88,45 +65,11 @@ namespace BisBuddy.EventListeners.AddonEventListeners.Containers
             }
         }
 
-        private unsafe void handlePostRecieveEvent(AddonEvent type, AddonArgs args)
-        {
-            try
-            {
-                // clear old data out
-                neededItemIndexes.Clear();
-                dragDropComponentNodes.Clear();
-
-                updateAddonData();
-                updateHighlights();
-            }
-            catch (Exception ex)
-            {
-                Services.Log.Error(ex, $"Error in {GetType().Name} post recieve event");
-            }
-        }
-
-        private unsafe void handlePostRequestedUpdate(AddonEvent type, AddonArgs args)
-        {
-            try
-            {
-                // clear old data out
-                neededItemIndexes.Clear();
-                dragDropComponentNodes.Clear();
-
-                updateAddonData();
-                updateHighlights();
-            }
-            catch (Exception ex)
-            {
-                Services.Log.Error(ex, $"Error in {GetType().Name} post requested update");
-            }
-        }
-
         private unsafe void updateHighlights()
         {
             if (neededItemIndexes.Count == 0)
             {
-                unmarkAllNodes();
+                unmarkNodes();
                 return;
             }
 
@@ -176,6 +119,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners.Containers
 
         protected unsafe void updateNeededItemIndexes()
         {
+            neededItemIndexes.Clear();
             var items = GetItemsOrdered(sorter, getTabIndex(), pagesPerView, itemsPerPage);
 
             // calculate items needed in inventory
@@ -184,15 +128,15 @@ namespace BisBuddy.EventListeners.AddonEventListeners.Containers
                 var item = items[i];
                 var itemId = Plugin.ItemData.ConvertItemIdToHq(item.ItemId);
 
-                if (Gearset.GetGearsetsNeedingItemById(itemId, Plugin.Gearsets, includeCollectedPrereqs: true).Count > 0)
-                {
+                if (Gearset.GearsetsNeedItemId(itemId, Plugin.Gearsets, includeCollectedPrereqs: true))
                     neededItemIndexes.Add(i);
-                }
             }
         }
 
         protected unsafe void updateDragDropComponentNodes()
         {
+            dragDropComponentNodes.Clear();
+
             // find child addon containing the components
             var addons = getAddons();
 

@@ -5,6 +5,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
     {
         // the type of shop this is (what do items in this shop cost?)
         public override string AddonName => "ShopExchangeItem";
+        protected override float CustomNodeMaxY => 312;
 
         // ADDON ATKVALUE INDEXES
         protected override int AtkValueItemCountIndex => 3;
@@ -20,5 +21,6 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
         protected override uint AddonScrollbarNodeId => 6;
         protected override uint AddonScrollbarButtonNodeId => 2;
         protected override uint AddonShieldInfoResNodeId => 3;
+        protected override uint NoItemsTextNodeId => 18;
     }
 }

@@ -12,19 +12,20 @@ namespace BisBuddy.EventListeners.AddonEventListeners
 {
     public abstract class AddonEventListener : EventListener
     {
+        private IReadOnlyList<NodeBase> customNodesList = [];
         private readonly Dictionary<nint, NodeBase> customNodes = [];
         private readonly List<nint> highlightedNodes = [];
-        protected IReadOnlyList<NodeBase> CustomNodes => customNodes.Values.ToList().AsReadOnly();
+        protected IReadOnlyList<NodeBase> CustomNodes => customNodesList;
         public virtual uint AddonCustomNodeId => 420000;
         public abstract string AddonName { get; }
-        private bool allNodesUnmarked = false;
+
+        // for lists that scroll, to avoid them rendering off the bottom
+        protected abstract float CustomNodeMaxY { get; }
 
         protected AddonEventListener(Plugin plugin, bool configBool) : base(plugin)
         {
             SetListeningStatus(configBool);
         }
-
-        public abstract void handleManualUpdate();
 
         protected abstract unsafe NodeBase? initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon);
 
@@ -41,28 +42,20 @@ namespace BisBuddy.EventListeners.AddonEventListeners
 
         protected override void register()
         {
-            Plugin.OnGearsetsUpdate += handleManualUpdate;
             Plugin.OnGearsetsUpdate += handleUpdateHighlightColor;
             Services.AddonLifecycle.RegisterListener(AddonEvent.PreFinalize, AddonName, handlePreFinalize);
             registerAddonListeners();
-
-            // call an update in case the listener is registered while addon is visible
-            if (Services.ClientState.IsLoggedIn)
-            {
-                handleManualUpdate();
-            }
         }
 
-        protected override void unregister()
+        protected override unsafe void unregister()
         {
             if (IsEnabled) // only perform these if it is enabled
             {
-                Plugin.OnGearsetsUpdate -= handleManualUpdate;
                 Plugin.OnGearsetsUpdate -= handleUpdateHighlightColor;
                 Services.AddonLifecycle.UnregisterListener(handlePreFinalize);
                 unregisterAddonListeners();
             }
-            unmarkAllNodes();
+            unmarkNodes();
             destroyNodes();
         }
 
@@ -78,9 +71,10 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             }
         }
 
-        private void handlePreFinalize(AddonEvent type, AddonArgs args)
+        private unsafe void handlePreFinalize(AddonEvent type, AddonArgs args)
         {
             // ensure all nodes are destroyed before finalizing
+            unmarkNodes();
             destroyNodes();
         }
 
@@ -92,6 +86,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                 ?? throw new Exception($"Failed to create custom node for \"{AddonName}\"");
 
             customNodes.Add((nint)parentNode, customNode);
+            customNodesList = customNodes.Values.ToList().AsReadOnly();
             return customNode;
         }
 
@@ -100,18 +95,15 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             var nodeHighlighted = highlightedNodes.Contains((nint)node);
 
             // remove if unhighlighting
-            if (highlightedNodes.Contains((nint)node) && !toEnable)
+            if (nodeHighlighted && !toEnable)
                 highlightedNodes.Remove((nint)node);
 
             // add if highlighting
-            if (!highlightedNodes.Contains((nint)node) && toEnable)
+            if (!nodeHighlighted && toEnable)
                 highlightedNodes.Add((nint)node);
 
             if (nodeHighlighted == toEnable)
                 return false; // already in the desired state
-
-            if (toEnable)
-                allNodesUnmarked = false; // marking a node here, not all unmarked
 
             var color = toEnable
                 ? Plugin.Configuration.HighlightColor
@@ -134,12 +126,19 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                 customNode = createCustomNode(parentNode, addon);
             }
 
-            allNodesUnmarked &= !toEnable; // if any node is enabled, at least one node is marked
+            // move node to be positioned where it should be
+            customNode.ScreenX = parentNode->ScreenX + customNode.X;
+            customNode.ScreenY = parentNode->ScreenY + customNode.Y;
 
-            if (customNode.IsVisible == toEnable)
+            // even if s
+            var makeVisible = toEnable
+                && (parentNode->Y + customNode.Height) >= (customNode.Height / 2)
+                && (parentNode->Y + (customNode.Height / 2)) <= CustomNodeMaxY;
+
+            if (customNode.IsVisible == makeVisible)
                 return false;
 
-            customNode.IsVisible = toEnable;
+            customNode.IsVisible = makeVisible;
             return true;
         }
 
@@ -163,9 +162,8 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                 Services.Log.Verbose($"Set node \"{parentNode->NodeId}\" in \"{AddonName}\" marking to {(toEnable ? "enabled" : "disabled")}");
         }
 
-        protected unsafe void unmarkAllNodes()
+        protected unsafe void unmarkNodes(AtkResNode* parentNodeFilter = null)
         {
-            if (allNodesUnmarked) return; // already unmarked
             try
             {
                 var highlightedNodesCount = highlightedNodes.Count;
@@ -173,19 +171,27 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                 {
                     var node = (AtkResNode*)highlightedNodes[0];
 
-                    if (node != null)
-                        setAddGreen(node, false);
-                }
-                if (highlightedNodesCount > 0)
-                    Services.Log.Verbose($"Unhighlighted all {highlightedNodesCount} node(s) in \"{AddonName}\"");
+                    if (parentNodeFilter != null && parentNodeFilter != node->ParentNode)
+                        continue;
 
-                foreach (var customNode in customNodes.Values)
-                {
-                    customNode.IsVisible = false;
+                    if (node != null)
+                    {
+                        setAddGreen(node, false);
+                        Services.Log.Verbose($"Unhighlighted {node->NodeId} in \"{AddonName}\"");
+                    }
                 }
-                if (customNodes.Count > 0)
-                    Services.Log.Verbose($"Hid all {customNodes.Count} custom node(s) in \"{AddonName}\"");
-                allNodesUnmarked = true;
+
+                foreach (var customNodeEntry in customNodes)
+                {
+                    if (parentNodeFilter != null && parentNodeFilter != ((AtkResNode*)customNodeEntry.Key)->ParentNode)
+                        continue;
+
+                    if (customNodeEntry.Value.IsVisible)
+                    {
+                        customNodeEntry.Value.IsVisible = false;
+                        Services.Log.Verbose($"Hid {((AtkResNode*)customNodeEntry.Key)->NodeId}'s custom node in \"{AddonName}\"");
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -196,14 +202,14 @@ namespace BisBuddy.EventListeners.AddonEventListeners
         protected unsafe void destroyNodes()
         {
             var count = customNodes.Count;
-            var customNodesList = customNodes.ToList();
-            foreach (var customNodeEntry in customNodesList)
+            foreach (var customNodeEntry in customNodes)
             {
                 unlinkCustomNode(customNodeEntry.Key, customNodeEntry.Value);
 
                 customNodeEntry.Value.Dispose();
 
                 customNodes.Remove(customNodeEntry.Key);
+                customNodesList = customNodes.Values.ToList().AsReadOnly();
             }
 
             if (customNodes.Count > 0)
