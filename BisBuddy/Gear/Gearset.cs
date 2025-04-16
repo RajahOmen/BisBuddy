@@ -62,7 +62,7 @@ namespace BisBuddy.Gear
             return satisfiedGearpieces;
         }
 
-        public bool NeedsItemId(uint candidateItemId, bool ignoreCollected, bool includeCollectedPrereqs) =>
-            IsActive && Gearpieces.Any(gearpiece => gearpiece.NeedsItemId(candidateItemId, ignoreCollected, includeCollectedPrereqs));
+        public bool NeedsItemId(uint candidateItemId, bool ignoreCollected, bool includeCollectedPrereqs, bool includeUncollectedItemMateria) =>
+            IsActive && Gearpieces.Any(gearpiece => gearpiece.NeedsItemId(candidateItemId, ignoreCollected, includeCollectedPrereqs, includeUncollectedItemMateria));
     }
 }

@@ -44,9 +44,10 @@ namespace BisBuddy.Gear
             uint itemId,
             List<Gearset> gearsets,
             bool ignoreCollected = true,
-            bool includeCollectedPrereqs = false
+            bool includeCollectedPrereqs = false,
+            bool includeUncollectedItemMateria = true
             ) =>
-            gearsets.Any(gearset => gearset.NeedsItemId(itemId, ignoreCollected, includeCollectedPrereqs));
+            gearsets.Any(gearset => gearset.NeedsItemId(itemId, ignoreCollected, includeCollectedPrereqs, includeUncollectedItemMateria));
 
         public static List<MeldPlan> GetNeededItemMeldPlans(uint itemId, List<Gearset> gearsets, bool includeAsPrerequisite)
         {
@@ -61,7 +62,7 @@ namespace BisBuddy.Gear
                 foreach (var gearpiece in gearset.Gearpieces)
                 {
                     // this gearpiece doesn't need this item
-                    if (!gearpiece.NeedsItemId(itemId, false, true, includeAsPrerequisite))
+                    if (!gearpiece.NeedsItemId(itemId, false, true, true, includeAsPrerequisite: includeAsPrerequisite))
                         continue;
 
                     // look at what materia is needed for this gearpiece

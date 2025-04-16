@@ -43,7 +43,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                 for (var itemIdx = 0; itemIdx < addon->NumItems; itemIdx++)
                 {
                     var lootItem = addon->Items[itemIdx];
-                    if (Gearset.GearsetsNeedItemId(lootItem.ItemId, Plugin.Gearsets))
+                    if (Gearset.GearsetsNeedItemId(lootItem.ItemId, Plugin.Gearsets, includeUncollectedItemMateria: Plugin.Configuration.HighlightUncollectedItemMateria))
                         itemIndexesToHighlight.Add(itemIdx);
                 }
 

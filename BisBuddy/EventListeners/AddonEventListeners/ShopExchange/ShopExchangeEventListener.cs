@@ -130,7 +130,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
                 shieldInAtkValues = true;
 
                 // add if needed
-                if (Gearset.GearsetsNeedItemId(endOfItemIdList.UInt, Plugin.Gearsets))
+                if (Gearset.GearsetsNeedItemId(endOfItemIdList.UInt, Plugin.Gearsets, includeUncollectedItemMateria: Plugin.Configuration.HighlightUncollectedItemMateria))
                     neededShopItemIndexes.Add(AddonShieldIndex);
             }
 
@@ -147,7 +147,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
                     ? 1  // shield visible and idx after where shield goes
                     : 0; // either shield not visible or before where shield goes
 
-                if (Gearset.GearsetsNeedItemId(itemId, Plugin.Gearsets))
+                if (Gearset.GearsetsNeedItemId(itemId, Plugin.Gearsets, includeUncollectedItemMateria: Plugin.Configuration.HighlightUncollectedItemMateria))
                 {
                     var filteredIndex = getFilteredIndex(i, atkValues);
                     if (filteredIndex >= 0) neededShopItemIndexes.Add(filteredIndex + shieldOffset);

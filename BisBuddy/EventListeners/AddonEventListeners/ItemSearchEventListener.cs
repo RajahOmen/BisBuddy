@@ -86,8 +86,8 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                     var hqItemId = Plugin.ItemData.ConvertItemIdToHq(nqItemId);
 
                     var nqOrHqNeeded = (
-                        Gearset.GearsetsNeedItemId(nqItemId, Plugin.Gearsets) // either the NQ is needed
-                        || Gearset.GearsetsNeedItemId(hqItemId, Plugin.Gearsets) // or HQ is needed
+                        Gearset.GearsetsNeedItemId(nqItemId, Plugin.Gearsets, includeUncollectedItemMateria: Plugin.Configuration.HighlightUncollectedItemMateria) // either the NQ is needed
+                        || Gearset.GearsetsNeedItemId(hqItemId, Plugin.Gearsets, includeUncollectedItemMateria: Plugin.Configuration.HighlightUncollectedItemMateria) // or HQ is needed
                         );
                     if (nqOrHqNeeded) // needed at some level
                     {

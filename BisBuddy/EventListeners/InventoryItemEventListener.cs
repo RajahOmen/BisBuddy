@@ -1,4 +1,5 @@
 using BisBuddy.Gear;
+using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
 using Dalamud.Game.Inventory;
 using Dalamud.Game.Inventory.InventoryEventArgTypes;
 using System;
@@ -48,7 +49,13 @@ namespace BisBuddy.EventListeners
                     return;
 
                 // item not needed in any gearsets, ignore
-                if (!Gearset.GearsetsNeedItemId(addedArgs.Item.ItemId, Plugin.Gearsets, ignoreCollected: false, includeCollectedPrereqs: true))
+                if (!Gearset.GearsetsNeedItemId(
+                        addedArgs.Item.ItemId,
+                        Plugin.Gearsets,
+                        ignoreCollected: false,
+                        includeCollectedPrereqs: true,
+                        includeUncollectedItemMateria: Plugin.Configuration.HighlightUncollectedItemMateria
+                    ))
                     return;
 
                 // added to type we track, update gearsets
@@ -71,7 +78,13 @@ namespace BisBuddy.EventListeners
                     return;
 
                 // item not needed in any gearsets, ignore
-                if (!Gearset.GearsetsNeedItemId(removedArgs.Item.ItemId, Plugin.Gearsets, ignoreCollected: false, includeCollectedPrereqs: true))
+                if (!Gearset.GearsetsNeedItemId(
+                        removedArgs.Item.ItemId,
+                        Plugin.Gearsets,
+                        ignoreCollected: false,
+                        includeCollectedPrereqs: true,
+                        includeUncollectedItemMateria: Plugin.Configuration.HighlightUncollectedItemMateria
+                    ))
                     return;
 
                 // removed from type we track, update gearsets
@@ -94,7 +107,13 @@ namespace BisBuddy.EventListeners
                     return;
 
                 // item not needed in any gearsets, ignore
-                if (!Gearset.GearsetsNeedItemId(changedArgs.Item.ItemId, Plugin.Gearsets, ignoreCollected: false, includeCollectedPrereqs: true))
+                if (!Gearset.GearsetsNeedItemId(
+                        changedArgs.Item.ItemId,
+                        Plugin.Gearsets,
+                        ignoreCollected: false,
+                        includeCollectedPrereqs: true,
+                        includeUncollectedItemMateria: Plugin.Configuration.HighlightUncollectedItemMateria
+                    ))
                     return;
 
                 // changed in a type we track, update gearsets
@@ -117,7 +136,13 @@ namespace BisBuddy.EventListeners
                     return;
 
                 // item not needed in any gearsets, ignore
-                if (!Gearset.GearsetsNeedItemId(movedArgs.Item.ItemId, Plugin.Gearsets, ignoreCollected: false, includeCollectedPrereqs: true))
+                if (!Gearset.GearsetsNeedItemId(
+                        movedArgs.Item.ItemId,
+                        Plugin.Gearsets,
+                        ignoreCollected: false,
+                        includeCollectedPrereqs: true,
+                        includeUncollectedItemMateria: Plugin.Configuration.HighlightUncollectedItemMateria
+                    ))
                     return;
 
                 // moved untracked -> tracked or tracked -> untracked, update gearsets
