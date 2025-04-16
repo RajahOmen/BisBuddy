@@ -48,7 +48,7 @@ namespace BisBuddy.Gear
             ) =>
             gearsets.Any(gearset => gearset.NeedsItemId(itemId, ignoreCollected, includeCollectedPrereqs));
 
-        public static List<MeldPlan> GetNeededItemMeldPlans(uint itemId, List<Gearset> gearsets)
+        public static List<MeldPlan> GetNeededItemMeldPlans(uint itemId, List<Gearset> gearsets, bool includeAsPrerequisite)
         {
             var neededMeldPlans = new List<MeldPlan>();
 
@@ -61,7 +61,7 @@ namespace BisBuddy.Gear
                 foreach (var gearpiece in gearset.Gearpieces)
                 {
                     // this gearpiece doesn't need this item
-                    if (gearpiece.NeedsItemId(itemId, false, true) == 0)
+                    if (!gearpiece.NeedsItemId(itemId, false, true, includeAsPrerequisite))
                         continue;
 
                     // look at what materia is needed for this gearpiece
@@ -78,7 +78,7 @@ namespace BisBuddy.Gear
             return neededMeldPlans;
         }
 
-        public static HashSet<string> GetUnmeldedItemNames(List<Gearset> gearsets)
+        public static HashSet<string> GetUnmeldedItemNames(List<Gearset> gearsets, bool includePrerequisites)
         {
             // return list of meldable item names for gearpieces that aren't fully melded
             var itemNames = new HashSet<string>();
@@ -96,7 +96,7 @@ namespace BisBuddy.Gear
                     itemNames.Add(gearpiece.ItemName);
 
                     // try to find any meldable items in prereq tree and add those names
-                    if (gearpiece.PrerequisiteTree != null)
+                    if (gearpiece.PrerequisiteTree != null && includePrerequisites)
                         itemNames.UnionWith(gearpiece.PrerequisiteTree.MeldableItemNames());
                 }
             }

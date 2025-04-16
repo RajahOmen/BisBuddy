@@ -392,4 +392,23 @@ Gearpiece needs the following melds: [+36 CRT, +36 DET]
 When ON: +36 CRT is highlighted
 When OFF: +36 CRT and +36 DET are highlighted</value>
   </data>
+  <data name="HighlightCollectedItemMateriaCheckbox" xml:space="preserve">
+    <value>Collected Only</value>
+  </data>
+  <data name="HighlightPrerequisiteMateriaCheckbox" xml:space="preserve">
+    <value>Meld Prerequisites</value>
+  </data>
+  <data name="HighlightPrerequisiteMateriaHelp" xml:space="preserve">
+    <value>Whether prerequisites should be marked for melding if they have materia slots and the gearpiece they are for requires melds
+
+When ON: Prerequisites will be highlighted when melding materia, with the materia highlighted being the ones for the final gearpiece
+When OFF: Only the main gearpiece will be highlighted when melding materia.
+
+Example
+Gearpiece (unobtained): Augmented Historia Ring of Casting [+54 DET, +54 CRT]
+Prerequisite (obtained): Historia Ring of Casting
+
+When ON: When melding, the Historia Ring of Casting is highlighted and the materia highlighted for it is [+54 DET, +54 CRT]
+When OFF: The Historia Ring of Casting is not highlighted.</value>
+  </data>
 </root>

@@ -232,6 +232,15 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Collected Only.
+        /// </summary>
+        internal static string HighlightCollectedItemMateriaCheckbox {
+            get {
+                return ResourceManager.GetString("HighlightCollectedItemMateriaCheckbox", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Highlight Color.
         /// </summary>
         internal static string HighlightColorButtonLabel {
@@ -376,6 +385,33 @@ namespace BisBuddy.Resources {
         internal static string HighlightNextMateriaHelp {
             get {
                 return ResourceManager.GetString("HighlightNextMateriaHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Meld Prerequisites.
+        /// </summary>
+        internal static string HighlightPrerequisiteMateriaCheckbox {
+            get {
+                return ResourceManager.GetString("HighlightPrerequisiteMateriaCheckbox", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Whether prerequisites should be marked for melding if they have materia slots and the gearpiece they are for requires melds
+        ///
+        ///When ON: Prerequisites will be highlighted when melding materia, with the materia highlighted being the ones for the final gearpiece
+        ///When OFF: Only the main gearpiece will be highlighted when melding materia.
+        ///
+        ///Example
+        ///Gearpiece (unobtained): Augmented Historia Ring of Casting [+54 DET, +54 CRT]
+        ///Prerequisite (obtained): Historia Ring of Casting
+        ///
+        ///When ON: When melding, the Hist [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string HighlightPrerequisiteMateriaHelp {
+            get {
+                return ResourceManager.GetString("HighlightPrerequisiteMateriaHelp", resourceCulture);
             }
         }
         

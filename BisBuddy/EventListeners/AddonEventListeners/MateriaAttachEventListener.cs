@@ -49,7 +49,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
         private string selectedItemName = string.Empty;
         private readonly HashSet<int> unmeldedItemIndexes = [];
         private readonly HashSet<int> neededMateriaIndexes = [];
-        private HashSet<string> unmeldedItemNames = Gearset.GetUnmeldedItemNames(plugin.Gearsets);
+        private HashSet<string> unmeldedItemNames = Gearset.GetUnmeldedItemNames(plugin.Gearsets, plugin.Configuration.HighlightPrerequisiteMateria);
         private HashSet<string> neededMateriaNames = [];
 
         public List<MeldPlan> meldPlans { get; private set; } = [];
@@ -63,7 +63,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             Plugin.OnGearsetsUpdate += handleManualUpdate;
             Services.AddonLifecycle.RegisterListener(AddonEvent.PreDraw, AddonName, handlePreDraw);
             Services.AddonLifecycle.RegisterListener(AddonEvent.PreFinalize, AddonName, handlePreFinalize);
-            unmeldedItemNames = Gearset.GetUnmeldedItemNames(plugin.Gearsets);
+            unmeldedItemNames = Gearset.GetUnmeldedItemNames(Plugin.Gearsets, Plugin.Configuration.HighlightPrerequisiteMateria);
         }
 
         protected override void unregisterAddonListeners()
@@ -76,7 +76,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
 
         private void handleManualUpdate()
         {
-            unmeldedItemNames = Gearset.GetUnmeldedItemNames(Plugin.Gearsets);
+            unmeldedItemNames = Gearset.GetUnmeldedItemNames(Plugin.Gearsets, Plugin.Configuration.HighlightPrerequisiteMateria);
         }
 
         private void handlePreFinalize(AddonEvent type, AddonArgs? args)
@@ -105,7 +105,11 @@ namespace BisBuddy.EventListeners.AddonEventListeners
         private void updateMateriaMeldPlans()
         {
             if (selectedItemName != string.Empty)
-                meldPlans = Gearset.GetNeededItemMeldPlans(Plugin.ItemData.GetItemIdByName(selectedItemName), Plugin.Gearsets);
+                meldPlans = Gearset.GetNeededItemMeldPlans(
+                    Plugin.ItemData.GetItemIdByName(selectedItemName),
+                    Plugin.Gearsets,
+                    Plugin.Configuration.HighlightPrerequisiteMateria
+                    );
             else
                 meldPlans.Clear();
 
