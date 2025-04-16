@@ -36,7 +36,6 @@ namespace BisBuddy.Windows
                 var materiaButtonText = $"x{materiaGroup.Count} +{materiaGroup.Materia.StatQuantity} {materiaGroup.Materia.StatShortName}{needColorblind}";
 
                 using (ImRaii.PushColor(ImGuiCol.Text, textColor))
-                using (ImRaii.Disabled(!gearpiece.IsCollected))
                 {
                     if (ImGui.Button($"{materiaButtonText}##materia_meld_button"))
                     {

@@ -229,5 +229,12 @@ namespace BisBuddy.Gear
                 }
             }
         }
+
+        public void UnmeldAllMateria()
+        {
+            itemMateriaGrouped = null;
+            foreach (var materia in ItemMateria)
+                materia.IsMelded = false;
+        }
     }
 }

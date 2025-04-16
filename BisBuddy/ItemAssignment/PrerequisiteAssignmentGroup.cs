@@ -1,5 +1,6 @@
 using BisBuddy.Gear;
 using BisBuddy.Gear.Prerequisites;
+using BisBuddy.Items;
 using Dalamud.Game.Inventory;
 using System;
 using System.Collections.Generic;
@@ -71,7 +72,7 @@ namespace BisBuddy.ItemAssignment
             return needed.Count > 0;
         }
 
-        public List<GameInventoryItem> AssignItem(GameInventoryItem item)
+        public List<GameInventoryItem> AssignItem(GameInventoryItem item, ItemData itemData, bool assignPrerequisiteMateria)
         {
             if (Gearpieces.Count == 0)
                 return [];
@@ -88,6 +89,19 @@ namespace BisBuddy.ItemAssignment
                 if (nodeAssigned == null)
                     continue;
 
+                if (assignPrerequisiteMateria)
+                {
+                    var itemMateria = itemData.ItemIsMeldable(item.ItemId)
+                        ? itemData.GetItemMateria(item)
+                        : [];
+
+                    if (itemMateria.Count > 0)
+                    {
+                        gearpiece.UnmeldAllMateria();
+                        gearpiece.MeldMultipleMateria(itemMateria);
+                    }
+                }
+                    
                 var previousAssignments = DirectlyAssignedNodes.GetValueOrDefault(gearpiece, []);
                 previousAssignments.Add((nodeAssigned, item));
 

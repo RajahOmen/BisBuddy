@@ -240,7 +240,7 @@ namespace BisBuddy.Items
         /// <returns>If it can be melded. If invalid item id, returns false.</returns>
         public bool ItemIsMeldable(uint itemId)
         {
-            if (!ItemSheet.TryGetRow(itemId, out var itemRow))
+            if (!tryGetItemRowById(itemId, out var itemRow))
                 return false;
 
             return itemRow.MateriaSlotCount > 0;

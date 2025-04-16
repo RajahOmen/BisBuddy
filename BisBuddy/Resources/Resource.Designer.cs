@@ -398,16 +398,15 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Whether prerequisites should be marked for melding if they have materia slots and the gearpiece they are for requires melds
+        ///   Looks up a localized string similar to Whether prerequisites should be considered meld targets for the materia listed for gearpieces they are a prerequisite for
         ///
-        ///When ON: Prerequisites will be highlighted when melding materia, with the materia highlighted being the ones for the final gearpiece
+        ///When ON: Prerequisites will be highlighted when melding materia, requiring the materia the final gearpiece needs.
+        ///The gearpiece in the menu will reflect the melds of the prerequisite while it is not yet obtained.
         ///When OFF: Only the main gearpiece will be highlighted when melding materia.
         ///
         ///Example
         ///Gearpiece (unobtained): Augmented Historia Ring of Casting [+54 DET, +54 CRT]
-        ///Prerequisite (obtained): Historia Ring of Casting
-        ///
-        ///When ON: When melding, the Hist [rest of string was truncated]&quot;;.
+        ///Prere [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string HighlightPrerequisiteMateriaHelp {
             get {

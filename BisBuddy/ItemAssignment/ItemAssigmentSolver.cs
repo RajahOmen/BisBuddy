@@ -1,5 +1,6 @@
 using BisBuddy.Gear;
 using BisBuddy.Items;
+using BisBuddy.Util;
 using Dalamud.Game.Inventory;
 using LinearAssignment;
 using System;
@@ -16,6 +17,7 @@ namespace BisBuddy.ItemAssignment
         public static readonly int DummyEdgeWeightValue = NoEdgeWeightValue + 1;
 
         private readonly bool strictMateriaMatching;
+        private readonly bool assignPrerequisiteMateria;
         private readonly ItemData itemData;
         private readonly List<Gearset> allGearsets;
         private readonly List<Gearset> assignableGearsets;
@@ -33,10 +35,12 @@ namespace BisBuddy.ItemAssignment
             List<Gearset> assignableGearsets,
             List<GameInventoryItem> inventoryItems,
             ItemData itemData,
-            bool strictMateriaMatching
+            bool strictMateriaMatching,
+            bool assignPrerequisiteMateria
             )
         {
             this.strictMateriaMatching = strictMateriaMatching;
+            this.assignPrerequisiteMateria = assignPrerequisiteMateria;
             this.itemData = itemData;
             this.allGearsets = allGearsets;
             this.assignableGearsets = assignableGearsets;
@@ -138,9 +142,9 @@ namespace BisBuddy.ItemAssignment
             }
         }
 
-        public List<Assignment> Solve()
+        public List<Gearpiece> SolveAndAssign()
         {
-            // stage 1: assign gearpieces
+            // stage 1: solve gearpiece assignments
             generateGearpieceEdges();
             int[] gearpieceAssignments;
             try
@@ -162,7 +166,10 @@ namespace BisBuddy.ItemAssignment
             // this removes candidate items from prereq list as well
             addGearpieceAssignments(gearpieceAssignments);
 
-            // stage 2: prepare prerequisite lists after gearpiece stage
+            // stage 2: assign gearpieces according to solution
+            var updatedGearpieces = ItemAssigner.MakeItemAssignments(assignments, Gearset.GetGearpiecesFromGearsets(assignableGearsets), itemData);
+
+            // stage 3: prepare prerequisite lists after gearpiece stage
             // group prerequisite items by gearpiece
             prerequisiteGroups.AddRange(groupPrerequisites(allGearsets));
             // filter item list to only needed items
@@ -170,8 +177,8 @@ namespace BisBuddy.ItemAssignment
                 .Where(item => prerequisiteGroups.Any(g => g.NeedsItemId(item.ItemId)))
                 .ToList();
 
-            // stage 3: assign remaining valid items as prerequisites
-            var prerequisiteAssignments = solveAndAssignPrerequisites();
+            // stage 4: assign remaining valid items as prerequisites
+            var prerequisiteAssignments = solveAndAssignPrerequisites(assignPrerequisiteMateria);
 #if DEBUG
             Services.Log.Debug("Item Assignment Solver Solution");
 
@@ -195,7 +202,8 @@ namespace BisBuddy.ItemAssignment
                     .ToList()
                 );
 #endif
-            return assignments;
+
+            return updatedGearpieces;
         }
 
         private void unassignPrereqs()
@@ -204,7 +212,7 @@ namespace BisBuddy.ItemAssignment
             gearpieces.ForEach(g => g.PrerequisiteTree?.SetCollected(false, false));
         }
 
-        private int[] solveAndAssignPrerequisites()
+        private int[] solveAndAssignPrerequisites(bool assignPrerequisiteMateria)
         {
             // assignments: index = candidate item index
             //              value = prerequisite group index
@@ -258,7 +266,7 @@ namespace BisBuddy.ItemAssignment
                     assignments[itemIdx] = bestGroupIdx;
 
                     // assign item. If assignment would shadow earlier-assigned items, re-add to assignment queue
-                    var oldAssignedItems = bestGroup.AssignItem(itemToAssign);
+                    var oldAssignedItems = bestGroup.AssignItem(itemToAssign, itemData, assignPrerequisiteMateria);
                     candidateItemList.AddRange(oldAssignedItems);
                 }
             }
