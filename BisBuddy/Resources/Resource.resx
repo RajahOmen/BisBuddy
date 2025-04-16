@@ -417,7 +417,7 @@ When OFF: The Historia Ring of Casting is not highlighted.</value>
   <data name="HighlightUncollectedItemMateriaHelp" xml:space="preserve">
     <value>Whether materia needed for gearpieces that are not yet collected should be highlighted.
 
-When ON: If a gearpiece isn't collected, its materia will not be highlighted anywhere
-When OFF: Materia needed for gearpieces will be highlighted regardless of collected status</value>
+When ON: Materia needed for gearpieces will be highlighted regardless of collected status
+When OFF: If a gearpiece isn't collected, its materia will not be highlighted anywhere</value>
   </data>
 </root>

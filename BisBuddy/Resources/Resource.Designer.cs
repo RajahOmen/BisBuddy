@@ -445,8 +445,8 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Whether materia needed for gearpieces that are not yet collected should be highlighted.
         ///
-        ///When ON: If a gearpiece isn&apos;t collected, its materia will not be highlighted anywhere
-        ///When OFF: Materia needed for gearpieces will be highlighted regardless of collected status.
+        ///When ON: Materia needed for gearpieces will be highlighted regardless of collected status
+        ///When OFF: If a gearpiece isn&apos;t collected, its materia will not be highlighted anywhere.
         /// </summary>
         internal static string HighlightUncollectedItemMateriaHelp {
             get {
