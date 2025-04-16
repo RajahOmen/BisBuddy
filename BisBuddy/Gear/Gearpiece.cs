@@ -82,7 +82,13 @@ namespace BisBuddy.Gear
                 PrerequisiteTree.SetCollected(false, manualToggle);
         }
 
-        public bool NeedsItemId(uint candidateItemId, bool ignoreCollected, bool includeCollectedPrereqs, bool includeAsPrerequisite = true)
+        public bool NeedsItemId(
+            uint candidateItemId,
+            bool ignoreCollected,
+            bool includeCollectedPrereqs,
+            bool includeUncollectedItemMateria,
+            bool includeAsPrerequisite = true
+            )
         {
             // not a real item, can't be needed
             if (candidateItemId == 0)
@@ -96,7 +102,8 @@ namespace BisBuddy.Gear
             if (candidateItemId == ItemId)
                 return true;
 
-            var neededAsMateria = ItemMateria.Any(materia => (!materia.IsMelded || !ignoreCollected) && candidateItemId == materia.ItemId);
+            var neededAsMateria = (includeUncollectedItemMateria || IsCollected)
+                && ItemMateria.Any(materia => (!materia.IsMelded || !ignoreCollected) && candidateItemId == materia.ItemId);
             var neededAsPrerequisite = includeAsPrerequisite
                 && (PrerequisiteTree?.ItemNeededCount(candidateItemId, !includeCollectedPrereqs && ignoreCollected) ?? 0) > 0;
 

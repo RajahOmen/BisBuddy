@@ -182,6 +182,17 @@ public class ConfigWindow : Window, IDisposable
         ImGui.SameLine();
         ImGuiComponents.HelpMarker(Resource.HighlightItemTooltipsHelp);
 
+        //UNCOLLECTED MATERIA HIGHLIGHTING
+        var highlightUncollectedItemMateria = configuration.HighlightUncollectedItemMateria;
+        if (ImGui.Checkbox(Resource.HighlightUncollectedItemMateriaCheckbox, ref highlightUncollectedItemMateria))
+        {
+            configuration.HighlightUncollectedItemMateria = highlightUncollectedItemMateria;
+            plugin.SaveGearsetsWithUpdate(false);
+
+        }
+        ImGui.SameLine();
+        ImGuiComponents.HelpMarker(Resource.HighlightUncollectedItemMateriaHelp);
+
         ImGui.Spacing();
         ImGui.Separator();
         ImGui.Text(Resource.ConfigInventorySectionHeader);

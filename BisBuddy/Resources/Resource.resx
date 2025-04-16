@@ -411,4 +411,13 @@ Prerequisite (obtained): Historia Ring of Casting
 When ON: When melding, the Historia Ring of Casting is highlighted and the materia highlighted for it is [+54 DET, +54 CRT]
 When OFF: The Historia Ring of Casting is not highlighted.</value>
   </data>
+  <data name="HighlightUncollectedItemMateriaCheckbox" xml:space="preserve">
+    <value>Uncollected Item Materia</value>
+  </data>
+  <data name="HighlightUncollectedItemMateriaHelp" xml:space="preserve">
+    <value>Whether materia needed for gearpieces that are not yet collected should be highlighted.
+
+When ON: If a gearpiece isn't collected, its materia will not be highlighted anywhere
+When OFF: Materia needed for gearpieces will be highlighted regardless of collected status</value>
+  </data>
 </root>

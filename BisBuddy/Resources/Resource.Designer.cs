@@ -434,6 +434,27 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Uncollected Item Materia.
+        /// </summary>
+        internal static string HighlightUncollectedItemMateriaCheckbox {
+            get {
+                return ResourceManager.GetString("HighlightUncollectedItemMateriaCheckbox", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Whether materia needed for gearpieces that are not yet collected should be highlighted.
+        ///
+        ///When ON: If a gearpiece isn&apos;t collected, its materia will not be highlighted anywhere
+        ///When OFF: Materia needed for gearpieces will be highlighted regardless of collected status.
+        /// </summary>
+        internal static string HighlightUncollectedItemMateriaHelp {
+            get {
+                return ResourceManager.GetString("HighlightUncollectedItemMateriaHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Gearset sheet link from Etro.gg
         ///ex: https://etro.gg/gearset/4b5f4ed3-4832-4fd5-b134-3429ea8caf37.
         /// </summary>
