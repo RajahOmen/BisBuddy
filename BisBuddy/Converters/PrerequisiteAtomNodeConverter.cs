@@ -24,6 +24,7 @@ namespace BisBuddy.Converters
             PrerequisiteNodeSourceType? sourceType = null;
             bool? isCollected = null;
             bool? isManuallyCollected = null;
+            bool isMeldable = false;
 
             while (reader.Read())
             {
@@ -37,7 +38,8 @@ namespace BisBuddy.Converters
                 {
                     case nameof(PrerequisiteNode.ItemId):
                         itemId = reader.GetUInt32();
-                        itemName = itemData.GetItemNameById(reader.GetUInt32());
+                        itemName = itemData.GetItemNameById(itemId!.Value);
+                        isMeldable = itemData.ItemIsMeldable(itemId!.Value);
                         break;
                     case nameof(PrerequisiteNode.NodeId):
                         nodeId = reader.GetString();
@@ -87,7 +89,8 @@ namespace BisBuddy.Converters
                 sourceType ?? throw new JsonException("No sourceType found for PrerequisiteAtomNode"),
                 isCollected ?? throw new JsonException("No isCollected found for PrerequisiteAtomNode"),
                 isManuallyCollected ?? throw new JsonException("No isManuallyCollected found for PrerequisiteAtomNode"),
-                nodeId ?? throw new JsonException("No nodeId found for PrerequisiteAtomNode")
+                nodeId ?? throw new JsonException("No nodeId found for PrerequisiteAtomNode"),
+                isMeldable
                 );
         }
 

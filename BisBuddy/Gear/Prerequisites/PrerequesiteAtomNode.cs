@@ -13,6 +13,7 @@ namespace BisBuddy.Gear.Prerequisites
         public string NodeId { get; init; }
         public uint ItemId { get; set; }
         public string ItemName { get; set; }
+        public bool IsMeldable { get; set; } = false;
         public PrerequisiteNodeSourceType SourceType { get; set; }
         public List<PrerequisiteNode> PrerequisiteTree { get; set; }
 
@@ -37,7 +38,8 @@ namespace BisBuddy.Gear.Prerequisites
             PrerequisiteNodeSourceType sourceType,
             bool isCollected = false,
             bool isManuallyCollected = false,
-            string? nodeId = null
+            string? nodeId = null,
+            bool isMeldable = false
             )
         {
             NodeId = nodeId ?? Guid.NewGuid().ToString();
@@ -47,6 +49,7 @@ namespace BisBuddy.Gear.Prerequisites
             PrerequisiteTree = prerequisiteTree ?? [];
             IsCollected = isCollected;
             IsManuallyCollected = isManuallyCollected;
+            IsMeldable = isMeldable;
         }
 
         public void SetCollected(bool collected, bool manualToggle)
@@ -140,6 +143,18 @@ namespace BisBuddy.Gear.Prerequisites
             return PrerequisiteTree
                 .SelectMany(p => p.ManuallyCollectedItemIds())
                 .ToList();
+        }
+
+        public HashSet<string> MeldableItemNames()
+        {
+            var prereqNames = PrerequisiteTree
+                .SelectMany(p => p.MeldableItemNames())
+                .ToHashSet();
+
+            if (IsMeldable)
+                prereqNames.Add(ItemName);
+
+            return prereqNames;
         }
 
         public string GroupKey()

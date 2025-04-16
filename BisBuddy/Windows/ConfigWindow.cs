@@ -111,7 +111,7 @@ public class ConfigWindow : Window, IDisposable
             var curLoc = ImGui.GetCursorScreenPos();
             var col = ImGui.GetColorU32(new Vector4(1, 1, 1, 1));
             var halfButtonHeight = (ImGui.CalcTextSize("HI").Y / 2) + ImGui.GetStyle().FramePadding.Y;
-            drawList.AddLine(curLoc + new Vector2(10, 0), curLoc + new Vector2(10, halfButtonHeight), col, 2);
+            drawList.AddLine(curLoc + new Vector2(10, 0), curLoc + new Vector2(10, (halfButtonHeight * 3) + 5), col, 2);
             drawList.AddLine(curLoc + new Vector2(10, halfButtonHeight), curLoc + new Vector2(20, halfButtonHeight), col, 2);
 
             using (ImRaii.PushIndent(25.0f, scaled: false))
@@ -124,6 +124,22 @@ public class ConfigWindow : Window, IDisposable
                 }
                 ImGui.SameLine();
                 ImGuiComponents.HelpMarker(Resource.HighlightNextMateriaHelp);
+            }
+
+            drawList = ImGui.GetWindowDrawList();
+            curLoc = ImGui.GetCursorScreenPos();
+            drawList.AddLine(curLoc + new Vector2(10, halfButtonHeight), curLoc + new Vector2(20, halfButtonHeight), col, 2);
+
+            using (ImRaii.PushIndent(25.0f, scaled: false))
+            {
+                var highlightPrerequisiteMateria = configuration.HighlightPrerequisiteMateria;
+                if (ImGui.Checkbox(Resource.HighlightPrerequisiteMateriaCheckbox, ref highlightPrerequisiteMateria))
+                {
+                    configuration.HighlightPrerequisiteMateria = highlightPrerequisiteMateria;
+                    plugin.SaveGearsetsWithUpdate(false);
+                }
+                ImGui.SameLine();
+                ImGuiComponents.HelpMarker(Resource.HighlightPrerequisiteMateriaHelp);
             }
         }
 
