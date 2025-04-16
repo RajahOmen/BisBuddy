@@ -24,6 +24,7 @@ namespace BisBuddy.Items
         public static readonly char GlamourIcon = '';
         public static readonly int MaxItemPrerequisites = 25;
         private ExcelSheet<Item> ItemSheet { get; init; }
+        private ExcelSheet<Item> ItemSheetEn { get; init; }
         private ExcelSheet<SpecialShop> ShopSheet { get; init; }
         private ExcelSheet<SheetMateria> Materia { get; init; }
         public ILookup<uint, uint> ItemsCoffers
@@ -32,7 +33,7 @@ namespace BisBuddy.Items
             {
                 if (itemsCoffers == null)
                 {
-                    itemsCoffers = generateItemsCoffers(ItemSheet);
+                    itemsCoffers = generateItemsCoffers(ItemSheetEn);
                     Task.Run(async () =>
                     {
                         await Task.Delay(3000);
@@ -65,6 +66,7 @@ namespace BisBuddy.Items
         public ItemData(ExcelModule luminaExcelModule)
         {
             ItemSheet = luminaExcelModule.GetSheet<Item>() ?? throw new ArgumentException("Item sheet not found");
+            ItemSheetEn = luminaExcelModule.GetSheet<Item>(language: Lumina.Data.Language.English) ?? throw new ArgumentException("Item sheet not found");
             ShopSheet = luminaExcelModule.GetSheet<SpecialShop>() ?? throw new InvalidOperationException("Special shop sheet not found");
             Materia = luminaExcelModule.GetSheet<SheetMateria>() ?? throw new InvalidOperationException("Materia sheet not found");
             NameToId = [];
@@ -229,6 +231,19 @@ namespace BisBuddy.Items
             var materiaItem = materiaRow.Item[materiaGrade];
 
             return materiaItem.RowId;
+        }
+
+        /// <summary>
+        /// Returns if an item can have materia attached to it
+        /// </summary>
+        /// <param name="itemId">The item id to check</param>
+        /// <returns>If it can be melded. If invalid item id, returns false.</returns>
+        public bool ItemIsMeldable(uint itemId)
+        {
+            if (!ItemSheet.TryGetRow(itemId, out var itemRow))
+                return false;
+
+            return itemRow.MateriaSlotCount > 0;
         }
 
         /// <summary>   
