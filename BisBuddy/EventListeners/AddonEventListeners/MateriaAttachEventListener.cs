@@ -1,4 +1,5 @@
 using BisBuddy.Gear;
+using BisBuddy.Items;
 using BisBuddy.Util;
 using Dalamud.Game.Addon.Lifecycle;
 using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
@@ -183,6 +184,10 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                 // parse to regular string
                 var itemNameString = SeString.Parse((byte*)itemNameSeString.String).TextValue;
 
+                // some languages split HQ icon into separate raw text payload, add space between if so
+                if (itemNameString.EndsWith(ItemData.HqIcon) && itemNameString[^2] != ' ')
+                    itemNameString = itemNameString.Insert(itemNameString.Length - 1, " ");
+
                 // item hasn't changed since last update
                 if (itemNameString == selectedItemName) return false;
 
@@ -234,9 +239,13 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                         break;
                     }
 
-                    var itemNameStr = SeString.Parse((byte*)itemName.String).TextValue;
+                    var itemNameString = SeString.Parse((byte*)itemName.String).TextValue;
 
-                    if (neededNames.Contains(itemNameStr))
+                    // some languages split HQ icon into separate raw text payload, add space between if so
+                    if (itemNameString.EndsWith(ItemData.HqIcon) && itemNameString[^2] != ' ')
+                        itemNameString = itemNameString.Insert(itemNameString.Length - 1, " ");
+
+                    if (neededNames.Contains(itemNameString))
                     {
                         indexesToFill.Add(itemIdx - atkValueListStartIndex);
                     }
