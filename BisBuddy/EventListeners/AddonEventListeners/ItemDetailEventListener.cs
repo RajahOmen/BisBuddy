@@ -195,7 +195,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
 
         private void setNodeVisibility(bool setVisible)
         {
-            var customTextNode = CustomNodes.Count > 0 ? CustomNodes[0] : null;
+            var customTextNode = CustomNodes.Count > 0 ? CustomNodes.First().Value : null;
             if (customTextNode == null)
                 return; // doesn't exist, nothing to hide
 
@@ -237,7 +237,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
         {
             // assign custom text to node
             var customTextNode = CustomNodes.Count > 0
-                ? (TextNode)CustomNodes[0]
+                ? (TextNode)CustomNodes.First().Value
                 : (TextNode)createCustomNode(addon->GetNodeById(AddonParentNodeId), addon);  // doesn't exist, create it
 
             // get the formatted text to display in the custom node

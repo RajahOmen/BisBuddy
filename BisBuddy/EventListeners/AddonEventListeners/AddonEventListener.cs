@@ -12,10 +12,10 @@ namespace BisBuddy.EventListeners.AddonEventListeners
 {
     public abstract class AddonEventListener : EventListener
     {
-        private IReadOnlyList<NodeBase> customNodesList = [];
+        private IReadOnlyDictionary<nint, NodeBase> customNodesList = new Dictionary<nint, NodeBase>().AsReadOnly();
         private readonly Dictionary<nint, NodeBase> customNodes = [];
         private readonly List<nint> highlightedNodes = [];
-        protected IReadOnlyList<NodeBase> CustomNodes => customNodesList;
+        protected IReadOnlyDictionary<nint, NodeBase> CustomNodes => customNodesList;
         public virtual uint AddonCustomNodeId => 420000;
         public abstract string AddonName { get; }
 
@@ -86,7 +86,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                 ?? throw new Exception($"Failed to create custom node for \"{AddonName}\"");
 
             customNodes.Add((nint)parentNode, customNode);
-            customNodesList = customNodes.Values.ToList().AsReadOnly();
+            customNodesList = customNodes.AsReadOnly();
             return customNode;
         }
 
@@ -209,7 +209,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                 customNodeEntry.Value.Dispose();
 
                 customNodes.Remove(customNodeEntry.Key);
-                customNodesList = customNodes.Values.ToList().AsReadOnly();
+                customNodesList = customNodes.AsReadOnly();
             }
 
             if (customNodes.Count > 0)

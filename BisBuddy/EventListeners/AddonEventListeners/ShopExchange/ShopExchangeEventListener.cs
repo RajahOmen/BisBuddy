@@ -96,6 +96,18 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
 
                     setNodeNeededMark((AtkResNode*)itemNodePtr, itemNeeded, true, true);
                 }
+
+                foreach (var entry in CustomNodes)
+                {
+                    if (!entry.Value.IsVisible)
+                        continue;
+
+                    var parentNode = (AtkComponentNode*)entry.Key;
+                    var parentNodeComponent = (AtkComponentListItemRenderer*)parentNode->Component;
+
+                    if (parentNodeComponent->ListItemIndex >= itemTreeListComponent->Items.Count)
+                        setNodeNeededMark((AtkResNode*)parentNode, false, true, true);
+                }
             }
             catch (Exception ex)
             {
