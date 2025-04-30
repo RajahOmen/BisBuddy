@@ -108,7 +108,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             if (selectedItemName != string.Empty)
                 meldPlans = Gearset.GetNeededItemMeldPlans(
                     Plugin.ItemData.GetItemIdByName(selectedItemName),
-                    Plugin.Gearsets,
+                    Plugin.ItemRequirements,
                     Plugin.Configuration.HighlightPrerequisiteMateria
                     );
             else

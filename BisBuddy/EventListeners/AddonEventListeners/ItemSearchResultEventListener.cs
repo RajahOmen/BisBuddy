@@ -158,9 +158,9 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                 var nqItemId = infoProxy->SearchItemId;
                 var hqItemId = Plugin.ItemData.ConvertItemIdToHq(nqItemId);
 
-                nqNeeded = Gearset.GetGearsetsNeedingItemById(nqItemId, Plugin.Gearsets).Sum(gearset => gearset.countNeeded);
+                nqNeeded = Gearset.GetItemRequirements(nqItemId, Plugin.ItemRequirements).Count;
                 hqNeeded = hqItemId != nqItemId
-                    ? Gearset.GetGearsetsNeedingItemById(hqItemId, Plugin.Gearsets).Sum(gearset => gearset.countNeeded)
+                    ? Gearset.GetItemRequirements(hqItemId, Plugin.ItemRequirements).Count
                     : nqNeeded;
             }
             catch (Exception ex)

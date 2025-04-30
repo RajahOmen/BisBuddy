@@ -128,11 +128,10 @@ namespace BisBuddy.EventListeners.AddonEventListeners.Containers
                 var item = items[i];
                 var itemId = Plugin.ItemData.ConvertItemIdToHq(item.ItemId);
 
-                if (Gearset.GearsetsNeedItemId(
+                if (Gearset.RequirementsNeedItemId(
                         itemId,
-                        Plugin.Gearsets,
-                        includeCollectedPrereqs: true,
-                        includeUncollectedItemMateria: Plugin.Configuration.HighlightUncollectedItemMateria
+                        Plugin.ItemRequirements,
+                        includeCollectedPrereqs: true
                         )
                     )
                     neededItemIndexes.Add(i);

@@ -49,11 +49,6 @@ namespace BisBuddy.Gear.Prerequisites
                 p.SetCollected(collected, manualToggle);
         }
 
-        public int ItemNeededCount(uint itemId, bool ignoreCollected)
-        {
-            return PrerequisiteTree.Sum(p => p.ItemNeededCount(itemId, ignoreCollected));   // need all
-        }
-
         public int MinRemainingItems(uint? newItemId = null)
         {
             var totalRemainingItems = 0;
@@ -118,6 +113,22 @@ namespace BisBuddy.Gear.Prerequisites
             return PrerequisiteTree
                 .SelectMany(p => p.MeldableItemNames())
                 .ToHashSet();
+        }
+
+        public IEnumerable<ItemRequirement> ItemRequirements(Gearset parentGearset, Gearpiece parentGearpiece)
+        {
+            yield return new ItemRequirement()
+            {
+                ItemId = ItemId,
+                Gearset = parentGearset,
+                Gearpiece = parentGearpiece,
+                IsCollected = IsCollected,
+                RequirementType = RequirementType.Prerequisite,
+            };
+
+            foreach (var prereq in PrerequisiteTree)
+                foreach (var requirement in prereq.ItemRequirements(parentGearset, parentGearpiece))
+                    yield return requirement;
         }
 
         public string GroupKey()

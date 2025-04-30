@@ -40,10 +40,12 @@ public sealed partial class Plugin : IDalamudPlugin
 
             // update Gearsets to new character's gearsets
             Gearsets = Configuration.GetCharacterGearsets(value, jsonOptions);
+            ItemRequirements = Gearset.BuildItemRequirements(Gearsets, Configuration.HighlightUncollectedItemMateria);
         }
     }
     public Configuration Configuration { get; set; }
     public List<Gearset> Gearsets { get; private set; } = [];
+    public Dictionary<uint, List<ItemRequirement>> ItemRequirements { get; private set; } = [];
     // handle async FIFO item assignment
     public ItemAssignmentQueue itemAssignmentQueue { get; private set; } = new();
 
@@ -243,6 +245,7 @@ public sealed partial class Plugin : IDalamudPlugin
 
     public void TriggerGearsetsUpdate()
     {
+        ItemRequirements = Gearset.BuildItemRequirements(Gearsets, Configuration.HighlightUncollectedItemMateria);
         OnGearsetsUpdate?.Invoke();
     }
 

@@ -5,76 +5,145 @@ namespace BisBuddy.Gear
 {
     public partial class Gearset
     {
-        public static List<(Gearset gearset, int countNeeded)> GetGearsetsNeedingItemById(
-            uint itemId,
+        public static Dictionary<uint, List<ItemRequirement>> BuildItemRequirements(
             List<Gearset> gearsets,
-            bool ignoreCollected = true,
-            bool includeCollectedPrereqs = false
+            bool includeUncollectedItemMateria
             )
         {
-            // includeCollectedPrereqs: true  - for internal sources: highlight them in inventory to show they are needed to upgrade with
-            //                          false - for external sources: don't highlight, we already have enough in inventories
-            var satisfiedGearsets = new List<(Gearset gearset, int countNeeded)>();
-            // get a dict of gearsets that are satisfied
+            var requirements = new Dictionary<uint, List<ItemRequirement>>();
+
             foreach (var gearset in gearsets)
             {
-                if (!gearset.IsActive) continue;
-
-                var satisfiedGearpieces = gearset.GetGearpiecesNeedingItem(itemId, ignoreCollected, includeCollectedPrereqs);
-                if (satisfiedGearpieces.Count > 0)
+                foreach (var requirement in gearset.ItemRequirements(includeUncollectedItemMateria))
                 {
-                    satisfiedGearsets.Add((gearset, satisfiedGearpieces.Sum(g => g.countNeeded)));
+                    if (requirements.TryGetValue(requirement.ItemId, out var itemIdRequirements))
+                        itemIdRequirements.Add(requirement);
+                    else
+                        requirements[requirement.ItemId] = [requirement];
                 }
             }
 
-            return satisfiedGearsets;
+            return requirements;
         }
 
         /// <summary>
-        /// Whether a list of gearsets need a specific item id in some way (as the gearpiece, as a gearpiece prerequisite, or as a materia).
-        /// Ignores gearsets marked as inactive in the list.
+        /// Whether a list of ItemRequirements include specific item id in some way (as the gearpiece, as a gearpiece prerequisite, or as a materia).
         /// </summary>
         /// <param name="itemId">The item id to check</param>
-        /// <param name="gearsets">The list of gearsets to check if the item is needed in</param>
-        /// <param name="ignoreCollected">Whether to ignore gearpieces that are marked as collected when checking needed status</param>
+        /// <param name="itemRequirements">The dictionary of ItemRequirements to check if the item is needed in</param>
+        /// <param name="includeMateria">Whether to include requirements of type Materia</param>
+        /// <param name="includePrereqs">Whether to include requirements of type Prerequisite</param>
+        /// <param name="includeCollected">Whether to include gearpieces that are marked as collected when checking needed status</param>
         /// <param name="includeCollectedPrereqs">Whether to include prerequisites marked as collected. True for 'internal' inventory sources.
-        /// False for external sources outside of player inventory</param>
+        /// False for 'external' sources outside of player inventory</param>
         /// <returns>If the item is needed in any way by any of the gearsets listed</returns>
-        public static bool GearsetsNeedItemId(
+        public static bool RequirementsNeedItemId(
             uint itemId,
-            List<Gearset> gearsets,
-            bool ignoreCollected = true,
-            bool includeCollectedPrereqs = false,
-            bool includeUncollectedItemMateria = true
-            ) =>
-            gearsets.Any(gearset => gearset.NeedsItemId(itemId, ignoreCollected, includeCollectedPrereqs, includeUncollectedItemMateria));
-
-        public static List<MeldPlan> GetNeededItemMeldPlans(uint itemId, List<Gearset> gearsets, bool includeAsPrerequisite)
+            Dictionary<uint, List<ItemRequirement>> itemRequirements,
+            bool includePrereqs = true,
+            bool includeMateria = true,
+            bool includeCollected = false,
+            bool includeCollectedPrereqs = false
+            )
         {
-            var neededMeldPlans = new List<MeldPlan>();
+            if (!itemRequirements.TryGetValue(itemId, out var itemIdRequirements))
+                return false;
 
-            // look through all gearsets
-            foreach (var gearset in gearsets)
+            if (itemIdRequirements.Count == 0)
+                return false;
+
+            // no further filtering down, so any requirement is valid
+            if (includeCollected && includeCollectedPrereqs)
+                return true;
+
+            foreach (var itemRequirement in itemIdRequirements)
             {
-                // only active ones
-                if (!gearset.IsActive) continue;
-
-                foreach (var gearpiece in gearset.Gearpieces)
+                switch (itemRequirement.RequirementType)
                 {
-                    // this gearpiece doesn't need this item
-                    if (!gearpiece.NeedsItemId(itemId, false, true, true, includeAsPrerequisite: includeAsPrerequisite))
-                        continue;
-
-                    // look at what materia is needed for this gearpiece
-                    var gearpieceMateria = new List<Materia>();
-                    foreach (var materia in gearpiece.ItemMateria)
-                        gearpieceMateria.Add(materia);
-
-                    // if there are any melds needed, add this 'meld plan' to the list
-                    if (gearpieceMateria.Any(m => !m.IsMelded))
-                        neededMeldPlans.Add(new MeldPlan(gearset, gearpiece, gearpieceMateria));
+                    case RequirementType.Gearpiece:
+                        if (!itemRequirement.IsCollected || includeCollected)
+                            return true;
+                        break;
+                    case RequirementType.Materia:
+                        if (includeMateria && (!itemRequirement.IsCollected || includeCollected))
+                            return true;
+                        break;
+                    case RequirementType.Prerequisite:
+                        if (includePrereqs && (!itemRequirement.IsCollected || includeCollectedPrereqs))
+                            return true;
+                        break;
+                    default:
+                        break;
                 }
             }
+            return false;
+        }
+
+        /// <summary>
+        /// Get list of ItemRequirements for a specific item id. Returns empty list if not needed.
+        /// </summary>
+        /// <param name="itemId">The item id to check</param>
+        /// <param name="itemRequirements">The dictionary of ItemRequirements to check if the item is needed in</param>
+        /// <param name="includeMateria">Whether to include requirements of type Materia</param>
+        /// <param name="includePrereqs">Whether to include requirements of type Prerequisite</param>
+        /// <param name="includeCollected">Whether to include gearpieces that are marked as collected when checking needed status</param>
+        /// <param name="includeCollectedPrereqs">If includePrereqs is true, whether to include prerequisites marked as collected.
+        /// True for 'internal' inventory sources. False for 'external' sources outside of player inventory</param>
+        /// <returns>List of the items ItemRequirements that match the filters</returns>
+        public static IReadOnlyList<ItemRequirement> GetItemRequirements(
+            uint itemId,
+            Dictionary<uint, List<ItemRequirement>> itemRequirements,
+            bool includePrereqs = true,
+            bool includeMateria = true,
+            bool includeCollected = false,
+            bool includeCollectedPrereqs = false
+            )
+        {
+            if (!itemRequirements.TryGetValue(itemId, out var itemIdRequirements))
+                return [];
+
+            if (itemIdRequirements.Count == 0)
+                return [];
+
+            // no further filtering down, so any requirement is valid
+            if (includeCollected && includeCollectedPrereqs)
+                return itemIdRequirements;
+
+            var filteredRequirements = itemIdRequirements.Where(requirement =>
+                    requirement.RequirementType switch
+                    {
+                        RequirementType.Gearpiece => !requirement.IsCollected || includeCollected,
+                        RequirementType.Materia => includeMateria && (!requirement.IsCollected || includeCollected),
+                        RequirementType.Prerequisite => includePrereqs && (!requirement.IsCollected || includeCollectedPrereqs),
+                        _ => false
+                    }
+                ).ToList();
+
+            return filteredRequirements;
+        }
+
+        public static List<MeldPlan> GetNeededItemMeldPlans(
+            uint itemId,
+            Dictionary<uint, List<ItemRequirement>> itemRequirements,
+            bool includeAsPrerequisite
+            )
+        {
+            // get item requirements, a max of one per gearpiece
+            var itemIdRequirements = GetItemRequirements(
+                itemId,
+                itemRequirements,
+                includePrereqs: includeAsPrerequisite,
+                includeMateria: false,
+                includeCollected: true,
+                includeCollectedPrereqs: true
+                ).DistinctBy(requirement => requirement.Gearpiece);
+
+            var neededMeldPlans = new List<MeldPlan>();
+
+            foreach (var requirement in itemIdRequirements)
+                // if there are any melds needed, add this 'meld plan' to the list
+                if (requirement.Gearpiece.ItemMateria.Any(m => !m.IsMelded))
+                    neededMeldPlans.Add(new MeldPlan(requirement.Gearset, requirement.Gearpiece, requirement.Gearpiece.ItemMateria));
 
             return neededMeldPlans;
         }

@@ -212,8 +212,13 @@ namespace BisBuddy.EventListeners.AddonEventListeners
 
         private bool updateNeededGearsetNames(uint itemId)
         {
-            // get what gearsets need this item
-            var newNeededGearsets = Gearset.GetGearsetsNeedingItemById(itemId, Plugin.Gearsets, includeCollectedPrereqs: true);
+            // get the itemRequirements for this item
+            var itemRequirements = Gearset.GetItemRequirements(itemId, Plugin.ItemRequirements, includeCollectedPrereqs: true);
+
+            var newNeededGearsets = itemRequirements
+                .GroupBy(requirement => requirement.Gearset)
+                .Select(group => ( Gearset: group.Key, countNeeded: group.Count() ))
+                .ToList();
 
             if (
                 newNeededGearsets.Count == neededGearsets.Count
