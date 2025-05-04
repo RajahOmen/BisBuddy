@@ -48,10 +48,14 @@ namespace BisBuddy.EventListeners.AddonEventListeners
         private readonly Configuration configuration = plugin.Configuration;
 
         private string selectedItemName = string.Empty;
-        private readonly HashSet<int> unmeldedItemIndexes = [];
-        private readonly HashSet<int> neededMateriaIndexes = [];
-        private HashSet<string> unmeldedItemNames = Gearset.GetUnmeldedItemNames(plugin.Gearsets, plugin.Configuration.HighlightPrerequisiteMateria);
-        private HashSet<string> neededMateriaNames = [];
+        private readonly Dictionary<int, HighlightColor> unmeldedItemIndexes = [];
+        private readonly Dictionary<int, HighlightColor> neededMateriaIndexes = [];
+        private Dictionary<string, HighlightColor> unmeldedItemNames = Gearset.GetUnmeldedItemNames(
+            plugin.Gearsets,
+            plugin.Configuration.DefaultHighlightColor,
+            plugin.Configuration.HighlightPrerequisiteMateria
+            );
+        private Dictionary<string, HighlightColor> neededMateriaNames = [];
 
         public List<MeldPlan> meldPlans { get; private set; } = [];
         public int selectedMeldPlanIndex = 0;
@@ -64,7 +68,11 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             Plugin.OnGearsetsUpdate += handleManualUpdate;
             Services.AddonLifecycle.RegisterListener(AddonEvent.PreDraw, AddonName, handlePreDraw);
             Services.AddonLifecycle.RegisterListener(AddonEvent.PreFinalize, AddonName, handlePreFinalize);
-            unmeldedItemNames = Gearset.GetUnmeldedItemNames(Plugin.Gearsets, Plugin.Configuration.HighlightPrerequisiteMateria);
+            unmeldedItemNames = Gearset.GetUnmeldedItemNames(
+                Plugin.Gearsets,
+                Plugin.Configuration.DefaultHighlightColor,
+                Plugin.Configuration.HighlightPrerequisiteMateria
+                );
         }
 
         protected override void unregisterAddonListeners()
@@ -75,10 +83,12 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             Services.AddonLifecycle.UnregisterListener(handlePreFinalize);
         }
 
-        private void handleManualUpdate()
-        {
-            unmeldedItemNames = Gearset.GetUnmeldedItemNames(Plugin.Gearsets, Plugin.Configuration.HighlightPrerequisiteMateria);
-        }
+        private void handleManualUpdate() =>
+            unmeldedItemNames = Gearset.GetUnmeldedItemNames(
+                Plugin.Gearsets,
+                Plugin.Configuration.DefaultHighlightColor,
+                Plugin.Configuration.HighlightPrerequisiteMateria
+                );
 
         private void handlePreFinalize(AddonEvent type, AddonArgs? args)
         {
@@ -142,7 +152,8 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             if (configuration.HighlightNextMateria)
                 materiaNames = materiaNames.Take(1);
 
-            neededMateriaNames = materiaNames.ToHashSet();
+            var materiaColor = meldPlans[selectedMeldPlanIndex].Gearset.HighlightColor ?? Plugin.Configuration.DefaultHighlightColor;
+            neededMateriaNames = materiaNames.Select(name => (name, materiaColor)).ToDictionary();
         }
 
         private unsafe bool updateItemSelected(AtkUnitBase* addon)
@@ -207,8 +218,8 @@ namespace BisBuddy.EventListeners.AddonEventListeners
 
         private unsafe void updateRequiredIndexes(
             AtkUnitBase* addon,
-            HashSet<int> indexesToFill,
-            HashSet<string> neededNames,
+            Dictionary<int, HighlightColor> indexesToFill,
+            Dictionary<string, HighlightColor> neededNames,
             int atkValueListStartIndex
             )
         {
@@ -245,10 +256,8 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                     if (itemNameString.EndsWith(ItemData.HqIcon) && itemNameString[^2] != ' ')
                         itemNameString = itemNameString.Insert(itemNameString.Length - 1, " ");
 
-                    if (neededNames.Contains(itemNameString))
-                    {
-                        indexesToFill.Add(itemIdx - atkValueListStartIndex);
-                    }
+                    if (neededNames.TryGetValue(itemNameString, out var color))
+                        indexesToFill.Add(itemIdx - atkValueListStartIndex, color);
 
                     itemIdx++;
                 }
@@ -322,7 +331,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
         }
 
         private unsafe void HighlightItems(
-            HashSet<int> highlightedIndexList,
+            Dictionary<int, HighlightColor> highlightedIndexColors,
             AtkComponentNode* parentNode,
             uint hoverNodeId
             )
@@ -335,12 +344,12 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             for (var i = 0; i < parentNodeComponent->ListLength; i++)
             {
                 var itemNodeComponent = parentNodeComponent->ItemRendererList[i].AtkComponentListItemRenderer;
-                var itemNeeded = highlightedIndexList.Contains(itemNodeComponent->ListItemIndex);
-                setNodeNeededMark((AtkResNode*)itemNodeComponent->OwnerNode, itemNeeded, true, true);
+                var itemColor = highlightedIndexColors.GetValueOrDefault(i);
+                setNodeNeededMark((AtkResNode*)itemNodeComponent->OwnerNode, itemColor, true, true);
             }
         }
 
-        protected override unsafe NodeBase? initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon)
+        protected override unsafe NodeBase? initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon, HighlightColor color)
         {
             NineGridNode? customNode = null;
             try
@@ -359,9 +368,9 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                 customNode = UiHelper.CloneNineGridNode(
                     AddonCustomNodeId,
                     hoverNode,
-                    Plugin.Configuration.CustomNodeAddColor,
+                    color.CustomNodeColor,
                     Plugin.Configuration.CustomNodeMultiplyColor,
-                    Plugin.Configuration.CustomNodeAlpha
+                    color.CustomNodeAlpha(Plugin.Configuration.BrightListItemHighlighting)
                     ) ?? throw new Exception($"Could not clone node \"{hoverNodeId}\"");
 
                 // mark as dirty

@@ -117,15 +117,6 @@ namespace BisBuddy.Gear.Prerequisites
 
         public IEnumerable<ItemRequirement> ItemRequirements(Gearset parentGearset, Gearpiece parentGearpiece)
         {
-            yield return new ItemRequirement()
-            {
-                ItemId = ItemId,
-                Gearset = parentGearset,
-                Gearpiece = parentGearpiece,
-                IsCollected = IsCollected,
-                RequirementType = RequirementType.Prerequisite,
-            };
-
             foreach (var prereq in PrerequisiteTree)
                 foreach (var requirement in prereq.ItemRequirements(parentGearset, parentGearpiece))
                     yield return requirement;

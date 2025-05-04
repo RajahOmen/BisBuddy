@@ -53,6 +53,9 @@ namespace BisBuddy.EventListeners.AddonEventListeners
         // list of gearset names that need the currently hovered item
         private List<(Gearset gearset, int countNeeded)> neededGearsets = [];
 
+        // Doesn't really use a node color, use this as a standin
+        private static readonly HighlightColor TextNodeColor = new(0.0f, 0.0f, 0.0f, 1.0f);
+
         protected override float CustomNodeMaxY => float.MaxValue;
 
         protected override void registerAddonListeners()
@@ -86,6 +89,8 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                 }
 
                 var namesUpdated = updateNeededGearsetNames((uint)itemId);
+
+                //Services.Log.Verbose($"Names updated: {namesUpdated}. {string.Join(", ", neededGearsets.Select(g => g.gearset.Name))}");
 
                 // no change
                 if (!namesUpdated)
@@ -195,7 +200,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
 
         private void setNodeVisibility(bool setVisible)
         {
-            var customTextNode = CustomNodes.Count > 0 ? CustomNodes.First().Value : null;
+            var customTextNode = CustomNodes.Count > 0 ? CustomNodes.First().Value.Node : null;
             if (customTextNode == null)
                 return; // doesn't exist, nothing to hide
 
@@ -207,7 +212,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             if (parentNode == null)
                 return; // parent node doesn't exist somehow
 
-            setNodeNeededMark(parentNode, setVisible, false, true);
+            setNodeNeededMark(parentNode, setVisible ? TextNodeColor : null, false, true);
         }
 
         private bool updateNeededGearsetNames(uint itemId)
@@ -242,8 +247,8 @@ namespace BisBuddy.EventListeners.AddonEventListeners
         {
             // assign custom text to node
             var customTextNode = CustomNodes.Count > 0
-                ? (TextNode)CustomNodes.First().Value
-                : (TextNode)createCustomNode(addon->GetNodeById(AddonParentNodeId), addon);  // doesn't exist, create it
+                ? (TextNode)CustomNodes.First().Value.Node
+                : (TextNode)createCustomNode(addon->GetNodeById(AddonParentNodeId), addon, TextNodeColor);  // doesn't exist, create it
 
             // get the formatted text to display in the custom node
             var customSeString = usedInSeString(customTextNode, itemNameTwoLines);
@@ -252,7 +257,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             customTextNode.Text = customSeString;
         }
 
-        protected override NodeBase? initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon)
+        protected override NodeBase? initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon, HighlightColor color)
         {
             TextNode? customTextNode = null;
             try

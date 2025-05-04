@@ -15,7 +15,7 @@ namespace BisBuddy;
 [Serializable]
 public class Configuration : IPluginConfiguration
 {
-    public static readonly int CurrentVersion = 2;
+    public static readonly int CurrentVersion = 3;
     public static readonly string DefaultGearsetName = "New Gearset";
 
     public int Version { get; set; } = 2;
@@ -34,17 +34,10 @@ public class Configuration : IPluginConfiguration
     public bool PluginUpdateInventoryScan { get; set; } = true;
     public bool StrictMateriaMatching { get; set; } = true;
 
-    // default equivalent to R:0, B:255, G:0, A:100, which which translates to
-    // normal nodes: (0, 100, 0)
-    // custom nodes: (-255, 255, -255)
-    public Vector4 HighlightColor { get; set; } = new Vector4(0.0f, 1.0f, 0.0f, 0.392f);
-    // scale between -1.0f and 1.0f. (ex: 0.0f -> -1.0f, 0.5f -> 0.0f, 1.0f -> 1.0f)
-    public Vector3 CustomNodeAddColor => new(
-        (HighlightColor.X * 2) - 1,
-        (HighlightColor.Y * 2) - 1,
-        (HighlightColor.Z * 2) - 1
-        );
-    public readonly float CustomNodeAlpha = 1.0f;
+    //public HighlightColor HighlightColor { get; set; } = new(0.0f, 1.0f, 0.0f, 0.393f);
+    public bool BrightListItemHighlighting { get; set; } = true;
+    public static readonly float BrightListItemAlpha = 1.0f;
+    public HighlightColor DefaultHighlightColor { get; set; } = new(0.0f, 1.0f, 0.0f, 0.393f);
     public readonly Vector3 CustomNodeMultiplyColor = new(0.393f, 0.393f, 0.393f);
 
     public Dictionary<ulong, CharacterInfo> CharactersData { get; set; } = [];
@@ -87,7 +80,7 @@ public class Configuration : IPluginConfiguration
                 if (configVersion != CurrentVersion)
                 {
                     Services.Log.Warning($"Config version {configVersion} found, current {CurrentVersion}. Attempting migration");
-                    return migrateOldConfig(configJson, configText, configVersion, itemData);
+                    return migrateOldConfig(configJson, configText, configVersion, itemData, jsonOptions);
                 }
             }
 
@@ -110,7 +103,13 @@ public class Configuration : IPluginConfiguration
         }
     }
 
-    private static Configuration migrateOldConfig(JsonDocument configJson, string configText, int configVersion, ItemData itemData)
+    private static Configuration migrateOldConfig(
+        JsonDocument configJson,
+        string configText,
+        int configVersion,
+        ItemData itemData,
+        JsonSerializerOptions jsonOptions
+        )
     {
         var newConfig = new Configuration();
         for (var version = configVersion; version < CurrentVersion; version++)
@@ -118,6 +117,7 @@ public class Configuration : IPluginConfiguration
             newConfig = version switch
             {
                 1 => migrate1To2(configText, itemData),
+                2 => migrate2To3(configJson, jsonOptions),
                 _ => throw new JsonException($"Invalid version number \"{configVersion}\"")
             };
         }
@@ -160,5 +160,29 @@ public class Configuration : IPluginConfiguration
         {
             throw new JsonException(ex.Message);
         }
+    }
+
+    /// <summary>
+    /// Migrate old Vector4 HighlightColor to new HighlightColor type
+    /// </summary>
+    /// <param name="configJson">JsonDocument config</param>
+    /// <param name="jsonOptions">options instance for deserializing</param>
+    /// <returns>The migrated and deserialized config</returns>
+    /// <exception cref="JsonException">If the config cannot be migrated or deserialized</exception>
+    private static Configuration migrate2To3(JsonDocument configJson, JsonSerializerOptions jsonOptions)
+    {
+        HighlightColor? highlightColor = null;
+        if (configJson.RootElement.TryGetProperty("HighlightColor", out var highlightColorProperty))
+        {
+            var highlightColorVector = JsonSerializer.Deserialize<Vector4>(highlightColorProperty, jsonOptions);
+            highlightColor = new HighlightColor(highlightColorVector);
+        }
+
+        var config = JsonSerializer.Deserialize<Configuration>(configJson, jsonOptions) ?? new Configuration();
+        if (highlightColor is not null)
+            config.DefaultHighlightColor = highlightColor;
+
+        config.Version = 3;
+        return config;
     }
 }

@@ -122,6 +122,57 @@ namespace BisBuddy.Gear
             return filteredRequirements;
         }
 
+        public static HighlightColor? GetRequirementColor(
+            IReadOnlyList<ItemRequirement> itemRequirements,
+            HighlightColor defaultColor
+            )
+        {
+            if (itemRequirements.Count == 0)
+                return null;
+
+            HighlightColor? currentColor = null;
+            foreach (var itemRequirement in itemRequirements)
+            {
+                if (itemRequirement.Gearset.HighlightColor != null)
+                {
+                    // multiple colors for this requirement, return the default one
+                    if (currentColor != null && !currentColor.Equals(itemRequirement.Gearset.HighlightColor))
+                        return defaultColor;
+
+                    currentColor = itemRequirement.Gearset.HighlightColor;
+                } else
+                {
+                    currentColor = defaultColor;
+                }
+            }
+
+            // return the gearset's color, or default if no gearset had custom color
+            return currentColor ?? defaultColor;
+        }
+
+        public static HighlightColor? GetRequirementColor(
+            uint itemId,
+            HighlightColor defaultColor,
+            Dictionary<uint, List<ItemRequirement>> itemRequirements,
+            bool includePrereqs = true,
+            bool includeMateria = true,
+            bool includeCollected = false,
+            bool includeCollectedPrereqs = false
+            )
+        {
+            // retrieve list of item requirements for this item id
+            var itemIdRequirements = GetItemRequirements(
+                itemId,
+                itemRequirements,
+                includePrereqs,
+                includeMateria,
+                includeCollected,
+                includeCollectedPrereqs
+                );
+
+            return GetRequirementColor(itemIdRequirements, defaultColor);
+        }
+
         public static List<MeldPlan> GetNeededItemMeldPlans(
             uint itemId,
             Dictionary<uint, List<ItemRequirement>> itemRequirements,
@@ -148,10 +199,14 @@ namespace BisBuddy.Gear
             return neededMeldPlans;
         }
 
-        public static HashSet<string> GetUnmeldedItemNames(List<Gearset> gearsets, bool includePrerequisites)
+        public static Dictionary<string, HighlightColor> GetUnmeldedItemNames(
+            List<Gearset> gearsets,
+            HighlightColor defaultColor,
+            bool includePrerequisites
+            )
         {
             // return list of meldable item names for gearpieces that aren't fully melded
-            var itemNames = new HashSet<string>();
+            var itemNames = new Dictionary<string, HighlightColor>();
 
             foreach (var gearset in gearsets)
             {
@@ -162,12 +217,28 @@ namespace BisBuddy.Gear
                     if (gearpiece.ItemMateria.All(m => m.IsMelded))
                         continue;
 
-                    // add item itself to list
-                    itemNames.Add(gearpiece.ItemName);
+                    HashSet<string> newItemNames;
+                    if (gearpiece.PrerequisiteTree is not null && includePrerequisites)
+                    {
+                        newItemNames = gearpiece.PrerequisiteTree.MeldableItemNames();
+                        newItemNames.Add(gearpiece.ItemName);
+                    }
+                    else
+                    {
+                        newItemNames = [gearpiece.ItemName];
+                    }
 
-                    // try to find any meldable items in prereq tree and add those names
-                    if (gearpiece.PrerequisiteTree != null && includePrerequisites)
-                        itemNames.UnionWith(gearpiece.PrerequisiteTree.MeldableItemNames());
+                    foreach (var newItemName in newItemNames)
+                    {
+                        // add item itself to list
+                        if (
+                        itemNames.TryGetValue(newItemName, out var currentColor)
+                        && !currentColor.Equals(gearset.HighlightColor)
+                        ) // multiple colors, use default color
+                            itemNames[newItemName] = defaultColor;
+                        else
+                            itemNames[newItemName] = gearset.HighlightColor ?? defaultColor;
+                    }
                 }
             }
 

@@ -27,13 +27,13 @@ public class ConfigWindow : Window, IDisposable
 
     public override void Draw()
     {
-        ImGui.Text(Resource.ConfigHighlightingSectionHeader);
+        ImGui.Text("General Settings");
         ImGui.Spacing();
 
         using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(3.0f, 4.0f)))
         {
             // COLOR PICKER
-            var existingColor = configuration.HighlightColor;
+            var existingColor = configuration.DefaultHighlightColor.BaseColor;
             if (ImGui.ColorButton($"{Resource.HighlightColorButtonTooltip}###ColorPickerButton", existingColor))
             {
                 ImGui.OpenPopup($"###ColorPickerPopup");
@@ -54,9 +54,9 @@ public class ConfigWindow : Window, IDisposable
                             | ImGuiColorEditFlags.NoBorder
                         )))
                     {
-                        if (existingColor != configuration.HighlightColor)
+                        if (existingColor != configuration.DefaultHighlightColor.BaseColor)
                         {
-                            configuration.HighlightColor = existingColor;
+                            configuration.DefaultHighlightColor.UpdateColor(existingColor);
                             plugin.SaveGearsetsWithUpdate();
                         }
                     }
@@ -67,6 +67,47 @@ public class ConfigWindow : Window, IDisposable
         }
         ImGui.SameLine();
         ImGuiComponents.HelpMarker(Resource.HighlightColorHelp);
+
+        // BRIGHT CUSTOM NODE HIGHLIGHTING
+        var brightListItemHighlighting = configuration.BrightListItemHighlighting;
+        if (ImGui.Checkbox(Resource.BrightListItemHighlightingCheckbox, ref brightListItemHighlighting))
+        {
+            configuration.BrightListItemHighlighting = brightListItemHighlighting;
+            plugin.SaveGearsetsWithUpdate();
+        }
+        ImGui.SameLine();
+        ImGuiComponents.HelpMarker(Resource.BrightListItemHighlightingHelp);
+
+        //UNCOLLECTED MATERIA HIGHLIGHTING
+        var highlightUncollectedItemMateria = configuration.HighlightUncollectedItemMateria;
+        if (ImGui.Checkbox(Resource.HighlightUncollectedItemMateriaCheckbox, ref highlightUncollectedItemMateria))
+        {
+            configuration.HighlightUncollectedItemMateria = highlightUncollectedItemMateria;
+            plugin.SaveGearsetsWithUpdate(false);
+
+        }
+        ImGui.SameLine();
+        ImGuiComponents.HelpMarker(Resource.HighlightUncollectedItemMateriaHelp);
+
+        // ASSIGNMENT GROUPING
+        var strictMateriaMatching = configuration.StrictMateriaMatching;
+        if (ImGui.Checkbox(Resource.StrictMateriaMatchingCheckbox, ref strictMateriaMatching))
+        {
+            configuration.StrictMateriaMatching = strictMateriaMatching;
+            plugin.SaveConfiguration(true);
+
+            // if auto scanning enabled, rerun assignments with new configuration
+            if (configuration.AutoScanInventory)
+            {
+                plugin.ScheduleUpdateFromInventory(plugin.Gearsets);
+            }
+        }
+        ImGui.SameLine();
+        ImGuiComponents.HelpMarker(Resource.StrictMateriaMatchingHelp);
+
+
+        ImGui.Separator();
+        ImGui.Text(Resource.ConfigHighlightingSectionHeader);
 
         // NEED GREED
         var highlightNeedGreed = configuration.HighlightNeedGreed;
@@ -182,17 +223,6 @@ public class ConfigWindow : Window, IDisposable
         ImGui.SameLine();
         ImGuiComponents.HelpMarker(Resource.HighlightItemTooltipsHelp);
 
-        //UNCOLLECTED MATERIA HIGHLIGHTING
-        var highlightUncollectedItemMateria = configuration.HighlightUncollectedItemMateria;
-        if (ImGui.Checkbox(Resource.HighlightUncollectedItemMateriaCheckbox, ref highlightUncollectedItemMateria))
-        {
-            configuration.HighlightUncollectedItemMateria = highlightUncollectedItemMateria;
-            plugin.SaveGearsetsWithUpdate(false);
-
-        }
-        ImGui.SameLine();
-        ImGuiComponents.HelpMarker(Resource.HighlightUncollectedItemMateriaHelp);
-
         ImGui.Spacing();
         ImGui.Separator();
         ImGui.Text(Resource.ConfigInventorySectionHeader);
@@ -229,21 +259,5 @@ public class ConfigWindow : Window, IDisposable
         }
         ImGui.SameLine();
         ImGuiComponents.HelpMarker(string.Format(Resource.UpdateOnPluginChangesHelp, Plugin.PluginName));
-
-        // ASSIGNMENT GROUPING
-        var strictMateriaMatching = configuration.StrictMateriaMatching;
-        if (ImGui.Checkbox(Resource.StrictMateriaMatchingCheckbox, ref strictMateriaMatching))
-        {
-            configuration.StrictMateriaMatching = strictMateriaMatching;
-            plugin.SaveConfiguration(true);
-
-            // if auto scanning enabled, rerun assignments with new configuration
-            if (configuration.AutoScanInventory)
-            {
-                plugin.ScheduleUpdateFromInventory(plugin.Gearsets);
-            }
-        }
-        ImGui.SameLine();
-        ImGuiComponents.HelpMarker(Resource.StrictMateriaMatchingHelp);
     }
 }

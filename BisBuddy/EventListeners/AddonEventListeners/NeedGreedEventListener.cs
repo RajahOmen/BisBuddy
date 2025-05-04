@@ -39,12 +39,18 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             {
                 if (addon == null || !addon->IsVisible) return;
 
-                var itemIndexesToHighlight = new List<int>();
+                var itemIndexesToHighlight = new Dictionary<int, HighlightColor>();
                 for (var itemIdx = 0; itemIdx < addon->NumItems; itemIdx++)
                 {
                     var lootItem = addon->Items[itemIdx];
-                    if (Gearset.RequirementsNeedItemId(lootItem.ItemId, Plugin.ItemRequirements))
-                        itemIndexesToHighlight.Add(itemIdx);
+                    var itemColor = Gearset.GetRequirementColor(
+                        lootItem.ItemId,
+                        Plugin.Configuration.DefaultHighlightColor,
+                        Plugin.ItemRequirements
+                        );
+
+                    if (itemColor is not null)
+                        itemIndexesToHighlight.Add(itemIdx, itemColor);
                 }
 
                 highlightItems(itemIndexesToHighlight, addon);
@@ -55,7 +61,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             }
         }
 
-        private unsafe void highlightItems(List<int> itemIndexes, AddonNeedGreed* needGreed)
+        private unsafe void highlightItems(Dictionary<int, HighlightColor> indexColors, AddonNeedGreed* needGreed)
         {
             var itemListComponent = (AtkComponentList*)needGreed
                 ->GetComponentByNodeId(AddonItemListNodeId);
@@ -63,12 +69,12 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             for (var i = 0; i < itemListComponent->ListLength; i++)
             {
                 var itemComponent = itemListComponent->ItemRendererList[i].AtkComponentListItemRenderer;
-                var itemNeeded = itemIndexes.Contains(itemComponent->ListItemIndex);
-                setNodeNeededMark((AtkResNode*)itemComponent->OwnerNode, itemNeeded, true, false);
+                var itemColor = indexColors.GetValueOrDefault(i);
+                setNodeNeededMark((AtkResNode*)itemComponent->OwnerNode, itemColor, true, false);
             }
         }
 
-        protected override unsafe NodeBase? initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon)
+        protected override unsafe NodeBase? initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon, HighlightColor color)
         {
             // doesn't use custom nodes
             return null;

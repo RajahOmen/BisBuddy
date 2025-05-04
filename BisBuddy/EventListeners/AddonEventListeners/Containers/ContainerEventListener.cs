@@ -17,7 +17,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners.Containers
     {
         public override uint AddonCustomNodeId => throw new NotImplementedException();
 
-        protected readonly List<int> neededItemIndexes = [];
+        protected readonly Dictionary<int, HighlightColor> neededItemColors = [];
         protected readonly List<nint> dragDropComponentNodes = [];
 
         // items per standard inventory container 'page'
@@ -67,7 +67,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners.Containers
 
         private unsafe void updateHighlights()
         {
-            if (neededItemIndexes.Count == 0)
+            if (neededItemColors.Count == 0)
             {
                 unmarkNodes();
                 return;
@@ -80,8 +80,9 @@ namespace BisBuddy.EventListeners.AddonEventListeners.Containers
                 // not shown, skip
                 if (!node->IsVisible()) continue;
 
-                var nodeNeeded = neededItemIndexes.Contains(i);
-                setNodeNeededMark(node, nodeNeeded, true, false);
+                var nodeColor = neededItemColors.GetValueOrDefault(i);
+
+                setNodeNeededMark(node, nodeColor, true, false);
             }
         }
 
@@ -119,7 +120,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners.Containers
 
         protected unsafe void updateNeededItemIndexes()
         {
-            neededItemIndexes.Clear();
+            neededItemColors.Clear();
             var items = GetItemsOrdered(sorter, getTabIndex(), pagesPerView, itemsPerPage);
 
             // calculate items needed in inventory
@@ -127,14 +128,15 @@ namespace BisBuddy.EventListeners.AddonEventListeners.Containers
             {
                 var item = items[i];
                 var itemId = Plugin.ItemData.ConvertItemIdToHq(item.ItemId);
+                var itemColor = Gearset.GetRequirementColor(
+                    itemId,
+                    Plugin.Configuration.DefaultHighlightColor,
+                    Plugin.ItemRequirements,
+                    includeCollectedPrereqs: true
+                    );
 
-                if (Gearset.RequirementsNeedItemId(
-                        itemId,
-                        Plugin.ItemRequirements,
-                        includeCollectedPrereqs: true
-                        )
-                    )
-                    neededItemIndexes.Add(i);
+                if (itemColor is not null)
+                    neededItemColors.Add(i, itemColor);
             }
         }
 
@@ -200,7 +202,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners.Containers
             return container->GetInventorySlot(item->Slot);
         }
 
-        protected override unsafe NodeBase? initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon)
+        protected override unsafe NodeBase? initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon, HighlightColor color)
         {
             // doesn't use custom nodes
             return null;

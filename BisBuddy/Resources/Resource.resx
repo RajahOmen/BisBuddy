@@ -309,13 +309,13 @@ When ON: Gearset 1 completed, Gearset 2 incomplete
 When OFF: Gearset 1 completed, Gearset 2 completed</value>
   </data>
   <data name="HighlightColorButtonTooltip" xml:space="preserve">
-    <value>Color needed items are highlighted in</value>
+    <value>Color needed items are highlighted in by default or with color conflicts</value>
   </data>
   <data name="HighlightColorButtonLabel" xml:space="preserve">
-    <value>Highlight Color</value>
+    <value>Default Highlight Color</value>
   </data>
   <data name="HighlightColorHelp" xml:space="preserve">
-    <value>What color to highlight needed items in
+    <value>What color to highlight needed items in by default, or if an item is needed by gearsets different colors
 
 Use alpha channel to adjust highlight intensity on items/icons
 List menu highlights are not affected</value>
@@ -421,5 +421,24 @@ When OFF: The Historia Ring of Casting is not highlighted.</value>
 
 When ON: Materia needed for gearpieces will be highlighted regardless of collected status
 When OFF: If a gearpiece isn't collected, its materia will not be highlighted anywhere</value>
+  </data>
+  <data name="BrightListItemHighlightingCheckbox" xml:space="preserve">
+    <value>Bright List Items</value>
+  </data>
+  <data name="BrightListItemHighlightingHelp" xml:space="preserve">
+    <value>Locks list item highlight opacity to max to increase contrast. Disabling may fix issues with some custom UIs</value>
+  </data>
+  <data name="GearsetHighlightColorLabel" xml:space="preserve">
+    <value>Gearset Highlight Color</value>
+  </data>
+  <data name="GearsetHighlightColorButtonTooltip" xml:space="preserve">
+    <value>Color needed items for this gearset are highlighted in</value>
+  </data>
+  <data name="GearsetDefaultColorCheckbox" xml:space="preserve">
+    <value>Use Default Color</value>
+  </data>
+  <data name="GearsetDefaultColorTooltip" xml:space="preserve">
+    <value>Whether to use the default highlight color (as set in configuration),
+or to have a unique color to highlight items in</value>
   </data>
 </root>

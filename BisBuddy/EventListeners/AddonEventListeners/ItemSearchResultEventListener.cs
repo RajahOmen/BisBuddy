@@ -10,7 +10,6 @@ using KamiToolKit.Classes;
 using KamiToolKit.Nodes;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using static FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentList;
 
 namespace BisBuddy.EventListeners.AddonEventListeners
@@ -32,6 +31,8 @@ namespace BisBuddy.EventListeners.AddonEventListeners
         // if nq or hq is needed for the selected item
         private int nqNeeded = 0;
         private int hqNeeded = 0;
+        private HighlightColor? nqColor = null;
+        private HighlightColor? hqColor = null;
 
         protected override float CustomNodeMaxY => 240f;
 
@@ -113,7 +114,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                     if (nqNeededRem > 0 && !itemIsHq) // needed nq
                     {
                         // mark the node
-                        setNodeNeededMark(listingNode, true, true, true);
+                        setNodeNeededMark(listingNode, nqColor, true, true);
 
                         // subtract the node's listing quantity from the remaining needed quantity
                         var listingQuantityNode = (AtkTextNode*)listItem.AtkComponentListItemRenderer->GetTextNodeById(AddonItemQuantityNodeId);
@@ -126,7 +127,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                     else if (hqNeededRem > 0 && itemIsHq) // needed hq
                     {
                         // mark the node
-                        setNodeNeededMark(listingNode, true, true, true);
+                        setNodeNeededMark(listingNode, hqColor, true, true);
 
                         // subtract the node's listing quantity from the remaining needed quantity
                         var listingQuantityNode = (AtkTextNode*)listingNode->GetComponent()->GetTextNodeById(AddonItemQuantityNodeId);
@@ -136,7 +137,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                         hqNeededRem -= listingQuantity;
                     }
                     else // unneeded
-                        setNodeNeededMark(listingNode, false, true, true);
+                        setNodeNeededMark(listingNode, null, true, true);
                 }
             }
             catch (Exception ex)
@@ -158,10 +159,18 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                 var nqItemId = infoProxy->SearchItemId;
                 var hqItemId = Plugin.ItemData.ConvertItemIdToHq(nqItemId);
 
-                nqNeeded = Gearset.GetItemRequirements(nqItemId, Plugin.ItemRequirements).Count;
-                hqNeeded = hqItemId != nqItemId
-                    ? Gearset.GetItemRequirements(hqItemId, Plugin.ItemRequirements).Count
-                    : nqNeeded;
+                var nqItemRequirements = Gearset.GetItemRequirements(nqItemId, Plugin.ItemRequirements);
+                var hqItemRequirements = hqItemId != nqItemId
+                    ? Gearset.GetItemRequirements(hqItemId, Plugin.ItemRequirements)
+                    : nqItemRequirements;
+
+                nqNeeded = nqItemRequirements.Count;
+                hqNeeded = nqItemRequirements.Count;
+
+                nqColor = Gearset.GetRequirementColor(nqItemRequirements, Plugin.Configuration.DefaultHighlightColor);
+                hqColor = hqItemId != nqItemId
+                    ? Gearset.GetRequirementColor(hqItemRequirements, Plugin.Configuration.DefaultHighlightColor)
+                    : nqColor;
             }
             catch (Exception ex)
             {
@@ -169,7 +178,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             }
         }
 
-        protected override unsafe NodeBase? initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon)
+        protected override unsafe NodeBase? initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon, HighlightColor color)
         {
             NineGridNode? customNode = null;
             try
@@ -185,9 +194,9 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                 customNode = UiHelper.CloneNineGridNode(
                     AddonCustomNodeId,
                     hoverNode,
-                    Plugin.Configuration.CustomNodeAddColor,
+                    color.CustomNodeColor,
                     Plugin.Configuration.CustomNodeMultiplyColor,
-                    Plugin.Configuration.CustomNodeAlpha
+                    color.CustomNodeAlpha(Plugin.Configuration.BrightListItemHighlighting)
                     ) ?? throw new Exception($"Could not clone node \"{hoverNode->NodeId}\"");
 
                 // mark as dirty
