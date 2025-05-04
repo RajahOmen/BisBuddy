@@ -17,11 +17,8 @@ namespace BisBuddy.EventListeners
             if (Plugin.Configuration.AutoScanInventory)
             {
                 register();
-                if (Services.ClientState.IsLoggedIn)
-                {
-                    Services.Log.Verbose($"Initialized while logged in. Initiating inventory scan.");
-                    Plugin.ScheduleUpdateFromInventory(Plugin.Gearsets); // scan on initialization
-                }
+                Services.Log.Verbose($"Initialized while logged in. Initiating inventory scan.");
+                handleAutoCompleteItems();
             }
         }
 
@@ -49,7 +46,7 @@ namespace BisBuddy.EventListeners
             try
             {
                 if (!Services.ClientState.IsLoggedIn)
-                    throw new Exception("Auto complete item event triggered while logged out");
+                    return;
 
                 Plugin.ScheduleUpdateFromInventory(Plugin.Gearsets);
             }
@@ -65,7 +62,7 @@ namespace BisBuddy.EventListeners
             try
             {
                 if (!Services.ClientState.IsLoggedIn)
-                    throw new Exception("Login event triggered while logged out");
+                    return;
 
                 Services.Log.Verbose($"Updating player content id to {Services.ClientState.LocalContentId}");
 
@@ -82,7 +79,7 @@ namespace BisBuddy.EventListeners
             try
             {
                 if (Services.ClientState.IsLoggedIn)
-                    throw new Exception("Logout event triggered while logged in");
+                    return;
 
                 Plugin.PlayerContentId = 0;
             }
