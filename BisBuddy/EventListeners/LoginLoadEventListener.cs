@@ -17,8 +17,11 @@ namespace BisBuddy.EventListeners
             if (Plugin.Configuration.AutoScanInventory)
             {
                 register();
-                Services.Log.Verbose($"Initialized while logged in. Initiating inventory scan.");
-                handleAutoCompleteItems();
+                if (Services.ClientState.IsLoggedIn)
+                {
+                    Services.Log.Verbose($"Initialized while logged in. Initiating inventory scan.");
+                    handleAutoCompleteItems();
+                }
             }
         }
 
