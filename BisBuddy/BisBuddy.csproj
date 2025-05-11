@@ -3,7 +3,7 @@
 
   <PropertyGroup>
     <TargetFramework>net9.0-windows</TargetFramework>
-    <Version>0.1.4.1</Version>
+    <Version>0.1.5.0</Version>
     <Description>Gearing, simplified.</Description>
     <PackageProjectUrl>https://github.com/RajahOmen/BisBuddy</PackageProjectUrl>
     <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
