@@ -61,8 +61,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                     // display list has "looped back" to the beginning (too many items to display), break out
                     else if (listItemIndex == firstListItemIndex) break;
 
-                    var itemColor = neededItemColors.GetValueOrDefault(i);
-
+                    var itemColor = neededItemColors.GetValueOrDefault(listItemIndex);
                     setNodeNeededMark((AtkResNode*)listItem.AtkComponentListItemRenderer->OwnerNode, itemColor, true, true);
                 }
             }
@@ -102,7 +101,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                         itemColor = hqItemColor;
 
                     if (itemColor is not null)
-                        neededItemColors.Add(i, itemColor);
+                        neededItemColors.Add(i, itemColor); 
                 }
             }
             catch (Exception ex)
