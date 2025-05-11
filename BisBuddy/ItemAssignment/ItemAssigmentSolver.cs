@@ -1,6 +1,5 @@
 using BisBuddy.Gear;
 using BisBuddy.Items;
-using BisBuddy.Util;
 using Dalamud.Game.Inventory;
 using LinearAssignment;
 using System;

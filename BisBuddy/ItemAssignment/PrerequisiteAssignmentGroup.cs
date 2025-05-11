@@ -101,7 +101,7 @@ namespace BisBuddy.ItemAssignment
                         gearpiece.MeldMultipleMateria(itemMateria);
                     }
                 }
-                    
+
                 var previousAssignments = DirectlyAssignedNodes.GetValueOrDefault(gearpiece, []);
                 previousAssignments.Add((nodeAssigned, item));
 

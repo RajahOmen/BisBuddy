@@ -132,7 +132,8 @@ namespace BisBuddy.Gear
                         return defaultColor;
 
                     currentColor = itemRequirement.Gearset.HighlightColor;
-                } else
+                }
+                else
                 {
                     currentColor = defaultColor;
                 }

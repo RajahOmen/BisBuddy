@@ -101,7 +101,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                         itemColor = hqItemColor;
 
                     if (itemColor is not null)
-                        neededItemColors.Add(i, itemColor); 
+                        neededItemColors.Add(i, itemColor);
                 }
             }
             catch (Exception ex)

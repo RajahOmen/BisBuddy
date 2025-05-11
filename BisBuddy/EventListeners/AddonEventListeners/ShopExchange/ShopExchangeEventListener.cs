@@ -176,8 +176,8 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
                     var filteredIndex = getFilteredIndex(i, atkValues);
                     if (filteredIndex >= 0)
                         neededShopItemIndexColors.Add(filteredIndex + shieldOffset, itemColor);
-                        //Services.Log.Verbose($"idx: {filteredIndex + shieldOffset}, Item color: {itemColor.BaseColor}");
-                        //neededShopItemIndexColors.Add(filteredIndex + shieldOffset, itemColor);
+                    //Services.Log.Verbose($"idx: {filteredIndex + shieldOffset}, Item color: {itemColor.BaseColor}");
+                    //neededShopItemIndexColors.Add(filteredIndex + shieldOffset, itemColor);
 
 
                 }

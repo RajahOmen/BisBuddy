@@ -227,7 +227,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
 
             var newNeededGearsets = itemRequirements
                 .GroupBy(requirement => requirement.Gearset)
-                .Select(group => ( Gearset: group.Key, countNeeded: group.Count() ))
+                .Select(group => (Gearset: group.Key, countNeeded: group.Count()))
                 .ToList();
 
             if (
