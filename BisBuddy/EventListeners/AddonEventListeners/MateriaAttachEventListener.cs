@@ -107,7 +107,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             }
 
             updateState(addon);
-            handleUpdate(addon);
+            updateHighlights(addon);
         }
 
         public unsafe void handleSelectedMateriaPlanIdxChange(int newIdx)
@@ -301,7 +301,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             updateNeededMateriaIndexes(addon);
         }
 
-        private unsafe void handleUpdate(AtkUnitBase* addon)
+        private unsafe void updateHighlights(AtkUnitBase* addon)
         {
             try
             {
@@ -321,19 +321,18 @@ namespace BisBuddy.EventListeners.AddonEventListeners
         private unsafe void updateItemHighlights(BaseNode addonNode)
         {
             var gearListNode = addonNode.GetComponentNode(AddonGearpieceListNodeId).GetPointer();
-            HighlightItems(unmeldedItemIndexes, gearListNode, AddonGearpieceSelectedHighlightNodeId);
+            HighlightItems(unmeldedItemIndexes, gearListNode);
         }
 
         private unsafe void updateMateriaHighlights(BaseNode addonNode)
         {
             var materiaListNode = addonNode.GetComponentNode(AddonMateriaListNodeId).GetPointer();
-            HighlightItems(neededMateriaIndexes, materiaListNode, AddonMateriaSelectedHighlightNodeId);
+            HighlightItems(neededMateriaIndexes, materiaListNode);
         }
 
         private unsafe void HighlightItems(
             Dictionary<int, HighlightColor> highlightedIndexColors,
-            AtkComponentNode* parentNode,
-            uint hoverNodeId
+            AtkComponentNode* parentNode
             )
         {
             var parentNodeComponent = (AtkComponentList*)parentNode->Component;
@@ -344,7 +343,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             for (var i = 0; i < parentNodeComponent->ListLength; i++)
             {
                 var itemNodeComponent = parentNodeComponent->ItemRendererList[i].AtkComponentListItemRenderer;
-                var itemColor = highlightedIndexColors.GetValueOrDefault(i);
+                var itemColor = highlightedIndexColors.GetValueOrDefault(itemNodeComponent->ListItemIndex);
                 setNodeNeededMark((AtkResNode*)itemNodeComponent->OwnerNode, itemColor, true, true);
             }
         }

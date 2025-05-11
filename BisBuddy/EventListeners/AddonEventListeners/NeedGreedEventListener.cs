@@ -69,7 +69,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             for (var i = 0; i < itemListComponent->ListLength; i++)
             {
                 var itemComponent = itemListComponent->ItemRendererList[i].AtkComponentListItemRenderer;
-                var itemColor = indexColors.GetValueOrDefault(i);
+                var itemColor = indexColors.GetValueOrDefault(itemComponent->ListItemIndex);
                 setNodeNeededMark((AtkResNode*)itemComponent->OwnerNode, itemColor, true, false);
             }
         }
