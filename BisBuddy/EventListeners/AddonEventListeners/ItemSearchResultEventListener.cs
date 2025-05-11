@@ -10,6 +10,7 @@ using KamiToolKit.Classes;
 using KamiToolKit.Nodes;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using static FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentList;
 
 namespace BisBuddy.EventListeners.AddonEventListeners
@@ -159,9 +160,9 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                 var nqItemId = infoProxy->SearchItemId;
                 var hqItemId = Plugin.ItemData.ConvertItemIdToHq(nqItemId);
 
-                var nqItemRequirements = Gearset.GetItemRequirements(nqItemId, Plugin.ItemRequirements);
+                var nqItemRequirements = Gearset.GetItemRequirements(nqItemId, Plugin.ItemRequirements).ToList();
                 var hqItemRequirements = hqItemId != nqItemId
-                    ? Gearset.GetItemRequirements(hqItemId, Plugin.ItemRequirements)
+                    ? Gearset.GetItemRequirements(hqItemId, Plugin.ItemRequirements).ToList()
                     : nqItemRequirements;
 
                 nqNeeded = nqItemRequirements.Count;
