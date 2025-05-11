@@ -48,9 +48,6 @@ namespace BisBuddy.EventListeners
         {
             try
             {
-                if (!Services.ClientState.IsLoggedIn)
-                    return;
-
                 Plugin.ScheduleUpdateFromInventory(Plugin.Gearsets);
             }
             catch (Exception ex)
@@ -62,34 +59,14 @@ namespace BisBuddy.EventListeners
 
         private void handleLogin()
         {
-            try
-            {
-                if (!Services.ClientState.IsLoggedIn)
-                    return;
-
-                Services.Log.Verbose($"Updating player content id to {Services.ClientState.LocalContentId}");
-
-                Plugin.PlayerContentId = Services.ClientState.LocalContentId;
-            }
-            catch (Exception ex)
-            {
-                Services.Log.Error(ex, "Failed to handle Login");
-            }
+            Services.Log.Verbose($"[Login] Updating player content id to {Services.ClientState.LocalContentId}");
+            Plugin.PlayerContentId = Services.ClientState.LocalContentId;
         }
 
         private void handleLogout(int type, int code)
         {
-            try
-            {
-                if (Services.ClientState.IsLoggedIn)
-                    return;
-
-                Plugin.PlayerContentId = 0;
-            }
-            catch (Exception ex)
-            {
-                Services.Log.Error(ex, "Failed to handle Logout");
-            }
+            Services.Log.Verbose($"[Logout] Updating player content id to {Services.ClientState.LocalContentId}");
+            Plugin.PlayerContentId = 0;
         }
     }
 }
