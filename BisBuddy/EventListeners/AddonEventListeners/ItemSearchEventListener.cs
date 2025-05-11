@@ -23,7 +23,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
         public static readonly uint AddonHoverHighlightNodeId = 15;
 
         // what items are needed from the marketboard listings
-        private readonly HashSet<int> neededItemIndexes = [];
+        private readonly Dictionary<int, HighlightColor> neededItemColors = [];
 
         protected override float CustomNodeMaxY => 500f;
 
@@ -41,7 +41,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             try
             {
                 updateNeededItems();
-                if (neededItemIndexes.Count == 0)
+                if (neededItemColors.Count == 0)
                 { // no items needed from list, return
                     unmarkNodes();
                     return;
@@ -61,8 +61,8 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                     // display list has "looped back" to the beginning (too many items to display), break out
                     else if (listItemIndex == firstListItemIndex) break;
 
-                    var itemNeeded = neededItemIndexes.Contains(listItemIndex);
-                    setNodeNeededMark((AtkResNode*)listItem.AtkComponentListItemRenderer->OwnerNode, itemNeeded, true, true);
+                    var itemColor = neededItemColors.GetValueOrDefault(listItemIndex);
+                    setNodeNeededMark((AtkResNode*)listItem.AtkComponentListItemRenderer->OwnerNode, itemColor, true, true);
                 }
             }
             catch (Exception ex)
@@ -75,7 +75,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
         {
             try
             {
-                neededItemIndexes.Clear();
+                neededItemColors.Clear();
                 var agent = AgentItemSearch.Instance();
 
                 if (agent == null) return;
@@ -85,15 +85,23 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                     var nqItemId = agent->ListingPageItems[i].ItemId;
                     var hqItemId = Plugin.ItemData.ConvertItemIdToHq(nqItemId);
 
-                    var nqOrHqNeeded = (
-                        Gearset.GearsetsNeedItemId(nqItemId, Plugin.Gearsets, includeUncollectedItemMateria: Plugin.Configuration.HighlightUncollectedItemMateria) // either the NQ is needed
-                        || Gearset.GearsetsNeedItemId(hqItemId, Plugin.Gearsets, includeUncollectedItemMateria: Plugin.Configuration.HighlightUncollectedItemMateria) // or HQ is needed
-                        );
-                    if (nqOrHqNeeded) // needed at some level
-                    {
-                        var itemName = Plugin.ItemData.GetItemNameById(nqItemId);
-                        neededItemIndexes.Add(i);
-                    }
+                    var nqItemColor = Gearset.GetRequirementColor(nqItemId, Plugin.Configuration.DefaultHighlightColor, Plugin.ItemRequirements);
+                    var hqItemColor = Gearset.GetRequirementColor(nqItemId, Plugin.Configuration.DefaultHighlightColor, Plugin.ItemRequirements);
+                    HighlightColor? itemColor = null;
+
+                    // set color to set this item as based on the requirements of the nq and hq versions of the item
+                    if (nqItemColor is null && hqItemColor is null) // not needed
+                        itemColor = null;
+                    if (nqItemColor is not null && hqItemColor is not null) // both needed
+                        // set to nq item color if nq and hq is the same, else use tiebreak color
+                        itemColor = nqItemColor.Equals(hqItemColor) ? nqItemColor : Plugin.Configuration.DefaultHighlightColor;
+                    else if (nqItemColor is not null) // nq only needed
+                        itemColor = nqItemColor;
+                    else // hq only needed
+                        itemColor = hqItemColor;
+
+                    if (itemColor is not null)
+                        neededItemColors.Add(i, itemColor);
                 }
             }
             catch (Exception ex)
@@ -102,7 +110,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
             }
         }
 
-        protected override unsafe NodeBase? initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon)
+        protected override unsafe NodeBase? initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon, HighlightColor color)
         {
             NineGridNode? customNode = null;
             try
@@ -115,12 +123,12 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                     .SearchNodeById(AddonHoverHighlightNodeId)
                     ->GetAsAtkNineGridNode();
 
-                customNode = UiHelper.CloneNineGridNode(
+                customNode = UiHelper.CloneHighlightNineGridNode(
                     AddonCustomNodeId,
                     hoverNode,
-                    Plugin.Configuration.CustomNodeAddColor,
+                    color.CustomNodeColor,
                     Plugin.Configuration.CustomNodeMultiplyColor,
-                    Plugin.Configuration.CustomNodeAlpha
+                    color.CustomNodeAlpha(Plugin.Configuration.BrightListItemHighlighting)
                     ) ?? throw new Exception($"Could not clone node \"{hoverNode->NodeId}\"");
 
                 // mark as dirty

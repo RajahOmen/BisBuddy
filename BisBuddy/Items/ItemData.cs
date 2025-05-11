@@ -232,7 +232,7 @@ namespace BisBuddy.Items
 
             return materiaItem.RowId;
         }
-        
+
         /// <summary>
         /// Returns if an item can have materia attached to it
         /// </summary>

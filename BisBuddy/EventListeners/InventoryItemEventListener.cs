@@ -1,5 +1,4 @@
 using BisBuddy.Gear;
-using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
 using Dalamud.Game.Inventory;
 using Dalamud.Game.Inventory.InventoryEventArgTypes;
 using System;
@@ -49,12 +48,12 @@ namespace BisBuddy.EventListeners
                     return;
 
                 // item not needed in any gearsets, ignore
-                if (!Gearset.GearsetsNeedItemId(
+                if (!Gearset.RequirementsNeedItemId(
                         addedArgs.Item.ItemId,
-                        Plugin.Gearsets,
-                        ignoreCollected: false,
-                        includeCollectedPrereqs: true,
-                        includeUncollectedItemMateria: Plugin.Configuration.HighlightUncollectedItemMateria
+                        Plugin.ItemRequirements,
+                        includeCollected: true,
+                        includeObtainable: true,
+                        includeCollectedPrereqs: true
                     ))
                     return;
 
@@ -78,12 +77,12 @@ namespace BisBuddy.EventListeners
                     return;
 
                 // item not needed in any gearsets, ignore
-                if (!Gearset.GearsetsNeedItemId(
+                if (!Gearset.RequirementsNeedItemId(
                         removedArgs.Item.ItemId,
-                        Plugin.Gearsets,
-                        ignoreCollected: false,
-                        includeCollectedPrereqs: true,
-                        includeUncollectedItemMateria: Plugin.Configuration.HighlightUncollectedItemMateria
+                        Plugin.ItemRequirements,
+                        includeCollected: true,
+                        includeObtainable: true,
+                        includeCollectedPrereqs: true
                     ))
                     return;
 
@@ -107,12 +106,12 @@ namespace BisBuddy.EventListeners
                     return;
 
                 // item not needed in any gearsets, ignore
-                if (!Gearset.GearsetsNeedItemId(
+                if (!Gearset.RequirementsNeedItemId(
                         changedArgs.Item.ItemId,
-                        Plugin.Gearsets,
-                        ignoreCollected: false,
-                        includeCollectedPrereqs: true,
-                        includeUncollectedItemMateria: Plugin.Configuration.HighlightUncollectedItemMateria
+                        Plugin.ItemRequirements,
+                        includeCollected: true,
+                        includeObtainable: true,
+                        includeCollectedPrereqs: true
                     ))
                     return;
 
@@ -136,12 +135,12 @@ namespace BisBuddy.EventListeners
                     return;
 
                 // item not needed in any gearsets, ignore
-                if (!Gearset.GearsetsNeedItemId(
+                if (!Gearset.RequirementsNeedItemId(
                         movedArgs.Item.ItemId,
-                        Plugin.Gearsets,
-                        ignoreCollected: false,
-                        includeCollectedPrereqs: true,
-                        includeUncollectedItemMateria: Plugin.Configuration.HighlightUncollectedItemMateria
+                        Plugin.ItemRequirements,
+                        includeCollected: true,
+                        includeObtainable: true,
+                        includeCollectedPrereqs: true
                     ))
                     return;
 

@@ -88,7 +88,34 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Item Highlighting.
+        ///   Looks up a localized string similar to Bright List Items.
+        /// </summary>
+        internal static string BrightListItemHighlightingCheckbox {
+            get {
+                return ResourceManager.GetString("BrightListItemHighlightingCheckbox", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Locks list item highlight opacity to max to increase contrast. Disabling may fix issues with some custom UIs.
+        /// </summary>
+        internal static string BrightListItemHighlightingHelp {
+            get {
+                return ResourceManager.GetString("BrightListItemHighlightingHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to General Settings.
+        /// </summary>
+        internal static string ConfigGeneralSectionHeader {
+            get {
+                return ResourceManager.GetString("ConfigGeneralSectionHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Window Highlighting.
         /// </summary>
         internal static string ConfigHighlightingSectionHeader {
             get {
@@ -178,6 +205,43 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Use Default Color.
+        /// </summary>
+        internal static string GearsetDefaultColorCheckbox {
+            get {
+                return ResourceManager.GetString("GearsetDefaultColorCheckbox", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Whether to use the default highlight color (as set in configuration),
+        ///or to have a unique color to highlight items in.
+        /// </summary>
+        internal static string GearsetDefaultColorTooltip {
+            get {
+                return ResourceManager.GetString("GearsetDefaultColorTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Color needed items for this gearset are highlighted in.
+        /// </summary>
+        internal static string GearsetHighlightColorButtonTooltip {
+            get {
+                return ResourceManager.GetString("GearsetHighlightColorButtonTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Gearset Highlight Color.
+        /// </summary>
+        internal static string GearsetHighlightColorLabel {
+            get {
+                return ResourceManager.GetString("GearsetHighlightColorLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to JSON.
         /// </summary>
         internal static string GearsetJsonButton {
@@ -232,6 +296,24 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Highlight Appearance.
+        /// </summary>
+        internal static string GeneralConfigurationHighlightAppearanceCategory {
+            get {
+                return ResourceManager.GetString("GeneralConfigurationHighlightAppearanceCategory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Miscellaneous.
+        /// </summary>
+        internal static string GeneralConfigurationMiscellaneousCategory {
+            get {
+                return ResourceManager.GetString("GeneralConfigurationMiscellaneousCategory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Collected Only.
         /// </summary>
         internal static string HighlightCollectedItemMateriaCheckbox {
@@ -241,7 +323,7 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Highlight Color.
+        ///   Looks up a localized string similar to Default Highlight Color.
         /// </summary>
         internal static string HighlightColorButtonLabel {
             get {
@@ -250,7 +332,7 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Color needed items are highlighted in.
+        ///   Looks up a localized string similar to Color needed items are highlighted in by default or with color conflicts.
         /// </summary>
         internal static string HighlightColorButtonTooltip {
             get {
@@ -259,7 +341,7 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to What color to highlight needed items in
+        ///   Looks up a localized string similar to What color to highlight needed items in by default, or if an item is needed by gearsets different colors
         ///
         ///Use alpha channel to adjust highlight intensity on items/icons
         ///List menu highlights are not affected.

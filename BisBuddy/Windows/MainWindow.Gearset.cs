@@ -124,7 +124,7 @@ namespace BisBuddy.Windows
                 var gearsetName = gearset.Name;
                 var copyButtonWidth = ImGuiComponents.GetIconButtonWithTextWidth(FontAwesomeIcon.Copy, Resource.GearsetUrlButton);
                 var exportButtonWidth = ImGuiComponents.GetIconButtonWithTextWidth(FontAwesomeIcon.FileExport, Resource.GearsetJsonButton);
-                ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X - (copyButtonWidth + exportButtonWidth + 17));
+                ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X - ImGui.GetStyle().FramePadding.X);
                 if (ImGui.InputText($"##gearset_rename_input", ref gearsetName, 512))
                 {
                     gearset.Name = gearsetName;
@@ -133,11 +133,12 @@ namespace BisBuddy.Windows
                 if (ImGui.IsItemHovered())
                     ImGui.SetTooltip(Resource.RenameGearsetTooltip);
 
-                ImGui.SameLine();
+                ImGui.Spacing();
+                ImGui.Indent();
 
                 if (gearset.SourceUrl != null)
                 {
-                    ImGui.SameLine();
+                    //ImGui.SameLine();
                     if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.Copy, $"{Resource.GearsetUrlButton}##copy_gearset_url"))
                     {
                         ImGui.SetClipboardText(gearset.SourceUrl);
@@ -172,6 +173,68 @@ namespace BisBuddy.Windows
                     ImGui.SetTooltip(Resource.GearsetJsonTooltip);
                 }
 
+                ImGui.SameLine();
+
+                // DEFAULT COLOR CHECKBOX
+                var useDefaultColor = gearset.HighlightColor is null;
+                if (ImGui.Checkbox(Resource.GearsetDefaultColorCheckbox, ref useDefaultColor))
+                {
+                    if (useDefaultColor)
+                        gearset.HighlightColor = null;
+                    else
+                        gearset.HighlightColor = new HighlightColor(plugin.Configuration.DefaultHighlightColor.BaseColor);
+                }
+                if (ImGui.IsItemHovered())
+                    ImGui.SetTooltip(Resource.GearsetDefaultColorTooltip);
+
+                ImGui.SameLine();
+
+                // COLOR PICKER
+                using (ImRaii.Disabled(useDefaultColor))
+                using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(3.0f, 4.0f)))
+                {
+                    var existingColor = gearset.HighlightColor?.BaseColor ?? plugin.Configuration.DefaultHighlightColor.BaseColor;
+                    if (ImGui.ColorButton($"{Resource.GearsetHighlightColorButtonTooltip}###ColorPickerButton", existingColor))
+                    {
+                        ImGui.OpenPopup($"###ColorPickerPopup");
+                    }
+
+                    using (var popup = ImRaii.Popup($"###ColorPickerPopup"))
+                    {
+                        if (popup)
+                        {
+                            if (ImGui.ColorPicker4(
+                                $"###ColorPicker",
+                                ref existingColor,
+                                (
+                                    ImGuiColorEditFlags.NoPicker
+                                    | ImGuiColorEditFlags.AlphaBar
+                                    | ImGuiColorEditFlags.NoSidePreview
+                                    | ImGuiColorEditFlags.DisplayRGB
+                                    | ImGuiColorEditFlags.NoBorder
+                                )))
+                            {
+                                if (existingColor != (gearset.HighlightColor?.BaseColor ?? plugin.Configuration.DefaultHighlightColor.BaseColor))
+                                {
+                                    if (gearset.HighlightColor == null)
+                                    {
+                                        var newHighlightColor = new HighlightColor(existingColor);
+                                        gearset.HighlightColor = newHighlightColor;
+                                    }
+                                    else
+                                    {
+                                        gearset.HighlightColor.UpdateColor(existingColor);
+                                    }
+                                    plugin.SaveGearsetsWithUpdate();
+                                }
+                            }
+                        }
+                    }
+                    ImGui.SameLine();
+                    ImGui.Text(Resource.GearsetHighlightColorLabel);
+                }
+
+                ImGui.Unindent();
                 ImGui.Spacing();
                 ImGui.Separator();
                 ImGui.Spacing();

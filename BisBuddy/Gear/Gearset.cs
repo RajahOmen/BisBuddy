@@ -1,7 +1,6 @@
 using BisBuddy.Import;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace BisBuddy.Gear
 {
@@ -21,6 +20,7 @@ namespace BisBuddy.Gear
         public string? SourceString { get; set; } = null;
         public ImportSourceType? SourceType { get; set; }
         public string JobAbbrv { get; set; } = "???";
+        public HighlightColor? HighlightColor { get; set; } = null;
 
         public Gearset(string name, string? sourceUrl, ImportSourceType? sourceType)
         {
@@ -48,21 +48,14 @@ namespace BisBuddy.Gear
             Gearpieces.Sort((a, b) => a.GearpieceType.CompareTo(b.GearpieceType));
         }
 
-        public List<(Gearpiece gearpiece, int countNeeded)> GetGearpiecesNeedingItem(uint candidateItemId, bool ignoreCollected, bool includeCollectedPrereqs)
+        public IEnumerable<ItemRequirement> ItemRequirements(bool includeUncollectedItemMateria)
         {
-            List<(Gearpiece gearpiece, int countNeeded)> satisfiedGearpieces = [];
-            foreach (var gearpiece in Gearpieces)
-            {
-                var countNeeded = gearpiece.NeedsItemIdCount(candidateItemId, ignoreCollected, includeCollectedPrereqs);
-                if (countNeeded > 0)
-                {
-                    satisfiedGearpieces.Add((gearpiece, countNeeded));
-                }
-            }
-            return satisfiedGearpieces;
-        }
+            if (!IsActive)
+                yield break;
 
-        public bool NeedsItemId(uint candidateItemId, bool ignoreCollected, bool includeCollectedPrereqs, bool includeUncollectedItemMateria) =>
-            IsActive && Gearpieces.Any(gearpiece => gearpiece.NeedsItemId(candidateItemId, ignoreCollected, includeCollectedPrereqs, includeUncollectedItemMateria));
+            foreach (var gearpiece in Gearpieces)
+                foreach (var requirement in gearpiece.ItemRequirements(this, includeUncollectedItemMateria))
+                    yield return requirement;
+        }
     }
 }

@@ -74,7 +74,12 @@ public unsafe class MeldPlanSelectorWindow : Window, IDisposable
     public override void Draw()
     {
         var curIdx = plugin.MateriaAttachEventListener.selectedMeldPlanIndex;
-        if (curIdx >= MeldPlans.Count) return;
+        if (curIdx >= MeldPlans.Count)
+            return;
+
+        // don't show if addon isn't currently visible (ie. during a meld action)
+        if (addon == null || !addon->IsVisible || !addon->WindowNode->IsVisible())
+            return;
 
         ImGui.Text(Resource.MeldWindowHeader);
 

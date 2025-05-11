@@ -55,6 +55,43 @@ namespace BisBuddy.Gear
             }
         }
 
+        public IEnumerable<ItemRequirement> ItemRequirements(Gearset parentGearset, bool includeUncollectedItemMateria)
+        {
+            yield return new ItemRequirement()
+            {
+                ItemId = ItemId,
+                Gearset = parentGearset,
+                Gearpiece = this,
+                IsCollected = IsCollected || IsManuallyCollected,
+                IsObtainable = IsObtainable,
+                RequirementType = RequirementType.Gearpiece,
+            };
+
+            // ignore materia if uncollected item materia is not enabled
+            if (IsCollected || IsManuallyCollected || includeUncollectedItemMateria)
+            {
+                foreach (var materia in ItemMateria)
+                {
+                    yield return new ItemRequirement()
+                    {
+                        ItemId = materia.ItemId,
+                        Gearset = parentGearset,
+                        Gearpiece = this,
+                        IsCollected = materia.IsMelded,
+                        IsObtainable = false, // materia has no prerequisites
+                        RequirementType = RequirementType.Materia,
+                    };
+                }
+            }
+
+            if (PrerequisiteTree is not null)
+            {
+                var prerequisiteRequirements = PrerequisiteTree.ItemRequirements(parentGearset, this);
+                foreach (var requirement in prerequisiteRequirements)
+                    yield return requirement;
+            }
+        }
+
         public void SetCollected(bool collected, bool manualToggle)
         {
             if (IsManuallyCollected && !collected && !manualToggle)
@@ -80,62 +117,6 @@ namespace BisBuddy.Gear
             // if clicked by user as uncollected, uncollect all prerequisites as well
             if (!collected && manualToggle && PrerequisiteTree != null)
                 PrerequisiteTree.SetCollected(false, manualToggle);
-        }
-
-        public bool NeedsItemId(
-            uint candidateItemId,
-            bool ignoreCollected,
-            bool includeCollectedPrereqs,
-            bool includeUncollectedItemMateria,
-            bool includeAsPrerequisite = true
-            )
-        {
-            // not a real item, can't be needed
-            if (candidateItemId == 0)
-                return false;
-
-            // If this item is marked as collected, only way item is needed is if it is materia
-            if (IsCollected && ignoreCollected)
-                return ItemMateria.Any(materia => (!materia.IsMelded || !ignoreCollected) && candidateItemId == materia.ItemId);
-
-            // is this the gearpiece itself
-            if (candidateItemId == ItemId)
-                return true;
-
-            var neededAsMateria = (includeUncollectedItemMateria || IsCollected)
-                && ItemMateria.Any(materia => (!materia.IsMelded || !ignoreCollected) && candidateItemId == materia.ItemId);
-            var neededAsPrerequisite = includeAsPrerequisite
-                && (PrerequisiteTree?.ItemNeededCount(candidateItemId, !includeCollectedPrereqs && ignoreCollected) ?? 0) > 0;
-
-            // only can be needed as materia or a prerequisite
-            return neededAsMateria || neededAsPrerequisite;
-        }
-
-
-        // return the number of this item needed for this gearpiece
-        public int NeedsItemIdCount(uint candidateItemId, bool ignoreCollected, bool includeCollectedPrereqs)
-        {
-            // not a real item, can't be needed
-            if (candidateItemId == 0) return 0;
-
-            // Calculate how many of this item are needed as materia (assume item is materia)
-            var neededAsMateriaCount = ItemMateria
-                .Where(materia => (!materia.IsMelded || !ignoreCollected) && candidateItemId == materia.ItemId)
-                .Count();
-
-            // If this item is marked as collected, only way item is needed is if it is materia
-            if (IsCollected && ignoreCollected) return neededAsMateriaCount;
-
-            // is this the item we need
-            if (candidateItemId == ItemId) return 1;
-
-            // Calculate how many of this item are needed as prereqs
-            // if includeCollectedPrereqs: false
-            // if not includeCollectedPrereqs: val of ignoreCollected
-            var neededAsPrereqCount = PrerequisiteTree?.ItemNeededCount(candidateItemId, !includeCollectedPrereqs && ignoreCollected) ?? 0;
-
-            // If the item is one of the prerequisites. If not, returns 0
-            return neededAsMateriaCount + neededAsPrereqCount;
         }
 
         public List<uint> ManuallyCollectedItemIds()

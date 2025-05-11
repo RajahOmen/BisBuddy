@@ -46,7 +46,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
         // max value for the filter display list indicating item is visible (diff shops have diff values)
         protected abstract uint AtkValueFilteredItemsListVisibleMaxValue { get; }
 
-        private readonly HashSet<int> neededShopItemIndexes = [];
+        private readonly Dictionary<int, HighlightColor> neededShopItemIndexColors = [];
         private bool shieldInAtkValues = false;
 
         protected override void registerAddonListeners()
@@ -71,7 +71,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
 
                 updateNeededShopItemIndexes(addon->AtkValuesSpan);
                 // skip if no items are needed in this shop
-                if (neededShopItemIndexes.Count == 0 || (noEntriesTextNode != null && noEntriesTextNode->IsVisible()))
+                if (neededShopItemIndexColors.Count == 0 || (noEntriesTextNode != null && noEntriesTextNode->IsVisible()))
                 {
                     // remove highlight on all items if there are no items needed
                     unmarkNodes();
@@ -92,21 +92,22 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
 
                     var itemNodeComponent = (AtkComponentListItemRenderer*)itemNodePtr->Component;
                     var nodeListIndex = itemNodeComponent->ListItemIndex;
-                    var itemNeeded = neededShopItemIndexes.Contains(nodeListIndex);
 
-                    setNodeNeededMark((AtkResNode*)itemNodePtr, itemNeeded, true, true);
+                    var itemColor = neededShopItemIndexColors.GetValueOrDefault(nodeListIndex);
+
+                    setNodeNeededMark((AtkResNode*)itemNodePtr, itemColor, true, true);
                 }
 
                 foreach (var entry in CustomNodes)
                 {
-                    if (!entry.Value.IsVisible)
+                    if (!entry.Value.Node.IsVisible)
                         continue;
 
                     var parentNode = (AtkComponentNode*)entry.Key;
                     var parentNodeComponent = (AtkComponentListItemRenderer*)parentNode->Component;
 
                     if (parentNodeComponent->ListItemIndex >= itemTreeListComponent->Items.Count)
-                        setNodeNeededMark((AtkResNode*)parentNode, false, true, true);
+                        setNodeNeededMark((AtkResNode*)parentNode, null, true, true);
                 }
             }
             catch (Exception ex)
@@ -117,7 +118,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
 
         private unsafe void updateNeededShopItemIndexes(Span<AtkValue> atkValues)
         {
-            neededShopItemIndexes.Clear();
+            neededShopItemIndexColors.Clear();
             shieldInAtkValues = false;
             var shopItemCount = atkValues[AtkValueItemCountIndex].Int;
             var maxItemIndex = AtkValueItemIdListStartingIndex + shopItemCount;
@@ -142,8 +143,13 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
                 shieldInAtkValues = true;
 
                 // add if needed
-                if (Gearset.GearsetsNeedItemId(endOfItemIdList.UInt, Plugin.Gearsets, includeUncollectedItemMateria: Plugin.Configuration.HighlightUncollectedItemMateria))
-                    neededShopItemIndexes.Add(AddonShieldIndex);
+                var shopItemColor = Gearset.GetRequirementColor(
+                    endOfItemIdList.UInt,
+                    Plugin.Configuration.DefaultHighlightColor,
+                    Plugin.ItemRequirements
+                    );
+                if (shopItemColor is not null)
+                    neededShopItemIndexColors.Add(AddonShieldIndex, shopItemColor);
             }
 
             // handle other items
@@ -159,10 +165,21 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
                     ? 1  // shield visible and idx after where shield goes
                     : 0; // either shield not visible or before where shield goes
 
-                if (Gearset.GearsetsNeedItemId(itemId, Plugin.Gearsets, includeUncollectedItemMateria: Plugin.Configuration.HighlightUncollectedItemMateria))
+                var itemColor = Gearset.GetRequirementColor(
+                    itemId,
+                    Plugin.Configuration.DefaultHighlightColor,
+                    Plugin.ItemRequirements
+                    );
+
+                if (itemColor is not null)
                 {
                     var filteredIndex = getFilteredIndex(i, atkValues);
-                    if (filteredIndex >= 0) neededShopItemIndexes.Add(filteredIndex + shieldOffset);
+                    if (filteredIndex >= 0)
+                        neededShopItemIndexColors.Add(filteredIndex + shieldOffset, itemColor);
+                    //Services.Log.Verbose($"idx: {filteredIndex + shieldOffset}, Item color: {itemColor.BaseColor}");
+                    //neededShopItemIndexColors.Add(filteredIndex + shieldOffset, itemColor);
+
+
                 }
             }
         }
@@ -219,7 +236,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
             );
         }
 
-        protected override unsafe NodeBase? initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon)
+        protected override unsafe NodeBase? initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon, HighlightColor color)
         {
             NineGridNode? customNode = null;
             try
@@ -230,12 +247,12 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
                     ? parentNode.GetNode<AtkNineGridNode>(AddonShopShieldHoverNodeId)
                     : parentNode.GetNode<AtkNineGridNode>(AddonShopHoverNodeId);
 
-                customNode = UiHelper.CloneNineGridNode(
+                customNode = UiHelper.CloneHighlightNineGridNode(
                     AddonCustomNodeId,
                     hoverNode,
-                    Plugin.Configuration.CustomNodeAddColor,
+                    color.CustomNodeColor,
                     Plugin.Configuration.CustomNodeMultiplyColor,
-                    Plugin.Configuration.CustomNodeAlpha
+                    color.CustomNodeAlpha(Plugin.Configuration.BrightListItemHighlighting)
                     ) ?? throw new Exception($"Could not clone node \"{hoverNode->NodeId}\"");
 
                 // mark as dirty
