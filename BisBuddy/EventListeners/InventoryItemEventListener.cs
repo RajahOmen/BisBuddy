@@ -53,6 +53,7 @@ namespace BisBuddy.EventListeners
                         addedArgs.Item.ItemId,
                         Plugin.ItemRequirements,
                         includeCollected: true,
+                        includeObtainable: true,
                         includeCollectedPrereqs: true
                     ))
                     return;
@@ -81,6 +82,7 @@ namespace BisBuddy.EventListeners
                         removedArgs.Item.ItemId,
                         Plugin.ItemRequirements,
                         includeCollected: true,
+                        includeObtainable: true,
                         includeCollectedPrereqs: true
                     ))
                     return;
@@ -109,6 +111,7 @@ namespace BisBuddy.EventListeners
                         changedArgs.Item.ItemId,
                         Plugin.ItemRequirements,
                         includeCollected: true,
+                        includeObtainable: true,
                         includeCollectedPrereqs: true
                     ))
                     return;
@@ -137,6 +140,7 @@ namespace BisBuddy.EventListeners
                         movedArgs.Item.ItemId,
                         Plugin.ItemRequirements,
                         includeCollected: true,
+                        includeObtainable: true,
                         includeCollectedPrereqs: true
                     ))
                     return;

@@ -62,12 +62,13 @@ namespace BisBuddy.Gear
                 ItemId = ItemId,
                 Gearset = parentGearset,
                 Gearpiece = this,
-                IsCollected = IsCollected,
+                IsCollected = IsCollected || IsManuallyCollected,
+                IsObtainable = IsObtainable,
                 RequirementType = RequirementType.Gearpiece,
             };
 
             // ignore materia if uncollected item materia is not enabled
-            if (IsCollected || includeUncollectedItemMateria)
+            if (IsCollected || IsManuallyCollected || includeUncollectedItemMateria)
             {
                 foreach (var materia in ItemMateria)
                 {
@@ -77,6 +78,7 @@ namespace BisBuddy.Gear
                         Gearset = parentGearset,
                         Gearpiece = this,
                         IsCollected = materia.IsMelded,
+                        IsObtainable = false, // materia has no prerequisites
                         RequirementType = RequirementType.Materia,
                     };
                 }

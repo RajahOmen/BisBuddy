@@ -29,6 +29,12 @@ namespace BisBuddy.Gear
         /// </summary>
         public bool IsCollected;
 
+
+        /// <summary>
+        /// If the requirement being satisfied by the ItemId is marked as obtainable
+        /// </summary>
+        public bool IsObtainable;
+
         /// <summary>
         /// How is this item needed (gearpiece, prerequisite piece, materia)
         /// </summary>

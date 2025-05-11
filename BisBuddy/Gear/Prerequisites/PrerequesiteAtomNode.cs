@@ -154,6 +154,7 @@ namespace BisBuddy.Gear.Prerequisites
                 Gearset = parentGearset,
                 Gearpiece = parentGearpiece,
                 IsCollected = IsCollected,
+                IsObtainable = IsObtainable,
                 RequirementType = RequirementType.Prerequisite,
             };
 

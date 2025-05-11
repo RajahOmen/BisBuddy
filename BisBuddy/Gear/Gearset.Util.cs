@@ -33,7 +33,8 @@ namespace BisBuddy.Gear
         /// <param name="itemRequirements">The dictionary of ItemRequirements to check if the item is needed in</param>
         /// <param name="includeMateria">Whether to include requirements of type Materia</param>
         /// <param name="includePrereqs">Whether to include requirements of type Prerequisite</param>
-        /// <param name="includeCollected">Whether to include gearpieces that are marked as collected when checking needed status</param>
+        /// <param name="includeCollected">Whether to include sources that are marked as collected when checking needed status</param>
+        /// <param name="includeObtainable">Whether to include sources that are marked as obtainable when checking needed status</param>
         /// <param name="includeCollectedPrereqs">Whether to include prerequisites marked as collected. True for 'internal' inventory sources.
         /// False for 'external' sources outside of player inventory</param>
         /// <returns>If the item is needed in any way by any of the gearsets listed</returns>
@@ -43,40 +44,21 @@ namespace BisBuddy.Gear
             bool includePrereqs = true,
             bool includeMateria = true,
             bool includeCollected = false,
+            bool includeObtainable = false,
             bool includeCollectedPrereqs = false
             )
         {
-            if (!itemRequirements.TryGetValue(itemId, out var itemIdRequirements))
-                return false;
+            var itemIdRequirements = GetItemRequirements(
+                itemId,
+                itemRequirements,
+                includePrereqs,
+                includeMateria,
+                includeCollected,
+                includeObtainable,
+                includeCollectedPrereqs
+                );
 
-            if (itemIdRequirements.Count == 0)
-                return false;
-
-            // no further filtering down, so any requirement is valid
-            if (includeCollected && includeCollectedPrereqs)
-                return true;
-
-            foreach (var itemRequirement in itemIdRequirements)
-            {
-                switch (itemRequirement.RequirementType)
-                {
-                    case RequirementType.Gearpiece:
-                        if (!itemRequirement.IsCollected || includeCollected)
-                            return true;
-                        break;
-                    case RequirementType.Materia:
-                        if (includeMateria && (!itemRequirement.IsCollected || includeCollected))
-                            return true;
-                        break;
-                    case RequirementType.Prerequisite:
-                        if (includePrereqs && (!itemRequirement.IsCollected || includeCollectedPrereqs))
-                            return true;
-                        break;
-                    default:
-                        break;
-                }
-            }
-            return false;
+            return itemIdRequirements.Any();
         }
 
         /// <summary>
@@ -87,47 +69,57 @@ namespace BisBuddy.Gear
         /// <param name="includeMateria">Whether to include requirements of type Materia</param>
         /// <param name="includePrereqs">Whether to include requirements of type Prerequisite</param>
         /// <param name="includeCollected">Whether to include gearpieces that are marked as collected when checking needed status</param>
+        /// <param name="includeObtainable">Whether to include sources that are marked as obtainable when checking needed status</param>
         /// <param name="includeCollectedPrereqs">If includePrereqs is true, whether to include prerequisites marked as collected.
         /// True for 'internal' inventory sources. False for 'external' sources outside of player inventory</param>
         /// <returns>List of the items ItemRequirements that match the filters</returns>
-        public static IReadOnlyList<ItemRequirement> GetItemRequirements(
+        public static IEnumerable<ItemRequirement> GetItemRequirements(
             uint itemId,
             Dictionary<uint, List<ItemRequirement>> itemRequirements,
             bool includePrereqs = true,
             bool includeMateria = true,
             bool includeCollected = false,
+            bool includeObtainable = false, // TODO: make sure this is set right for other places
             bool includeCollectedPrereqs = false
             )
         {
             if (!itemRequirements.TryGetValue(itemId, out var itemIdRequirements))
-                return [];
+                yield break;
 
             if (itemIdRequirements.Count == 0)
-                return [];
+                yield break;
 
-            // no further filtering down, so any requirement is valid
-            if (includeCollected && includeCollectedPrereqs)
-                return itemIdRequirements;
+            foreach (var req in itemIdRequirements)
+            {
+                if (!includeObtainable && req.IsObtainable)
+                    continue;
 
-            var filteredRequirements = itemIdRequirements.Where(requirement =>
-                    requirement.RequirementType switch
-                    {
-                        RequirementType.Gearpiece => !requirement.IsCollected || includeCollected,
-                        RequirementType.Materia => includeMateria && (!requirement.IsCollected || includeCollected),
-                        RequirementType.Prerequisite => includePrereqs && (!requirement.IsCollected || includeCollectedPrereqs),
-                        _ => false
-                    }
-                ).ToList();
+                switch (req.RequirementType)
+                {
+                    case RequirementType.Gearpiece:
+                        if (includeCollected || !req.IsCollected)
+                            yield return req;
+                        break;
+                    case RequirementType.Materia:
+                        if (includeMateria && (includeCollected || !req.IsCollected))
+                            yield return req;
+                        break;
+                    case RequirementType.Prerequisite:
+                        if (includePrereqs && (includeCollectedPrereqs || !req.IsCollected))
+                            yield return req;
+                        break;
+                }
+            }
 
-            return filteredRequirements;
+            yield break;
         }
 
         public static HighlightColor? GetRequirementColor(
-            IReadOnlyList<ItemRequirement> itemRequirements,
+            IEnumerable<ItemRequirement> itemRequirements,
             HighlightColor defaultColor
             )
         {
-            if (itemRequirements.Count == 0)
+            if (!itemRequirements.Any())
                 return null;
 
             HighlightColor? currentColor = null;
@@ -157,6 +149,7 @@ namespace BisBuddy.Gear
             bool includePrereqs = true,
             bool includeMateria = true,
             bool includeCollected = false,
+            bool includeObtainable = false,
             bool includeCollectedPrereqs = false
             )
         {
@@ -167,6 +160,7 @@ namespace BisBuddy.Gear
                 includePrereqs,
                 includeMateria,
                 includeCollected,
+                includeObtainable,
                 includeCollectedPrereqs
                 );
 
@@ -186,8 +180,10 @@ namespace BisBuddy.Gear
                 includePrereqs: includeAsPrerequisite,
                 includeMateria: false,
                 includeCollected: true,
+                includeObtainable: true,
                 includeCollectedPrereqs: true
-                ).DistinctBy(requirement => requirement.Gearpiece);
+                ).DistinctBy(requirement => requirement.Gearpiece)
+                .ToList();
 
             var neededMeldPlans = new List<MeldPlan>();
 

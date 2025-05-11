@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="ConfigHighlightingSectionHeader" xml:space="preserve">
-    <value>Item Highlighting</value>
+    <value>Window Highlighting</value>
   </data>
   <data name="HighlightNeedGreedCheckbox" xml:space="preserve">
     <value>Need/Greed Windows</value>
@@ -440,5 +440,14 @@ When OFF: If a gearpiece isn't collected, its materia will not be highlighted an
   <data name="GearsetDefaultColorTooltip" xml:space="preserve">
     <value>Whether to use the default highlight color (as set in configuration),
 or to have a unique color to highlight items in</value>
+  </data>
+  <data name="ConfigGeneralSectionHeader" xml:space="preserve">
+    <value>General Settings</value>
+  </data>
+  <data name="GeneralConfigurationHighlightAppearanceCategory" xml:space="preserve">
+    <value>Highlight Appearance</value>
+  </data>
+  <data name="GeneralConfigurationMiscellaneousCategory" xml:space="preserve">
+    <value>Miscellaneous</value>
   </data>
 </root>

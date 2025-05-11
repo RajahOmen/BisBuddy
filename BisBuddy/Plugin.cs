@@ -8,6 +8,7 @@ using BisBuddy.Import;
 using BisBuddy.ItemAssignment;
 using BisBuddy.Items;
 using BisBuddy.Windows;
+using BisBuddy.Windows.ConfigWindow;
 using Dalamud.Game.Command;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin;

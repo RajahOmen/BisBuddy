@@ -106,7 +106,16 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Item Highlighting.
+        ///   Looks up a localized string similar to General Settings.
+        /// </summary>
+        internal static string ConfigGeneralSectionHeader {
+            get {
+                return ResourceManager.GetString("ConfigGeneralSectionHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Window Highlighting.
         /// </summary>
         internal static string ConfigHighlightingSectionHeader {
             get {
@@ -283,6 +292,24 @@ namespace BisBuddy.Resources {
         internal static string GearsetUrlTooltip {
             get {
                 return ResourceManager.GetString("GearsetUrlTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Highlight Appearance.
+        /// </summary>
+        internal static string GeneralConfigurationHighlightAppearanceCategory {
+            get {
+                return ResourceManager.GetString("GeneralConfigurationHighlightAppearanceCategory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Miscellaneous.
+        /// </summary>
+        internal static string GeneralConfigurationMiscellaneousCategory {
+            get {
+                return ResourceManager.GetString("GeneralConfigurationMiscellaneousCategory", resourceCulture);
             }
         }
         
