@@ -144,15 +144,19 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                 customNodeData.Color = color;
                 customNodes[(nint)parentNode] = customNodeData;
             }
-            
-            // move node to be positioned where it should be
-            customNodeData.Node.ScreenX = parentNode->ScreenX + customNodeData.Node.X;
-            customNodeData.Node.ScreenY = parentNode->ScreenY + customNodeData.Node.Y;
 
             // only make visible if color to mark is provided & custom node within min and max values
             var makeVisible = color is not null
                 && (parentNode->Y + customNodeData.Node.Height) >= (customNodeData.Node.Height / 2)
                 && (parentNode->Y + (customNodeData.Node.Height / 2)) <= CustomNodeMaxY;
+
+            // update position if showing the node
+            if (makeVisible)
+            {
+                // move node to be positioned where it should be
+                customNodeData.Node.ScreenX = parentNode->ScreenX + customNodeData.Node.X;
+                customNodeData.Node.ScreenY = parentNode->ScreenY + customNodeData.Node.Y;
+            }
 
             if (customNodeData.Node.IsVisible == makeVisible)
                 return false;
