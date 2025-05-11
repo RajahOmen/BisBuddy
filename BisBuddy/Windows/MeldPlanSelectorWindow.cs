@@ -4,6 +4,7 @@ using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
+using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using ImGuiNET;
 using System;
@@ -74,7 +75,12 @@ public unsafe class MeldPlanSelectorWindow : Window, IDisposable
     public override void Draw()
     {
         var curIdx = plugin.MateriaAttachEventListener.selectedMeldPlanIndex;
-        if (curIdx >= MeldPlans.Count) return;
+        if (curIdx >= MeldPlans.Count)
+            return;
+
+        // don't show if addon isn't currently visible (ie. during a meld action)
+        if (addon == null || !addon->IsVisible || !addon->WindowNode->IsVisible())
+            return;
 
         ImGui.Text(Resource.MeldWindowHeader);
 
