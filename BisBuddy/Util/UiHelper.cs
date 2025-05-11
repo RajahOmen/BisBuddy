@@ -15,6 +15,8 @@ namespace BisBuddy.Util;
 
 public static unsafe partial class UiHelper
 {
+    private static readonly string NineGridTexturePath = "ui/uld/ListItemA_hr1.tex";
+
     public static unsafe void SetNodeColor(AtkResNode* node, Vector4 color)
     {
         node->AddRed = (short)Math.Round(255 * color.X * color.W);
@@ -93,7 +95,7 @@ public static unsafe partial class UiHelper
 
         return textNode;
     }
-    public static unsafe NineGridNode? CloneNineGridNode(
+    public static unsafe NineGridNode? CloneHighlightNineGridNode(
         uint newNodeId,
         AtkNineGridNode* clonedNode,
         Vector3 addColor,
@@ -105,19 +107,11 @@ public static unsafe partial class UiHelper
 
         try
         {
-            var hoverNodePart = clonedNode->PartsList->Parts[0];
-
-            // get the texture string of the selected highlight texture
-            var textureString = hoverNodePart.UldAsset
-                ->AtkTexture.Resource
-                ->TexFileResourceHandle
-                ->ResourceHandle.FileName;
-
             // initialize new custom ninegridnode to show the highlight
             newNode = new NineGridNode()
             {
                 NodeID = newNodeId,
-                NodeFlags = NodeFlags.Enabled | NodeFlags.Visible | NodeFlags.AnchorTop | NodeFlags.AnchorLeft,
+                NodeFlags = NodeFlags.Enabled | NodeFlags.Visible | NodeFlags.AnchorRight | NodeFlags.AnchorLeft,
                 Width = clonedNode->Width,
                 Height = clonedNode->Height,
                 Scale = new(clonedNode->ScaleX, clonedNode->ScaleY),
@@ -136,6 +130,7 @@ public static unsafe partial class UiHelper
             };
 
             // construct and add texture part to the node
+            var hoverNodePart = clonedNode->PartsList->Parts[0];
             var part = new Part()
             {
                 U = hoverNodePart.U,
@@ -145,7 +140,7 @@ public static unsafe partial class UiHelper
                 Id = 0,
             };
 
-            part.LoadTexture(textureString.ToString());
+            part.LoadTexture(NineGridTexturePath.ToString());
             newNode.AddPart(part);
 
             return newNode;

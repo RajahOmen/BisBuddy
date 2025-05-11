@@ -247,7 +247,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
                     ? parentNode.GetNode<AtkNineGridNode>(AddonShopShieldHoverNodeId)
                     : parentNode.GetNode<AtkNineGridNode>(AddonShopHoverNodeId);
 
-                customNode = UiHelper.CloneNineGridNode(
+                customNode = UiHelper.CloneHighlightNineGridNode(
                     AddonCustomNodeId,
                     hoverNode,
                     color.CustomNodeColor,

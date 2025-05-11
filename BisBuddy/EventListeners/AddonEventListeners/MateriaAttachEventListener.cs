@@ -364,7 +364,7 @@ namespace BisBuddy.EventListeners.AddonEventListeners
                     .SearchNodeById(hoverNodeId)
                     ->GetAsAtkNineGridNode();
 
-                customNode = UiHelper.CloneNineGridNode(
+                customNode = UiHelper.CloneHighlightNineGridNode(
                     AddonCustomNodeId,
                     hoverNode,
                     color.CustomNodeColor,
