@@ -84,7 +84,7 @@ namespace BisBuddy.Gear
                 }
             }
 
-            if (PrerequisiteTree is not null)
+            if (!IsCollected && PrerequisiteTree is not null)
             {
                 var prerequisiteRequirements = PrerequisiteTree.ItemRequirements(parentGearset, this);
                 foreach (var requirement in prerequisiteRequirements)
