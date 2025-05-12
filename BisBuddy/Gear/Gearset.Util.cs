@@ -79,7 +79,7 @@ namespace BisBuddy.Gear
             bool includePrereqs = true,
             bool includeMateria = true,
             bool includeCollected = false,
-            bool includeObtainable = false, // TODO: make sure this is set right for other places
+            bool includeObtainable = false,
             bool includeCollectedPrereqs = false
             )
         {
@@ -91,7 +91,7 @@ namespace BisBuddy.Gear
 
             foreach (var req in itemIdRequirements)
             {
-                if (!includeObtainable && req.IsObtainable)
+                if (!includeObtainable && req.IsObtainable && !req.IsCollected)
                     continue;
 
                 switch (req.RequirementType)
