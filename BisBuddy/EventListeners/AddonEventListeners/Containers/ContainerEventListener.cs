@@ -132,7 +132,8 @@ namespace BisBuddy.EventListeners.AddonEventListeners.Containers
                     itemId,
                     Plugin.Configuration.DefaultHighlightColor,
                     Plugin.ItemRequirements,
-                    includeCollectedPrereqs: true
+                    includeCollectedPrereqs: true,
+                    includeObtainable: true
                     );
 
                 if (itemColor is not null)

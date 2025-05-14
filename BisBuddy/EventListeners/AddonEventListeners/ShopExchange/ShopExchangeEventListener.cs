@@ -146,7 +146,8 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
                 var shopItemColor = Gearset.GetRequirementColor(
                     endOfItemIdList.UInt,
                     Plugin.Configuration.DefaultHighlightColor,
-                    Plugin.ItemRequirements
+                    Plugin.ItemRequirements,
+                    includeObtainable: true
                     );
                 if (shopItemColor is not null)
                     neededShopItemIndexColors.Add(AddonShieldIndex, shopItemColor);
@@ -168,7 +169,8 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
                 var itemColor = Gearset.GetRequirementColor(
                     itemId,
                     Plugin.Configuration.DefaultHighlightColor,
-                    Plugin.ItemRequirements
+                    Plugin.ItemRequirements,
+                    includeObtainable: true
                     );
 
                 if (itemColor is not null)
@@ -176,10 +178,6 @@ namespace BisBuddy.EventListeners.AddonEventListeners.ShopExchange
                     var filteredIndex = getFilteredIndex(i, atkValues);
                     if (filteredIndex >= 0)
                         neededShopItemIndexColors.Add(filteredIndex + shieldOffset, itemColor);
-                    //Services.Log.Verbose($"idx: {filteredIndex + shieldOffset}, Item color: {itemColor.BaseColor}");
-                    //neededShopItemIndexColors.Add(filteredIndex + shieldOffset, itemColor);
-
-
                 }
             }
         }
