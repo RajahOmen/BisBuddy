@@ -5,13 +5,13 @@ using System.Linq;
 namespace BisBuddy.Gear.Prerequisites
 {
     [Serializable]
-    public class PrerequisiteOrNode : PrerequisiteNode
+    public class PrerequisiteOrNode : IPrerequisiteNode
     {
         public string NodeId { get; init; }
         public uint ItemId { get; set; }
         public string ItemName { get; set; }
         public PrerequisiteNodeSourceType SourceType { get; set; }
-        public List<PrerequisiteNode> PrerequisiteTree { get; set; }
+        public List<IPrerequisiteNode> PrerequisiteTree { get; set; }
 
         public bool IsCollected => PrerequisiteTree.Any(p => p.IsCollected);
         public bool IsManuallyCollected => PrerequisiteTree.Any(p => p.IsManuallyCollected);
@@ -21,7 +21,7 @@ namespace BisBuddy.Gear.Prerequisites
         public PrerequisiteOrNode(
             uint itemId,
             string itemName,
-            List<PrerequisiteNode>? prerequisiteTree,
+            List<IPrerequisiteNode>? prerequisiteTree,
             PrerequisiteNodeSourceType sourceType,
             string? nodeId = null
             )
@@ -56,7 +56,7 @@ namespace BisBuddy.Gear.Prerequisites
             return PrerequisiteTree.Sum(p => p.PrerequisiteCount());
         }
 
-        public PrerequisiteNode? AssignItemId(uint itemId)
+        public IPrerequisiteNode? AssignItemId(uint itemId)
         {
             // don't assign if OR is already satisfied
             if (IsCollected)

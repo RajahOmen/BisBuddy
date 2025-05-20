@@ -1,4 +1,4 @@
-using BisBuddy.Gear;
+using BisBuddy.Gear.MeldPlan;
 using BisBuddy.Resources;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility;

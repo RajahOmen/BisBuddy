@@ -12,7 +12,7 @@ namespace BisBuddy.Gear
             uint itemId,
             string itemName,
             GearpieceType gearpieceType,
-            PrerequisiteNode? prerequisiteTree,
+            IPrerequisiteNode? prerequisiteTree,
             List<Materia>? itemMateria,
             bool isCollected = false,
             bool isManuallyCollected = false
@@ -29,7 +29,7 @@ namespace BisBuddy.Gear
         public uint ItemId { get; set; }
         public string ItemName { get; set; }
         public GearpieceType GearpieceType { get; set; }
-        public PrerequisiteNode? PrerequisiteTree { get; set; } // relations with other items that can be used to obtain this gearpiece
+        public IPrerequisiteNode? PrerequisiteTree { get; set; } // relations with other items that can be used to obtain this gearpiece
         public bool IsCollected { get; private set; }
         public bool IsManuallyCollected { get; private set; } // If this item was manually marked as collected
         public bool IsObtainable => PrerequisiteTree?.IsObtainable ?? false; // If no prerequisites known, assume not obtainable

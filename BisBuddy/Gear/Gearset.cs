@@ -1,6 +1,7 @@
 using BisBuddy.Import;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace BisBuddy.Gear
 {
@@ -18,11 +19,11 @@ namespace BisBuddy.Gear
         public string? SourceUrl { get; set; } = null;
         // for local representations of the gearset that aren't native JSON (ex: teamcraft plaintext)
         public string? SourceString { get; set; } = null;
-        public ImportSourceType? SourceType { get; set; }
+        public ImportGearsetSourceType? SourceType { get; set; }
         public string JobAbbrv { get; set; } = "???";
         public HighlightColor? HighlightColor { get; set; } = null;
 
-        public Gearset(string name, string? sourceUrl, ImportSourceType? sourceType)
+        public Gearset(string name, string? sourceUrl, ImportGearsetSourceType? sourceType)
         {
             Name = name;
             SourceUrl = sourceUrl;
@@ -33,7 +34,7 @@ namespace BisBuddy.Gear
             string name,
             List<Gearpiece> gearpieces,
             string jobAbbrv,
-            ImportSourceType? sourceType,
+            ImportGearsetSourceType? sourceType,
             string? sourceUrl = null,
             string? sourceString = null
             )
@@ -56,6 +57,11 @@ namespace BisBuddy.Gear
             foreach (var gearpiece in Gearpieces)
                 foreach (var requirement in gearpiece.ItemRequirements(this, includeUncollectedItemMateria))
                     yield return requirement;
+        }
+
+        public static IEnumerable<Gearpiece> GetGearpiecesFromGearsets(IEnumerable<Gearset> gearsets)
+        {
+            return gearsets.SelectMany(g => g.Gearpieces);
         }
     }
 }

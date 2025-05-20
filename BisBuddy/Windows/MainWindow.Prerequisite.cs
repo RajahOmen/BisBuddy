@@ -151,7 +151,7 @@ namespace BisBuddy.Windows
             }
         }
 
-        private void drawPrerequisiteTree(PrerequisiteNode prerequisiteNode, Gearpiece parentGearpiece, int parentCount = 1)
+        private void drawPrerequisiteTree(IPrerequisiteNode prerequisiteNode, Gearpiece parentGearpiece, int parentCount = 1)
         {
             if (prerequisiteNode.GetType() == typeof(PrerequisiteOrNode))
             {

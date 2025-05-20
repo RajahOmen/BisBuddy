@@ -1,5 +1,6 @@
 using BisBuddy.Import;
 using BisBuddy.Resources;
+using BisBuddy.Services.ImportGearset;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using Dalamud.Utility;
@@ -14,7 +15,7 @@ namespace BisBuddy.Windows;
 public class ImportGearsetWindow : Window, IDisposable
 {
     private string gearsetSourceString = string.Empty;
-    private ImportSourceType gearsetSourceType = ImportSourceType.Xivgear;
+    private ImportGearsetSourceType gearsetSourceType = ImportGearsetSourceType.Xivgear;
     private bool importLoading = false;
     private GearsetImportStatusType? importStatus;
     private int importedGearsetCount = -1;
@@ -29,20 +30,20 @@ public class ImportGearsetWindow : Window, IDisposable
         { GearsetImportStatusType.TooManyGearsets, Resource.ImportFailTooManyGearsets },
     };
 
-    private static readonly Dictionary<ImportSourceType, string> ImportSourceTypeNames = new()
+    private static readonly Dictionary<ImportGearsetSourceType, string> ImportSourceTypeNames = new()
     {
-        { ImportSourceType.Xivgear, "Xivgear.app" },
-        { ImportSourceType.Etro, "Etro.gg" },
-        { ImportSourceType.Json, $"JSON" },
-        { ImportSourceType.Teamcraft, "Teamcraft" },
+        { ImportGearsetSourceType.Xivgear, "Xivgear.app" },
+        { ImportGearsetSourceType.Etro, "Etro.gg" },
+        { ImportGearsetSourceType.Json, $"JSON" },
+        { ImportGearsetSourceType.Teamcraft, "Teamcraft" },
     };
 
-    private static readonly Dictionary<ImportSourceType, string> ImportSourceTypeTooltips = new()
+    private static readonly Dictionary<ImportGearsetSourceType, string> ImportSourceTypeTooltips = new()
     {
-        { ImportSourceType.Xivgear, Resource.ImportXivgearTooltip },
-        { ImportSourceType.Etro, Resource.ImportEtroTooltip },
-        { ImportSourceType.Json, Resource.ImportJsonTooltip },
-        { ImportSourceType.Teamcraft, Resource.ImportTeamcraftTooltip },
+        { ImportGearsetSourceType.Xivgear, Resource.ImportXivgearTooltip },
+        { ImportGearsetSourceType.Etro, Resource.ImportEtroTooltip },
+        { ImportGearsetSourceType.Json, Resource.ImportJsonTooltip },
+        { ImportGearsetSourceType.Teamcraft, Resource.ImportTeamcraftTooltip },
     };
 
     public ImportGearsetWindow(Plugin plugin)
@@ -70,7 +71,7 @@ public class ImportGearsetWindow : Window, IDisposable
             }
 
             importLoading = true;
-            var importResult = await Services.ImportGearsetService.ImportGearsets(gearsetSourceType, gearsetSourceString);
+            var importResult = await ImportGearsetService.ImportGearsets(gearsetSourceType, gearsetSourceString);
             gearsetSourceString = string.Empty;
             importStatus = importResult.StatusType;
             importedGearsetCount = importResult.Gearsets != null ? importResult.Gearsets.Count : -1;
@@ -99,7 +100,7 @@ public class ImportGearsetWindow : Window, IDisposable
 
     public override void Draw()
     {
-        var sourceOptions = Services.ImportGearsetService.RegisteredSources();
+        var sourceOptions = ImportGearsetService.RegisteredSourceTypes();
         using (var sourceOptionsTable = ImRaii.Table("Source options", sourceOptions.Count, ImGuiTableFlags.BordersInnerV))
         using (ImRaii.PushStyle(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.5f, 0.5f)))
         {

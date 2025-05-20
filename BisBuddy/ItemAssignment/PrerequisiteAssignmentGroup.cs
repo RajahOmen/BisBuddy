@@ -33,7 +33,7 @@ namespace BisBuddy.ItemAssignment
         private List<Materia> materiaList = [];
         public readonly HashSet<Gearset> Gearsets = [];
 
-        public Dictionary<Gearpiece, HashSet<(PrerequisiteNode Node, GameInventoryItem Item)>> DirectlyAssignedNodes = [];
+        public Dictionary<Gearpiece, HashSet<(IPrerequisiteNode Node, GameInventoryItem Item)>> DirectlyAssignedNodes = [];
 
         public List<Materia> MateriaList
         {
@@ -72,7 +72,7 @@ namespace BisBuddy.ItemAssignment
             return needed.Count > 0;
         }
 
-        public List<GameInventoryItem> AssignItem(GameInventoryItem item, ItemData itemData, bool assignPrerequisiteMateria)
+        public List<GameInventoryItem> AssignItem(GameInventoryItem item, ItemDataService itemData, bool assignPrerequisiteMateria)
         {
             if (Gearpieces.Count == 0)
                 return [];

@@ -8,9 +8,9 @@ using System.Text.Json.Serialization;
 
 namespace BisBuddy.Converters
 {
-    internal class GearpieceConverter(ItemData itemData) : JsonConverter<Gearpiece>
+    internal class GearpieceConverter(IItemDataService itemData) : JsonConverter<Gearpiece>
     {
-        private readonly ItemData itemData = itemData;
+        private readonly IItemDataService itemData = itemData;
 
         public override Gearpiece? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
@@ -18,7 +18,7 @@ namespace BisBuddy.Converters
                 throw new JsonException("Expected StartObject for Gearpiece");
 
             uint? itemId = null;
-            PrerequisiteNode? prerequisiteTree = null;
+            IPrerequisiteNode? prerequisiteTree = null;
             List<Materia>? itemMateria = null;
             bool? isCollected = null;
             bool? isManuallyCollected = null;
@@ -37,7 +37,7 @@ namespace BisBuddy.Converters
                         itemId = reader.GetUInt32();
                         break;
                     case nameof(Gearpiece.PrerequisiteTree):
-                        prerequisiteTree = JsonSerializer.Deserialize<PrerequisiteNode>(ref reader, options);
+                        prerequisiteTree = JsonSerializer.Deserialize<IPrerequisiteNode>(ref reader, options);
                         break;
                     case nameof(Gearpiece.ItemMateria):
                         itemMateria = JsonSerializer.Deserialize<List<Materia>>(ref reader, options);

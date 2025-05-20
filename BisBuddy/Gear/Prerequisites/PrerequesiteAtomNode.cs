@@ -5,7 +5,7 @@ using System.Linq;
 namespace BisBuddy.Gear.Prerequisites
 {
     [Serializable]
-    public class PrerequisiteAtomNode : PrerequisiteNode
+    public class PrerequisiteAtomNode : IPrerequisiteNode
     {
         private bool isManuallyCollected = false;
         private bool isCollected = false;
@@ -15,7 +15,7 @@ namespace BisBuddy.Gear.Prerequisites
         public string ItemName { get; set; }
         public bool IsMeldable { get; set; } = false;
         public PrerequisiteNodeSourceType SourceType { get; set; }
-        public List<PrerequisiteNode> PrerequisiteTree { get; set; }
+        public List<IPrerequisiteNode> PrerequisiteTree { get; set; }
 
         public bool IsCollected
         {
@@ -34,7 +34,7 @@ namespace BisBuddy.Gear.Prerequisites
         public PrerequisiteAtomNode(
             uint itemId,
             string itemName,
-            List<PrerequisiteNode>? prerequisiteTree,
+            List<IPrerequisiteNode>? prerequisiteTree,
             PrerequisiteNodeSourceType sourceType,
             bool isCollected = false,
             bool isManuallyCollected = false,
@@ -103,7 +103,7 @@ namespace BisBuddy.Gear.Prerequisites
             return 1 + PrerequisiteTree.Sum(p => p.PrerequisiteCount());
         }
 
-        public PrerequisiteNode? AssignItemId(uint itemId)
+        public IPrerequisiteNode? AssignItemId(uint itemId)
         {
             if (IsCollected)
                 return null;

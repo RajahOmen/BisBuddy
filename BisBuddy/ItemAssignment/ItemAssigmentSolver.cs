@@ -17,7 +17,7 @@ namespace BisBuddy.ItemAssignment
 
         private readonly bool strictMateriaMatching;
         private readonly bool assignPrerequisiteMateria;
-        private readonly ItemData itemData;
+        private readonly ItemDataService itemData;
         private readonly List<Gearset> allGearsets;
         private readonly List<Gearset> assignableGearsets;
         private readonly List<GearpieceAssignmentGroup> gearpieceGroups = [];
@@ -33,7 +33,7 @@ namespace BisBuddy.ItemAssignment
             List<Gearset> allGearsets,
             List<Gearset> assignableGearsets,
             List<GameInventoryItem> inventoryItems,
-            ItemData itemData,
+            ItemDataService itemData,
             bool strictMateriaMatching,
             bool assignPrerequisiteMateria
             )
@@ -119,7 +119,7 @@ namespace BisBuddy.ItemAssignment
                 }
 
                 // Convert the entire row into a formatted string
-                var itemName = itemData.GetItemNameById(groups[row].ItemId).Replace($"{ItemData.HqIcon}", "[HQ]");
+                var itemName = itemData.GetItemNameById(groups[row].ItemId).Replace($"{ItemDataService.HqIcon}", "[HQ]");
                 var itemIdx = $"[{row,2}]";
                 var itemAssignment =
                     (assIdx != -1 && edges[row, assIdx] != NoEdgeWeightValue)
@@ -166,7 +166,8 @@ namespace BisBuddy.ItemAssignment
             addGearpieceAssignments(gearpieceAssignments);
 
             // stage 2: assign gearpieces according to solution
-            var updatedGearpieces = ItemAssigner.MakeItemAssignments(assignments, Gearset.GetGearpiecesFromGearsets(assignableGearsets), itemData);
+            var assignableGearpieces = assignableGearsets.SelectMany(g => g.Gearpieces).ToList();
+            var updatedGearpieces = ItemAssigner.MakeItemAssignments(assignments, assignableGearpieces, itemData);
 
             // stage 3: prepare prerequisite lists after gearpiece stage
             // group prerequisite items by gearpiece
@@ -207,8 +208,9 @@ namespace BisBuddy.ItemAssignment
 
         private void unassignPrereqs()
         {
-            var gearpieces = Gearset.GetGearpiecesFromGearsets(assignableGearsets);
-            gearpieces.ForEach(g => g.PrerequisiteTree?.SetCollected(false, false));
+            foreach (var gearset in assignableGearsets)
+                foreach (var gearpiece in gearset.Gearpieces)
+                    gearpiece.PrerequisiteTree?.SetCollected(false, false);
         }
 
         private int[] solveAndAssignPrerequisites(bool assignPrerequisiteMateria)

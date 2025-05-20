@@ -5,20 +5,20 @@ using System.Linq;
 namespace BisBuddy.Gear.Prerequisites
 {
     [Serializable]
-    public class PrerequisiteAndNode : PrerequisiteNode
+    public class PrerequisiteAndNode : IPrerequisiteNode
     {
         public string NodeId { get; init; }
         public uint ItemId { get; set; }
         public string ItemName { get; set; }
         public PrerequisiteNodeSourceType SourceType { get; set; }
-        public List<PrerequisiteNode> PrerequisiteTree { get; set; }
+        public List<IPrerequisiteNode> PrerequisiteTree { get; set; }
 
         public bool IsCollected => PrerequisiteTree.All(p => p.IsCollected);
         public bool IsManuallyCollected => PrerequisiteTree.All(p => p.IsManuallyCollected);
         public bool IsObtainable => IsCollected || PrerequisiteTree.All(p => p.IsObtainable);
         public HashSet<string> ChildNodeIds => [.. PrerequisiteTree.Select(p => p.NodeId), .. PrerequisiteTree.SelectMany(p => p.ChildNodeIds)];
 
-        public List<(PrerequisiteNode Node, int Count)> Groups()
+        public List<(IPrerequisiteNode Node, int Count)> Groups()
         {
             return PrerequisiteTree
                 .GroupBy(p => p.GroupKey())
@@ -31,7 +31,7 @@ namespace BisBuddy.Gear.Prerequisites
         public PrerequisiteAndNode(
             uint itemId,
             string itemName,
-            List<PrerequisiteNode>? prerequisiteTree,
+            List<IPrerequisiteNode>? prerequisiteTree,
             PrerequisiteNodeSourceType sourceType,
             string? nodeId = null
             )
@@ -89,7 +89,7 @@ namespace BisBuddy.Gear.Prerequisites
             return PrerequisiteTree.Sum(p => p.PrerequisiteCount());
         }
 
-        public PrerequisiteNode? AssignItemId(uint itemId)
+        public IPrerequisiteNode? AssignItemId(uint itemId)
         {
             foreach (var prereq in PrerequisiteTree)
             {
