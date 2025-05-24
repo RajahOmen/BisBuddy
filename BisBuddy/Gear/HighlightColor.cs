@@ -19,6 +19,7 @@ namespace BisBuddy.Gear
         public float CustomNodeAlpha(bool brightHighlighting)
             => brightHighlighting ? Configuration.BrightListItemAlpha : dimCustomNodeAlpha;
 
+        [JsonIgnore]
         public Vector4 ExistingNodeColor => BaseColor;
 
         [JsonConstructor]
