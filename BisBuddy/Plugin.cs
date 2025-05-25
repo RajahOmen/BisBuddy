@@ -170,6 +170,9 @@ public sealed partial class Plugin : IDalamudPlugin
                 // commands
                 builder.RegisterType<CommandService>().AsImplementedInterfaces().SingleInstance();
 
+                // handle active language
+                builder.RegisterType<LanguageService>().AsImplementedInterfaces().SingleInstance();
+
                 // addon listeners
                 //   inventories
                 builder.RegisterType<InventoryBuddyService>().AsImplementedInterfaces().AsSelf().SingleInstance();

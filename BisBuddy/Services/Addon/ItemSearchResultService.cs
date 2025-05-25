@@ -107,13 +107,6 @@ namespace BisBuddy.Services.Addon
 
                     var listingNode = (AtkResNode*)listItem.AtkComponentListItemRenderer->OwnerNode;
 
-                    //if (listItem.AtkComponentListItemRenderer->OwnerNode->Y < 0)
-                    //{
-                    //    setNodeNeededMark(listingNode, false, true, true);
-                    //    continue;
-                    //}
-
-
                     if (nqNeededRem > 0 && !itemIsHq) // needed nq
                     {
                         // mark the node
