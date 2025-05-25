@@ -1,3 +1,4 @@
+using BisBuddy.Util;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using KamiToolKit.Nodes;
 using System;
@@ -17,7 +18,7 @@ namespace BisBuddy.Gear
         [JsonIgnore]
         private float dimCustomNodeAlpha;
         public float CustomNodeAlpha(bool brightHighlighting)
-            => brightHighlighting ? Configuration.BrightListItemAlpha : dimCustomNodeAlpha;
+            => brightHighlighting ? Constants.BrightListItemAlpha : dimCustomNodeAlpha;
 
         [JsonIgnore]
         public Vector4 ExistingNodeColor => BaseColor;

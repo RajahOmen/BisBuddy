@@ -1,39 +1,35 @@
 using BisBuddy.Gear.Prerequisites;
+using BisBuddy.Services;
+using Dalamud.Plugin.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace BisBuddy.Gear
 {
+    public delegate void GearpieceChangeHandler();
+
     [Serializable]
-    public class Gearpiece
+    public class Gearpiece(
+        ITypedLogger<Gearpiece> logger,
+        uint itemId,
+        string itemName,
+        GearpieceType gearpieceType,
+        IPrerequisiteNode? prerequisiteTree,
+        List<Materia>? itemMateria,
+        bool isCollected = false,
+        bool isManuallyCollected = false
+        )
     {
-        public Gearpiece(
-            uint itemId,
-            string itemName,
-            GearpieceType gearpieceType,
-            IPrerequisiteNode? prerequisiteTree,
-            List<Materia>? itemMateria,
-            bool isCollected = false,
-            bool isManuallyCollected = false
-            )
-        {
-            ItemId = itemId;
-            ItemName = itemName;
-            GearpieceType = gearpieceType;
-            PrerequisiteTree = prerequisiteTree;
-            ItemMateria = itemMateria ?? [];
-            IsCollected = isCollected;
-            IsManuallyCollected = isManuallyCollected;
-        }
-        public uint ItemId { get; set; }
-        public string ItemName { get; set; }
-        public GearpieceType GearpieceType { get; set; }
-        public IPrerequisiteNode? PrerequisiteTree { get; set; } // relations with other items that can be used to obtain this gearpiece
-        public bool IsCollected { get; private set; }
-        public bool IsManuallyCollected { get; private set; } // If this item was manually marked as collected
+        private readonly ITypedLogger<Gearpiece> logger = logger;
+        public uint ItemId { get; set; } = itemId;
+        public string ItemName { get; set; } = itemName;
+        public GearpieceType GearpieceType { get; set; } = gearpieceType;
+        public IPrerequisiteNode? PrerequisiteTree { get; set; } = prerequisiteTree;
+        public bool IsCollected { get; private set; } = isCollected;
+        public bool IsManuallyCollected { get; private set; } = isManuallyCollected;
         public bool IsObtainable => PrerequisiteTree?.IsObtainable ?? false; // If no prerequisites known, assume not obtainable
-        public List<Materia> ItemMateria { get; init; }
+        public List<Materia> ItemMateria { get; init; } = itemMateria ?? [];
         private List<(Materia Materia, int Count)>? itemMateriaGrouped = null;
         public List<(Materia Materia, int Count)>? ItemMateriaGrouped
         {
@@ -53,6 +49,13 @@ namespace BisBuddy.Gear
             {
                 itemMateriaGrouped = value;
             }
+        }
+
+        public event GearpieceChangeHandler? OnGearpieceChange;
+
+        private void triggerGearpieceChange()
+        {
+            OnGearpieceChange?.Invoke();
         }
 
         public IEnumerable<ItemRequirement> ItemRequirements(Gearset parentGearset, bool includeUncollectedItemMateria)
@@ -96,7 +99,7 @@ namespace BisBuddy.Gear
         {
             if (IsManuallyCollected && !collected && !manualToggle)
             {
-                Services.Log.Error($"Cannot automatically uncollect manually collected item: {ItemName}");
+                logger.Error($"Cannot automatically uncollect manually collected item: {ItemName}");
                 return;
             }
 
@@ -117,6 +120,8 @@ namespace BisBuddy.Gear
             // if clicked by user as uncollected, uncollect all prerequisites as well
             if (!collected && manualToggle && PrerequisiteTree != null)
                 PrerequisiteTree.SetCollected(false, manualToggle);
+
+            triggerGearpieceChange();
         }
 
         public List<uint> ManuallyCollectedItemIds()
@@ -140,6 +145,7 @@ namespace BisBuddy.Gear
                 {
                     materia.IsMelded = true;
                     ItemMateria[i] = materia;
+                    triggerGearpieceChange();
                     break;
                 }
             }
@@ -193,6 +199,7 @@ namespace BisBuddy.Gear
                 }
             }
 
+            triggerGearpieceChange();
             return slottedCount;
         }
 
@@ -206,6 +213,7 @@ namespace BisBuddy.Gear
                 {
                     materia.IsMelded = false;
                     ItemMateria[i] = materia;
+                    triggerGearpieceChange();
                     break;
                 }
             }
@@ -216,6 +224,8 @@ namespace BisBuddy.Gear
             itemMateriaGrouped = null;
             foreach (var materia in ItemMateria)
                 materia.IsMelded = false;
+
+            triggerGearpieceChange();
         }
     }
 }

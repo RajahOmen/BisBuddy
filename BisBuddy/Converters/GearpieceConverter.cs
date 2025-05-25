@@ -1,3 +1,4 @@
+using BisBuddy.Factories;
 using BisBuddy.Gear;
 using BisBuddy.Gear.Prerequisites;
 using BisBuddy.Items;
@@ -8,9 +9,13 @@ using System.Text.Json.Serialization;
 
 namespace BisBuddy.Converters
 {
-    internal class GearpieceConverter(IItemDataService itemData) : JsonConverter<Gearpiece>
+    internal class GearpieceConverter(
+        IItemDataService itemDataService,
+        IGearpieceFactory gearpieceFactory
+        ) : JsonConverter<Gearpiece>
     {
-        private readonly IItemDataService itemData = itemData;
+        private readonly IItemDataService itemDataService = itemDataService;
+        private readonly IGearpieceFactory gearpieceFactory = gearpieceFactory;
 
         public override Gearpiece? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
@@ -57,19 +62,11 @@ namespace BisBuddy.Converters
             if (itemId == null)
                 throw new JsonException("No itemId found for Gearpiece");
 
-            // try to extend this tree with new options
-            prerequisiteTree = itemData.ExtendItemPrerequisites(
+            return gearpieceFactory.Create(
                 itemId!.Value,
+                itemMateria,
                 prerequisiteTree,
                 isCollected ?? false,
-                isManuallyCollected ?? false
-                );
-
-            return itemData.BuildGearpiece(
-                itemId!.Value,
-                prerequisiteTree,
-                itemMateria ?? throw new JsonException("No itemMateria found for Gearpiece"),
-                isCollected ?? throw new JsonException("No isCollected found for Gearpiece"),
                 isManuallyCollected ?? false
                 );
         }

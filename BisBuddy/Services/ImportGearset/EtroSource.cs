@@ -1,3 +1,4 @@
+using BisBuddy.Factories;
 using BisBuddy.Gear;
 using BisBuddy.Import;
 using BisBuddy.Items;
@@ -10,7 +11,11 @@ using System.Threading.Tasks;
 
 namespace BisBuddy.Services.ImportGearset
 {
-    public class EtroSource : IImportGearsetSource
+    public class EtroSource(
+        HttpClient httpClient,
+        IItemDataService itemDataService,
+        IGearpieceFactory gearpieceFactory
+        ) : IImportGearsetSource
     {
         public ImportGearsetSourceType SourceType => ImportGearsetSourceType.Etro;
 
@@ -32,14 +37,9 @@ namespace BisBuddy.Services.ImportGearset
             "fingerR",
             ]);
 
-        private readonly ItemDataService itemData;
-        private readonly HttpClient httpClient;
-
-        public EtroSource(ItemDataService itemData, HttpClient httpClient)
-        {
-            this.itemData = itemData;
-            this.httpClient = httpClient;
-        }
+        private readonly HttpClient httpClient = httpClient;
+        private readonly IItemDataService itemDataService = itemDataService;
+        private readonly IGearpieceFactory gearpieceFactory = gearpieceFactory;
 
         public async Task<List<Gearset>> ImportGearsets(string importString)
         {
@@ -117,7 +117,6 @@ namespace BisBuddy.Services.ImportGearset
             }
 
             var gearpieces = new List<Gearpiece>();
-            var gearset = new Gearset(gearsetName, gearpieces, job, ImportGearsetSourceType.Etro, sourceUrl: importString);
 
             foreach (var typeStr in EtroGearpieceTypeFieldNames)
             {
@@ -127,16 +126,14 @@ namespace BisBuddy.Services.ImportGearset
                     )
                 {
                     // parse gearpiece properties
-                    var gearpieceType = GearpieceTypeMapper.Parse(typeStr);
                     var gearpieceId = gearpieceIdJson.GetUInt32();
-                    var hqGearpieceId = itemData.ConvertItemIdToHq(gearpieceId);
+                    var hqGearpieceId = itemDataService.ConvertItemIdToHq(gearpieceId);
+                    var gearpieceMateria = parseMateria(materiaProp, gearpieceId.ToString(), typeStr);
+
                     // etro only provides NQ items, convert to HQ
-                    var gearpiece = new Gearpiece(
+                    var gearpiece = gearpieceFactory.Create(
                         hqGearpieceId,
-                        itemData.GetItemNameById(hqGearpieceId),
-                        gearpieceType,
-                        itemData.BuildGearpiecePrerequisiteTree(hqGearpieceId),
-                        parseMateria(materiaProp, gearpieceId.ToString(), typeStr)
+                        gearpieceMateria
                         );
 
                     // add gearpiece to gearpieces
@@ -161,15 +158,11 @@ namespace BisBuddy.Services.ImportGearset
                     if (relicItemId == 0)
                         continue;
 
-                    var relicName = itemData.GetItemNameById(relicItemId);
-                    var relicType = GearpieceTypeMapper.Parse(relic.Name);
-                    var relicMateria = new List<Materia>();
-                    var gearpiece = new Gearpiece(
+                    var relicMateria = parseMateria(materiaProp, relicItemId.ToString(), relic.Name);
+
+                    var gearpiece = gearpieceFactory.Create(
                         relicItemId,
-                        relicName,
-                        relicType,
-                        itemData.BuildGearpiecePrerequisiteTree(relicItemId),
-                        parseMateria(materiaProp, relicItemId.ToString(), relic.Name)
+                        relicMateria
                         );
 
                     // add gearpiece to gearpieces
@@ -177,10 +170,10 @@ namespace BisBuddy.Services.ImportGearset
                 }
             }
 
-            if (gearset.Gearpieces.Count == 0)
+            if (gearpieces.Count == 0)
                 return null;
 
-            gearset.Gearpieces.Sort((a, b) => a.GearpieceType.CompareTo(b.GearpieceType));
+            var gearset = new Gearset(gearsetName, gearpieces, job, ImportGearsetSourceType.Etro, sourceUrl: importString);
 
             return gearset;
         }
@@ -216,7 +209,7 @@ namespace BisBuddy.Services.ImportGearset
                 foreach (var materiaSlot in prop.Value.EnumerateObject())
                 {
                     var materiaSlotId = materiaSlot.Value.GetUInt32();
-                    var newMateria = itemData.BuildMateria(materiaSlotId);
+                    var newMateria = itemDataService.BuildMateria(materiaSlotId);
                     materiaList.Add(newMateria);
                 }
             }

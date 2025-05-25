@@ -1,4 +1,4 @@
-namespace BisBuddy.Windows.ConfigWindow
+namespace BisBuddy.Windows.Config
 {
     public enum ConfigMenuGroup
     {

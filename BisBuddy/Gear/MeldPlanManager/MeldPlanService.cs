@@ -1,58 +1,66 @@
-using BisBuddy.Gear.GearsetsManager;
-using BisBuddy.Services.AddonEventListeners;
+using BisBuddy.Services.Addon;
+using BisBuddy.Services.Gearsets;
 using BisBuddy.Windows;
 using System;
 using System.Collections.Generic;
 
 namespace BisBuddy.Gear.MeldPlanManager
 {
-    public class MeldPlanService
+    public class MeldPlanService(
+        IGearsetsService gearsetsService
+        ) : IMeldPlanService
     {
-        private readonly IGearsetsService gearsetsService;
-        private readonly MeldPlanSelectorWindow meldPlanSelectorWindow;
-        private readonly MateriaAttachEventListener materiaAttachEventListener;
+        private readonly IGearsetsService gearsetsService = gearsetsService;
 
-        private List<MeldPlan> currentMeldPlans = [];
-        private int currentPlanIdx = 0;
-        public IReadOnlyList<MeldPlan> CurrentMeldPlans => currentMeldPlans;
-        public int CurrentPlanIdx => currentPlanIdx;
-
-        public MeldPlanService(
-            IGearsetsService gearsetsService,
-            MeldPlanSelectorWindow meldPlanSelectorWindow,
-            MateriaAttachEventListener materiaAttachEventListener
-            )
+        private IReadOnlyList<MeldPlan> currentMeldPlans = [];
+        private int currentMeldPlanIndex = 0;
+        private uint? currentItemId;
+        public IReadOnlyList<MeldPlan> CurrentMeldPlans
         {
-            this.gearsetsService = gearsetsService;
-            this.meldPlanSelectorWindow = meldPlanSelectorWindow;
-            this.materiaAttachEventListener = materiaAttachEventListener;
+            get => currentMeldPlans;
+            set
+            {
+                currentMeldPlans = value;
+                // "refresh" this to perform new bounds check
+                CurrentMeldPlanIndex = CurrentMeldPlanIndex;
+            }
         }
-
-        public void UpdateMeldPlans(uint? newItemId)
+        public int CurrentMeldPlanIndex
         {
-            if (newItemId is not null)
-                currentMeldPlans = gearsetsService.GetNeededItemMeldPlans(newItemId!.Value);
+            get => currentMeldPlanIndex;
+            set
+            {
+                // change, but stay within bounds of meld plan list
+                currentMeldPlanIndex = Math.Max(
+                    Math.Min(value, currentMeldPlans.Count - 1),
+                    0
+                    );
+            }
+        }
+        public MeldPlan? CurrentMeldPlan => 
+            currentMeldPlans.Count > 0
+            ? currentMeldPlans[currentMeldPlanIndex]
+            : null;
+
+        public void SetCurrentMeldPlanItemId(uint? newItemId)
+        {
+            if (currentItemId == newItemId)
+                return;
+
+            currentItemId = newItemId;
+
+            if (newItemId is uint id)
+                CurrentMeldPlans = gearsetsService.GetNeededItemMeldPlans(id);
             else
-                currentMeldPlans.Clear();
+                CurrentMeldPlans = [];
         }
+    }
 
-        public void UpdateMeldPlanIndex(int newPlanIdx)
-        {
-            if (currentPlanIdx == newPlanIdx)
-                return;
-
-            if (newPlanIdx < 0 || newPlanIdx >= currentMeldPlans.Count)
-                return;
-
-
-            currentPlanIdx = newPlanIdx;
-            // todo: setter in the listener to
-            materiaAttachEventListener.selectedMeldPlanIndex = currentPlanIdx;
-        }
-
-        public delegate void MeldPlanIdxSelectedChangeHandler(int newIdx);
-        public event MeldPlanIdxSelectedChangeHandler? OnMeldPlanIdxSelectedChange;
-        public void TriggerMeldPlanIdxSelectedChange(int newIdx) =>
-            OnMeldPlanIdxSelectedChange?.Invoke(newIdx);
+    public interface IMeldPlanService
+    {
+        public MeldPlan? CurrentMeldPlan { get; }
+        public IReadOnlyList<MeldPlan> CurrentMeldPlans { get; }
+        public int CurrentMeldPlanIndex { get; set; }
+        public void SetCurrentMeldPlanItemId(uint? newItemId);
     }
 }

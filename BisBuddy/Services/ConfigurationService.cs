@@ -1,5 +1,8 @@
+using Autofac.Core;
 using BisBuddy.Gear;
 using BisBuddy.Items;
+using BisBuddy.Services.ItemAssignment;
+using BisBuddy.Util;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using Microsoft.Extensions.Hosting;
@@ -7,7 +10,10 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Numerics;
+using System.Reflection;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,193 +22,183 @@ using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace BisBuddy.Services
 {
-    public class ConfigurationService : IConfigurationService
+    /// <summary>
+    /// Handles when the configuration data changes
+    /// </summary>
+    /// <param name="effectsAssignments">If the configuration data change may effect how items are assigned</param>
+    public delegate void ConfigurationChangeDelegate(bool effectsAssignments);
+
+    public class ConfigurationService(
+        ITypedLogger<ConfigurationService> logger,
+        IConfigurationLoaderService loadConfigurationService,
+        IQueueService queueService,
+        IFileService fileService,
+        JsonSerializerOptions jsonSerializerOptions
+        ) : IConfigurationService
     {
-        private readonly IDalamudPluginInterface pluginInterface;
-        private readonly IPluginLog pluginLog;
-        private readonly IItemDataService itemDataService;
-        private readonly JsonSerializerOptions jsonSerializerOptions;
+        private readonly ITypedLogger<ConfigurationService> logger = logger;
+        private readonly IQueueService queueService = queueService;
+        private readonly IFileService fileService = fileService;
+        private readonly JsonSerializerOptions jsonSerializerOptions = jsonSerializerOptions;
 
-        public Configuration Config { get; init; }
+        private IConfigurationProperties configuration { get; set; } = loadConfigurationService.LoadConfig();
 
-        public ConfigurationService(
-            IDalamudPluginInterface pluginInterface,
-            IPluginLog pluginLog,
-            IItemDataService itemDataService,
-            JsonSerializerOptions jsonSerializerOptions
+        public event ConfigurationChangeDelegate? OnConfigurationChange;
+
+        private void updateConfigProperty<T>(
+            Expression<Func<IConfigurationProperties, T>> propertyExp,
+            T newValue,
+            bool effectsAssignments
             )
         {
-            this.pluginInterface = pluginInterface;
-            this.pluginLog = pluginLog;
-            this.itemDataService = itemDataService;
-            this.jsonSerializerOptions = jsonSerializerOptions;
-            this.Config = loadConfig();
+            if (propertyExp.Body is not MemberExpression memberExpr)
+                throw new ArgumentException(
+                    "Expression must be a simple property access",
+                    nameof(propertyExp)
+                    );
+
+            if (memberExpr.Member is not PropertyInfo propInfo)
+                throw new ArgumentException(
+                    "Expression must point to a property",
+                    nameof(propertyExp)
+                    );
+
+            propInfo.SetValue(configuration, newValue);
+            OnConfigurationChange?.Invoke(effectsAssignments: effectsAssignments);
         }
 
-        private Configuration loadConfig()
+        public int Version
+        {
+            get => configuration.Version;
+            set => updateConfigProperty(cfg => cfg.Version, value, false);
+        }
+
+        public bool HighlightNeedGreed
+        {
+            get => configuration.HighlightNeedGreed;
+            set => updateConfigProperty(cfg => cfg.HighlightNeedGreed, value, false);
+        }
+
+        public bool HighlightShops
+        {
+            get => configuration.HighlightShops;
+            set => updateConfigProperty(cfg => cfg.HighlightShops, value, false);
+        }
+
+        public bool HighlightMateriaMeld
+        {
+            get => configuration.HighlightMateriaMeld;
+            set => updateConfigProperty(cfg => cfg.HighlightMateriaMeld, value, false);
+        }
+
+        public bool HighlightNextMateria
+        {
+            get => configuration.HighlightNextMateria;
+            set => updateConfigProperty(cfg => cfg.HighlightNextMateria, value, false);
+        }
+
+        public bool HighlightUncollectedItemMateria
+        {
+            get => configuration.HighlightUncollectedItemMateria;
+            set => updateConfigProperty(cfg => cfg.HighlightUncollectedItemMateria, value, true);
+        }
+
+        public bool HighlightPrerequisiteMateria
+        {
+            get => configuration.HighlightPrerequisiteMateria;
+            set => updateConfigProperty(cfg => cfg.HighlightPrerequisiteMateria, value, false);
+        }
+
+        public bool HighlightInventories
+        {
+            get => configuration.HighlightInventories;
+            set => updateConfigProperty(cfg => cfg.HighlightInventories, value, false);
+        }
+
+        public bool HighlightMarketboard
+        {
+            get => configuration.HighlightMarketboard;
+            set => updateConfigProperty(cfg => cfg.HighlightMarketboard, value, false);
+        }
+
+        public bool AnnotateTooltips
+        {
+            get => configuration.AnnotateTooltips;
+            set => updateConfigProperty(cfg => cfg.AnnotateTooltips, value, false);
+        }
+
+        public bool AutoCompleteItems
+        {
+            get => configuration.AutoCompleteItems;
+            set => updateConfigProperty(cfg => cfg.AutoCompleteItems, value, false);
+        }
+
+        public bool AutoScanInventory
+        {
+            get => configuration.AutoScanInventory;
+            set => updateConfigProperty(cfg => cfg.AutoScanInventory, value, true);
+        }
+
+        public bool PluginUpdateInventoryScan
+        {
+            get => configuration.PluginUpdateInventoryScan;
+            set => updateConfigProperty(cfg => cfg.PluginUpdateInventoryScan, value, true);
+        }
+
+        public bool StrictMateriaMatching
+        {
+            get => configuration.StrictMateriaMatching;
+            set => updateConfigProperty(cfg => cfg.StrictMateriaMatching, value, true);
+        }
+
+        public bool BrightListItemHighlighting
+        {
+            get => configuration.BrightListItemHighlighting;
+            set => updateConfigProperty(cfg => cfg.BrightListItemHighlighting, value, false);
+        }
+
+        public HighlightColor DefaultHighlightColor
+        {
+            get => configuration.DefaultHighlightColor;
+        }
+
+        public void UpdateDefaultHighlightColor(Vector4 newColor)
+        {
+            configuration.DefaultHighlightColor.UpdateColor(newColor);
+            OnConfigurationChange?.Invoke(effectsAssignments: false);
+        }
+
+        private async Task saveAsync(CancellationToken cancellationToken = default)
         {
             try
             {
-                var configText = File.ReadAllText(pluginInterface.ConfigFile.FullName);
-                using (var configJson = JsonDocument.Parse(configText))
-                {
-                    var configVersion = configJson
-                        .RootElement
-                        .GetProperty(nameof(Version))
-                        .GetInt32();
-
-                    if (configVersion != Configuration.CurrentVersion)
-                    {
-                        pluginLog.Warning($"Config version {configVersion} found, current {Configuration.CurrentVersion}. Attempting migration");
-                        return migrateOldConfig(configJson, configText, configVersion);
-                    }
-                }
-
-                pluginLog.Verbose($"Loading config...");
-                return JsonSerializer.Deserialize<Configuration>(configText, jsonSerializerOptions) ?? new Configuration();
-            }
-            catch (FileNotFoundException)
-            {
-                return new Configuration();
-            }
-            catch (JsonException ex)
-            {
-                pluginLog.Error(ex, "Error loading/converting config file, creating new");
-                return new Configuration();
+                var configText = JsonSerializer.Serialize(configuration, jsonSerializerOptions);
+                await fileService.WriteConfigAsync(configText, cancellationToken);
             }
             catch (Exception ex)
             {
-                pluginLog.Fatal(ex, $"Error loading {Plugin.PluginName} configuration");
-                throw;
+                logger.Error($"Error saving config file", ex);
             }
         }
 
-        private Configuration migrateOldConfig(
-            JsonDocument configJson,
-            string configText,
-            int configVersion
-            )
-        {
-            var newConfig = new Configuration();
-            for (var version = configVersion; version < Configuration.CurrentVersion; version++)
-            {
-                newConfig = version switch
-                {
-                    1 => migrate1To2(configText),
-                    2 => migrate2To3(configJson),
-                    _ => throw new JsonException($"Invalid version number \"{configVersion}\"")
-                };
-                newConfig.Version = version + 1;
-            }
-
-            pluginLog.Info("Config migration success");
-
-            return newConfig;
-        }
-
-        /// <summary>
-        /// migrate from newtonsoft to stj
-        /// migrate from PrerequisiteItems to PrerequisiteTree
-        /// </summary>
-        /// <param name="configText">The string of text for the serialized config to migrate</param>
-        /// <returns></returns>
-        /// <exception cref="JsonException">If the config fails to deserialize with the old system</exception>
-        private Configuration migrate1To2(string configText)
-        {
-            /// <summary>
-            /// migrate from newtonsoft to stj
-            /// migrate from PrerequisiteItems to PrerequisiteTree
-            /// </summary>
-            try
-            {
-                var config = JsonConvert.DeserializeObject<Configuration>(configText)
-                    ?? throw new JsonException("Old config result is null");
-
-                foreach (var charData in config.CharactersData)
-                {
-                    foreach (var gearset in charData.Value.Gearsets)
-                    {
-                        foreach (var gearpiece in gearset.Gearpieces)
-                        {
-                            // rebuild prereqs with new system
-                            gearpiece.PrerequisiteTree = itemDataService.BuildGearpiecePrerequisiteTree(gearpiece.ItemId);
-
-                            // if gearpiece is collected, this will collect prereqs as well
-                            gearpiece.SetCollected(gearpiece.IsCollected, gearpiece.IsManuallyCollected);
-                        }
-                    }
-                }
-                return config;
-            }
-            catch (Newtonsoft.Json.JsonException ex)
-            {
-                throw new JsonException(ex.Message);
-            }
-        }
-
-        /// <summary>
-        /// Migrate old Vector4 HighlightColor to new HighlightColor type
-        /// </summary>
-        /// <param name="configJson">JsonDocument config</param>
-        /// <param name="jsonOptions">options instance for deserializing</param>
-        /// <returns>The migrated and deserialized config</returns>
-        /// <exception cref="JsonException">If the config cannot be migrated or deserialized</exception>
-        private Configuration migrate2To3(JsonDocument configJson)
-        {
-            HighlightColor? highlightColor = null;
-            if (configJson.RootElement.TryGetProperty("HighlightColor", out var highlightColorProperty))
-            {
-                var highlightColorVector = JsonSerializer.Deserialize<Vector4>(highlightColorProperty, jsonSerializerOptions);
-                highlightColor = new HighlightColor(highlightColorVector);
-            }
-
-            var config = JsonSerializer.Deserialize<Configuration>(configJson, jsonSerializerOptions) ?? new Configuration();
-            if (highlightColor is not null)
-                config.DefaultHighlightColor = highlightColor;
-
-            return config;
-        }
-
-        public void Save()
-        {
-            var configText = JsonSerializer.Serialize(Config, jsonSerializerOptions);
-            File.WriteAllText(pluginInterface.ConfigFile.FullName, configText);
-        }
+        public void ScheduleSave() =>
+            queueService.Enqueue(async () => await saveAsync());
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
             return Task.CompletedTask;
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        public async Task StopAsync(CancellationToken cancellationToken)
         {
-            Save();
-            
-            return Task.CompletedTask;
-        }
-
-        public IReadOnlyList<Gearset> GetCharacterGearsets(ulong characterId, JsonSerializerOptions jsonOptions)
-        {
-            // if not logged in, return a dummy list
-            if (characterId == 0)
-                return [];
-
-            if (Config.CharactersData.TryGetValue(characterId, out var charInfo))
-                return charInfo.Gearsets;
-
-            pluginLog.Debug($"No existing gearsets found for character {characterId}, creating new one");
-            // no existing gearsets found for character, creating new one
-            var newCharacterInfo = new CharacterInfo(characterId, []);
-            Config.CharactersData.Add(characterId, newCharacterInfo);
-            Save();
-            return newCharacterInfo.Gearsets;
+            await saveAsync(cancellationToken);
         }
     }
 
-    public interface IConfigurationService : IHostedService
+    public interface IConfigurationService : IHostedService, IConfigurationProperties
     {
-        public Configuration Config { get; }
-        public IReadOnlyList<Gearset> GetCharacterGearsets();
-        public void Save();
+        public event ConfigurationChangeDelegate? OnConfigurationChange;
+        public void UpdateDefaultHighlightColor(Vector4 newColor);
+        public void ScheduleSave();
     }
 }

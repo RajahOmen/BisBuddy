@@ -16,8 +16,8 @@ using static FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentList;
 namespace BisBuddy.Services.Addon
 {
     // marketboard
-    public class ItemSearchResultService(AddonServiceDependencies deps)
-        : AddonService(deps, configBool: deps.ConfigService.Config.HighlightMarketboard)
+    public class ItemSearchResultService(AddonServiceDependencies<ItemSearchResultService> deps)
+        : AddonService<ItemSearchResultService>(deps)
     {
         public override string AddonName => "ItemSearchResult";
 
@@ -45,6 +45,8 @@ namespace BisBuddy.Services.Addon
         {
             addonLifecycle.UnregisterListener(handlePreDraw);
         }
+        protected override void updateListeningStatus(bool effectsAssignments)
+            => setListeningStatus(configurationService.HighlightMarketboard);
 
         private unsafe void handlePreDraw(AddonEvent type, AddonArgs args)
         {
@@ -143,7 +145,7 @@ namespace BisBuddy.Services.Addon
             }
             catch (Exception ex)
             {
-                pluginLog.Error(ex, $"{GetType().Name}: Failed to update PostDraw");
+                logger.Error(ex, $"{GetType().Name}: Failed to update PostDraw");
             }
         }
 
@@ -175,7 +177,7 @@ namespace BisBuddy.Services.Addon
             }
             catch (Exception ex)
             {
-                pluginLog.Error(ex, "Failed to update needed items");
+                logger.Error(ex, "Failed to update needed items");
             }
         }
 
@@ -196,8 +198,7 @@ namespace BisBuddy.Services.Addon
                     AddonCustomNodeId,
                     hoverNode,
                     color.CustomNodeColor,
-                    configService.Config.CustomNodeMultiplyColor,
-                    color.CustomNodeAlpha(configService.Config.BrightListItemHighlighting)
+                    color.CustomNodeAlpha(configurationService.BrightListItemHighlighting)
                     ) ?? throw new Exception($"Could not clone node \"{hoverNode->NodeId}\"");
 
                 // mark as dirty
@@ -211,7 +212,7 @@ namespace BisBuddy.Services.Addon
             catch (Exception ex)
             {
                 customNode?.Dispose();
-                pluginLog.Error(ex, "Failed to initialize custom node");
+                logger.Error(ex, "Failed to initialize custom node");
                 return null;
             }
         }

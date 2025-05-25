@@ -11,6 +11,16 @@
           "System.Diagnostics.DiagnosticSource": "8.0.1"
         }
       },
+      "Autofac.Extensions.DependencyInjection": {
+        "type": "Direct",
+        "requested": "[10.0.0, )",
+        "resolved": "10.0.0",
+        "contentHash": "ZjR/onUlP7BzQ7VBBigQepWLAyAzi3VRGX3pP6sBqkPRiT61fsTZqbTpRUKxo30TMgbs1o3y6bpLbETix4SJog==",
+        "dependencies": {
+          "Autofac": "8.1.0",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "8.0.1"
+        }
+      },
       "DalamudPackager": {
         "type": "Direct",
         "requested": "[12.0.0, )",
@@ -108,6 +118,15 @@
         "requested": "[9.0.0, )",
         "resolved": "9.0.0",
         "contentHash": "UbsU/gYe4nv1DeqMXIVzDfNNek7Sk2kKuAOXL/Y+sLcAR0HwFUqzg1EPiU88jeHNe0g81aPvvHbvHarQr3r9IA=="
+      },
+      "TestableIO.System.IO.Abstractions.Wrappers": {
+        "type": "Direct",
+        "requested": "[22.0.14, )",
+        "resolved": "22.0.14",
+        "contentHash": "w8VwX0jiDSfj5bM+BopyZszvvEnQKDTNDp9pUKYwSOj34P9GAllmJ6kcGyye2IrzctdQs3xFpg8Vdsm8TrWfgQ==",
+        "dependencies": {
+          "Testably.Abstractions.FileSystem.Interface": "9.0.0"
+        }
       },
       "CSVFile": {
         "type": "Transitive",
@@ -374,6 +393,11 @@
         "type": "Transitive",
         "resolved": "9.0.5",
         "contentHash": "nhtTvAgKTD7f6t0bkOb4/hNv0PShb8GHs5Fhn7PvYhwhyWiVyVBvL2vTGH0Hlw5jOZQmWkzQxjY6M/h4tl8M6Q=="
+      },
+      "Testably.Abstractions.FileSystem.Interface": {
+        "type": "Transitive",
+        "resolved": "9.0.0",
+        "contentHash": "uksk86YlnzAdyfVNu3wICU0X5iXVe9LF7Q3UkngNliHWEvM5gvAlOUr+jmd9JwmbJWISH5+i1vyXE02lEVz7WQ=="
       },
       "kamitoolkit": {
         "type": "Project"

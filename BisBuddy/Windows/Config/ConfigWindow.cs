@@ -1,22 +1,27 @@
 using BisBuddy.Resources;
+using BisBuddy.Services;
+using BisBuddy.Services.Gearsets;
+using BisBuddy.Util;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
+using Dalamud.Plugin.Services;
 using ImGuiNET;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 
-namespace BisBuddy.Windows.ConfigWindow;
+namespace BisBuddy.Windows.Config;
 
 public class ConfigWindow : Window, IDisposable
 {
-    private readonly Configuration configuration;
-    private readonly Plugin plugin;
+    private readonly IConfigurationService configurationService;
     private ConfigMenuGroup selectedConfigMenu = ConfigMenuGroup.General;
     private float? subMenuMaxLength;
 
-    public ConfigWindow(Plugin plugin) : base($"{string.Format(Resource.ConfigWindowTitle, Plugin.PluginName)}###bisbuddyconfiguration")
+    public ConfigWindow(
+        IConfigurationService configurationService
+        ) : base($"{string.Format(Resource.ConfigWindowTitle, Constants.PluginName)}###bisbuddyconfiguration")
     {
         Flags = ImGuiWindowFlags.AlwaysAutoResize
                 | ImGuiWindowFlags.NoScrollbar
@@ -27,8 +32,8 @@ public class ConfigWindow : Window, IDisposable
             MinimumSize = new(300, 0),
             MaximumSize = new(1000, 1000)
         };
-        configuration = plugin.Configuration;
-        this.plugin = plugin;
+        
+        this.configurationService = configurationService;
     }
 
     public void Dispose() { }
@@ -41,7 +46,7 @@ public class ConfigWindow : Window, IDisposable
             ImGui.Spacing();
 
             // COLOR PICKER
-            var existingColor = configuration.DefaultHighlightColor.BaseColor;
+            var existingColor = configurationService.DefaultHighlightColor.BaseColor;
             if (ImGui.ColorButton($"{Resource.HighlightColorButtonTooltip}###ColorPickerButton", existingColor))
             {
                 ImGui.OpenPopup($"###ColorPickerPopup");
@@ -54,19 +59,15 @@ public class ConfigWindow : Window, IDisposable
                     if (ImGui.ColorPicker4(
                         $"###ColorPicker",
                         ref existingColor,
-
-                            ImGuiColorEditFlags.NoPicker
-                            | ImGuiColorEditFlags.AlphaBar
-                            | ImGuiColorEditFlags.NoSidePreview
-                            | ImGuiColorEditFlags.DisplayRGB
-                            | ImGuiColorEditFlags.NoBorder
+                        ImGuiColorEditFlags.NoPicker
+                        | ImGuiColorEditFlags.AlphaBar
+                        | ImGuiColorEditFlags.NoSidePreview
+                        | ImGuiColorEditFlags.DisplayRGB
+                        | ImGuiColorEditFlags.NoBorder
                         ))
                     {
-                        if (existingColor != configuration.DefaultHighlightColor.BaseColor)
-                        {
-                            configuration.DefaultHighlightColor.UpdateColor(existingColor);
-                            plugin.SaveGearsetsWithUpdate();
-                        }
+                        if (existingColor != configurationService.DefaultHighlightColor.BaseColor)
+                            configurationService.UpdateDefaultHighlightColor(existingColor);
                     }
                 }
             }
@@ -77,12 +78,9 @@ public class ConfigWindow : Window, IDisposable
             ImGui.SetTooltip(Resource.HighlightColorHelp);
 
         // BRIGHT CUSTOM NODE HIGHLIGHTING
-        var brightListItemHighlighting = configuration.BrightListItemHighlighting;
+        var brightListItemHighlighting = configurationService.BrightListItemHighlighting;
         if (ImGui.Checkbox(Resource.BrightListItemHighlightingCheckbox, ref brightListItemHighlighting))
-        {
-            configuration.BrightListItemHighlighting = brightListItemHighlighting;
-            plugin.SaveGearsetsWithUpdate();
-        }
+            configurationService.BrightListItemHighlighting = brightListItemHighlighting;
         if (ImGui.IsItemHovered())
             ImGui.SetTooltip(Resource.BrightListItemHighlightingHelp);
 
@@ -94,28 +92,16 @@ public class ConfigWindow : Window, IDisposable
         ImGui.Spacing();
 
         //UNCOLLECTED MATERIA HIGHLIGHTING
-        var highlightUncollectedItemMateria = configuration.HighlightUncollectedItemMateria;
+        var highlightUncollectedItemMateria = configurationService.HighlightUncollectedItemMateria;
         if (ImGui.Checkbox(Resource.HighlightUncollectedItemMateriaCheckbox, ref highlightUncollectedItemMateria))
-        {
-            configuration.HighlightUncollectedItemMateria = highlightUncollectedItemMateria;
-            plugin.SaveGearsetsWithUpdate(false);
-        }
+            configurationService.HighlightUncollectedItemMateria = highlightUncollectedItemMateria;
         if (ImGui.IsItemHovered())
             ImGui.SetTooltip(Resource.HighlightUncollectedItemMateriaHelp);
 
         // ASSIGNMENT GROUPING
-        var strictMateriaMatching = configuration.StrictMateriaMatching;
+        var strictMateriaMatching = configurationService.StrictMateriaMatching;
         if (ImGui.Checkbox(Resource.StrictMateriaMatchingCheckbox, ref strictMateriaMatching))
-        {
-            configuration.StrictMateriaMatching = strictMateriaMatching;
-            plugin.SaveConfiguration(true);
-
-            // if auto scanning enabled, rerun assignments with new configuration
-            if (configuration.AutoScanInventory)
-            {
-                plugin.ScheduleUpdateFromInventory(plugin.Gearsets);
-            }
-        }
+            configurationService.StrictMateriaMatching = strictMateriaMatching;
         if (ImGui.IsItemHovered())
             ImGui.SetTooltip(Resource.StrictMateriaMatchingHelp);
     }
@@ -123,37 +109,24 @@ public class ConfigWindow : Window, IDisposable
     public void drawHighlightingMenu()
     {
         // NEED GREED
-        var highlightNeedGreed = configuration.HighlightNeedGreed;
+        var highlightNeedGreed = configurationService.HighlightNeedGreed;
         if (ImGui.Checkbox(Resource.HighlightNeedGreedCheckbox, ref highlightNeedGreed))
-        {
-            configuration.HighlightNeedGreed = highlightNeedGreed;
-            plugin.SaveConfiguration(false);
-            plugin.NeedGreedEventListener.SetListeningStatus(highlightNeedGreed);
-        }
+            configurationService.HighlightNeedGreed = highlightNeedGreed;
         if (ImGui.IsItemHovered())
             ImGui.SetTooltip(Resource.HighlightNeedGreedHelp);
 
         // SHOPS
-        var highlightShops = configuration.HighlightShops;
+        var highlightShops = configurationService.HighlightShops;
         if (ImGui.Checkbox(Resource.HighlightShopExchangesCheckbox, ref highlightShops))
-        {
-            configuration.HighlightShops = highlightShops;
-            plugin.SaveConfiguration(false);
-            plugin.ShopExchangeItemEventListener.SetListeningStatus(highlightShops);
-            plugin.ShopExchangeCurrencyEventListener.SetListeningStatus(highlightShops);
-        }
+            configurationService.HighlightShops = highlightShops;
         if (ImGui.IsItemHovered())
             ImGui.SetTooltip(Resource.HighlightShopExchangesHelp);
 
         // MATERIA MELDING
         // toggle highlighting
-        var highlightMateriaMeld = configuration.HighlightMateriaMeld;
+        var highlightMateriaMeld = configurationService.HighlightMateriaMeld;
         if (ImGui.Checkbox(Resource.HighlightMateriaMeldingCheckbox, ref highlightMateriaMeld))
-        {
-            configuration.HighlightMateriaMeld = highlightMateriaMeld;
-            plugin.SaveConfiguration(false);
-            plugin.MateriaAttachEventListener.SetListeningStatus(highlightMateriaMeld);
-        }
+            configurationService.HighlightMateriaMeld = highlightMateriaMeld;
         if (ImGui.IsItemHovered())
             ImGui.SetTooltip(Resource.HighlightMateriaMeldingHelp);
 
@@ -170,12 +143,9 @@ public class ConfigWindow : Window, IDisposable
 
             using (ImRaii.PushIndent(25.0f, scaled: false))
             {
-                var highlightNextMateria = configuration.HighlightNextMateria;
+                var highlightNextMateria = configurationService.HighlightNextMateria;
                 if (ImGui.Checkbox(Resource.HighlightNextMateriaCheckbox, ref highlightNextMateria))
-                {
-                    configuration.HighlightNextMateria = highlightNextMateria;
-                    plugin.SaveGearsetsWithUpdate(false);
-                }
+                    configurationService.HighlightNextMateria = highlightNextMateria;
                 if (ImGui.IsItemHovered())
                     ImGui.SetTooltip(Resource.HighlightNextMateriaHelp);
             }
@@ -186,53 +156,32 @@ public class ConfigWindow : Window, IDisposable
 
             using (ImRaii.PushIndent(25.0f, scaled: false))
             {
-                var highlightPrerequisiteMateria = configuration.HighlightPrerequisiteMateria;
+                var highlightPrerequisiteMateria = configurationService.HighlightPrerequisiteMateria;
                 if (ImGui.Checkbox(Resource.HighlightPrerequisiteMateriaCheckbox, ref highlightPrerequisiteMateria))
-                {
-                    configuration.HighlightPrerequisiteMateria = highlightPrerequisiteMateria;
-                    plugin.SaveGearsetsWithUpdate(false);
-                }
+                    configurationService.HighlightPrerequisiteMateria = highlightPrerequisiteMateria;
                 if (ImGui.IsItemHovered())
                     ImGui.SetTooltip(Resource.HighlightPrerequisiteMateriaHelp);
             }
         }
 
         // INVENTORIES
-        var highlightInventories = configuration.HighlightInventories;
+        var highlightInventories = configurationService.HighlightInventories;
         if (ImGui.Checkbox(Resource.HighlightInventoriesCheckbox, ref highlightInventories))
-        {
-            configuration.HighlightInventories = highlightInventories;
-            plugin.SaveConfiguration(false);
-            plugin.InventoryEventListener.SetListeningStatus(highlightInventories);
-            plugin.InventoryLargeEventListener.SetListeningStatus(highlightInventories);
-            plugin.InventoryExpansionEventListener.SetListeningStatus(highlightInventories);
-            plugin.InventoryRetainerEventListener.SetListeningStatus(highlightInventories);
-            plugin.InventoryRetainerLargeEventListener.SetListeningStatus(highlightInventories);
-            plugin.InventoryBuddyEventListener.SetListeningStatus(highlightInventories);
-        }
+            configurationService.HighlightInventories = highlightInventories;
         if (ImGui.IsItemHovered())
             ImGui.SetTooltip(Resource.HighlightInventoriesHelp);
 
         // MARKETBOARD
-        var highlightMarketboard = configuration.HighlightMarketboard;
+        var highlightMarketboard = configurationService.HighlightMarketboard;
         if (ImGui.Checkbox(Resource.HighlightMarketboardCheckbox, ref highlightMarketboard))
-        {
-            configuration.HighlightMarketboard = highlightMarketboard;
-            plugin.SaveConfiguration(false);
-            plugin.ItemSearchEventListener.SetListeningStatus(highlightMarketboard);
-            plugin.ItemSearchResultEventListener.SetListeningStatus(highlightMarketboard);
-        }
+            configurationService.HighlightMarketboard = highlightMarketboard;
         if (ImGui.IsItemHovered())
             ImGui.SetTooltip(Resource.HighlightMarketboardHelp);
 
         // ITEM TOOLTIPS
-        var annotateTooltips = configuration.AnnotateTooltips;
+        var annotateTooltips = configurationService.AnnotateTooltips;
         if (ImGui.Checkbox(Resource.HighlightItemTooltipsCheckbox, ref annotateTooltips))
-        {
-            configuration.AnnotateTooltips = annotateTooltips;
-            plugin.SaveConfiguration(false);
-            plugin.ItemDetailEventListener.SetListeningStatus(annotateTooltips);
-        }
+            configurationService.AnnotateTooltips = annotateTooltips;
         if (ImGui.IsItemHovered())
             ImGui.SetTooltip(Resource.HighlightItemTooltipsHelp);
     }
@@ -240,36 +189,25 @@ public class ConfigWindow : Window, IDisposable
     public void drawInventoryMenu()
     {
         // ITEM COLLECTION
-        var enableAutoComplete = configuration.AutoCompleteItems;
+        var enableAutoComplete = configurationService.AutoCompleteItems;
         if (ImGui.Checkbox(Resource.UpdateOnItemChangeCheckbox, ref enableAutoComplete))
-        {
-            configuration.AutoCompleteItems = enableAutoComplete;
-            plugin.SaveConfiguration(true);
-            plugin.ItemUpdateEventListener.SetListeningStatus(enableAutoComplete);
-        }
+            configurationService.AutoCompleteItems = enableAutoComplete;
         if (ImGui.IsItemHovered())
             ImGui.SetTooltip(Resource.UpdateOnItemChangeHelp);
 
         // INVENTORY SCAN ON LOGIN/LOAD
-        var enableAutoScan = configuration.AutoScanInventory;
+        var enableAutoScan = configurationService.AutoScanInventory;
         if (ImGui.Checkbox(Resource.UpdateOnLoginLoadCheckbox, ref enableAutoScan))
-        {
-            configuration.AutoScanInventory = enableAutoScan;
-            plugin.SaveConfiguration(true);
-            plugin.LoginLoadEventListener.SetListeningStatus(enableAutoScan);
-        }
+            configurationService.AutoScanInventory = enableAutoScan;
         if (ImGui.IsItemHovered())
-            ImGui.SetTooltip(string.Format(Resource.UpdateOnLoginLoadHelp, Plugin.PluginName));
+            ImGui.SetTooltip(string.Format(Resource.UpdateOnLoginLoadHelp, Constants.PluginName));
 
         // INVENTORY SCAN ON PLUGIN UPDATES
-        var enablePluginUpdateScan = configuration.PluginUpdateInventoryScan;
+        var enablePluginUpdateScan = configurationService.PluginUpdateInventoryScan;
         if (ImGui.Checkbox(Resource.UpdateOnPluginChangesCheckbox, ref enablePluginUpdateScan))
-        {
-            configuration.PluginUpdateInventoryScan = enablePluginUpdateScan;
-            plugin.SaveConfiguration(true);
-        }
+            configurationService.PluginUpdateInventoryScan = enablePluginUpdateScan;
         if (ImGui.IsItemHovered())
-            ImGui.SetTooltip(string.Format(Resource.UpdateOnPluginChangesHelp, Plugin.PluginName));
+            ImGui.SetTooltip(string.Format(Resource.UpdateOnPluginChangesHelp, Constants.PluginName));
     }
     public override void Draw()
     {

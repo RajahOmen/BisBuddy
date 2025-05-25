@@ -1,9 +1,9 @@
-using BisBuddy.Services.AddonEventListeners;
+
 
 namespace BisBuddy.Services.Addon.ShopExchange
 {
-    public class ShopExchangeCurrencyService(AddonServiceDependencies deps)
-        : ShopExchangeService(deps)
+    public class ShopExchangeCurrencyService(AddonServiceDependencies<ShopExchangeCurrencyService> deps)
+        : ShopExchangeService<ShopExchangeCurrencyService>(deps)
     {
         // the type of shop this is (what do items in this shop cost?)
         public override string AddonName => "ShopExchangeCurrency";

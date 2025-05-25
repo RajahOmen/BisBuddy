@@ -1,5 +1,4 @@
 using BisBuddy.Gear;
-using BisBuddy.Services.AddonEventListeners;
 using BisBuddy.Util;
 using Dalamud.Game.Addon.Lifecycle;
 using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
@@ -13,8 +12,8 @@ using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
 
 namespace BisBuddy.Services.Addon.ShopExchange
 {
-    public abstract class ShopExchangeService(AddonServiceDependencies deps)
-        : AddonService(deps, configBool: deps.ConfigService.Config.HighlightShops)
+    public abstract class ShopExchangeService<T>(AddonServiceDependencies<T> deps)
+        : AddonService<T>(deps) where T : class
     {
         // ADDON NODE IDS
         // list of items in the shop
@@ -59,6 +58,9 @@ namespace BisBuddy.Services.Addon.ShopExchange
         {
             addonLifecycle.UnregisterListener(handlePreDraw);
         }
+
+        protected override void updateListeningStatus(bool effectsAssignments)
+            => setListeningStatus(configurationService.HighlightShops);
 
         private unsafe void handlePreDraw(AddonEvent type, AddonArgs args)
         {
@@ -205,7 +207,7 @@ namespace BisBuddy.Services.Addon.ShopExchange
                 var value = atkValues[i + AtkValueFilteredItemsListStartingIndex];
                 if (value.Type != ValueType.UInt)
                 {
-                    pluginLog.Error($"[{GetType().Name}] Filter list item type \"{value.Type}\" unexpected");
+                    logger.Error($"Filter list item type \"{value.Type}\" unexpected");
                     return -1;
                 }
 
@@ -218,7 +220,7 @@ namespace BisBuddy.Services.Addon.ShopExchange
             }
 
             // didnt find, must not display
-            pluginLog.Warning($"[{GetType().Name}] No compressed index found for \"{index}\"");
+            logger.Warning($"No compressed index found for \"{index}\"");
             return -1;
         }
 
@@ -246,8 +248,7 @@ namespace BisBuddy.Services.Addon.ShopExchange
                     AddonCustomNodeId,
                     hoverNode,
                     color.CustomNodeColor,
-                    configService.Config.CustomNodeMultiplyColor,
-                    color.CustomNodeAlpha(configService.Config.BrightListItemHighlighting)
+                    color.CustomNodeAlpha(configurationService.BrightListItemHighlighting)
                     ) ?? throw new Exception($"Could not clone node \"{hoverNode->NodeId}\"");
 
                 // mark as dirty
@@ -261,7 +262,7 @@ namespace BisBuddy.Services.Addon.ShopExchange
             catch (Exception ex)
             {
                 customNode?.Dispose();
-                pluginLog.Error(ex, "Failed to create custom highlight node");
+                logger.Error(ex, "Failed to create custom highlight node");
                 return null;
             }
         }

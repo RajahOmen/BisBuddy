@@ -13,8 +13,8 @@ using System.Numerics;
 
 namespace BisBuddy.Services.Addon
 {
-    public unsafe class ItemDetailService(AddonServiceDependencies deps)
-        : AddonService(deps, configBool: deps.ConfigService.Config.AnnotateTooltips)
+    public unsafe class ItemDetailService(AddonServiceDependencies<ItemDetailService> deps)
+        : AddonService<ItemDetailService>(deps)
     {
         public override string AddonName => "ItemDetail";
 
@@ -70,6 +70,10 @@ namespace BisBuddy.Services.Addon
             gameGui.HoveredItemChanged -= handleHoveredItemChanged;
             neededGearsets = [];
         }
+
+        protected override void updateListeningStatus(bool effectsAssignments)
+            => setListeningStatus(configurationService.AnnotateTooltips);
+
         private void handleManualUpdate()
         {
             // manually trigger refresh
@@ -84,7 +88,7 @@ namespace BisBuddy.Services.Addon
             {
                 if (itemId > uint.MaxValue)
                 {
-                    pluginLog.Warning($"{GetType().Name} HoveredItem itemId too large {itemId} > {uint.MaxValue}");
+                    logger.Warning($"HoveredItem itemId too large {itemId} > {uint.MaxValue}");
                     return;
                 }
 
@@ -116,7 +120,7 @@ namespace BisBuddy.Services.Addon
             }
             catch (Exception e)
             {
-                pluginLog.Error(e, "Failed to handle PostRequestedUpdate event");
+                logger.Error(e, "Failed to handle PostRequestedUpdate event");
             }
         }
 
@@ -289,7 +293,7 @@ namespace BisBuddy.Services.Addon
             catch (Exception ex)
             {
                 customTextNode?.Dispose();
-                pluginLog.Error(ex, "Failed to initialize custom node");
+                logger.Error(ex, "Failed to initialize custom node");
                 return null;
             }
         }

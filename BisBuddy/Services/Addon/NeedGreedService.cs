@@ -9,8 +9,8 @@ using System.Collections.Generic;
 
 namespace BisBuddy.Services.Addon
 {
-    public class NeedGreedService(AddonServiceDependencies deps)
-        : AddonService(deps, configBool: deps.ConfigService.Config.HighlightNeedGreed)
+    public class NeedGreedService(AddonServiceDependencies<NeedGreedService> deps)
+        : AddonService<NeedGreedService>(deps)
     {
         // ADDON NODE IDS
         // the node id of the list of items in the addon
@@ -31,6 +31,9 @@ namespace BisBuddy.Services.Addon
         {
             addonLifecycle.UnregisterListener(handlePreDraw);
         }
+
+        protected override void updateListeningStatus(bool effectsAssignments)
+            => setListeningStatus(configurationService.HighlightNeedGreed);
 
         private unsafe void handlePreDraw(AddonEvent type, AddonArgs args)
         {
@@ -53,7 +56,7 @@ namespace BisBuddy.Services.Addon
             }
             catch (Exception ex)
             {
-                pluginLog.Warning(ex, "Error in handleNeedGreedAddonEvent");
+                logger.Warning(ex, "Error in handleNeedGreedAddonEvent");
             }
         }
 

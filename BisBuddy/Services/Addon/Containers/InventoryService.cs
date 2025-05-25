@@ -1,4 +1,3 @@
-using BisBuddy.Services.AddonEventListeners;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using System.Collections.Generic;
@@ -6,8 +5,8 @@ using System.Linq;
 
 namespace BisBuddy.Services.Addon.Containers
 {
-    public class InventoryService(AddonServiceDependencies deps)
-        : ContainerService(deps)
+    public class InventoryService(AddonServiceDependencies<InventoryService> deps)
+        : ContainerService<InventoryService>(deps)
     {
         public override string AddonName => "Inventory";
         protected override int pagesPerView => 1;

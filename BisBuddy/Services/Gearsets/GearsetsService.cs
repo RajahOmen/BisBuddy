@@ -1,12 +1,13 @@
+using BisBuddy.Factories;
 using BisBuddy.Gear;
 using BisBuddy.Gear.MeldPlanManager;
-using BisBuddy.Items;
+using BisBuddy.Import;
+using BisBuddy.Services.ImportGearset;
 using BisBuddy.Services.ItemAssignment;
-using BisBuddy.Windows;
-using Dalamud.Game.Inventory;
 using Dalamud.Plugin.Services;
 using Microsoft.Extensions.Hosting;
 using System.Collections.Generic;
+using System.IO;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,125 +19,160 @@ namespace BisBuddy.Services.Gearsets
     /// <summary>
     /// Manages a logged in character's gearsets, gearset requirements, gearset changes & updates
     /// </summary>
-    public partial class GearsetsService : IGearsetsService
+    public partial class GearsetsService(
+        ITypedLogger<GearsetsService> logger,
+        IFramework framework,
+        IClientState clientState,
+        IGameInventory gameInventory,
+        IConfigurationService configurationService,
+        IFileService fileService,
+        JsonSerializerOptions jsonSerializerOptions,
+        IItemAssignmentSolverFactory itemAssignmentSolverFactory,
+        IQueueService queueService,
+        IInventoryUpdateDisplayService inventoryUpdateDisplayService,
+        IImportGearsetService importGearsetService
+        ) : IGearsetsService
     {
-        private readonly IPluginLog pluginLog;
-        private readonly IGameInventory gameInventory;
-        private readonly IClientState clientState;
-        private readonly IConfigurationService configService;
-        private readonly JsonSerializerOptions jsonSerializerOptions;
-        private readonly MainWindow mainWindow;
-        private readonly ItemDataService itemData;
-        private readonly QueueService itemAssignmentQueue;
+        private readonly ITypedLogger<GearsetsService> logger = logger;
+        private readonly IFramework framework = framework;
+        private readonly IGameInventory gameInventory = gameInventory;
+        private readonly IClientState clientState = clientState;
+        private readonly IConfigurationService configurationService = configurationService;
+        private readonly IFileService fileService = fileService;
+        private readonly JsonSerializerOptions jsonSerializerOptions = jsonSerializerOptions;
+        private readonly IItemAssignmentSolverFactory itemAssignmentSolverFactory = itemAssignmentSolverFactory;
+        private readonly IQueueService queueService = queueService;
+        private readonly IInventoryUpdateDisplayService inventoryUpdateDisplayService = inventoryUpdateDisplayService;
+        private readonly IImportGearsetService importGearsetService = importGearsetService;
+
+        private bool gearsetsDirty = false;
 
         private ulong currentLocalContentId => clientState.LocalContentId;
 
-        private List<Gearset> gearsets;
+        private List<Gearset> currentGearsets = [];
+        private Dictionary<uint, List<ItemRequirement>> currentItemRequirements = [];
 
-        public IReadOnlyList<Gearset> Gearsets => gearsets;
-
-        private readonly List<GameInventoryType> inventorySources = [
-            GameInventoryType.Inventory1,
-            GameInventoryType.Inventory2,
-            GameInventoryType.Inventory3,
-            GameInventoryType.Inventory4,
-            GameInventoryType.EquippedItems,
-            GameInventoryType.ArmoryMainHand,
-            GameInventoryType.ArmoryOffHand,
-            GameInventoryType.ArmoryHead,
-            GameInventoryType.ArmoryBody,
-            GameInventoryType.ArmoryHands,
-            GameInventoryType.ArmoryLegs,
-            GameInventoryType.ArmoryFeets,
-            GameInventoryType.ArmoryEar,
-            GameInventoryType.ArmoryNeck,
-            GameInventoryType.ArmoryWrist,
-            GameInventoryType.ArmoryRings,
-            ];
-
-        public IReadOnlyList<GameInventoryType> InventorySources => inventorySources;
-
-        private Dictionary<uint, List<ItemRequirement>> itemRequirements;
-
-        public GearsetsService(
-            IPluginLog pluginLog,
-            IClientState clientState,
-            IGameInventory gameInventory,
-            IConfigurationService configurationService,
-            JsonSerializerOptions jsonSerializerOptions,
-            MainWindow mainWindow,
-            ItemDataService itemData,
-            QueueService itemAssignmentQueue
-            )
+        public IReadOnlyList<Gearset> CurrentGearsets
         {
-            this.pluginLog = pluginLog;
-            this.clientState = clientState;
-            this.gameInventory = gameInventory;
-            this.configService = configurationService;
-            this.jsonSerializerOptions = jsonSerializerOptions;
-            this.mainWindow = mainWindow;
-            this.itemData = itemData;
-            this.itemAssignmentQueue = itemAssignmentQueue;
-            gearsets = getCurrentGearsets();
-            itemRequirements = buildItemRequirements();
+            get => currentGearsets;
+            private set
+            {
+                currentGearsets = (List<Gearset>) value;
+                scheduleGearsetsChange();
+            }
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
+            // updating gearset data per framework update
+            framework.Update += onUpdate;
+
+            // note: load under framework event registration
+            loadGearsets();
+
             // tracking logged in character
             clientState.Login += handleLogin;
             clientState.Logout += handleLogout;
 
-            // tracking inventory state changes
-            gameInventory.ItemAdded += handleItemAdded;
-            gameInventory.ItemRemoved += handleItemRemoved;
-            gameInventory.ItemChanged += handleItemChanged;
-            gameInventory.ItemMoved += handleItemMoved;
+            // tracking config changes
+            configurationService.OnConfigurationChange += handleConfigChange;
+
+            // tracking internal gearset changes
+            foreach (var gearset in currentGearsets)
+                gearset.OnGearsetChange += handleGearsetChange;
+
+            // if configured to, run scan to ensure up-to-date
+            if (configurationService.AutoScanInventory)
+                ScheduleUpdateFromInventory();
 
             return Task.CompletedTask;
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
+            // updating gearset data per framework update
+            framework.Update -= onUpdate;
+
             // tracking logged in character
             clientState.Login -= handleLogin;
             clientState.Logout -= handleLogout;
 
-            // tracking inventory state changes
-            gameInventory.ItemAdded -= handleItemAdded;
-            gameInventory.ItemRemoved -= handleItemRemoved;
-            gameInventory.ItemChanged -= handleItemChanged;
-            gameInventory.ItemMoved -= handleItemMoved;
+            // tracking config changes
+            configurationService.OnConfigurationChange -= handleConfigChange;
+
+            // tracking internal gearset changes
+            foreach (var gearset in currentGearsets)
+                gearset.OnGearsetChange -= handleGearsetChange;
 
             return Task.CompletedTask;
         }
 
         /// <summary>
         /// Retrieve the gearsets saved for the current logged-in character id, or an empty list if there is none
+        /// If there isn't a character logged in, an empty list is returned
+        /// If the character has no saved gearsets, a new empty gearsets file is created and an empty list is returned
         /// </summary>
-        /// <returns></returns>
-        private List<Gearset> getCurrentGearsets()
+        /// <returns>The gearsets for the logged in character id</returns>
+        private void loadGearsets()
         {
-            if (configService.Config.CharactersData.TryGetValue(currentLocalContentId, out var characterInfo))
-                return characterInfo.Gearsets;
-            else
-                return [];
+            try
+            {
+                if (currentLocalContentId == 0)
+                    currentGearsets = [];
+                else
+                    currentGearsets = JsonSerializer.Deserialize<List<Gearset>>(
+                        fileService.OpenReadGearsetsStream(currentLocalContentId),
+                        jsonSerializerOptions
+                        ) ?? [];
+            } catch (FileNotFoundException)
+            {
+                logger.Debug($"No gearsets file found for \"{currentLocalContentId}\", creating new");
+
+                var emptyGearsetsListStr = serializeGearsets([]);
+                fileService.WriteGearsetsAsync(
+                    currentLocalContentId,
+                    emptyGearsetsListStr
+                    );
+                currentGearsets = [];
+            } finally
+            {
+                triggerGearsetsChange(saveToFile: false);
+            }
         }
 
-        public string ExportGearsetToJsonStr(Gearset gearset)
+        public async Task SaveCurrentGearsetsAsync()
         {
-            return JsonSerializer.Serialize(gearset, jsonSerializerOptions);
+            // don't save anything if no character is logged in
+            if (currentLocalContentId == 0 || !clientState.IsLoggedIn)
+                return;
+
+            var gearsetsListStr = serializeGearsets(currentGearsets);
+
+            await fileService.WriteGearsetsAsync(
+                currentLocalContentId,
+                gearsetsListStr
+                );
         }
+
+        private string serializeGearsets(List<Gearset> gearsets)
+        {
+            return JsonSerializer.Serialize(
+                gearsets,
+                jsonSerializerOptions
+                );
+        }
+
+        public string ExportGearsetToJsonStr(Gearset gearset) =>
+            JsonSerializer.Serialize(gearset, jsonSerializerOptions);
     }
 
     public interface IGearsetsService : IHostedService
     {
-        public IReadOnlyList<Gearset> Gearsets { get; }
-        public IReadOnlyList<GameInventoryType> InventorySources { get; }
-        public void AddGearset(Gearset gearset);
-        public void AddGearsets(IEnumerable<Gearset> gearsets);
-        public void RemoveGearsets(IEnumerable<Gearset> gearsets);
-        public void RemoveGearsets(Gearset gearset);
+        public IReadOnlyList<Gearset> CurrentGearsets { get; }
+        public Task<ImportGearsetsResult> AddGearsetsFromSource(ImportGearsetSourceType sourceType, string sourceString);
+        public void RemoveGearset(Gearset gearset);
+        public string ExportGearsetToJsonStr(Gearset gearset);
+        public Task SaveCurrentGearsetsAsync();
 
         /// <summary>
         /// Fires whenever a change to the current gearsets is made
@@ -171,9 +207,7 @@ namespace BisBuddy.Services.Gearsets
             bool includeCollectedPrereqs = false
         );
         public List<MeldPlan> GetNeededItemMeldPlans(uint itemId);
-        public Dictionary<string, HighlightColor> GetUnmeldedItemColors(
-            bool includePrerequisites
-        );
+        public Dictionary<string, HighlightColor> GetUnmeldedMateriaColors();
 
         /// <summary>
         /// Schedule a request to update item assignment for a subset of gearsets for the current character.
@@ -182,7 +216,7 @@ namespace BisBuddy.Services.Gearsets
         /// <param name="saveChanges">If the changes should be saved upon completion</param>
         /// <param name="manualUpdate">If this update was triggered by direct user input</param>
         public void ScheduleUpdateFromInventory(
-            List<Gearset> gearsetsToUpdate,
+            IEnumerable<Gearset> gearsetsToUpdate,
             bool saveChanges = true,
             bool manualUpdate = false
             );

@@ -1,12 +1,16 @@
 using BisBuddy.Import;
 using BisBuddy.Resources;
+using BisBuddy.Services;
+using BisBuddy.Services.Gearsets;
 using BisBuddy.Services.ImportGearset;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
+using Dalamud.Plugin.Services;
 using Dalamud.Utility;
 using ImGuiNET;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 
@@ -14,6 +18,10 @@ namespace BisBuddy.Windows;
 
 public class ImportGearsetWindow : Window, IDisposable
 {
+    private readonly ITypedLogger<ImportGearsetWindow> logger;
+    private readonly IGearsetsService gearsetsService;
+    private readonly List<IImportGearsetSource> importGearsetSources;
+
     private string gearsetSourceString = string.Empty;
     private ImportGearsetSourceType gearsetSourceType = ImportGearsetSourceType.Xivgear;
     private bool importLoading = false;
@@ -46,7 +54,11 @@ public class ImportGearsetWindow : Window, IDisposable
         { ImportGearsetSourceType.Teamcraft, Resource.ImportTeamcraftTooltip },
     };
 
-    public ImportGearsetWindow(Plugin plugin)
+    public ImportGearsetWindow(
+        ITypedLogger<ImportGearsetWindow> logger,
+        IGearsetsService gearsetsService,
+        IEnumerable<IImportGearsetSource> importGearsetSources
+        )
         : base($"{Resource.ImportWindowTitle}##bisbuddy import gearset", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
         SizeConstraints = new WindowSizeConstraints
@@ -57,6 +69,10 @@ public class ImportGearsetWindow : Window, IDisposable
 
         Size = new Vector2(500, 180);
         SizeCondition = ImGuiCond.Appearing;
+
+        this.logger = logger;
+        this.gearsetsService = gearsetsService;
+        this.importGearsetSources = importGearsetSources.ToList();
     }
 
     private async Task ImportNewGearsets()
@@ -71,14 +87,14 @@ public class ImportGearsetWindow : Window, IDisposable
             }
 
             importLoading = true;
-            var importResult = await ImportGearsetService.ImportGearsets(gearsetSourceType, gearsetSourceString);
+            var importResult = await gearsetsService.AddGearsetsFromSource(gearsetSourceType, gearsetSourceString);
             gearsetSourceString = string.Empty;
             importStatus = importResult.StatusType;
             importedGearsetCount = importResult.Gearsets != null ? importResult.Gearsets.Count : -1;
         }
         catch (Exception ex)
         {
-            Services.Log.Error(ex, $"Internal Error");
+            logger.Error(ex, $"Internal Error");
             importStatus = GearsetImportStatusType.InternalError;
         }
         finally
@@ -100,27 +116,26 @@ public class ImportGearsetWindow : Window, IDisposable
 
     public override void Draw()
     {
-        var sourceOptions = ImportGearsetService.RegisteredSourceTypes();
-        using (var sourceOptionsTable = ImRaii.Table("Source options", sourceOptions.Count, ImGuiTableFlags.BordersInnerV))
+        using (var sourceOptionsTable = ImRaii.Table("Source options", importGearsetSources.Count, ImGuiTableFlags.BordersInnerV))
         using (ImRaii.PushStyle(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.5f, 0.5f)))
         {
-            if (!sourceOptionsTable || sourceOptions.Count == 0)
+            if (!sourceOptionsTable || importGearsetSources.Count == 0)
                 return;
 
-            foreach (var source in sourceOptions)
+            foreach (var source in importGearsetSources)
             {
                 ImGui.TableNextColumn();
 
-                var sourceSelected = gearsetSourceType == source;
-                if (ImGui.Selectable(ImportSourceTypeNames.GetValueOrDefault(source, "Unknown Source"), sourceSelected))
+                var sourceSelected = gearsetSourceType == source.SourceType;
+                if (ImGui.Selectable(ImportSourceTypeNames.GetValueOrDefault(source.SourceType, "Unknown Source"), sourceSelected))
                 {
-                    gearsetSourceType = source;
+                    gearsetSourceType = source.SourceType;
                     importStatus = null;
                     importedGearsetCount = -1;
                 }
 
                 if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip(ImportSourceTypeTooltips.GetValueOrDefault(source, "Unknown Source"));
+                    ImGui.SetTooltip(ImportSourceTypeTooltips.GetValueOrDefault(source.SourceType, "Unknown Source"));
             }
         }
 

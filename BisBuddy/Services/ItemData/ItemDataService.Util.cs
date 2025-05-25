@@ -1,5 +1,6 @@
 using BisBuddy.Gear;
 using BisBuddy.Gear.Prerequisites;
+using BisBuddy.Util;
 using Dalamud.Game.Inventory;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
@@ -26,10 +27,10 @@ namespace BisBuddy.Items
             if (!item.CanBeHq)
                 return id;
 
-            return id + ItemIdHqOffset;
+            return id + Constants.ItemIdHqOffset;
         }
 
-        public static string SeStringToString(ReadOnlySeString input)
+        public string SeStringToString(ReadOnlySeString input)
         {
             return input.ExtractText().Replace("\u00AD", string.Empty);
         }
@@ -38,14 +39,14 @@ namespace BisBuddy.Items
         {
             // check if item is HQ, change Id to NQ if it is
             var modifiedId = id;
-            var itemIsHq = id >= ItemIdHqOffset;
-            if (itemIsHq) modifiedId -= ItemIdHqOffset;
+            var itemIsHq = id >= Constants.ItemIdHqOffset;
+            if (itemIsHq) modifiedId -= Constants.ItemIdHqOffset;
 
             // returns the name of the item with the provided id
             var itemName = SeStringToString(ItemSheet.GetRow(modifiedId).Name);
 
             // add Hq icon to the item name if it is hq
-            if (itemIsHq) itemName = $"{itemName} {HqIcon}";
+            if (itemIsHq) itemName = $"{itemName} {Constants.HqIcon}";
 
             NameToId[itemName] = id;
             return itemName;
@@ -53,8 +54,8 @@ namespace BisBuddy.Items
 
         private bool tryGetItemRowById(uint itemId, out Item item)
         {
-            if (itemId > ItemIdHqOffset)
-                itemId -= ItemIdHqOffset;
+            if (itemId > Constants.ItemIdHqOffset)
+                itemId -= Constants.ItemIdHqOffset;
 
             return ItemSheet.TryGetRow(itemId, out item);
         }
@@ -64,14 +65,14 @@ namespace BisBuddy.Items
             // return cached value
             if (NameToId.TryGetValue(name, out var value)) return value;
 
-            var itemIsHq = name.Contains(HqIcon);
+            var itemIsHq = name.Contains(Constants.HqIcon);
             if (itemIsHq) name = name[..^2]; // remove hq icon (remove hq icon and space)
 
             // get from item sheet if not cached
             var id = ItemSheet.FirstOrDefault(item => SeStringToString(item.Name) == name).RowId;
 
             // convert to HQ id if item is HQ
-            if (itemIsHq) id += ItemIdHqOffset;
+            if (itemIsHq) id += Constants.ItemIdHqOffset;
 
             NameToId[name] = id;
             return id;
@@ -99,7 +100,7 @@ namespace BisBuddy.Items
                 }
                 catch (Exception e)
                 {
-                    pluginLog.Error(e, $"Failed to get materia item id for item {GetItemNameById(item.ItemId)} (materia id {materiaId}, materia grade {materiaGrade})");
+                    logger.Error(e, $"Failed to get materia item id for item {GetItemNameById(item.ItemId)} (materia id {materiaId}, materia grade {materiaGrade})");
                     DumpData(item);
                 }
             }
@@ -116,7 +117,7 @@ namespace BisBuddy.Items
                 data[i] = ptr[i];
             }
             var str = string.Join(' ', data.Select(t => t.ToString("X")));
-            pluginLog.Fatal(str);
+            logger.Fatal(str);
         }
 
         public List<GearMateria> GetItemMateria(GameInventoryItem item)
@@ -195,7 +196,7 @@ namespace BisBuddy.Items
                         && node.GetType() == oldPrerequisiteNode.GetType()
                     );
 
-                pluginLog.Verbose($"New alternative found for \"{itemId}\", added as new {nameof(PrerequisiteOrNode)} layer");
+                logger.Verbose($"New alternative found for \"{itemId}\", added as new {nameof(PrerequisiteOrNode)} layer");
 
                 // add to new node. If no index found, insert at start
                 if (oldNodeIndex >= 0)
@@ -219,7 +220,7 @@ namespace BisBuddy.Items
 
                     if (!existsInOldNode)
                     {
-                        pluginLog.Verbose($"New alternative found for \"{itemId}\", added to existing {nameof(PrerequisiteOrNode)} layer");
+                        logger.Verbose($"New alternative found for \"{itemId}\", added to existing {nameof(PrerequisiteOrNode)} layer");
                         oldPrerequisiteNode.PrerequisiteTree.Add(newChildNode);
                     }
 
@@ -388,25 +389,6 @@ namespace BisBuddy.Items
             var statQuantity = materiaRow.Value.Value[materiaCol];
 
             return (materiaRow.Value.RowId, statName, materiaCol, statQuantity);
-        }
-
-        public Gearpiece BuildGearpiece(
-            uint itemId,
-            IPrerequisiteNode? prerequisiteTree,
-            List<GearMateria> itemMateria,
-            bool isCollected = false,
-            bool isManuallyCollected = false
-            )
-        {
-            return new Gearpiece(
-                itemId,
-                GetItemNameById(itemId),
-                GetItemGearpieceType(itemId),
-                prerequisiteTree,
-                itemMateria,
-                isCollected,
-                isManuallyCollected
-                );
         }
 
         public GearMateria BuildMateria(uint itemId, bool isMelded = false)

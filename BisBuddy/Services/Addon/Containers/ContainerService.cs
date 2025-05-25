@@ -1,5 +1,4 @@
 using BisBuddy.Gear;
-using BisBuddy.Services.AddonEventListeners;
 using Dalamud.Game.Addon.Lifecycle;
 using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
 using Dalamud.Game.Inventory;
@@ -13,8 +12,9 @@ using System.Linq;
 
 namespace BisBuddy.Services.Addon.Containers
 {
-    public abstract class ContainerService(AddonServiceDependencies deps)
-        : AddonService(deps, configBool: deps.ConfigService.Config.HighlightInventories)
+    public abstract class ContainerService<T>(
+        AddonServiceDependencies<T> deps
+        ) : AddonService<T>(deps) where T : class
     {
         public override uint AddonCustomNodeId => throw new NotImplementedException();
 
@@ -53,6 +53,9 @@ namespace BisBuddy.Services.Addon.Containers
             addonLifecycle.UnregisterListener(handlePreDraw);
         }
 
+        protected override void updateListeningStatus(bool effectsAssignments)
+            => setListeningStatus(configurationService.HighlightInventories);
+
         private unsafe void handlePreDraw(AddonEvent type, AddonArgs args)
         {
             try
@@ -62,7 +65,7 @@ namespace BisBuddy.Services.Addon.Containers
             }
             catch (Exception ex)
             {
-                pluginLog.Error(ex, $"Error in {GetType().Name} post refresh");
+                logger.Error(ex, $"Error in {GetType().Name} post refresh");
             }
         }
 

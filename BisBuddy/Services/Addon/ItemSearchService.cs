@@ -13,8 +13,8 @@ using System.Collections.Generic;
 namespace BisBuddy.Services.Addon
 {
     // marketboard
-    public class ItemSearchService(AddonServiceDependencies deps)
-        : AddonService(deps, configBool: deps.ConfigService.Config.HighlightMarketboard)
+    public class ItemSearchService(AddonServiceDependencies<ItemSearchResultService> deps)
+        : AddonService<ItemSearchResultService>(deps)
     {
         public override string AddonName => "ItemSearch";
 
@@ -35,6 +35,8 @@ namespace BisBuddy.Services.Addon
         {
             addonLifecycle.UnregisterListener(handlePreDraw);
         }
+        protected override void updateListeningStatus(bool effectsAssignments)
+            => setListeningStatus(configurationService.HighlightMarketboard);
 
         private unsafe void handlePreDraw(AddonEvent type, AddonArgs args)
         {
@@ -67,7 +69,7 @@ namespace BisBuddy.Services.Addon
             }
             catch (Exception ex)
             {
-                pluginLog.Error(ex, $"{GetType().Name}: Failed to update PreDraw");
+                logger.Error(ex, $"{GetType().Name}: Failed to update PreDraw");
             }
         }
 
@@ -94,7 +96,7 @@ namespace BisBuddy.Services.Addon
                         itemColor = null;
                     if (nqItemColor is not null && hqItemColor is not null) // both needed
                         // set to nq item color if nq and hq is the same, else use tiebreak color
-                        itemColor = nqItemColor.Equals(hqItemColor) ? nqItemColor : configService.Config.DefaultHighlightColor;
+                        itemColor = nqItemColor.Equals(hqItemColor) ? nqItemColor : configurationService.DefaultHighlightColor;
                     else if (nqItemColor is not null) // nq only needed
                         itemColor = nqItemColor;
                     else // hq only needed
@@ -106,7 +108,7 @@ namespace BisBuddy.Services.Addon
             }
             catch (Exception ex)
             {
-                pluginLog.Error(ex, "Failed to update needed items");
+                logger.Error(ex, "Failed to update needed items");
             }
         }
 
@@ -127,8 +129,7 @@ namespace BisBuddy.Services.Addon
                     AddonCustomNodeId,
                     hoverNode,
                     color.CustomNodeColor,
-                    configService.Config.CustomNodeMultiplyColor,
-                    color.CustomNodeAlpha(configService.Config.BrightListItemHighlighting)
+                    color.CustomNodeAlpha(configurationService.BrightListItemHighlighting)
                     ) ?? throw new Exception($"Could not clone node \"{hoverNode->NodeId}\"");
 
                 // mark as dirty
@@ -142,7 +143,7 @@ namespace BisBuddy.Services.Addon
             catch (Exception ex)
             {
                 customNode?.Dispose();
-                pluginLog.Error(ex, "Failed to initialize custom node");
+                logger.Error(ex, "Failed to initialize custom node");
                 return null;
             }
         }

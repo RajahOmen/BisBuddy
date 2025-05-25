@@ -1,9 +1,9 @@
-using BisBuddy.Services.AddonEventListeners;
+
 
 namespace BisBuddy.Services.Addon.ShopExchange
 {
-    public class ShopExchangeItemService(AddonServiceDependencies deps)
-        : ShopExchangeService(deps)
+    public class ShopExchangeItemService(AddonServiceDependencies<ShopExchangeItemService> deps)
+        : ShopExchangeService<ShopExchangeItemService>(deps)
     {
         // the type of shop this is (what do items in this shop cost?)
         public override string AddonName => "ShopExchangeItem";

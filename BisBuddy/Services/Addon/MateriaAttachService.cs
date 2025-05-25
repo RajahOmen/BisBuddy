@@ -1,6 +1,5 @@
 using BisBuddy.Gear;
-using BisBuddy.Gear.GearsetsManager;
-using BisBuddy.Gear.MeldPlan;
+using BisBuddy.Gear.MeldPlanManager;
 using BisBuddy.Items;
 using BisBuddy.Util;
 using Dalamud.Game.Addon.Lifecycle;
@@ -18,10 +17,13 @@ using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
 namespace BisBuddy.Services.Addon
 {
 
-    public class MateriaAttachService(AddonServiceDependencies deps)
-        : AddonService(deps, configBool: deps.ConfigService.Config.HighlightMateriaMeld
-        )
+    public class MateriaAttachService(
+        AddonServiceDependencies<MateriaAttachService> deps,
+        IMeldPlanService meldPlanService
+        ) : AddonService<MateriaAttachService>(deps)
     {
+        private readonly IMeldPlanService meldPlanService = meldPlanService;
+
         public override string AddonName => "MateriaAttach";
 
         // ADDON NODE IDS
@@ -47,59 +49,37 @@ namespace BisBuddy.Services.Addon
         // value for index of page selected (Gets overwritten when list element hovered/clicked)
         public static readonly int AtkValuePageIndexSelectedIndex = 4;
 
-        // for Next Materia behavior
-        private readonly Configuration configuration = configService.Config;
-
         private string selectedItemName = string.Empty;
         private readonly Dictionary<int, HighlightColor> unmeldedItemIndexes = [];
         private readonly Dictionary<int, HighlightColor> neededMateriaIndexes = [];
-        private Dictionary<string, HighlightColor> unmeldedItemNames = gearsetsService.GetUnmeldedItemColors(
-            configService.Config.HighlightPrerequisiteMateria
-            );
+        private Dictionary<string, HighlightColor> unmeldedItemNames = deps.GearsetsService.GetUnmeldedMateriaColors();
         private Dictionary<string, HighlightColor> neededMateriaNames = [];
-
-        public List<MeldPlan> meldPlans { get; private set; } = [];
-        public int selectedMeldPlanIndex = 0;
 
         protected override float CustomNodeMaxY => 324f;
 
         protected override void registerAddonListeners()
         {
-            Plugin.OnSelectedMeldPlanIdxChange += handleSelectedMateriaPlanIdxChange;
             gearsetsService.OnGearsetsChange += handleManualUpdate;
             addonLifecycle.RegisterListener(AddonEvent.PreDraw, AddonName, handlePreDraw);
             addonLifecycle.RegisterListener(AddonEvent.PreFinalize, AddonName, handlePreFinalize);
-            unmeldedItemNames = gearsetsService.GetUnmeldedItemColors(
-                configService.Config.HighlightPrerequisiteMateria
-                );
+            unmeldedItemNames = gearsetsService.GetUnmeldedMateriaColors();
         }
 
         protected override void unregisterAddonListeners()
         {
-            Plugin.OnSelectedMeldPlanIdxChange -= handleSelectedMateriaPlanIdxChange;
             gearsetsService.OnGearsetsChange -= handleManualUpdate;
             addonLifecycle.UnregisterListener(handlePreDraw);
             addonLifecycle.UnregisterListener(handlePreFinalize);
         }
 
+        protected override void updateListeningStatus(bool effectsAssignments)
+            => setListeningStatus(configurationService.HighlightMateriaMeld);
+
         private void handleManualUpdate() =>
-            unmeldedItemNames = gearsetsService.GetUnmeldedItemColors(
-                configService.Config.HighlightPrerequisiteMateria
-                );
+            unmeldedItemNames = gearsetsService.GetUnmeldedMateriaColors();
 
-        public delegate void MeldPlansChangeHandler(uint? itemId);
-        /// <summary>
-        /// Fires when the selected item in the materia attach addon is changed, so the meld plans available
-        /// should also change
-        /// </summary>
-        public event MeldPlansChangeHandler? OnMeldPlansChange;
-        public void TriggerMeldPlansChange(uint? itemId) =>
-            OnMeldPlansChange?.Invoke(itemId);
-
-        private void handlePreFinalize(AddonEvent type, AddonArgs? args)
-        {
-            TriggerMeldPlansChange(null);
-        }
+        private void handlePreFinalize(AddonEvent type, AddonArgs? args) =>
+            meldPlanService.SetCurrentMeldPlanItemId(null);
 
         private unsafe void handlePreDraw(AddonEvent type, AddonArgs args)
         {
@@ -115,54 +95,28 @@ namespace BisBuddy.Services.Addon
             updateHighlights(addon);
         }
 
-        public unsafe void handleSelectedMateriaPlanIdxChange(int newIdx)
-            => selectedMeldPlanIndex = newIdx;
-
         private void updateMateriaMeldPlans()
         {
-            if (selectedItemName != string.Empty)
-                meldPlans = gearsetsService.GetNeededItemMeldPlans(
-                    itemDataService.GetItemIdByName(selectedItemName)
-                    );
-            else
-                meldPlans.Clear();
-
             uint? selectedItemId = selectedItemName != string.Empty
                 ? itemDataService.GetItemIdByName(selectedItemName)
                 : null;
 
-            TriggerMeldPlansChange(selectedItemId);
+            meldPlanService.SetCurrentMeldPlanItemId(selectedItemId);
 
-
-            Plugin.UpdateMeldPlanSelectorWindow(meldPlans);
-
-            // ensure index within new bounds
-            selectedMeldPlanIndex = Math.Min(
-                Math.Max(
-                    meldPlans.Count - 1,
-                    0
-                    ),
-                selectedMeldPlanIndex
-                );
-
-            // bad index
-            if (selectedMeldPlanIndex >= meldPlans.Count)
-            {
-                neededMateriaNames = [];
-                return;
-            }
-
+            var currentMeldPlan = meldPlanService.CurrentMeldPlan;
+            
             // update list of materia names that are needed
-            var materiaNames = meldPlans[selectedMeldPlanIndex]
+            var materiaNames = meldPlanService
+                .CurrentMeldPlan?
                 .Materia
                 .Where(m => !m.IsMelded)
-                .Select(m => m.ItemName);
+                .Select(m => m.ItemName) ?? [];
 
             // limit to next materia to meld if configured
-            if (configuration.HighlightNextMateria)
+            if (configurationService.HighlightNextMateria)
                 materiaNames = materiaNames.Take(1);
 
-            var materiaColor = meldPlans[selectedMeldPlanIndex].Gearset.HighlightColor ?? configService.Config.DefaultHighlightColor;
+            var materiaColor = currentMeldPlan?.Gearset.HighlightColor ?? configurationService.DefaultHighlightColor;
             neededMateriaNames = materiaNames.Select(name => (name, materiaColor)).ToDictionary();
         }
 
@@ -197,7 +151,7 @@ namespace BisBuddy.Services.Addon
                 {
                     if (itemNameSeString.Type != ValueType.Undefined)
                     {
-                        pluginLog.Warning($"Unexpected \"{AddonName}\" item name type \"{itemNameSeString.Type}\"");
+                        logger.Warning($"Unexpected \"{AddonName}\" item name type \"{itemNameSeString.Type}\"");
                     }
                     return false;
                 }
@@ -206,14 +160,14 @@ namespace BisBuddy.Services.Addon
                 var itemNameString = SeString.Parse((byte*)itemNameSeString.String).TextValue;
 
                 // some languages split HQ icon into separate raw text payload, add space between if so
-                if (itemNameString.EndsWith(ItemDataService.HqIcon) && itemNameString[^2] != ' ')
+                if (itemNameString.EndsWith(Constants.HqIcon) && itemNameString[^2] != ' ')
                     itemNameString = itemNameString.Insert(itemNameString.Length - 1, " ");
 
                 // item hasn't changed since last update
                 if (itemNameString == selectedItemName) return false;
 
                 selectedItemName = itemNameString;
-                pluginLog.Debug($"Item \"{selectedItemName}\" selected in \"{AddonName}\"");
+                logger.Debug($"Item \"{selectedItemName}\" selected in \"{AddonName}\"");
 
                 // update the materia meld plan (if there is one)
                 updateMateriaMeldPlans();
@@ -221,7 +175,7 @@ namespace BisBuddy.Services.Addon
             }
             catch (Exception ex)
             {
-                pluginLog.Error(ex, "Failed to update selected item name.");
+                logger.Error(ex, "Failed to update selected item name.");
                 return false;
             }
         }
@@ -254,7 +208,7 @@ namespace BisBuddy.Services.Addon
                     {
                         if (itemName.Type != ValueType.Undefined)
                         {
-                            pluginLog.Warning($"Unexpected {AddonName} name type: {itemName.Type}");
+                            logger.Warning($"Unexpected {AddonName} name type: {itemName.Type}");
                         }
                         // end of list, break out of loop
                         break;
@@ -263,7 +217,7 @@ namespace BisBuddy.Services.Addon
                     var itemNameString = SeString.Parse((byte*)itemName.String).TextValue;
 
                     // some languages split HQ icon into separate raw text payload, add space between if so
-                    if (itemNameString.EndsWith(ItemDataService.HqIcon) && itemNameString[^2] != ' ')
+                    if (itemNameString.EndsWith(Constants.HqIcon) && itemNameString[^2] != ' ')
                         itemNameString = itemNameString.Insert(itemNameString.Length - 1, " ");
 
                     if (neededNames.TryGetValue(itemNameString, out var color))
@@ -274,7 +228,7 @@ namespace BisBuddy.Services.Addon
             }
             catch (Exception ex)
             {
-                pluginLog.Error(ex, "Failed to update required indexes");
+                logger.Error(ex, "Failed to update required indexes");
             }
         }
 
@@ -324,7 +278,7 @@ namespace BisBuddy.Services.Addon
             }
             catch (Exception ex)
             {
-                pluginLog.Error(ex, "Error in HandleMateriaAttachAddonPostReceiveEvent");
+                logger.Error(ex, "Error in HandleMateriaAttachAddonPostReceiveEvent");
             }
         }
 
@@ -378,8 +332,7 @@ namespace BisBuddy.Services.Addon
                     AddonCustomNodeId,
                     hoverNode,
                     color.CustomNodeColor,
-                    configService.Config.CustomNodeMultiplyColor,
-                    color.CustomNodeAlpha(configService.Config.BrightListItemHighlighting)
+                    color.CustomNodeAlpha(configurationService.BrightListItemHighlighting)
                     ) ?? throw new Exception($"Could not clone node \"{hoverNodeId}\"");
 
                 // mark as dirty
@@ -393,7 +346,7 @@ namespace BisBuddy.Services.Addon
             catch (Exception ex)
             {
                 customNode?.Dispose();
-                pluginLog.Error(ex, "Failed to initialize custom node");
+                logger.Error(ex, "Failed to initialize custom node");
                 return null;
             }
         }

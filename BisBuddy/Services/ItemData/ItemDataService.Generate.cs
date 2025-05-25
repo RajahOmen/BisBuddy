@@ -148,7 +148,7 @@ namespace BisBuddy.Items
             }
         }
 
-        private static ILookup<uint, uint> generateItemsCoffers(ExcelSheet<Item> itemSheet)
+        private ILookup<uint, uint> generateItemsCoffers(ExcelSheet<Item> itemSheet)
         {
             try
             {
@@ -157,15 +157,15 @@ namespace BisBuddy.Items
                     true,
                     out var failedLines,
                     out var exceptions,
-                    Services.DataManager.GameData,
-                    Services.DataManager.GameData.Options.DefaultExcelLanguage
+                    dataManager.GameData,
+                    dataManager.GameData.Options.DefaultExcelLanguage
                     );
 
                 if (failedLines.Count != 0)
                 {
                     foreach (var failedLine in failedLines)
                     {
-                        pluginLog.Error("Failed to load line from " + CsvLoader.ItemSupplementResourceName + ": " + failedLine);
+                        logger.Error("Failed to load line from " + CsvLoader.ItemSupplementResourceName + ": " + failedLine);
                     }
                 }
 
@@ -181,7 +181,7 @@ namespace BisBuddy.Items
             }
             catch (Exception ex)
             {
-                pluginLog.Error(ex, "Failed to generate coffers using " + CsvLoader.ItemSupplementResourceName);
+                logger.Error(ex, "Failed to generate coffers using " + CsvLoader.ItemSupplementResourceName);
                 throw;
             }
         }

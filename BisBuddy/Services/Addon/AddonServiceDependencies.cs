@@ -6,22 +6,22 @@ using KamiToolKit;
 
 namespace BisBuddy.Services.Addon
 {
-    public class AddonServiceDependencies(
+    public class AddonServiceDependencies<T>(
+        ITypedLogger<T> logger,
         IAddonLifecycle addonLifecycle,
         IGameGui gameGui,
         NativeController nativeController,
-        IPluginLog pluginLog,
         IGearsetsService gearsetsService,
         IItemDataService itemDataService,
-        IConfigurationService configService
-        )
+        IConfigurationService configurationService
+        ) where T : class
     {
+        public readonly ITypedLogger<T> logger = logger;
         public readonly IAddonLifecycle AddonLifecycle = addonLifecycle;
         public readonly IGameGui GameGui = gameGui;
         public readonly NativeController NativeController = nativeController;
-        public readonly IPluginLog PluginLog = pluginLog;
         public readonly IGearsetsService GearsetsService = gearsetsService;
         public readonly IItemDataService ItemDataService = itemDataService;
-        public readonly IConfigurationService ConfigService = configService;
+        public readonly IConfigurationService ConfigurationService = configurationService;
     }
 }

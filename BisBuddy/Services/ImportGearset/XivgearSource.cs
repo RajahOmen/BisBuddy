@@ -1,6 +1,8 @@
+using BisBuddy.Factories;
 using BisBuddy.Gear;
 using BisBuddy.Import;
 using BisBuddy.Items;
+using Dalamud.Plugin.Services;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -10,7 +12,12 @@ using System.Web;
 
 namespace BisBuddy.Services.ImportGearset
 {
-    public class XivgearSource : IImportGearsetSource
+    public class XivgearSource(
+        ITypedLogger<XivgearSource> logger,
+        HttpClient httpClient,
+        IItemDataService itemDataService,
+        IGearpieceFactory gearpieceFactory
+        ) : IImportGearsetSource
     {
         public ImportGearsetSourceType SourceType => ImportGearsetSourceType.Xivgear;
 
@@ -18,14 +25,10 @@ namespace BisBuddy.Services.ImportGearset
         private static readonly string XivgearApiBase = "https://api.xivgear.app/shortlink/";
         private static readonly string XivgearSetIndexBase = "&onlySetIndex=";
 
-        private readonly ItemDataService itemData;
-        private readonly HttpClient httpClient;
-
-        public XivgearSource(ItemDataService itemData, HttpClient httpClient)
-        {
-            this.itemData = itemData;
-            this.httpClient = httpClient;
-        }
+        private readonly ITypedLogger<XivgearSource> logger = logger;
+        private readonly HttpClient httpClient = httpClient;
+        private readonly IItemDataService itemDataService = itemDataService;
+        private readonly IGearpieceFactory gearpieceFactory = gearpieceFactory;
 
         public async Task<List<Gearset>> ImportGearsets(string importString)
         {
@@ -136,7 +139,7 @@ namespace BisBuddy.Services.ImportGearset
                 }
                 catch (Exception ex)
                 {
-                    Services.Log.Warning($"Failed to import gearset of gearsets: " + ex.Message);
+                    logger.Warning($"Failed to import gearset of gearsets: " + ex.Message);
                 }
             }
 
@@ -170,13 +173,6 @@ namespace BisBuddy.Services.ImportGearset
                 throw new JsonException($"No items found in {gearsetName}");
 
             var gearpieces = new List<Gearpiece>();
-            var gearset = new Gearset(
-                gearsetName,
-                gearpieces,
-                gearsetJob,
-                ImportGearsetSourceType.Xivgear,
-                sourceUrl: sourceUrl
-                );
 
             foreach (var slot in slots.EnumerateObject())
             {
@@ -188,11 +184,8 @@ namespace BisBuddy.Services.ImportGearset
                     throw new JsonException("No item ID for slot " + slot.Name);
                 }
 
-                var gearpieceType = GearpieceTypeMapper.Parse(slot.Name);
-
                 // xivgear only provides NQ items, convert to HQ
-                var gearpieceId = itemData.ConvertItemIdToHq(id.GetUInt32());
-                var gearpieceName = itemData.GetItemNameById(gearpieceId);
+                var gearpieceId = itemDataService.ConvertItemIdToHq(id.GetUInt32());
 
                 List<Materia> materiaList = [];
 
@@ -206,16 +199,14 @@ namespace BisBuddy.Services.ImportGearset
                             && materiaId.GetInt32() > 0
                             )
                         {
-                            var newMateria = itemData.BuildMateria(materiaId.GetUInt32());
+                            var newMateria = itemDataService.BuildMateria(materiaId.GetUInt32());
                             materiaList.Add(newMateria);
                         }
                     }
                 }
-                var gearpiece = new Gearpiece(
+
+                var gearpiece = gearpieceFactory.Create(
                     gearpieceId,
-                    gearpieceName,
-                    gearpieceType,
-                    itemData.BuildGearpiecePrerequisiteTree(gearpieceId),
                     materiaList
                     );
 
@@ -224,10 +215,17 @@ namespace BisBuddy.Services.ImportGearset
             }
 
             // don't return a gearset if it has no gearpieces
-            if (gearset.Gearpieces.Count == 0)
+            if (gearpieces.Count == 0)
                 return null;
 
-            gearset.Gearpieces.Sort((a, b) => a.GearpieceType.CompareTo(b.GearpieceType));
+            var gearset = new Gearset(
+                gearsetName,
+                gearpieces,
+                gearsetJob,
+                ImportGearsetSourceType.Xivgear,
+                sourceUrl: sourceUrl
+                );
+
             return gearset;
         }
     }

@@ -1,6 +1,8 @@
+using BisBuddy.Factories;
 using BisBuddy.Gear;
 using BisBuddy.Import;
 using BisBuddy.Items;
+using BisBuddy.Util;
 using Dalamud.Utility;
 using System;
 using System.Collections.Generic;
@@ -10,19 +12,18 @@ using System.Threading.Tasks;
 
 namespace BisBuddy.Services.ImportGearset
 {
-    public class TeamcraftPlaintextSource : IImportGearsetSource
+    public class TeamcraftPlaintextSource(
+        IItemDataService itemData,
+        IGearpieceFactory gearpieceFactory
+        ) : IImportGearsetSource
     {
         public ImportGearsetSourceType SourceType => ImportGearsetSourceType.Teamcraft;
         private static readonly string GearpieceStartingStr = "**";
         private static readonly string MateriaStartingStr = "- ";
         private static readonly string HqIndicatorStr = "HQ";
 
-        private readonly ItemDataService itemData;
-
-        public TeamcraftPlaintextSource(ItemDataService itemData)
-        {
-            this.itemData = itemData;
-        }
+        private readonly IItemDataService itemData = itemData;
+        private readonly IGearpieceFactory gearpieceFactory = gearpieceFactory;
 
         public async Task<List<Gearset>> ImportGearsets(string importString)
         {
@@ -121,7 +122,7 @@ namespace BisBuddy.Services.ImportGearset
                 return (null, possibleJobAbbrevs);
 
             // handle HQ parsing
-            gearpieceName = gearpieceName.Replace(HqIndicatorStr, ItemDataService.HqIcon.ToString());
+            gearpieceName = gearpieceName.Replace(HqIndicatorStr, Constants.HqIcon.ToString());
             var itemId = itemData.GetItemIdByName(gearpieceName);
 
             // invalid item name
@@ -138,19 +139,15 @@ namespace BisBuddy.Services.ImportGearset
                     .Intersect(currentItemJobAbbrevs)
                     .ToHashSet();
 
-            var gearpieceType = itemData.GetItemGearpieceType(itemId);
-
             var itemMateria = materiaNames
                 .Select(itemData.GetItemIdByName)
                 .Where(id => id > 0)
                 .Select(id => itemData.BuildMateria(id))
                 .ToList();
 
-            var gearpiece = new Gearpiece(
+
+            var gearpiece = gearpieceFactory.Create(
                 itemId,
-                gearpieceName,
-                gearpieceType,
-                itemData.BuildGearpiecePrerequisiteTree(itemId),
                 itemMateria
                 );
 

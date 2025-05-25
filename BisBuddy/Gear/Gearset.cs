@@ -1,27 +1,35 @@
 using BisBuddy.Import;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Numerics;
+using static FFXIVClientStructs.FFXIV.Component.GUI.AtkUIColorHolder.Delegates;
+using System.Runtime.InteropServices;
 
 namespace BisBuddy.Gear
 {
+    public delegate void GearsetChangeHandler();
+
     [Serializable]
     public partial class Gearset
     {
         public static readonly string DefaultName = "New Gearset";
 
         // set to random uuid
-        public string Id { get; set; } = Guid.NewGuid().ToString();
-        public bool IsActive { get; set; } = true;
-        public string Name { get; set; } = "New Gearset";
-        public List<Gearpiece> Gearpieces { get; init; } = [];
+        public string Id { get; private set; } = Guid.NewGuid().ToString();
+        public bool IsActive { get; private set; } = true;
+        public string Name { get; private set; } = "New Gearset";
+        public IReadOnlyList<Gearpiece> Gearpieces { get; init; } = [];
         // for links to externally sourced sites
-        public string? SourceUrl { get; set; } = null;
+        public string? SourceUrl { get; init; } = null;
         // for local representations of the gearset that aren't native JSON (ex: teamcraft plaintext)
-        public string? SourceString { get; set; } = null;
-        public ImportGearsetSourceType? SourceType { get; set; }
-        public string JobAbbrv { get; set; } = "???";
-        public HighlightColor? HighlightColor { get; set; } = null;
+        public string? SourceString { get; init; } = null;
+        public ImportGearsetSourceType? SourceType { get; init; }
+        public string JobAbbrv { get; init; } = "???";
+        public HighlightColor? HighlightColor { get; private set; } = null;
+
+        public event GearsetChangeHandler? OnGearsetChange;
 
         public Gearset(string name, string? sourceUrl, ImportGearsetSourceType? sourceType)
         {
@@ -43,10 +51,71 @@ namespace BisBuddy.Gear
             SourceUrl = sourceUrl;
             SourceString = sourceString;
             SourceType = sourceType;
-            Gearpieces = gearpieces;
             JobAbbrv = jobAbbrv;
+
             // ensure ordering after adding
-            Gearpieces.Sort((a, b) => a.GearpieceType.CompareTo(b.GearpieceType));
+            gearpieces.Sort((a, b) => a.GearpieceType.CompareTo(b.GearpieceType));
+            Gearpieces = gearpieces;
+
+            foreach (var gearpiece in Gearpieces)
+                gearpiece.OnGearpieceChange += triggerGearsetChange;
+        }
+
+        ~Gearset()
+        {
+            foreach (var gearpiece in Gearpieces)
+                gearpiece.OnGearpieceChange -= triggerGearsetChange;
+        }
+
+        private void triggerGearsetChange()
+        {
+            OnGearsetChange?.Invoke();
+        }
+
+        public void SetId(string newId)
+        {
+            Id = newId;
+            triggerGearsetChange();
+        }
+
+        public void SetActiveStatus(bool newActivityStatus)
+        {
+            IsActive = newActivityStatus;
+            triggerGearsetChange();
+        }
+
+        public void SetName(string newName)
+        {
+            Name = newName;
+            triggerGearsetChange();
+        }
+
+        public void SetHighlightColor(Vector4? newColor)
+        {
+            // same color
+            if (HighlightColor?.BaseColor == newColor)
+                return;
+
+            // existing gearset-specific highlight color
+            if (HighlightColor is HighlightColor oldColor)
+                if (newColor is Vector4 color)
+                    HighlightColor.UpdateColor(color);
+                else
+                {
+                    // changing to new binding, trigger update
+                    HighlightColor = oldColor;
+                    triggerGearsetChange();
+                }
+            // uses default highlight color
+            else
+            {
+                if (newColor is Vector4 color)
+                {
+                    HighlightColor = new HighlightColor(color);
+                    // changing to new binding, trigger update
+                    triggerGearsetChange();
+                }
+            }
         }
 
         public IEnumerable<ItemRequirement> ItemRequirements(bool includeUncollectedItemMateria)

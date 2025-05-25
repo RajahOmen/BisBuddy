@@ -1,6 +1,6 @@
 using Autofac;
 using BisBuddy.Windows;
-using BisBuddy.Windows.ConfigWindow;
+using BisBuddy.Windows.Config;
 using Dalamud.Interface;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;

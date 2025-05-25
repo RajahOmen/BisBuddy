@@ -11,7 +11,7 @@ using System.Text.Json;
 namespace BisBuddy;
 
 [Serializable]
-public class Configuration : IPluginConfiguration
+public class Configuration : IConfigurationProperties
 {
     public static readonly int CurrentVersion = 3;
     public static readonly string DefaultGearsetName = "New Gearset";
@@ -32,11 +32,28 @@ public class Configuration : IPluginConfiguration
     public bool PluginUpdateInventoryScan { get; set; } = true;
     public bool StrictMateriaMatching { get; set; } = true;
 
-    //public HighlightColor HighlightColor { get; set; } = new(0.0f, 1.0f, 0.0f, 0.393f);
     public bool BrightListItemHighlighting { get; set; } = true;
-    public static readonly float BrightListItemAlpha = 1.0f;
     public HighlightColor DefaultHighlightColor { get; set; } = new(0.0f, 1.0f, 0.0f, 0.393f);
-    public readonly Vector3 CustomNodeMultiplyColor = new(0.393f, 0.393f, 0.393f);
 
     public Dictionary<ulong, CharacterInfo> CharactersData { get; set; } = [];
 }
+
+public interface IConfigurationProperties : IPluginConfiguration
+{
+    public bool HighlightNeedGreed { get; set; }
+    public bool HighlightShops { get; set; }
+    public bool HighlightMateriaMeld { get; set; }
+    public bool HighlightNextMateria { get; set; }
+    public bool HighlightUncollectedItemMateria { get; set; }
+    public bool HighlightPrerequisiteMateria { get; set; }
+    public bool HighlightInventories { get; set; }
+    public bool HighlightMarketboard { get; set; }
+    public bool AnnotateTooltips { get; set; }
+    public bool AutoCompleteItems { get; set; }
+    public bool AutoScanInventory { get; set; }
+    public bool PluginUpdateInventoryScan { get; set; }
+    public bool StrictMateriaMatching { get; set; }
+    public bool BrightListItemHighlighting { get; set; }
+    public HighlightColor DefaultHighlightColor { get; }
+}
+

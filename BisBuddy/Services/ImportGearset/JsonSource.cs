@@ -33,7 +33,7 @@ namespace BisBuddy.Services.ImportGearset
             if (gearset == null)
                 return null;
 
-            gearset.Id = Guid.NewGuid().ToString(); // set to a new random uuid
+            gearset.SetId(Guid.NewGuid().ToString()); // set to a new random uuid
             return gearset;
         }
     }
