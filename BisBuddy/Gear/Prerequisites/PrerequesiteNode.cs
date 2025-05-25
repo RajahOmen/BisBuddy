@@ -2,6 +2,8 @@ using System.Collections.Generic;
 
 namespace BisBuddy.Gear.Prerequisites
 {
+    public delegate void PrerequisiteChangeHandler();
+
     public interface IPrerequisiteNode
     {
         public string NodeId { get; }
@@ -10,10 +12,14 @@ namespace BisBuddy.Gear.Prerequisites
         public bool IsCollected { get; }
         public bool IsManuallyCollected { get; }
         public bool IsObtainable { get; }
-        public List<IPrerequisiteNode> PrerequisiteTree { get; set; }
+        public IReadOnlyList<IPrerequisiteNode> PrerequisiteTree { get; set; }
         public HashSet<string> ChildNodeIds { get; }
         public PrerequisiteNodeSourceType SourceType { get; set; }
 
+        public event PrerequisiteChangeHandler? OnPrerequisiteChange;
+        public void AddNode(IPrerequisiteNode newNode);
+        public void ReplaceNode(int index, IPrerequisiteNode newNode);
+        public void InsertNode(int index, IPrerequisiteNode newNode);
         public void SetCollected(bool collected, bool manualToggle);
         public int MinRemainingItems(uint? newItemId = null);
         public void AddNeededItemIds(Dictionary<uint, (int MinDepth, int Count)> neededCounts, int startDepth = 0);

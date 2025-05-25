@@ -57,7 +57,7 @@ namespace BisBuddy.Converters
                         isManuallyCollected = reader.GetBoolean();
                         break;
                     default:
-                        reader.Skip();
+                        reader.TrySkip();
                         break;
                 }
             }

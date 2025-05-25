@@ -1,6 +1,5 @@
 using BisBuddy.Gear;
 using BisBuddy.Gear.MeldPlanManager;
-using BisBuddy.Items;
 using BisBuddy.Util;
 using Dalamud.Game.Addon.Lifecycle;
 using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
@@ -104,7 +103,7 @@ namespace BisBuddy.Services.Addon
             meldPlanService.SetCurrentMeldPlanItemId(selectedItemId);
 
             var currentMeldPlan = meldPlanService.CurrentMeldPlan;
-            
+
             // update list of materia names that are needed
             var materiaNames = meldPlanService
                 .CurrentMeldPlan?

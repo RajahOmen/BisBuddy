@@ -1,6 +1,5 @@
 using BisBuddy.Gear.Prerequisites;
 using BisBuddy.Services;
-using Dalamud.Plugin.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,27 +9,43 @@ namespace BisBuddy.Gear
     public delegate void GearpieceChangeHandler();
 
     [Serializable]
-    public class Gearpiece(
-        ITypedLogger<Gearpiece> logger,
-        uint itemId,
-        string itemName,
-        GearpieceType gearpieceType,
-        IPrerequisiteNode? prerequisiteTree,
-        List<Materia>? itemMateria,
-        bool isCollected = false,
-        bool isManuallyCollected = false
-        )
+    public class Gearpiece
     {
-        private readonly ITypedLogger<Gearpiece> logger = logger;
-        public uint ItemId { get; set; } = itemId;
-        public string ItemName { get; set; } = itemName;
-        public GearpieceType GearpieceType { get; set; } = gearpieceType;
-        public IPrerequisiteNode? PrerequisiteTree { get; set; } = prerequisiteTree;
-        public bool IsCollected { get; private set; } = isCollected;
-        public bool IsManuallyCollected { get; private set; } = isManuallyCollected;
+        private readonly ITypedLogger<Gearpiece> logger;
+        public uint ItemId { get; set; }
+        public string ItemName { get; set; }
+        public GearpieceType GearpieceType { get; set; }
+        public IPrerequisiteNode? PrerequisiteTree { get; set; }
+        public bool IsCollected { get; private set; }
+        public bool IsManuallyCollected { get; private set; }
         public bool IsObtainable => PrerequisiteTree?.IsObtainable ?? false; // If no prerequisites known, assume not obtainable
-        public List<Materia> ItemMateria { get; init; } = itemMateria ?? [];
+        public List<Materia> ItemMateria { get; init; }
         private List<(Materia Materia, int Count)>? itemMateriaGrouped = null;
+
+        public Gearpiece(
+            ITypedLogger<Gearpiece> logger,
+            uint itemId,
+            string itemName,
+            GearpieceType gearpieceType,
+            IPrerequisiteNode? prerequisiteTree,
+            List<Materia>? itemMateria,
+            bool isCollected = false,
+            bool isManuallyCollected = false
+        )
+        {
+            this.logger = logger;
+            ItemId = itemId;
+            ItemName = itemName;
+            GearpieceType = gearpieceType;
+            PrerequisiteTree = prerequisiteTree;
+            IsCollected = isCollected;
+            IsManuallyCollected = isManuallyCollected;
+            ItemMateria = itemMateria ?? [];
+
+            if (PrerequisiteTree is IPrerequisiteNode node)
+                node.OnPrerequisiteChange += triggerGearpieceChange;
+        }
+
         public List<(Materia Materia, int Count)>? ItemMateriaGrouped
         {
             get
@@ -53,10 +68,8 @@ namespace BisBuddy.Gear
 
         public event GearpieceChangeHandler? OnGearpieceChange;
 
-        private void triggerGearpieceChange()
-        {
+        private void triggerGearpieceChange() =>
             OnGearpieceChange?.Invoke();
-        }
 
         public IEnumerable<ItemRequirement> ItemRequirements(Gearset parentGearset, bool includeUncollectedItemMateria)
         {

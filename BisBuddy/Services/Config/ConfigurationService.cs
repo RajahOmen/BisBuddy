@@ -1,26 +1,15 @@
-using Autofac.Core;
 using BisBuddy.Gear;
-using BisBuddy.Items;
 using BisBuddy.Services.ItemAssignment;
-using BisBuddy.Util;
-using Dalamud.Plugin;
-using Dalamud.Plugin.Services;
 using Microsoft.Extensions.Hosting;
-using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Numerics;
 using System.Reflection;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using JsonException = System.Text.Json.JsonException;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
-namespace BisBuddy.Services
+namespace BisBuddy.Services.Config
 {
     /// <summary>
     /// Handles when the configuration data changes
@@ -28,22 +17,38 @@ namespace BisBuddy.Services
     /// <param name="effectsAssignments">If the configuration data change may effect how items are assigned</param>
     public delegate void ConfigurationChangeDelegate(bool effectsAssignments);
 
-    public class ConfigurationService(
-        ITypedLogger<ConfigurationService> logger,
-        IConfigurationLoaderService loadConfigurationService,
-        IQueueService queueService,
-        IFileService fileService,
-        JsonSerializerOptions jsonSerializerOptions
-        ) : IConfigurationService
+    public class ConfigurationService : IConfigurationService
     {
-        private readonly ITypedLogger<ConfigurationService> logger = logger;
-        private readonly IQueueService queueService = queueService;
-        private readonly IFileService fileService = fileService;
-        private readonly JsonSerializerOptions jsonSerializerOptions = jsonSerializerOptions;
+        private readonly ITypedLogger<ConfigurationService> logger;
+        private readonly IQueueService queueService;
+        private readonly IFileService fileService;
+        private readonly JsonSerializerOptions jsonSerializerOptions;
 
-        private IConfigurationProperties configuration { get; set; } = loadConfigurationService.LoadConfig();
+        public ConfigurationService(
+            ITypedLogger<ConfigurationService> logger,
+            IConfigurationLoaderService loadConfigurationService,
+            IQueueService queueService,
+            IFileService fileService,
+            JsonSerializerOptions jsonSerializerOptions
+        )
+        {
+            this.logger = logger;
+            this.queueService = queueService;
+            this.fileService = fileService;
+            this.jsonSerializerOptions = jsonSerializerOptions;
+            configuration = loadConfigurationService.LoadConfig();
+            configuration.DefaultHighlightColor.OnColorChange += handleDefaultHighlightColorChange;
+        }
+
+        private IConfigurationProperties configuration { get; set; }
 
         public event ConfigurationChangeDelegate? OnConfigurationChange;
+
+        private void triggerConfigurationChange(bool effectsAssignments)
+        {
+            logger.Verbose($"OnConfigurationChange (effectsAssignments: {effectsAssignments})");
+            OnConfigurationChange?.Invoke(effectsAssignments);
+        }
 
         private void updateConfigProperty<T>(
             Expression<Func<IConfigurationProperties, T>> propertyExp,
@@ -64,7 +69,8 @@ namespace BisBuddy.Services
                     );
 
             propInfo.SetValue(configuration, newValue);
-            OnConfigurationChange?.Invoke(effectsAssignments: effectsAssignments);
+            scheduleSave();
+            triggerConfigurationChange(effectsAssignments: effectsAssignments);
         }
 
         public int Version
@@ -162,16 +168,17 @@ namespace BisBuddy.Services
             get => configuration.DefaultHighlightColor;
         }
 
-        public void UpdateDefaultHighlightColor(Vector4 newColor)
+        private void handleDefaultHighlightColorChange()
         {
-            configuration.DefaultHighlightColor.UpdateColor(newColor);
-            OnConfigurationChange?.Invoke(effectsAssignments: false);
+            scheduleSave();
+            triggerConfigurationChange(effectsAssignments: false);
         }
 
         private async Task saveAsync(CancellationToken cancellationToken = default)
         {
             try
             {
+                logger.Verbose($"Saving configuration file");
                 var configText = JsonSerializer.Serialize(configuration, jsonSerializerOptions);
                 await fileService.WriteConfigAsync(configText, cancellationToken);
             }
@@ -181,7 +188,7 @@ namespace BisBuddy.Services
             }
         }
 
-        public void ScheduleSave() =>
+        public void scheduleSave() =>
             queueService.Enqueue(async () => await saveAsync());
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -198,7 +205,5 @@ namespace BisBuddy.Services
     public interface IConfigurationService : IHostedService, IConfigurationProperties
     {
         public event ConfigurationChangeDelegate? OnConfigurationChange;
-        public void UpdateDefaultHighlightColor(Vector4 newColor);
-        public void ScheduleSave();
     }
 }

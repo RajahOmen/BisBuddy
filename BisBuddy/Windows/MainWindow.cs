@@ -1,6 +1,7 @@
 using BisBuddy.Gear;
 using BisBuddy.Resources;
 using BisBuddy.Services;
+using BisBuddy.Services.Config;
 using BisBuddy.Services.Gearsets;
 using BisBuddy.Util;
 using BisBuddy.Windows.Config;
@@ -26,9 +27,6 @@ public partial class MainWindow : Window, IDisposable
     private readonly IGearsetsService gearsetsService;
     private readonly IInventoryUpdateDisplayService inventoryUpdateService;
     private readonly IConfigurationService configurationService;
-
-    public bool InventoryScanRunning = false;
-    public int InventoryScanUpdateCount = -1;
 
     public static readonly Vector4 UnobtainedColor = new(1.0f, 0.2f, 0.2f, 1.0f);
     public static readonly Vector4 ObtainedColor = new(0.2f, 1.0f, 0.2f, 1.0f);
@@ -63,8 +61,6 @@ public partial class MainWindow : Window, IDisposable
     public override void OnClose()
     {
         base.OnClose();
-        InventoryScanRunning = false;
-        InventoryScanUpdateCount = -1;
     }
 
     private unsafe void searchItemById(uint itemId)
@@ -84,6 +80,11 @@ public partial class MainWindow : Window, IDisposable
 
     private void drawHeader()
     {
+        var updateIsQueued = inventoryUpdateService.UpdateIsQueued;
+        var manualUpdatedCount = inventoryUpdateService.IsManualUpdate
+            ? inventoryUpdateService.GearpieceUpdateCount
+            : -1;
+
         using (ImRaii.Disabled(!clientState.IsLoggedIn))
         {
             using (ImRaii.Disabled(gearsetsService.CurrentGearsets.Count >= Constants.MaxGearsetCount))
@@ -105,25 +106,22 @@ public partial class MainWindow : Window, IDisposable
 
             ImGui.SameLine();
 
-            using (ImRaii.Disabled(InventoryScanRunning || gearsetsService.CurrentGearsets.Count == 0))
+            using (ImRaii.Disabled(updateIsQueued || gearsetsService.CurrentGearsets.Count == 0))
             {
                 if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.Sync, $"{Resource.SyncInventoryButton}##scaninventory"))
-                {
-                    InventoryScanRunning = true;
                     gearsetsService.ScheduleUpdateFromInventory(manualUpdate: true);
-                }
                 if (ImGui.IsItemHovered()) ImGui.SetTooltip(Resource.SyncInventoryTooltip);
             }
         }
-
-        if (InventoryScanRunning || InventoryScanUpdateCount >= 0)
+        if (updateIsQueued)
         {
-            var text = InventoryScanRunning
-                ? Resource.InventoryScanLoading
-                : string.Format(Resource.InventoryScanUpdated, InventoryScanUpdateCount);
-
             ImGui.SameLine();
-            ImGui.Text(text);
+            ImGui.Text(Resource.InventoryScanLoading);
+        }
+        else if (manualUpdatedCount >= 0)
+        {
+            ImGui.SameLine();
+            ImGui.Text(string.Format(Resource.InventoryScanUpdated, manualUpdatedCount));
         }
 
         ImGui.SameLine();

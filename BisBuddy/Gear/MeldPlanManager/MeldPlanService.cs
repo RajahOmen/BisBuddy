@@ -1,6 +1,4 @@
-using BisBuddy.Services.Addon;
 using BisBuddy.Services.Gearsets;
-using BisBuddy.Windows;
 using System;
 using System.Collections.Generic;
 
@@ -37,7 +35,7 @@ namespace BisBuddy.Gear.MeldPlanManager
                     );
             }
         }
-        public MeldPlan? CurrentMeldPlan => 
+        public MeldPlan? CurrentMeldPlan =>
             currentMeldPlans.Count > 0
             ? currentMeldPlans[currentMeldPlanIndex]
             : null;

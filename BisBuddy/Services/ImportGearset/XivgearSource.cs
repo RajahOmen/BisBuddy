@@ -2,7 +2,6 @@ using BisBuddy.Factories;
 using BisBuddy.Gear;
 using BisBuddy.Import;
 using BisBuddy.Items;
-using Dalamud.Plugin.Services;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -21,9 +20,11 @@ namespace BisBuddy.Services.ImportGearset
     {
         public ImportGearsetSourceType SourceType => ImportGearsetSourceType.Xivgear;
 
-        private static readonly string UriHost = "xivgear.app";
-        private static readonly string XivgearApiBase = "https://api.xivgear.app/shortlink/";
-        private static readonly string XivgearSetIndexBase = "&onlySetIndex=";
+        private const string UriHost = "xivgear.app";
+        private const string XivgearStandardApiBase = "https://api.xivgear.app/shortlink/{0}";
+        private const string XivgearStaticBisApiBase = "https://staticbis.xivgear.app/{0}/{1}.json";
+        private const string XivgearSetIndexBase = "&onlySetIndex=";
+        private const string StaticBisIdentifier = "bis|";
 
         private readonly ITypedLogger<XivgearSource> logger = logger;
         private readonly HttpClient httpClient = httpClient;
@@ -76,7 +77,7 @@ namespace BisBuddy.Services.ImportGearset
             }
             catch (HttpRequestException ex)
             {
-                throw new GearsetImportException(GearsetImportStatusType.InvalidInput, ex.Message);
+                throw new GearsetImportException(GearsetImportStatusType.InvalidInput, $"apiUrl: {apiUrl}, {ex.Message}");
             }
             catch (Exception ex) when (ex is JsonException || ex is ArgumentException || ex is InvalidOperationException)
             {
@@ -97,9 +98,21 @@ namespace BisBuddy.Services.ImportGearset
             if (string.IsNullOrEmpty(page) || !page.Contains('|'))
                 return null;
 
-            // Split the string and return the part after '|' appended to base
-            var xivgearSetUuid = page.Split('|')[1].Split('&')[0];
-            return XivgearApiBase + xivgearSetUuid;
+            // follows pattern ...path=bis|{job abbrev}|current
+            if (page.StartsWith(StaticBisIdentifier))
+            {
+                var pageParts = page.Split("|");
+                var jobAbbrev = pageParts[1];
+                var bisRelevance = pageParts[2];
+                return string.Format(XivgearStaticBisApiBase, jobAbbrev, bisRelevance);
+            }
+            // follows pattern ...path=sl|{set uuid}
+            else
+            {
+                // Split the string and return the part after '|' appended to base
+                var xivgearSetUuid = page.Split('|')[1].Split('&')[0];
+                return string.Format(XivgearStandardApiBase, xivgearSetUuid);
+            }
         }
 
         private List<Gearset> parseMultipleGearsets(

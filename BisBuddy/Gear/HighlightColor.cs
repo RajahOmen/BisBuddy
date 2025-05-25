@@ -7,6 +7,8 @@ using System.Text.Json.Serialization;
 
 namespace BisBuddy.Gear
 {
+    public delegate void ColorChangeDelegate();
+
     [Serializable]
     public class HighlightColor
     {
@@ -46,7 +48,12 @@ namespace BisBuddy.Gear
             dimCustomNodeAlpha = w;
         }
 
-        public unsafe void UpdateColor(Vector4 newColor)
+        public event ColorChangeDelegate? OnColorChange;
+
+        private void triggerColorChange() =>
+            OnColorChange?.Invoke();
+
+        public void UpdateColor(Vector4 newColor)
         {
             BaseColor = newColor;
             CustomNodeColor = new(
@@ -55,6 +62,7 @@ namespace BisBuddy.Gear
                 (newColor.Z * 2) - 1
             );
             dimCustomNodeAlpha = newColor.W;
+            triggerColorChange();
         }
 
         public unsafe void ColorCustomNode(NodeBase node, bool brightHighlighting)

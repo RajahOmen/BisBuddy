@@ -1,7 +1,6 @@
 using BisBuddy.Gear;
 using BisBuddy.Items;
 using BisBuddy.Util;
-using Dalamud.Plugin.Services;
 using Newtonsoft.Json;
 using System;
 using System.IO;
@@ -13,7 +12,7 @@ using System.Threading.Tasks;
 using JsonException = System.Text.Json.JsonException;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
-namespace BisBuddy.Services
+namespace BisBuddy.Services.Config
 {
     public class ConfigurationLoaderService(
         ITypedLogger<ConfigurationLoaderService> logger,
@@ -143,11 +142,11 @@ namespace BisBuddy.Services
             HighlightColor? highlightColor = null;
             if (configJson.RootElement.TryGetProperty("HighlightColor", out var highlightColorProperty))
             {
-                var highlightColorVector = JsonSerializer.Deserialize<Vector4>(highlightColorProperty, jsonSerializerOptions);
+                var highlightColorVector = highlightColorProperty.Deserialize<Vector4>(jsonSerializerOptions);
                 highlightColor = new HighlightColor(highlightColorVector);
             }
 
-            var config = JsonSerializer.Deserialize<Configuration>(configJson, jsonSerializerOptions) ?? new Configuration();
+            var config = configJson.Deserialize<Configuration>(jsonSerializerOptions) ?? new Configuration();
             if (highlightColor is not null)
                 config.DefaultHighlightColor = highlightColor;
 
@@ -161,7 +160,7 @@ namespace BisBuddy.Services
         /// <returns></returns>
         private async Task<Configuration> migrate3To4(JsonDocument configJson, CancellationToken cancellationToken = default)
         {
-            var config = JsonSerializer.Deserialize<Configuration>(configJson, jsonSerializerOptions)
+            var config = configJson.Deserialize<Configuration>(jsonSerializerOptions)
                 ?? new Configuration();
 
             // no gearsets stored in configuration

@@ -2,8 +2,8 @@ using BisBuddy.Gear;
 using BisBuddy.ItemAssignment;
 using BisBuddy.Items;
 using BisBuddy.Services;
+using BisBuddy.Services.Config;
 using Dalamud.Game.Inventory;
-using Dalamud.Plugin.Services;
 using System.Collections.Generic;
 
 namespace BisBuddy.Factories

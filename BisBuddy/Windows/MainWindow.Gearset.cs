@@ -106,10 +106,8 @@ namespace BisBuddy.Windows
                 {
                     if (ImGui.Checkbox("###collect_all_gearpieces", ref isAllCollected))
                     {
-                        foreach (var gearpiece in gearset.Gearpieces) gearpiece.SetCollected(isAllCollected, true);
-
-                        // don't update here. Creates issues with being unable to unassign pieces reliably due to no manual lock for uncollected.
-                        gearsetsService.SaveCurrentGearsetsAsync();
+                        foreach (var gearpiece in gearset.Gearpieces)
+                            gearpiece.SetCollected(isAllCollected, true);
                     }
                 }
                 if (ImGui.IsItemHovered())
@@ -127,10 +125,7 @@ namespace BisBuddy.Windows
                 var exportButtonWidth = ImGuiComponents.GetIconButtonWithTextWidth(FontAwesomeIcon.FileExport, Resource.GearsetJsonButton);
                 ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X - ImGui.GetStyle().FramePadding.X);
                 if (ImGui.InputText($"##gearset_rename_input", ref gearsetName, 512))
-                {
                     gearset.SetName(gearsetName);
-                    _ = gearsetsService.SaveCurrentGearsetsAsync();
-                }
                 if (ImGui.IsItemHovered())
                     ImGui.SetTooltip(Resource.RenameGearsetTooltip);
 
@@ -181,9 +176,9 @@ namespace BisBuddy.Windows
                 if (ImGui.Checkbox(Resource.GearsetDefaultColorCheckbox, ref useDefaultColor))
                 {
                     if (useDefaultColor)
-                        gearset.SetHighlightColor(null);
+                        gearset.HighlightColor = null;
                     else
-                        gearset.SetHighlightColor(configurationService.DefaultHighlightColor.BaseColor);
+                        gearset.HighlightColor = configurationService.DefaultHighlightColor;
                 }
                 if (ImGui.IsItemHovered())
                     ImGui.SetTooltip(Resource.GearsetDefaultColorTooltip);
@@ -196,14 +191,11 @@ namespace BisBuddy.Windows
                 {
                     var existingColor = gearset.HighlightColor?.BaseColor ?? configurationService.DefaultHighlightColor.BaseColor;
                     if (ImGui.ColorButton($"{Resource.GearsetHighlightColorButtonTooltip}###ColorPickerButton", existingColor))
-                    {
                         ImGui.OpenPopup($"###ColorPickerPopup");
-                    }
 
                     using (var popup = ImRaii.Popup($"###ColorPickerPopup"))
                     {
                         if (popup)
-                        {
                             if (ImGui.ColorPicker4(
                                 $"###ColorPicker",
                                 ref existingColor,
@@ -214,10 +206,7 @@ namespace BisBuddy.Windows
                                     | ImGuiColorEditFlags.DisplayRGB
                                     | ImGuiColorEditFlags.NoBorder
                                 )))
-                            {
-                                gearset.SetHighlightColor(existingColor);
-                            }
-                        }
+                                gearset.HighlightColor?.UpdateColor(existingColor);
                     }
                     ImGui.SameLine();
                     ImGui.Text(Resource.GearsetHighlightColorLabel);

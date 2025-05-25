@@ -1,22 +1,17 @@
 using BisBuddy.Gear;
-using BisBuddy.Items;
 using Dalamud.Configuration;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Numerics;
-using System.Text.Json;
 
 namespace BisBuddy;
 
 [Serializable]
 public class Configuration : IConfigurationProperties
 {
-    public static readonly int CurrentVersion = 3;
+    public static readonly int CurrentVersion = 4;
     public static readonly string DefaultGearsetName = "New Gearset";
 
-    public int Version { get; set; } = 2;
+    public int Version { get; set; } = 4;
 
     public bool HighlightNeedGreed { get; set; } = true;
     public bool HighlightShops { get; set; } = true;

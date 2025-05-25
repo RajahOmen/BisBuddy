@@ -1,5 +1,5 @@
 using BisBuddy.Items;
-using BisBuddy.Services;
+using BisBuddy.Services.Config;
 using BisBuddy.Services.Gearsets;
 using Dalamud.Plugin.Services;
 using KamiToolKit;

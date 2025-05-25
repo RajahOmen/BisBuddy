@@ -1,5 +1,6 @@
 using BisBuddy.Gear;
 using BisBuddy.Items;
+using BisBuddy.Services.Config;
 using BisBuddy.Services.Gearsets;
 using Dalamud.Game.Addon.Lifecycle;
 using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
@@ -80,15 +81,16 @@ namespace BisBuddy.Services.Addon
             try
             {
                 gearsetsService.OnGearsetsChange += handleUpdateHighlightColor;
+                configurationService.OnConfigurationChange += handleUpdateHighlightColor;
                 addonLifecycle.RegisterListener(AddonEvent.PreFinalize, AddonName, handlePreFinalize);
                 registerAddonListeners();
 
                 isEnabled = true;
-                logger.Verbose($"Registered listener(s) for \"{GetType().Name}\"");
+                logger.Verbose($"Registered listeners");
             }
             catch (Exception ex)
             {
-                logger.Error(ex, $"Failed to register listener(s) in \"{GetType().Name}\"");
+                logger.Error(ex, $"Failed to register listeners");
             }
         }
 
@@ -98,7 +100,8 @@ namespace BisBuddy.Services.Addon
             {
                 if (isEnabled) // only perform these if it is enabled
                 {
-                    gearsetsService.OnGearsetsChange += handleUpdateHighlightColor;
+                    gearsetsService.OnGearsetsChange -= handleUpdateHighlightColor;
+                    configurationService.OnConfigurationChange -= handleUpdateHighlightColor;
                     addonLifecycle.UnregisterListener(handlePreFinalize);
                     unregisterAddonListeners();
                 }
@@ -106,11 +109,11 @@ namespace BisBuddy.Services.Addon
                 destroyNodes();
 
                 isEnabled = false;
-                logger.Verbose($"Unregistered listener(s) for \"{GetType().Name}\"");
+                logger.Verbose($"Unregistered listeners");
             }
             catch (Exception ex)
             {
-                logger.Error(ex, $"Failed to unregister listener(s) for \"{GetType().Name}\"");
+                logger.Error(ex, $"Failed to unregister listeners");
             }
         }
 
@@ -124,6 +127,9 @@ namespace BisBuddy.Services.Addon
             foreach (var nodeData in customNodes.Values)
                 nodeData.Color.ColorCustomNode(nodeData.Node, configurationService.BrightListItemHighlighting);
         }
+
+        private unsafe void handleUpdateHighlightColor(bool effectsAssignments = false)
+            => handleUpdateHighlightColor();
 
         private unsafe void handlePreFinalize(AddonEvent type, AddonArgs args)
         {

@@ -69,7 +69,7 @@ namespace BisBuddy.Services.Addon
             }
             catch (Exception ex)
             {
-                logger.Error(ex, $"{GetType().Name}: Failed to update PreDraw");
+                logger.Error(ex, $"Failed to update PreDraw");
             }
         }
 

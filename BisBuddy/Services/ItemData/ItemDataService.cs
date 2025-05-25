@@ -1,6 +1,5 @@
 using BisBuddy.Gear;
 using BisBuddy.Gear.Prerequisites;
-using BisBuddy.Services.ImportGearset;
 using BisBuddy.Services;
 using Dalamud.Game.Inventory;
 using Dalamud.Plugin.Services;
@@ -10,7 +9,6 @@ using Lumina.Text.ReadOnly;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using GearMateria = BisBuddy.Gear.Materia;
 using SheetMateria = Lumina.Excel.Sheets.Materia;

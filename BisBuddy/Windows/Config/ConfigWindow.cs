@@ -1,10 +1,8 @@
 using BisBuddy.Resources;
-using BisBuddy.Services;
-using BisBuddy.Services.Gearsets;
+using BisBuddy.Services.Config;
 using BisBuddy.Util;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
-using Dalamud.Plugin.Services;
 using ImGuiNET;
 using System;
 using System.Collections.Generic;
@@ -32,7 +30,7 @@ public class ConfigWindow : Window, IDisposable
             MinimumSize = new(300, 0),
             MaximumSize = new(1000, 1000)
         };
-        
+
         this.configurationService = configurationService;
     }
 
@@ -67,7 +65,7 @@ public class ConfigWindow : Window, IDisposable
                         ))
                     {
                         if (existingColor != configurationService.DefaultHighlightColor.BaseColor)
-                            configurationService.UpdateDefaultHighlightColor(existingColor);
+                            configurationService.DefaultHighlightColor.UpdateColor(existingColor);
                     }
                 }
             }

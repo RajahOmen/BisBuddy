@@ -1,7 +1,6 @@
 using BisBuddy.Factories;
 using BisBuddy.Gear;
 using BisBuddy.Gear.Prerequisites;
-using BisBuddy.Items;
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
@@ -10,11 +9,9 @@ using System.Text.Json.Serialization;
 namespace BisBuddy.Converters
 {
     internal class GearpieceConverter(
-        IItemDataService itemDataService,
         IGearpieceFactory gearpieceFactory
         ) : JsonConverter<Gearpiece>
     {
-        private readonly IItemDataService itemDataService = itemDataService;
         private readonly IGearpieceFactory gearpieceFactory = gearpieceFactory;
 
         public override Gearpiece? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -54,7 +51,7 @@ namespace BisBuddy.Converters
                         isManuallyCollected = reader.GetBoolean();
                         break;
                     default:
-                        reader.Skip();
+                        reader.TrySkip();
                         break;
                 }
             }

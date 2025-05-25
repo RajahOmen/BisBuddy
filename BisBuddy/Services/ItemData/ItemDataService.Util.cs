@@ -2,14 +2,12 @@ using BisBuddy.Gear;
 using BisBuddy.Gear.Prerequisites;
 using BisBuddy.Util;
 using Dalamud.Game.Inventory;
-using Lumina.Excel;
 using Lumina.Excel.Sheets;
 using Lumina.Text.ReadOnly;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 using GearMateria = BisBuddy.Gear.Materia;
 using SheetMateria = Lumina.Excel.Sheets.Materia;
 
@@ -191,18 +189,19 @@ namespace BisBuddy.Items
                 // find node matching the old node in the new or node
                 var oldNodeIndex = newPrerequisiteNode
                     .PrerequisiteTree
-                    .FindIndex(node =>
-                        node.ItemId == oldPrerequisiteNode.ItemId
-                        && node.GetType() == oldPrerequisiteNode.GetType()
-                    );
+                    .Index()
+                    .First(node =>
+                        node.Item.ItemId == oldPrerequisiteNode.ItemId
+                        && node.Item.GetType() == oldPrerequisiteNode.GetType()
+                    ).Index;
 
                 logger.Verbose($"New alternative found for \"{itemId}\", added as new {nameof(PrerequisiteOrNode)} layer");
 
                 // add to new node. If no index found, insert at start
                 if (oldNodeIndex >= 0)
-                    newPrerequisiteNode.PrerequisiteTree[oldNodeIndex] = oldPrerequisiteNode;
+                    newPrerequisiteNode.ReplaceNode(oldNodeIndex, oldPrerequisiteNode);
                 else
-                    newPrerequisiteNode.PrerequisiteTree.Insert(0, oldPrerequisiteNode);
+                    newPrerequisiteNode.InsertNode(0, oldPrerequisiteNode);
 
                 return newPrerequisiteNode;
             }
@@ -221,7 +220,7 @@ namespace BisBuddy.Items
                     if (!existsInOldNode)
                     {
                         logger.Verbose($"New alternative found for \"{itemId}\", added to existing {nameof(PrerequisiteOrNode)} layer");
-                        oldPrerequisiteNode.PrerequisiteTree.Add(newChildNode);
+                        oldPrerequisiteNode.AddNode(newChildNode);
                     }
 
                 }

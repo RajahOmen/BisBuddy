@@ -1,6 +1,7 @@
 using BisBuddy.Gear.MeldPlanManager;
 using BisBuddy.Resources;
 using BisBuddy.Services;
+using BisBuddy.Services.Config;
 using BisBuddy.Services.Gearsets;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility;

@@ -2,7 +2,6 @@ using BisBuddy.Gear;
 using BisBuddy.Gear.Prerequisites;
 using BisBuddy.Items;
 using BisBuddy.Services;
-using Dalamud.Plugin.Services;
 using System;
 using System.Collections.Generic;
 

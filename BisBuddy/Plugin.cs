@@ -1,20 +1,24 @@
 using Autofac;
+using Autofac.Extensions.DependencyInjection;
 using BisBuddy.Converters;
 using BisBuddy.Factories;
 using BisBuddy.Gear;
+using BisBuddy.Gear.MeldPlanManager;
 using BisBuddy.Gear.Prerequisites;
-using BisBuddy.Import;
 using BisBuddy.Items;
 using BisBuddy.Services;
 using BisBuddy.Services.Addon;
 using BisBuddy.Services.Addon.Containers;
 using BisBuddy.Services.Addon.ShopExchange;
+using BisBuddy.Services.Config;
 using BisBuddy.Services.Gearsets;
 using BisBuddy.Services.ImportGearset;
 using BisBuddy.Services.ItemAssignment;
 using BisBuddy.Windows;
 using BisBuddy.Windows.Config;
+using Dalamud.Interface;
 using Dalamud.Interface.Windowing;
+using Dalamud.Networking.Http;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using KamiToolKit;
@@ -22,24 +26,18 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
+using System.IO.Abstractions;
 using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Dalamud.Networking.Http;
-using Autofac.Extensions.DependencyInjection;
-using Dalamud.Interface;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.IO.Abstractions;
-using System.Reflection.Metadata.Ecma335;
-using BisBuddy.Gear.MeldPlanManager;
 
 namespace BisBuddy;
 
 public sealed partial class Plugin : IDalamudPlugin
 {
     private readonly IHost host;
+    private readonly ITypedLogger<Plugin> logger;
 
     public Plugin(
         IDalamudPluginInterface pluginInterface,
@@ -207,12 +205,17 @@ public sealed partial class Plugin : IDalamudPlugin
                 });
             }).Build();
 
+        logger = host.Services.GetRequiredService<ITypedLogger<Plugin>>();
+
+        logger.Info($"Initialization complete, starting...");
         _ = host.StartAsync();
     }
 
     public void Dispose()
     {
+        logger.Info($"Teardown start");
         host.StopAsync().GetAwaiter().GetResult();
         host.Dispose();
+        logger.Info($"Teardown finish");
     }
 }

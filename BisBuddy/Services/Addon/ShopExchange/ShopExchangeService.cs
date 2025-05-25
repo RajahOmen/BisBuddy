@@ -227,7 +227,7 @@ namespace BisBuddy.Services.Addon.ShopExchange
         private unsafe bool isIndentedShieldNode(ComponentNode parentNode)
         {
             var shieldInfoNode = parentNode.GetNode<AtkResNode>(AddonShieldInfoResNodeId);
-            return 
+            return
                 shieldInfoNode->Type == NodeType.Res
                 && shieldInfoNode->X != 0
             ;

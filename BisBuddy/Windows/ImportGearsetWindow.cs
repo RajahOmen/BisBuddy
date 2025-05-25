@@ -5,7 +5,6 @@ using BisBuddy.Services.Gearsets;
 using BisBuddy.Services.ImportGearset;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
-using Dalamud.Plugin.Services;
 using Dalamud.Utility;
 using ImGuiNET;
 using System;

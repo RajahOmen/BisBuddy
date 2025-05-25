@@ -8,7 +8,7 @@ namespace BisBuddy.Services
         ) : ITypedLogger<T> where T : class
     {
         private readonly IPluginLog pluginLog = pluginLog;
-        private readonly string logPrefix = $"[{nameof(T)}]";
+        private readonly string logPrefix = $"[{typeof(T).Name}]";
 
         private string prefixedMessage(string message)
             => $"{logPrefix} {message}";

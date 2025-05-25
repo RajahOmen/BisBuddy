@@ -3,7 +3,6 @@ using BisBuddy.Items;
 using BisBuddy.Services;
 using BisBuddy.Util;
 using Dalamud.Game.Inventory;
-using Dalamud.Plugin.Services;
 using LinearAssignment;
 using System;
 using System.Collections.Generic;

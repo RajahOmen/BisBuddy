@@ -65,7 +65,7 @@ namespace BisBuddy.Services.Addon.Containers
             }
             catch (Exception ex)
             {
-                logger.Error(ex, $"Error in {GetType().Name} post refresh");
+                logger.Error(ex, $"Error in post refresh");
             }
         }
 

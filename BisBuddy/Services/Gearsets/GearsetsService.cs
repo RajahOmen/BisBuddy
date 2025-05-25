@@ -2,12 +2,14 @@ using BisBuddy.Factories;
 using BisBuddy.Gear;
 using BisBuddy.Gear.MeldPlanManager;
 using BisBuddy.Import;
+using BisBuddy.Services.Config;
 using BisBuddy.Services.ImportGearset;
 using BisBuddy.Services.ItemAssignment;
 using Dalamud.Plugin.Services;
 using Microsoft.Extensions.Hosting;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -57,7 +59,7 @@ namespace BisBuddy.Services.Gearsets
             get => currentGearsets;
             private set
             {
-                currentGearsets = (List<Gearset>) value;
+                currentGearsets = value.ToList();
                 scheduleGearsetsChange();
             }
         }
@@ -67,7 +69,7 @@ namespace BisBuddy.Services.Gearsets
             // updating gearset data per framework update
             framework.Update += onUpdate;
 
-            // note: load under framework event registration
+            // note: load after framework event registration
             loadGearsets();
 
             // tracking logged in character
@@ -88,7 +90,7 @@ namespace BisBuddy.Services.Gearsets
             return Task.CompletedTask;
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        public async Task StopAsync(CancellationToken cancellationToken)
         {
             // updating gearset data per framework update
             framework.Update -= onUpdate;
@@ -104,7 +106,7 @@ namespace BisBuddy.Services.Gearsets
             foreach (var gearset in currentGearsets)
                 gearset.OnGearsetChange -= handleGearsetChange;
 
-            return Task.CompletedTask;
+            await saveCurrentGearsetsAsync();
         }
 
         /// <summary>
@@ -117,6 +119,10 @@ namespace BisBuddy.Services.Gearsets
         {
             try
             {
+                // unregister change listening from old gearsets
+                foreach (var gearset in currentGearsets)
+                    gearset.OnGearsetChange -= handleGearsetChange;
+
                 if (currentLocalContentId == 0)
                     currentGearsets = [];
                 else
@@ -124,7 +130,8 @@ namespace BisBuddy.Services.Gearsets
                         fileService.OpenReadGearsetsStream(currentLocalContentId),
                         jsonSerializerOptions
                         ) ?? [];
-            } catch (FileNotFoundException)
+            }
+            catch (FileNotFoundException)
             {
                 logger.Debug($"No gearsets file found for \"{currentLocalContentId}\", creating new");
 
@@ -134,19 +141,29 @@ namespace BisBuddy.Services.Gearsets
                     emptyGearsetsListStr
                     );
                 currentGearsets = [];
-            } finally
+            }
+            finally
             {
+                foreach (var gearset in currentGearsets)
+                    gearset.OnGearsetChange += handleGearsetChange;
                 triggerGearsetsChange(saveToFile: false);
             }
         }
 
-        public async Task SaveCurrentGearsetsAsync()
+        private void scheduleSaveCurrentGearsets()
+        {
+            queueService.Enqueue(async () => await saveCurrentGearsetsAsync());
+        }
+
+        private async Task saveCurrentGearsetsAsync()
         {
             // don't save anything if no character is logged in
             if (currentLocalContentId == 0 || !clientState.IsLoggedIn)
                 return;
 
             var gearsetsListStr = serializeGearsets(currentGearsets);
+
+            logger.Verbose($"Saving {currentLocalContentId}'s current gearsets");
 
             await fileService.WriteGearsetsAsync(
                 currentLocalContentId,
@@ -172,7 +189,6 @@ namespace BisBuddy.Services.Gearsets
         public Task<ImportGearsetsResult> AddGearsetsFromSource(ImportGearsetSourceType sourceType, string sourceString);
         public void RemoveGearset(Gearset gearset);
         public string ExportGearsetToJsonStr(Gearset gearset);
-        public Task SaveCurrentGearsetsAsync();
 
         /// <summary>
         /// Fires whenever a change to the current gearsets is made

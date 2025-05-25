@@ -35,7 +35,7 @@ namespace BisBuddy.Converters
                         isMelded = reader.GetBoolean();
                         break;
                     default:
-                        reader.Skip();
+                        reader.TrySkip();
                         break;
                 }
             }

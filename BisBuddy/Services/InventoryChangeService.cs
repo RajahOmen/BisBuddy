@@ -1,13 +1,14 @@
+using BisBuddy.Services.Config;
 using BisBuddy.Services.Gearsets;
-using Dalamud.Game.Inventory.InventoryEventArgTypes;
+using BisBuddy.Util;
 using Dalamud.Game.Inventory;
+using Dalamud.Game.Inventory.InventoryEventArgTypes;
 using Dalamud.Plugin.Services;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using BisBuddy.Util;
 
 namespace BisBuddy.Services
 {

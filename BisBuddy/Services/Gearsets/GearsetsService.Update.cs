@@ -1,12 +1,12 @@
 using BisBuddy.Gear;
+using BisBuddy.Import;
+using BisBuddy.Util;
 using Dalamud.Game.Inventory;
+using Dalamud.Plugin.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using BisBuddy.Util;
-using BisBuddy.Import;
 using System.Threading.Tasks;
-using Dalamud.Plugin.Services;
 
 namespace BisBuddy.Services.Gearsets
 {
@@ -16,18 +16,18 @@ namespace BisBuddy.Services.Gearsets
 
         private void triggerGearsetsChange(bool saveToFile = true)
         {
-            logger.Verbose($"[GearsetsService] OnGearsetsChange [saving: {saveToFile}]");
+            logger.Verbose($"OnGearsetsChange (saving: {saveToFile})");
             updateItemRequirements();
             OnGearsetsChange?.Invoke();
             if (saveToFile)
-                _ = SaveCurrentGearsetsAsync();
+                scheduleSaveCurrentGearsets();
         }
 
         private void handleGearsetChange() =>
             scheduleGearsetsChange();
 
-        private void scheduleGearsetsChange()
-            => gearsetsDirty = true;
+        private void scheduleGearsetsChange() =>
+            gearsetsDirty = true;
 
         /// <summary>
         /// Coalesce gearset change event calls into one per framework
@@ -122,12 +122,13 @@ namespace BisBuddy.Services.Gearsets
             inventoryUpdateDisplayService.IsManualUpdate = manualUpdate;
 
             // don't block main thread, queue for execution instead
-            queueService.Enqueue(() =>
+            var queuedUpdate = queueService.Enqueue(() =>
             {
                 // returns number of gearpiece status changes after update
                 try
                 {
-                    if (gearsetsToUpdate.Count() == 0 || !clientState.IsLoggedIn)
+                    logger.Verbose($"Updating current gearsets with new assignments");
+                    if (gearsetsToUpdate.Any() || !clientState.IsLoggedIn)
                         return;
 
                     var itemsList = getGameInventoryItems();
@@ -143,9 +144,6 @@ namespace BisBuddy.Services.Gearsets
 
                     logger.Debug($"Updated {updatedGearpieces?.Count ?? 0} gearpieces from inventories");
 
-                    if (saveChanges)
-                        configurationService.ScheduleSave();
-
                     inventoryUpdateDisplayService.GearpieceUpdateCount = updatedGearpieces?.Count ?? 0;
                 }
                 catch (Exception ex)
@@ -158,6 +156,12 @@ namespace BisBuddy.Services.Gearsets
                     inventoryUpdateDisplayService.UpdateIsQueued = false;
                 }
             });
+            if (!queuedUpdate)
+            {
+                logger.Warning($"QueueService not open when requesting inventory update");
+                inventoryUpdateDisplayService.UpdateIsQueued = false;
+                inventoryUpdateDisplayService.GearpieceUpdateCount = 0;
+            }
         }
 
         private List<GameInventoryItem> getGameInventoryItems()

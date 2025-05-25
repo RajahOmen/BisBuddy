@@ -145,7 +145,7 @@ namespace BisBuddy.Services.Addon
             }
             catch (Exception ex)
             {
-                logger.Error(ex, $"{GetType().Name}: Failed to update PostDraw");
+                logger.Error(ex, $"Failed to update PostDraw");
             }
         }
 
