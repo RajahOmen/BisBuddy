@@ -1,3 +1,3 @@
 files:
   - source: /**/Resources/Resource.resx
-    translation: /BisBuddy/Resources/Resource.%two_letters_code%.resx
+    translation: /**/Resources/%file_name%.%two_letters_code%.%file_extension%
