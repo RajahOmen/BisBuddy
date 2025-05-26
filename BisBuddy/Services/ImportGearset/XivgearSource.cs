@@ -162,13 +162,13 @@ namespace BisBuddy.Services.ImportGearset
         private Gearset? parseGearset(string sourceUrl, JsonElement setElement, string? gearsetJobOverride)
         {
             // set gearset name
-            var gearsetName = Configuration.DefaultGearsetName;
+            var gearsetName = BisBuddy.Configuration.DefaultGearsetName;
             if (
                 setElement.TryGetProperty("name", out var nameProp)
                 && nameProp.ValueKind == JsonValueKind.String
                 )
             {
-                gearsetName = nameProp.GetString() ?? Configuration.DefaultGearsetName;
+                gearsetName = nameProp.GetString() ?? BisBuddy.Configuration.DefaultGearsetName;
             }
 
             var gearsetJob = gearsetJobOverride ?? "???";

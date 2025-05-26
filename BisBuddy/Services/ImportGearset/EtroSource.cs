@@ -92,13 +92,13 @@ namespace BisBuddy.Services.ImportGearset
         private async Task<Gearset?> parseGearset(JsonElement rootJsonElement, string importString)
         {
             // set gearset name
-            var gearsetName = Configuration.DefaultGearsetName;
+            var gearsetName = BisBuddy.Configuration.DefaultGearsetName;
             if (
                 rootJsonElement.TryGetProperty("name", out var nameProp)
                 && nameProp.ValueKind == JsonValueKind.String
                 )
             {
-                gearsetName = nameProp.GetString() ?? Configuration.DefaultGearsetName;
+                gearsetName = nameProp.GetString() ?? BisBuddy.Configuration.DefaultGearsetName;
             }
 
             var job = "???";

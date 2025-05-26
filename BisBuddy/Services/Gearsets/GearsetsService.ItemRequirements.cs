@@ -1,5 +1,4 @@
 using BisBuddy.Gear;
-using BisBuddy.Gear.MeldPlanManager;
 using System.Collections.Generic;
 using System.Linq;
 

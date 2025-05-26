@@ -1,6 +1,6 @@
 using BisBuddy.Gear;
 using BisBuddy.Items;
-using BisBuddy.Services.Config;
+using BisBuddy.Services.Configuration;
 using BisBuddy.Services.Gearsets;
 using Dalamud.Game.Addon.Lifecycle;
 using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;

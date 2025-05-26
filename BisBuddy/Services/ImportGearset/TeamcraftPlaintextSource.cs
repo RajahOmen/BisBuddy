@@ -103,7 +103,7 @@ namespace BisBuddy.Services.ImportGearset
             var actualJobAbbrev = possibleJobAbbrevs.Count == 1 ? possibleJobAbbrevs.First() : "???";
 
             return new Gearset(
-                Configuration.DefaultGearsetName,
+                BisBuddy.Configuration.DefaultGearsetName,
                 gearpieces,
                 actualJobAbbrev,
                 ImportGearsetSourceType.Teamcraft,

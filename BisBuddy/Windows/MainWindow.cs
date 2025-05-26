@@ -1,7 +1,8 @@
 using BisBuddy.Gear;
+using BisBuddy.Mediators;
 using BisBuddy.Resources;
 using BisBuddy.Services;
-using BisBuddy.Services.Config;
+using BisBuddy.Services.Configuration;
 using BisBuddy.Services.Gearsets;
 using BisBuddy.Util;
 using BisBuddy.Windows.Config;

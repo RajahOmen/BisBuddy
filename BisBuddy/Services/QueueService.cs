@@ -4,7 +4,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace BisBuddy.Services.ItemAssignment
+namespace BisBuddy.Services
 {
     public class QueueService(ITypedLogger<QueueService> logger) : IQueueService
     {

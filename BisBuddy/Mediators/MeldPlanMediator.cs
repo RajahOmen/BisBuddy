@@ -1,10 +1,11 @@
+using BisBuddy.Gear;
 using BisBuddy.Services.Gearsets;
 using System;
 using System.Collections.Generic;
 
-namespace BisBuddy.Gear.MeldPlanManager
+namespace BisBuddy.Mediators
 {
-    public class MeldPlanService(
+    public class MeldPlanMediator(
         IGearsetsService gearsetsService
         ) : IMeldPlanService
     {

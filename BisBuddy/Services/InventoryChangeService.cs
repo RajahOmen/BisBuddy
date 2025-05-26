@@ -1,4 +1,4 @@
-using BisBuddy.Services.Config;
+using BisBuddy.Services.Configuration;
 using BisBuddy.Services.Gearsets;
 using BisBuddy.Util;
 using Dalamud.Game.Inventory;

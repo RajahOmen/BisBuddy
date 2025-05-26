@@ -1,10 +1,9 @@
 using BisBuddy.Factories;
 using BisBuddy.Gear;
-using BisBuddy.Gear.MeldPlanManager;
 using BisBuddy.Import;
-using BisBuddy.Services.Config;
+using BisBuddy.Mediators;
+using BisBuddy.Services.Configuration;
 using BisBuddy.Services.ImportGearset;
-using BisBuddy.Services.ItemAssignment;
 using Dalamud.Plugin.Services;
 using Microsoft.Extensions.Hosting;
 using System.Collections.Generic;

@@ -1,5 +1,5 @@
 using BisBuddy.Resources;
-using BisBuddy.Services.Config;
+using BisBuddy.Services.Configuration;
 using BisBuddy.Util;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;

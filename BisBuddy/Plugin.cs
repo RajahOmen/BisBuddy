@@ -3,17 +3,16 @@ using Autofac.Extensions.DependencyInjection;
 using BisBuddy.Converters;
 using BisBuddy.Factories;
 using BisBuddy.Gear;
-using BisBuddy.Gear.MeldPlanManager;
 using BisBuddy.Gear.Prerequisites;
 using BisBuddy.Items;
+using BisBuddy.Mediators;
 using BisBuddy.Services;
 using BisBuddy.Services.Addon;
 using BisBuddy.Services.Addon.Containers;
 using BisBuddy.Services.Addon.ShopExchange;
-using BisBuddy.Services.Config;
+using BisBuddy.Services.Configuration;
 using BisBuddy.Services.Gearsets;
 using BisBuddy.Services.ImportGearset;
-using BisBuddy.Services.ItemAssignment;
 using BisBuddy.Windows;
 using BisBuddy.Windows.Config;
 using Dalamud.Interface;
@@ -138,10 +137,10 @@ public sealed partial class Plugin : IDalamudPlugin
                 builder.RegisterType<MeldPlanSelectorWindow>().As<Window>().AsSelf().SingleInstance();
 
                 // display update count on inventory window
-                builder.RegisterType<InventoryUpdateDisplayService>().As<IInventoryUpdateDisplayService>().SingleInstance();
+                builder.RegisterType<InventoryUpdateDisplayMediator>().As<IInventoryUpdateDisplayService>().SingleInstance();
 
                 // display and pick meld plans
-                builder.RegisterType<MeldPlanService>().As<IMeldPlanService>().SingleInstance();
+                builder.RegisterType<MeldPlanMediator>().As<IMeldPlanService>().SingleInstance();
 
                 // event listener dependencies
                 builder.RegisterGeneric(typeof(AddonServiceDependencies<>)).AsSelf().InstancePerDependency();

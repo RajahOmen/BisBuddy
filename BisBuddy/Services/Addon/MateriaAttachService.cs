@@ -1,5 +1,5 @@
 using BisBuddy.Gear;
-using BisBuddy.Gear.MeldPlanManager;
+using BisBuddy.Mediators;
 using BisBuddy.Util;
 using Dalamud.Game.Addon.Lifecycle;
 using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace BisBuddy.Gear.MeldPlanManager
+namespace BisBuddy.Gear
 {
     public readonly struct MeldPlan(Gearset gearset, Gearpiece gearpiece, List<Materia> materia)
     {

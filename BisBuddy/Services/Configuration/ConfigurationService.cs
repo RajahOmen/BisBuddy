@@ -1,5 +1,4 @@
 using BisBuddy.Gear;
-using BisBuddy.Services.ItemAssignment;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Linq.Expressions;
@@ -9,7 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
-namespace BisBuddy.Services.Config
+namespace BisBuddy.Services.Configuration
 {
     /// <summary>
     /// Handles when the configuration data changes

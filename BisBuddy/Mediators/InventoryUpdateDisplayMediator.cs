@@ -1,6 +1,6 @@
-namespace BisBuddy.Services
+namespace BisBuddy.Mediators
 {
-    public class InventoryUpdateDisplayService : IInventoryUpdateDisplayService
+    public class InventoryUpdateDisplayMediator : IInventoryUpdateDisplayService
     {
         public bool UpdateIsQueued { get; set; } = false;
         public int GearpieceUpdateCount { get; set; } = -1;

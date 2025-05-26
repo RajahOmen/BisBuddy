@@ -2,7 +2,7 @@ using BisBuddy.Gear;
 using BisBuddy.ItemAssignment;
 using BisBuddy.Items;
 using BisBuddy.Services;
-using BisBuddy.Services.Config;
+using BisBuddy.Services.Configuration;
 using Dalamud.Game.Inventory;
 using System.Collections.Generic;
 
