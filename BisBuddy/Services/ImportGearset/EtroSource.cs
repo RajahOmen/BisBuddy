@@ -2,6 +2,8 @@ using BisBuddy.Factories;
 using BisBuddy.Gear;
 using BisBuddy.Import;
 using BisBuddy.Items;
+using BisBuddy.Resources;
+using BisBuddy.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -101,14 +103,13 @@ namespace BisBuddy.Services.ImportGearset
                 gearsetName = nameProp.GetString() ?? BisBuddy.Configuration.DefaultGearsetName;
             }
 
-            var job = "???";
+            var jobAbbrev = Resource.UnknownJobAbbreviation;
             if (
                 rootJsonElement.TryGetProperty("jobAbbrev", out var jobProp)
                 && jobProp.ValueKind == JsonValueKind.String
+                && jobProp.GetString() is string jobPropStr
                 )
-            {
-                job = jobProp.GetString() ?? "???";
-            }
+                jobAbbrev = jobPropStr;
 
             JsonElement? materiaProp = null;
             if (rootJsonElement.TryGetProperty("materia", out var materia))
@@ -173,7 +174,7 @@ namespace BisBuddy.Services.ImportGearset
             if (gearpieces.Count == 0)
                 return null;
 
-            var gearset = new Gearset(gearsetName, gearpieces, job, ImportGearsetSourceType.Etro, sourceUrl: importString);
+            var gearset = new Gearset(gearsetName, gearpieces, jobAbbrev, ImportGearsetSourceType.Etro, sourceUrl: importString);
 
             return gearset;
         }

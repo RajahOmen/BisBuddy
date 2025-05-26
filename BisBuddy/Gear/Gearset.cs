@@ -1,4 +1,6 @@
 using BisBuddy.Import;
+using BisBuddy.Resources;
+using BisBuddy.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,7 +37,7 @@ namespace BisBuddy.Gear
         // for local representations of the gearset that aren't native JSON (ex: teamcraft plaintext)
         public string? SourceString { get; init; } = null;
         public ImportGearsetSourceType? SourceType { get; init; }
-        public string JobAbbrv { get; init; } = "???";
+        public string JobAbbrv { get; init; } = Resource.UnknownJobAbbreviation;
         public HighlightColor? HighlightColor
         {
             get => highlightColor;

@@ -2,6 +2,7 @@ using BisBuddy.Factories;
 using BisBuddy.Gear;
 using BisBuddy.Import;
 using BisBuddy.Items;
+using BisBuddy.Resources;
 using BisBuddy.Util;
 using Dalamud.Utility;
 using System;
@@ -100,7 +101,9 @@ namespace BisBuddy.Services.ImportGearset
                 return null;
 
             // did gearpieces narrow possibilities down to 1? Pick it, else unknown
-            var actualJobAbbrev = possibleJobAbbrevs.Count == 1 ? possibleJobAbbrevs.First() : "???";
+            var actualJobAbbrev = possibleJobAbbrevs.Count == 1
+                ? possibleJobAbbrevs.First()
+                : Resource.UnknownJobAbbreviation;
 
             return new Gearset(
                 BisBuddy.Configuration.DefaultGearsetName,

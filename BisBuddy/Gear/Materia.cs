@@ -1,3 +1,5 @@
+using BisBuddy.Resources;
+using BisBuddy.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -47,7 +49,7 @@ namespace BisBuddy.Gear
         {
             var statFullNameTrunc = statFullName.Length > 0
                 ? statFullName[..Math.Min(3, statFullName.Length)]
-                : "???";
+                : Resource.UnknownMateriaShortStat;
             var statShortName = StatFullToShortName
                 .GetValueOrDefault(
                     statId,

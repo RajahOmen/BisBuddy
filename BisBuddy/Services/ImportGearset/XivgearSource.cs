@@ -2,6 +2,8 @@ using BisBuddy.Factories;
 using BisBuddy.Gear;
 using BisBuddy.Import;
 using BisBuddy.Items;
+using BisBuddy.Resources;
+using BisBuddy.Util;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -167,19 +169,9 @@ namespace BisBuddy.Services.ImportGearset
                 setElement.TryGetProperty("name", out var nameProp)
                 && nameProp.ValueKind == JsonValueKind.String
                 )
-            {
                 gearsetName = nameProp.GetString() ?? BisBuddy.Configuration.DefaultGearsetName;
-            }
 
-            var gearsetJob = gearsetJobOverride ?? "???";
-            if (
-                gearsetJobOverride == null
-                && setElement.TryGetProperty("job", out var jobProp)
-                && jobProp.ValueKind == JsonValueKind.String
-                )
-            {
-                gearsetJob = jobProp.GetString() ?? "???";
-            }
+            var gearsetJob = parseGearsetJob(setElement, gearsetJobOverride);
 
             // get items from json
             if (!setElement.TryGetProperty("items", out var slots))
@@ -240,6 +232,25 @@ namespace BisBuddy.Services.ImportGearset
                 );
 
             return gearset;
+        }
+
+        private static string parseGearsetJob(JsonElement gearsetElement, string? pageJob)
+        {
+            if (
+                gearsetElement.TryGetProperty("jobOverride", out var gearsetJobTerm)
+                && gearsetJobTerm.ValueKind == JsonValueKind.String
+                && gearsetJobTerm.GetString() is string gearsetJobString
+                )
+                return gearsetJobString;
+            if (
+                gearsetElement.TryGetProperty("job", out var gearsetJobOverrideTerm)
+                && gearsetJobOverrideTerm.ValueKind == JsonValueKind.String
+                && gearsetJobOverrideTerm.GetString() is string gearsetJobOverrideString
+                )
+                return gearsetJobOverrideString;
+            if (pageJob is string pageJobTerm)
+                return pageJobTerm;
+            return Resource.UnknownJobAbbreviation;
         }
     }
 }

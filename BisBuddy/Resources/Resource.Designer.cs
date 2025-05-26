@@ -933,6 +933,24 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to ???.
+        /// </summary>
+        internal static string UnknownJobAbbreviation {
+            get {
+                return ResourceManager.GetString("UnknownJobAbbreviation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ???.
+        /// </summary>
+        internal static string UnknownMateriaShortStat {
+            get {
+                return ResourceManager.GetString("UnknownMateriaShortStat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unmeld.
         /// </summary>
         internal static string UnmeldVerb {
