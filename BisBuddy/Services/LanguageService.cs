@@ -33,7 +33,6 @@ namespace BisBuddy.Services
             var newCultureInfo = new CultureInfo(langCode);
             logger.Info($"Setting plugin language to \"{newCultureInfo}\"");
             Resource.Culture = newCultureInfo;
-            logger.Info($"Resource.Culture: {Resource.Culture}");
         }
     }
 
