@@ -7,10 +7,10 @@ using System.Text.Json.Serialization;
 
 namespace BisBuddy.Converters
 {
-    internal class PrerequisiteAndNodeConverter(ItemData itemData) : JsonConverter<PrerequisiteAndNode>
+    internal class PrerequisiteAndNodeConverter(IItemDataService itemData) : JsonConverter<PrerequisiteAndNode>
     {
         public const string TypeDescriminatorValue = "and";
-        private readonly ItemData itemData = itemData;
+        private readonly IItemDataService itemData = itemData;
 
         public override PrerequisiteAndNode? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
@@ -20,7 +20,7 @@ namespace BisBuddy.Converters
             uint? itemId = null;
             string? itemName = null;
             string? nodeId = null;
-            List<PrerequisiteNode>? prerequisiteTree = null;
+            List<IPrerequisiteNode>? prerequisiteTree = null;
             PrerequisiteNodeSourceType? sourceType = null;
 
             while (reader.Read())
@@ -33,21 +33,21 @@ namespace BisBuddy.Converters
 
                 switch (propertyName)
                 {
-                    case nameof(PrerequisiteNode.ItemId):
+                    case nameof(IPrerequisiteNode.ItemId):
                         itemId = reader.GetUInt32();
                         itemName = itemData.GetItemNameById(reader.GetUInt32());
                         break;
-                    case nameof(PrerequisiteNode.NodeId):
+                    case nameof(IPrerequisiteNode.NodeId):
                         nodeId = reader.GetString();
                         break;
-                    case nameof(PrerequisiteNode.SourceType):
+                    case nameof(IPrerequisiteNode.SourceType):
                         sourceType = (PrerequisiteNodeSourceType)reader.GetInt32();
                         break;
-                    case nameof(PrerequisiteNode.PrerequisiteTree):
-                        prerequisiteTree = JsonSerializer.Deserialize<List<PrerequisiteNode>>(ref reader, options);
+                    case nameof(IPrerequisiteNode.PrerequisiteTree):
+                        prerequisiteTree = JsonSerializer.Deserialize<List<IPrerequisiteNode>>(ref reader, options);
                         break;
                     default:
-                        reader.Skip();
+                        reader.TrySkip();
                         break;
                 }
             }
@@ -66,11 +66,11 @@ namespace BisBuddy.Converters
             writer.WriteStartObject();
 
             writer.WriteString(PrerequisiteNodeConverter.TypeDescriminatorPropertyName, TypeDescriminatorValue);
-            writer.WriteString(nameof(PrerequisiteNode.NodeId), value.NodeId);
-            writer.WriteNumber(nameof(PrerequisiteNode.ItemId), value.ItemId);
-            writer.WriteNumber(nameof(PrerequisiteNode.SourceType), (int)value.SourceType);
+            writer.WriteString(nameof(IPrerequisiteNode.NodeId), value.NodeId);
+            writer.WriteNumber(nameof(IPrerequisiteNode.ItemId), value.ItemId);
+            writer.WriteNumber(nameof(IPrerequisiteNode.SourceType), (int)value.SourceType);
 
-            writer.WritePropertyName(nameof(PrerequisiteNode.PrerequisiteTree));
+            writer.WritePropertyName(nameof(IPrerequisiteNode.PrerequisiteTree));
             writer.WriteStartArray();
             foreach (var prerequisiteNode in value.PrerequisiteTree)
                 JsonSerializer.Serialize(writer, prerequisiteNode, options);

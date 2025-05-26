@@ -1,6 +1,6 @@
+using BisBuddy.Factories;
 using BisBuddy.Gear;
 using BisBuddy.Gear.Prerequisites;
-using BisBuddy.Items;
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
@@ -8,9 +8,11 @@ using System.Text.Json.Serialization;
 
 namespace BisBuddy.Converters
 {
-    internal class GearpieceConverter(ItemData itemData) : JsonConverter<Gearpiece>
+    internal class GearpieceConverter(
+        IGearpieceFactory gearpieceFactory
+        ) : JsonConverter<Gearpiece>
     {
-        private readonly ItemData itemData = itemData;
+        private readonly IGearpieceFactory gearpieceFactory = gearpieceFactory;
 
         public override Gearpiece? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
@@ -18,7 +20,7 @@ namespace BisBuddy.Converters
                 throw new JsonException("Expected StartObject for Gearpiece");
 
             uint? itemId = null;
-            PrerequisiteNode? prerequisiteTree = null;
+            IPrerequisiteNode? prerequisiteTree = null;
             List<Materia>? itemMateria = null;
             bool? isCollected = null;
             bool? isManuallyCollected = null;
@@ -37,7 +39,7 @@ namespace BisBuddy.Converters
                         itemId = reader.GetUInt32();
                         break;
                     case nameof(Gearpiece.PrerequisiteTree):
-                        prerequisiteTree = JsonSerializer.Deserialize<PrerequisiteNode>(ref reader, options);
+                        prerequisiteTree = JsonSerializer.Deserialize<IPrerequisiteNode>(ref reader, options);
                         break;
                     case nameof(Gearpiece.ItemMateria):
                         itemMateria = JsonSerializer.Deserialize<List<Materia>>(ref reader, options);
@@ -49,7 +51,7 @@ namespace BisBuddy.Converters
                         isManuallyCollected = reader.GetBoolean();
                         break;
                     default:
-                        reader.Skip();
+                        reader.TrySkip();
                         break;
                 }
             }
@@ -57,19 +59,11 @@ namespace BisBuddy.Converters
             if (itemId == null)
                 throw new JsonException("No itemId found for Gearpiece");
 
-            // try to extend this tree with new options
-            prerequisiteTree = itemData.ExtendItemPrerequisites(
+            return gearpieceFactory.Create(
                 itemId!.Value,
+                itemMateria,
                 prerequisiteTree,
                 isCollected ?? false,
-                isManuallyCollected ?? false
-                );
-
-            return itemData.BuildGearpiece(
-                itemId!.Value,
-                prerequisiteTree,
-                itemMateria ?? throw new JsonException("No itemMateria found for Gearpiece"),
-                isCollected ?? throw new JsonException("No isCollected found for Gearpiece"),
                 isManuallyCollected ?? false
                 );
         }

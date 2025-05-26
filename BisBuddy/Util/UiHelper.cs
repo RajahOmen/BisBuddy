@@ -37,24 +37,27 @@ public static unsafe partial class UiHelper
     /// <param name="partInfo">Texture U,V coordinates and Texture Width,Height</param>
     /// <remarks>Returns null if allocation of any component failed</remarks>
     /// <returns>Fully Allocated AtkImageNode</returns>
-    public static AtkImageNode* MakeImageNode(uint id, PartInfo partInfo)
+    public static AtkImageNode* MakeImageNode(
+        uint id,
+        PartInfo partInfo
+        )
     {
         if (!TryMakeImageNode(id, 0, 0, 0, 0, out var imageNode))
         {
-            Services.Log.Error("Failed to alloc memory for AtkImageNode.");
+            //logger.Error("Failed to alloc memory for AtkImageNode.");
             return null;
         }
 
         if (!TryMakePartsList(0, out var partsList))
         {
-            Services.Log.Error("Failed to alloc memory for AtkUldPartsList.");
+            //logger.Error("Failed to alloc memory for AtkUldPartsList.");
             FreeImageNode(imageNode);
             return null;
         }
 
         if (!TryMakePart(partInfo.U, partInfo.V, partInfo.Width, partInfo.Height, out var part))
         {
-            Services.Log.Error("Failed to alloc memory for AtkUldPart.");
+            //logger.Error("Failed to alloc memory for AtkUldPart.");
             FreePartsList(partsList);
             FreeImageNode(imageNode);
             return null;
@@ -62,7 +65,7 @@ public static unsafe partial class UiHelper
 
         if (!TryMakeAsset(0, out var asset))
         {
-            Services.Log.Error("Failed to alloc memory for AtkUldAsset.");
+            //logger.Error("Failed to alloc memory for AtkUldAsset.");
             FreePart(part);
             FreePartsList(partsList);
             FreeImageNode(imageNode);
@@ -99,7 +102,6 @@ public static unsafe partial class UiHelper
         uint newNodeId,
         AtkNineGridNode* clonedNode,
         Vector3 addColor,
-        Vector3 multiplyColor,
         float alpha
         )
     {
@@ -125,7 +127,7 @@ public static unsafe partial class UiHelper
                 PartsRenderType = (PartsRenderType)clonedNode->PartsTypeRenderType,
                 Color = clonedNode->Color.ToVector4(),
                 AddColor = addColor,
-                MultiplyColor = multiplyColor,
+                MultiplyColor = Constants.CustomNodeMultiplyColor,
                 Alpha = alpha,
             };
 

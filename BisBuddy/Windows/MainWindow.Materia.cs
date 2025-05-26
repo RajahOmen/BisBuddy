@@ -41,17 +41,14 @@ namespace BisBuddy.Windows
                     {
                         if (materiaGroup.Materia.IsMelded)
                         {
-                            Services.Log.Verbose($"Unmelding materia {materiaGroup.Materia.ItemId} from {gearpiece.ItemName}");
+                            logger.Verbose($"Unmelding materia {materiaGroup.Materia.ItemId} from {gearpiece.ItemName}");
                             gearpiece.UnmeldSingleMateria(materiaGroup.Materia.ItemId);
                         }
                         else
                         {
-                            Services.Log.Verbose($"Melding materia {materiaGroup.Materia.ItemId} from {gearpiece.ItemName}");
+                            logger.Verbose($"Melding materia {materiaGroup.Materia.ItemId} from {gearpiece.ItemName}");
                             gearpiece.MeldSingleMateria(materiaGroup.Materia.ItemId);
                         }
-
-                        // don't update here. Creates issues with being unable to unassign materia reliably due to no manual lock for uncollected.
-                        plugin.SaveGearsetsWithUpdate(false);
                     }
                 }
                 if (ImGui.IsItemHovered())
@@ -59,7 +56,7 @@ namespace BisBuddy.Windows
                 if (ImGui.IsItemHovered())
                     ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
                 if (ImGui.IsItemClicked(ImGuiMouseButton.Right))
-                    Plugin.SearchItemById(materiaGroup.Materia.ItemId);
+                    searchItemById(materiaGroup.Materia.ItemId);
                 ImGui.SameLine();
             }
         }

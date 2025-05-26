@@ -7,10 +7,10 @@ using System.Text.Json.Serialization;
 
 namespace BisBuddy.Converters
 {
-    internal class PrerequisiteAtomNodeConverter(ItemData itemData) : JsonConverter<PrerequisiteAtomNode>
+    internal class PrerequisiteAtomNodeConverter(IItemDataService itemData) : JsonConverter<PrerequisiteAtomNode>
     {
         public const string TypeDescriminatorValue = "atom";
-        private readonly ItemData itemData = itemData;
+        private readonly IItemDataService itemData = itemData;
 
         public override PrerequisiteAtomNode? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
@@ -20,7 +20,7 @@ namespace BisBuddy.Converters
             uint? itemId = null;
             string? itemName = null;
             string? nodeId = null;
-            List<PrerequisiteNode>? prerequisiteTree = null;
+            List<IPrerequisiteNode>? prerequisiteTree = null;
             PrerequisiteNodeSourceType? sourceType = null;
             bool? isCollected = null;
             bool? isManuallyCollected = null;
@@ -36,28 +36,28 @@ namespace BisBuddy.Converters
 
                 switch (propertyName)
                 {
-                    case nameof(PrerequisiteNode.ItemId):
+                    case nameof(IPrerequisiteNode.ItemId):
                         itemId = reader.GetUInt32();
                         itemName = itemData.GetItemNameById(itemId!.Value);
                         isMeldable = itemData.ItemIsMeldable(itemId!.Value);
                         break;
-                    case nameof(PrerequisiteNode.NodeId):
+                    case nameof(IPrerequisiteNode.NodeId):
                         nodeId = reader.GetString();
                         break;
-                    case nameof(PrerequisiteNode.SourceType):
+                    case nameof(IPrerequisiteNode.SourceType):
                         sourceType = (PrerequisiteNodeSourceType)reader.GetInt32();
                         break;
-                    case nameof(PrerequisiteNode.PrerequisiteTree):
-                        prerequisiteTree = JsonSerializer.Deserialize<List<PrerequisiteNode>>(ref reader, options);
+                    case nameof(IPrerequisiteNode.PrerequisiteTree):
+                        prerequisiteTree = JsonSerializer.Deserialize<List<IPrerequisiteNode>>(ref reader, options);
                         break;
-                    case nameof(PrerequisiteNode.IsCollected):
+                    case nameof(IPrerequisiteNode.IsCollected):
                         isCollected = reader.GetBoolean();
                         break;
-                    case nameof(PrerequisiteNode.IsManuallyCollected):
+                    case nameof(IPrerequisiteNode.IsManuallyCollected):
                         isManuallyCollected = reader.GetBoolean();
                         break;
                     default:
-                        reader.Skip();
+                        reader.TrySkip();
                         break;
                 }
             }
@@ -99,13 +99,13 @@ namespace BisBuddy.Converters
             writer.WriteStartObject();
 
             writer.WriteString(PrerequisiteNodeConverter.TypeDescriminatorPropertyName, TypeDescriminatorValue);
-            writer.WriteString(nameof(PrerequisiteNode.NodeId), value.NodeId);
-            writer.WriteNumber(nameof(PrerequisiteNode.ItemId), value.ItemId);
-            writer.WriteNumber(nameof(PrerequisiteNode.SourceType), (int)value.SourceType);
-            writer.WriteBoolean(nameof(PrerequisiteNode.IsCollected), value.IsCollected);
-            writer.WriteBoolean(nameof(PrerequisiteNode.IsManuallyCollected), value.IsManuallyCollected);
+            writer.WriteString(nameof(IPrerequisiteNode.NodeId), value.NodeId);
+            writer.WriteNumber(nameof(IPrerequisiteNode.ItemId), value.ItemId);
+            writer.WriteNumber(nameof(IPrerequisiteNode.SourceType), (int)value.SourceType);
+            writer.WriteBoolean(nameof(IPrerequisiteNode.IsCollected), value.IsCollected);
+            writer.WriteBoolean(nameof(IPrerequisiteNode.IsManuallyCollected), value.IsManuallyCollected);
 
-            writer.WritePropertyName(nameof(PrerequisiteNode.PrerequisiteTree));
+            writer.WritePropertyName(nameof(IPrerequisiteNode.PrerequisiteTree));
             writer.WriteStartArray();
             foreach (var prerequisiteNode in value.PrerequisiteTree)
                 JsonSerializer.Serialize(writer, prerequisiteNode, options);

@@ -6,9 +6,9 @@ using System.Text.Json.Serialization;
 
 namespace BisBuddy.Converters
 {
-    internal class MateriaConverter(ItemData itemData) : JsonConverter<Materia>
+    internal class MateriaConverter(IItemDataService itemData) : JsonConverter<Materia>
     {
-        private readonly ItemData itemData = itemData;
+        private readonly IItemDataService itemData = itemData;
 
         public override Materia? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
@@ -35,7 +35,7 @@ namespace BisBuddy.Converters
                         isMelded = reader.GetBoolean();
                         break;
                     default:
-                        reader.Skip();
+                        reader.TrySkip();
                         break;
                 }
             }

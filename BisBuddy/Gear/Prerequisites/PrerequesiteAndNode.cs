@@ -5,20 +5,34 @@ using System.Linq;
 namespace BisBuddy.Gear.Prerequisites
 {
     [Serializable]
-    public class PrerequisiteAndNode : PrerequisiteNode
+    public class PrerequisiteAndNode : IPrerequisiteNode
     {
+        private List<IPrerequisiteNode> prerequisiteTree;
         public string NodeId { get; init; }
         public uint ItemId { get; set; }
         public string ItemName { get; set; }
         public PrerequisiteNodeSourceType SourceType { get; set; }
-        public List<PrerequisiteNode> PrerequisiteTree { get; set; }
+        public IReadOnlyList<IPrerequisiteNode> PrerequisiteTree
+        {
+            get => prerequisiteTree;
+            set
+            {
+                foreach (var node in prerequisiteTree)
+                    node.OnPrerequisiteChange -= OnPrerequisiteChange;
+
+                foreach (var node in value)
+                    node.OnPrerequisiteChange += OnPrerequisiteChange;
+
+                prerequisiteTree = value.ToList();
+            }
+        }
 
         public bool IsCollected => PrerequisiteTree.All(p => p.IsCollected);
         public bool IsManuallyCollected => PrerequisiteTree.All(p => p.IsManuallyCollected);
         public bool IsObtainable => IsCollected || PrerequisiteTree.All(p => p.IsObtainable);
         public HashSet<string> ChildNodeIds => [.. PrerequisiteTree.Select(p => p.NodeId), .. PrerequisiteTree.SelectMany(p => p.ChildNodeIds)];
 
-        public List<(PrerequisiteNode Node, int Count)> Groups()
+        public List<(IPrerequisiteNode Node, int Count)> Groups()
         {
             return PrerequisiteTree
                 .GroupBy(p => p.GroupKey())
@@ -31,7 +45,7 @@ namespace BisBuddy.Gear.Prerequisites
         public PrerequisiteAndNode(
             uint itemId,
             string itemName,
-            List<PrerequisiteNode>? prerequisiteTree,
+            List<IPrerequisiteNode>? prerequisiteTree,
             PrerequisiteNodeSourceType sourceType,
             string? nodeId = null
             )
@@ -40,7 +54,37 @@ namespace BisBuddy.Gear.Prerequisites
             ItemId = itemId;
             ItemName = itemName;
             SourceType = sourceType;
-            PrerequisiteTree = prerequisiteTree ?? [];
+            this.prerequisiteTree = prerequisiteTree ?? [];
+
+            foreach (var prereq in PrerequisiteTree)
+                prereq.OnPrerequisiteChange += handlePrereqChange;
+        }
+
+        public event PrerequisiteChangeHandler? OnPrerequisiteChange;
+
+        private void handlePrereqChange() =>
+            OnPrerequisiteChange?.Invoke();
+
+        public void AddNode(IPrerequisiteNode node) =>
+            InsertNode(PrerequisiteTree.Count, node);
+
+        public void ReplaceNode(int index, IPrerequisiteNode newNode)
+        {
+            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(index, PrerequisiteTree.Count);
+
+            var oldNode = PrerequisiteTree[index];
+            prerequisiteTree[index] = newNode;
+
+            oldNode.OnPrerequisiteChange -= handlePrereqChange;
+            newNode.OnPrerequisiteChange += handlePrereqChange;
+        }
+
+        public void InsertNode(int index, IPrerequisiteNode node)
+        {
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(index, PrerequisiteTree.Count);
+
+            prerequisiteTree.Insert(index, node);
+            node.OnPrerequisiteChange += handlePrereqChange;
         }
 
         public void SetCollected(bool collected, bool manualToggle)
@@ -89,7 +133,7 @@ namespace BisBuddy.Gear.Prerequisites
             return PrerequisiteTree.Sum(p => p.PrerequisiteCount());
         }
 
-        public PrerequisiteNode? AssignItemId(uint itemId)
+        public IPrerequisiteNode? AssignItemId(uint itemId)
         {
             foreach (var prereq in PrerequisiteTree)
             {

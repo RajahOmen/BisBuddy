@@ -1,5 +1,7 @@
 using BisBuddy.Gear;
 using BisBuddy.Items;
+using BisBuddy.Services;
+using BisBuddy.Util;
 using Dalamud.Game.Inventory;
 using LinearAssignment;
 using System;
@@ -8,18 +10,19 @@ using System.Linq;
 
 namespace BisBuddy.ItemAssignment
 {
-    public class ItemAssigmentSolver
+    public class ItemAssigmentSolver : IItemAssignmentSolver
     {
         // NOT no edge, because want to ensure solver runs, even for "no solution" cases
         public static readonly int NoEdgeWeightValue = int.MinValue + 1;
         // for edges between for dummy group assignments and their items
         public static readonly int DummyEdgeWeightValue = NoEdgeWeightValue + 1;
 
+        private readonly ITypedLogger<ItemAssigmentSolver> logger;
         private readonly bool strictMateriaMatching;
         private readonly bool assignPrerequisiteMateria;
-        private readonly ItemData itemData;
-        private readonly List<Gearset> allGearsets;
-        private readonly List<Gearset> assignableGearsets;
+        private readonly IItemDataService itemData;
+        private readonly IEnumerable<Gearset> allGearsets;
+        private readonly IEnumerable<Gearset> assignableGearsets;
         private readonly List<GearpieceAssignmentGroup> gearpieceGroups = [];
         private readonly List<PrerequisiteAssignmentGroup> prerequisiteGroups = [];
         private readonly List<GameInventoryItem> gearpieceCandidateItems;
@@ -30,14 +33,16 @@ namespace BisBuddy.ItemAssignment
         private int[,]? prerequisiteEdges;
 
         public ItemAssigmentSolver(
-            List<Gearset> allGearsets,
-            List<Gearset> assignableGearsets,
+            ITypedLogger<ItemAssigmentSolver> logger,
+            IEnumerable<Gearset> allGearsets,
+            IEnumerable<Gearset> assignableGearsets,
             List<GameInventoryItem> inventoryItems,
-            ItemData itemData,
+            IItemDataService itemData,
             bool strictMateriaMatching,
             bool assignPrerequisiteMateria
             )
         {
+            this.logger = logger;
             this.strictMateriaMatching = strictMateriaMatching;
             this.assignPrerequisiteMateria = assignPrerequisiteMateria;
             this.itemData = itemData;
@@ -67,7 +72,7 @@ namespace BisBuddy.ItemAssignment
             prerequisiteCandidateItems = inventoryItems;
         }
 
-        private static void removeManuallyCollectedItems(List<Gearset> gearsets, List<GameInventoryItem> inventoryItems)
+        private static void removeManuallyCollectedItems(IEnumerable<Gearset> gearsets, List<GameInventoryItem> inventoryItems)
         {
             var manuallyCollectedItemIds = gearsets
                 .SelectMany(set =>
@@ -104,7 +109,7 @@ namespace BisBuddy.ItemAssignment
                         : $"{itemData.GetItemNameById(c.ItemId),12}"
                     );
             var candidateItemIdLabel = labelName + string.Join(" ", itemNames);
-            Services.Log.Debug(candidateItemIdLabel);
+            logger.Debug(candidateItemIdLabel);
 
             for (var row = 0; row < rows; row++)
             {
@@ -119,7 +124,7 @@ namespace BisBuddy.ItemAssignment
                 }
 
                 // Convert the entire row into a formatted string
-                var itemName = itemData.GetItemNameById(groups[row].ItemId).Replace($"{ItemData.HqIcon}", "[HQ]");
+                var itemName = itemData.GetItemNameById(groups[row].ItemId).Replace($"{Constants.HqIcon}", "[HQ]");
                 var itemIdx = $"[{row,2}]";
                 var itemAssignment =
                     (assIdx != -1 && edges[row, assIdx] != NoEdgeWeightValue)
@@ -137,7 +142,7 @@ namespace BisBuddy.ItemAssignment
                         )}",12}"
                     ));
                 var line = $"{itemName} {itemIdx} {itemAssignment}".PadLeft(60) + itemEdges;
-                Services.Log.Debug(line);
+                logger.Debug(line);
             }
         }
 
@@ -166,7 +171,10 @@ namespace BisBuddy.ItemAssignment
             addGearpieceAssignments(gearpieceAssignments);
 
             // stage 2: assign gearpieces according to solution
-            var updatedGearpieces = ItemAssigner.MakeItemAssignments(assignments, Gearset.GetGearpiecesFromGearsets(assignableGearsets), itemData);
+            var assignableGearpieces = assignableGearsets.SelectMany(g => g.Gearpieces).ToList();
+
+            logger.Info($"Making up to \"{assignments.Count}\" item assignments");
+            var updatedGearpieces = ItemAssigner.MakeItemAssignments(assignments, assignableGearpieces, itemData);
 
             // stage 3: prepare prerequisite lists after gearpiece stage
             // group prerequisite items by gearpiece
@@ -179,9 +187,9 @@ namespace BisBuddy.ItemAssignment
             // stage 4: assign remaining valid items as prerequisites
             var prerequisiteAssignments = solveAndAssignPrerequisites(assignPrerequisiteMateria);
 #if DEBUG
-            Services.Log.Debug("Item Assignment Solver Solution");
+            logger.Debug("Item Assignment Solver Solution");
 
-            Services.Log.Debug("Gearpiece Assignments");
+            logger.Debug("Gearpiece Assignments");
             logSolution(
                 gearpieceAssignments,
                 gearpieceEdges,
@@ -191,7 +199,7 @@ namespace BisBuddy.ItemAssignment
                     .ToList()
                     );
 
-            Services.Log.Debug("Prerequisite Assignments");
+            logger.Debug("Prerequisite Assignments");
             logSolution(
                 prerequisiteAssignments,
                 prerequisiteEdges ?? new int[0, 0],
@@ -207,8 +215,9 @@ namespace BisBuddy.ItemAssignment
 
         private void unassignPrereqs()
         {
-            var gearpieces = Gearset.GetGearpiecesFromGearsets(assignableGearsets);
-            gearpieces.ForEach(g => g.PrerequisiteTree?.SetCollected(false, false));
+            foreach (var gearset in assignableGearsets)
+                foreach (var gearpiece in gearset.Gearpieces)
+                    gearpiece.PrerequisiteTree?.SetCollected(false, false);
         }
 
         private int[] solveAndAssignPrerequisites(bool assignPrerequisiteMateria)
@@ -272,7 +281,7 @@ namespace BisBuddy.ItemAssignment
             while (loopCount++ < maxLoops);
 
             if (loopCount >= maxLoops)
-                Services.Log.Warning($"Max prerequisite solve loop count reached with \"{prerequisiteCandidateItems.Count}\" items unprocessed");
+                logger.Warning($"Max prerequisite solve loop count reached with \"{prerequisiteCandidateItems.Count}\" items unprocessed");
 
             return assignments;
         }
@@ -298,7 +307,7 @@ namespace BisBuddy.ItemAssignment
             }
         }
 
-        private List<GearpieceAssignmentGroup> groupGearpieces(List<Gearset> gearsets)
+        private List<GearpieceAssignmentGroup> groupGearpieces(IEnumerable<Gearset> gearsets)
         {
             var gearpieceGroups = new List<GearpieceAssignmentGroup>();
             var overallGearpieceIdx = -1;
@@ -316,14 +325,14 @@ namespace BisBuddy.ItemAssignment
                     if (gearpieceGroups.Any(group => group.AddMatchingGearpiece(gearpiece, gearset))) continue;
 
                     // if no group was found, create a new one and add this gearpiece
-                    gearpieceGroups.Add(new GearpieceAssignmentGroup(gearpiece, gearset, overallGearpieceIdx));
+                    gearpieceGroups.Add(new GearpieceAssignmentGroup(logger, gearpiece, gearset, overallGearpieceIdx));
                 }
             }
 
             return gearpieceGroups;
         }
 
-        private List<PrerequisiteAssignmentGroup> groupPrerequisites(List<Gearset> gearsets)
+        private List<PrerequisiteAssignmentGroup> groupPrerequisites(IEnumerable<Gearset> gearsets)
         {
             var prerequisiteGroups = new List<PrerequisiteAssignmentGroup>();
             var overallPrereqIdx = -1;
@@ -354,6 +363,7 @@ namespace BisBuddy.ItemAssignment
 
                     // if no group was found, create a new one and add this prerequisite
                     prerequisiteGroups.Add(new PrerequisiteAssignmentGroup(
+                        logger,
                         gearpiece,
                         gearset,
                         overallPrereqIdx,
@@ -468,7 +478,7 @@ namespace BisBuddy.ItemAssignment
         //    for (var i = unassignedGroupsCount - 1; i >= 0; i--)
         //    {
         //        var unassignedGroup = prerequisiteGroups[unassignedGroupIndexes[i]];
-        //        Services.Log.Verbose($"unassigned group item id: {unassignedGroup.ItemId}. Assigned item ids: {string.Join(", ", prerequisiteAssignments.Select(i => prerequisiteGroups[i].ItemId))}");
+        //        pluginLog.Verbose($"unassigned group item id: {unassignedGroup.ItemId}. Assigned item ids: {string.Join(", ", prerequisiteAssignments.Select(i => prerequisiteGroups[i].ItemId))}");
 
         //        var validAssignedGroups = prerequisiteAssignments
         //            .Select(assignIdx => prerequisiteGroups[assignIdx])
@@ -485,7 +495,7 @@ namespace BisBuddy.ItemAssignment
 
         //        return;
 
-        //        Services.Log.Verbose($"Valid assigned groups: {validAssignedGroups.Count()}");
+        //        pluginLog.Verbose($"Valid assigned groups: {validAssignedGroups.Count()}");
 
         //        // get gearset-prerequisite pairing
         //        var unassignedPrereqGearsets = unassignedGroup
@@ -501,7 +511,7 @@ namespace BisBuddy.ItemAssignment
         //                if (validAssignedGroup.Gearsets.Contains(gearset))
         //                    continue;
 
-        //                Services.Log.Verbose($"{unassignedGearpiece.ItemName} valid group: {validAssignedGroup.ItemId}");
+        //                pluginLog.Verbose($"{unassignedGearpiece.ItemName} valid group: {validAssignedGroup.ItemId}");
 
         //                validAssignedGroup.Gearpieces.Add(unassignedGearpiece);
         //                validAssignedGroup.Gearsets.Add(gearset);
@@ -523,5 +533,10 @@ namespace BisBuddy.ItemAssignment
         //        }
         //    }
         //}
+    }
+
+    public interface IItemAssignmentSolver
+    {
+        public List<Gearpiece> SolveAndAssign();
     }
 }
