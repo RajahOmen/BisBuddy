@@ -1,5 +1,3 @@
 files:
-  - source: /**/Resources/*.resx
-    ignore:
-      - /**/Resources/Resource.resx
-    translation: /BisBuddy/Resources/Translations/Resource.%two_letters_code%.resx
+  - source: /**/Resources/Resource.resx
+    translation: /BisBuddy/Resources/Resource.%two_letters_code%.resx
