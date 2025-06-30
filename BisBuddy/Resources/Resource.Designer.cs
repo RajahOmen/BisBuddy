@@ -61,6 +61,24 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Alias for {0}.
+        /// </summary>
+        internal static string AliasChatCommandHelpMessage {
+            get {
+                return ResourceManager.GetString("AliasChatCommandHelpMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to /bis.
+        /// </summary>
+        internal static string AliasChatCommandName {
+            get {
+                return ResourceManager.GetString("AliasChatCommandName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Mark all as not Collected.
         /// </summary>
         internal static string AllCollectedTooltip {
@@ -725,6 +743,26 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to View existing or add new gearsets
+        ///      [config/c] - Open {0} configuration
+        ///      [new/n] - Add a new gearset.
+        /// </summary>
+        internal static string MainChatCommandHelpMessage {
+            get {
+                return ResourceManager.GetString("MainChatCommandHelpMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to /bisbuddy.
+        /// </summary>
+        internal static string MainChatCommandName {
+            get {
+                return ResourceManager.GetString("MainChatCommandName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Collection status locked. Inventory syncs will not uncollect.
         /// </summary>
         internal static string ManuallyCollectedTooltip {
@@ -803,6 +841,15 @@ namespace BisBuddy.Resources {
         internal static string OpenConfigTooltip {
             get {
                 return ResourceManager.GetString("OpenConfigTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to BISBuddy.
+        /// </summary>
+        internal static string PluginDisplayName {
+            get {
+                return ResourceManager.GetString("PluginDisplayName", resourceCulture);
             }
         }
         

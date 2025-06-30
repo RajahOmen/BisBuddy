@@ -1,6 +1,7 @@
 using BisBuddy.Gear;
 using BisBuddy.Gear.Prerequisites;
 using BisBuddy.Items;
+using BisBuddy.Services;
 using Dalamud.Game.Inventory;
 using System;
 using System.Collections.Generic;
@@ -10,6 +11,8 @@ namespace BisBuddy.ItemAssignment
 {
     public class PrerequisiteAssignmentGroup : IAssignmentGroup
     {
+        private readonly ITypedLogger<ItemAssigmentSolver> logger;
+
         // #0: If this would complete this prereq, value it highly
         private static readonly int FinishesPrereqBonus = 100000;
         // #1: prioritize filling prereqs at a higher depth (less nested)
@@ -33,7 +36,7 @@ namespace BisBuddy.ItemAssignment
         private List<Materia> materiaList = [];
         public readonly HashSet<Gearset> Gearsets = [];
 
-        public Dictionary<Gearpiece, HashSet<(PrerequisiteNode Node, GameInventoryItem Item)>> DirectlyAssignedNodes = [];
+        public Dictionary<Gearpiece, HashSet<(IPrerequisiteNode Node, GameInventoryItem Item)>> DirectlyAssignedNodes = [];
 
         public List<Materia> MateriaList
         {
@@ -47,12 +50,14 @@ namespace BisBuddy.ItemAssignment
         }
 
         public PrerequisiteAssignmentGroup(
+            ITypedLogger<ItemAssigmentSolver> logger,
             Gearpiece gearpiece,
             Gearset gearset,
             int gearpieceIdx,
             bool strictMateriaMatching
             )
         {
+            this.logger = logger;
             ItemId = gearpiece.ItemId;
             Gearpieces = [gearpiece];
             Gearsets = [gearset];
@@ -72,7 +77,7 @@ namespace BisBuddy.ItemAssignment
             return needed.Count > 0;
         }
 
-        public List<GameInventoryItem> AssignItem(GameInventoryItem item, ItemData itemData, bool assignPrerequisiteMateria)
+        public List<GameInventoryItem> AssignItem(GameInventoryItem item, IItemDataService itemData, bool assignPrerequisiteMateria)
         {
             if (Gearpieces.Count == 0)
                 return [];
@@ -200,7 +205,7 @@ namespace BisBuddy.ItemAssignment
 
 #if DEBUG
             var subScoreLog = string.Join("\n", subScores.Select(subScore => $"{subScore.Key}: {subScore.Value}"));
-            Services.Log.Verbose($"prereq group item id: {ItemId}. Candidate item id: {candidateId}\n{subScoreLog}\ntotal score: {totalScore}");
+            logger.Verbose($"prereq group item id: {ItemId}. Candidate item id: {candidateId}\n{subScoreLog}\ntotal score: {totalScore}");
 #endif
 
             // return sum of sub-scores

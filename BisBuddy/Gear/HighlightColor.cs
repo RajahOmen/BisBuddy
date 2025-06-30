@@ -1,3 +1,4 @@
+using BisBuddy.Util;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using KamiToolKit.Nodes;
 using System;
@@ -6,6 +7,8 @@ using System.Text.Json.Serialization;
 
 namespace BisBuddy.Gear
 {
+    public delegate void ColorChangeDelegate();
+
     [Serializable]
     public class HighlightColor
     {
@@ -17,8 +20,9 @@ namespace BisBuddy.Gear
         [JsonIgnore]
         private float dimCustomNodeAlpha;
         public float CustomNodeAlpha(bool brightHighlighting)
-            => brightHighlighting ? Configuration.BrightListItemAlpha : dimCustomNodeAlpha;
+            => brightHighlighting ? Constants.BrightListItemAlpha : dimCustomNodeAlpha;
 
+        [JsonIgnore]
         public Vector4 ExistingNodeColor => BaseColor;
 
         [JsonConstructor]
@@ -44,7 +48,12 @@ namespace BisBuddy.Gear
             dimCustomNodeAlpha = w;
         }
 
-        public unsafe void UpdateColor(Vector4 newColor)
+        public event ColorChangeDelegate? OnColorChange;
+
+        private void triggerColorChange() =>
+            OnColorChange?.Invoke();
+
+        public void UpdateColor(Vector4 newColor)
         {
             BaseColor = newColor;
             CustomNodeColor = new(
@@ -53,6 +62,7 @@ namespace BisBuddy.Gear
                 (newColor.Z * 2) - 1
             );
             dimCustomNodeAlpha = newColor.W;
+            triggerColorChange();
         }
 
         public unsafe void ColorCustomNode(NodeBase node, bool brightHighlighting)

@@ -45,7 +45,7 @@ namespace BisBuddy.Windows
                             }
                             catch (Exception ex)
                             {
-                                Services.Log.Error(ex, "Error drawing nested prereq");
+                                logger.Error(ex, "Error drawing nested prereq");
                             }
                         }
                     }
@@ -109,10 +109,7 @@ namespace BisBuddy.Windows
                     if (ImGui.Button($"{countLabel}{node.ItemName}{prereqLabelColorblind}##collect_prereq_button"))
                     {
                         node.SetCollected(!node.IsCollected, true);
-                        Services.Log.Debug($"Set gearpiece \"{parentGearpiece.ItemName}\" prereq \"{node.ItemName}\" to {(node.IsCollected ? "collected" : "not collected")}");
-
-                        // don't update here. Creates issues with being unable to unassign prereqs reliably due to no manual lock for uncollected
-                        plugin.SaveGearsetsWithUpdate(false);
+                        logger.Debug($"Set gearpiece \"{parentGearpiece.ItemName}\" prereq \"{node.ItemName}\" to {(node.IsCollected ? "collected" : "not collected")}");
                     }
                 }
                 if (ImGui.IsItemHovered())
@@ -128,7 +125,7 @@ namespace BisBuddy.Windows
                     ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
                 }
                 if (ImGui.IsItemClicked(ImGuiMouseButton.Right))
-                    Plugin.SearchItemById(node.ItemId);
+                    searchItemById(node.ItemId);
             }
 
             if (node.PrerequisiteTree.Count > 1)
@@ -151,7 +148,7 @@ namespace BisBuddy.Windows
             }
         }
 
-        private void drawPrerequisiteTree(PrerequisiteNode prerequisiteNode, Gearpiece parentGearpiece, int parentCount = 1)
+        private void drawPrerequisiteTree(IPrerequisiteNode prerequisiteNode, Gearpiece parentGearpiece, int parentCount = 1)
         {
             if (prerequisiteNode.GetType() == typeof(PrerequisiteOrNode))
             {

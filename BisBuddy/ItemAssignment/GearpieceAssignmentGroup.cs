@@ -1,4 +1,5 @@
 using BisBuddy.Gear;
+using BisBuddy.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +8,8 @@ namespace BisBuddy.ItemAssignment
 {
     public class GearpieceAssignmentGroup : IAssignmentGroup
     {
+        private readonly ITypedLogger<ItemAssigmentSolver>? logger;
+
         // #1: maximize materia count in common
         private static readonly int MateriaCountScoreScalar = 15000;
         // #2: maximize group size. has a max value to prevent group size from dominating score
@@ -42,11 +45,13 @@ namespace BisBuddy.ItemAssignment
         public bool IsManuallyCollected { get; set; } = false;
 
         public GearpieceAssignmentGroup(
+            ITypedLogger<ItemAssigmentSolver> logger,
             Gearpiece gearpiece,
             Gearset gearset,
             int gearpieceIdx
             )
         {
+            this.logger = logger;
             ItemId = gearpiece.ItemId;
             MateriaList = new List<Materia>(gearpiece.ItemMateria);
             Gearpieces = [gearpiece];
@@ -132,7 +137,7 @@ namespace BisBuddy.ItemAssignment
 
 #if DEBUG
             var subScoreLog = string.Join("\n", subScores.Select(subScore => $"{subScore.Key}: {subScore.Value}"));
-            Services.Log.Verbose($"gearpiece group item id: {ItemId}. Candidate item id: {candidateId}\n{subScoreLog}\ntotal score: {totalScore}");
+            logger?.Verbose($"gearpiece group item id: {ItemId}. Candidate item id: {candidateId}\n{subScoreLog}\ntotal score: {totalScore}");
 #endif
 
             // return sum of sub-scores

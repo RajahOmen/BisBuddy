@@ -10,17 +10,16 @@ namespace BisBuddy.ItemAssignment
     {
         // logic for applying assignments decided by solver
 
-        public static List<Gearpiece> MakeItemAssignments(List<Assignment> assignments, List<Gearpiece> gearpiecesToAssign, ItemData itemData)
+        public static List<Gearpiece> MakeItemAssignments(List<Assignment> assignments, List<Gearpiece> gearpiecesToAssign, IItemDataService itemData)
         {
             var updatedGearpieces = new List<Gearpiece>();
-            Services.Log.Information($"Making up to \"{assignments.Count}\" item assignments");
 
             updatedGearpieces.AddRange(makeAssignments(assignments, gearpiecesToAssign, itemData));
 
             return updatedGearpieces.Distinct().ToList();
         }
 
-        private static List<Gearpiece> makeAssignments(List<Assignment> assignments, List<Gearpiece> gearpiecesToAssign, ItemData itemData)
+        private static List<Gearpiece> makeAssignments(List<Assignment> assignments, List<Gearpiece> gearpiecesToAssign, IItemDataService itemData)
         {
             List<Gearpiece> updatedGearpieces = [];
             foreach (var assignment in assignments)

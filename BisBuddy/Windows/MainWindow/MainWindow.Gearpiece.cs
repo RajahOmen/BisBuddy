@@ -31,10 +31,7 @@ namespace BisBuddy.Windows
                     if (ImGui.Checkbox($"##gearpiece_collected", ref gearpieceCollected))
                     {
                         gearpiece.SetCollected(gearpieceCollected, true);
-                        Services.Log.Debug($"Set \"{gearset.Name}\" gearpiece \"{gearpiece.ItemName}\" to {(gearpieceCollected ? "collected" : "not collected")}");
-
-                        // don't update here. Creates issues with being unable to unassign pieces reliably due to no manual lock for uncollected.
-                        plugin.SaveGearsetsWithUpdate(false);
+                        logger.Debug($"Set \"{gearset.Name}\" gearpiece \"{gearpiece.ItemName}\" to {(gearpieceCollected ? "collected" : "not collected")}");
                     }
                 }
                 if (ImGui.IsItemHovered())
@@ -51,7 +48,7 @@ namespace BisBuddy.Windows
                 ImGui.SameLine();
 
                 if (ImGuiComponents.IconButton(FontAwesomeIcon.Search))
-                    Plugin.SearchItemById(gearpiece.ItemId);
+                    searchItemById(gearpiece.ItemId);
                 if (ImGui.IsItemHovered())
                     ImGui.SetTooltip(string.Format(Resource.SearchInventoryForItemTooltip, gearpiece.ItemName));
 

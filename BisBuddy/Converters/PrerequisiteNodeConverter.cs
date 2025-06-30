@@ -5,11 +5,11 @@ using System.Text.Json.Serialization;
 
 namespace BisBuddy.Converters
 {
-    internal class PrerequisiteNodeConverter : JsonConverter<PrerequisiteNode>
+    internal class PrerequisiteNodeConverter : JsonConverter<IPrerequisiteNode>
     {
         public const string TypeDescriminatorPropertyName = "$type";
 
-        public override PrerequisiteNode? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        public override IPrerequisiteNode? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             if (reader.TokenType != JsonTokenType.StartObject)
                 throw new JsonException("Expected StartObject for PrerequisiteNode");
@@ -32,7 +32,7 @@ namespace BisBuddy.Converters
             };
         }
 
-        public override void Write(Utf8JsonWriter writer, PrerequisiteNode value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, IPrerequisiteNode value, JsonSerializerOptions options)
         {
             if (value is PrerequisiteAndNode andNode)
                 JsonSerializer.Serialize(writer, andNode, options);

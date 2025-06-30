@@ -1,0 +1,453 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+    <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string"/>
+              <xsd:attribute name="type" type="xsd:string"/>
+              <xsd:attribute name="mimetype" type="xsd:string"/>
+              <xsd:attribute ref="xml:space"/>
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string"/>
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
+              <xsd:attribute ref="xml:space"/>
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required"/>
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="ConfigHighlightingSectionHeader" xml:space="preserve">
+    <value>Window Highlighting</value>
+  </data>
+    <data name="HighlightNeedGreedCheckbox" xml:space="preserve">
+    <value>Need/Greed Windows</value>
+  </data>
+    <data name="HighlightNeedGreedHelp" xml:space="preserve">
+    <value>Highlights items needed for gearsets in Need/Greed loot windows</value>
+  </data>
+    <data name="HighlightShopExchangesCheckbox" xml:space="preserve">
+    <value>Shops/Exchanges</value>
+  </data>
+    <data name="HighlightShopExchangesHelp" xml:space="preserve">
+    <value>Highlights items needed for gearsets in NPC shops/item exchanges</value>
+  </data>
+    <data name="HighlightMateriaMeldingCheckbox" xml:space="preserve">
+    <value>Materia Melding</value>
+  </data>
+    <data name="HighlightMateriaMeldingHelp" xml:space="preserve">
+    <value>Highlights gearpieces needing melds and the materia needed for those gearpieces in melding windows</value>
+  </data>
+    <data name="HighlightInventoriesCheckbox" xml:space="preserve">
+    <value>Inventories</value>
+  </data>
+    <data name="HighlightInventoriesHelp" xml:space="preserve">
+    <value>Highlights items needed for gearsets in inventories (inventory, retainer, saddlebag)</value>
+  </data>
+    <data name="HighlightMarketboardCheckbox" xml:space="preserve">
+    <value>Marketboard</value>
+  </data>
+    <data name="HighlightMarketboardHelp" xml:space="preserve">
+    <value>Highlights items needed for gearsets on the marketboard</value>
+  </data>
+    <data name="HighlightItemTooltipsCheckbox" xml:space="preserve">
+    <value>Item Tooltips</value>
+  </data>
+    <data name="HighlightItemTooltipsHelp" xml:space="preserve">
+    <value>Lists what gearsets need the item being hovered over in the item tooltip</value>
+  </data>
+    <data name="ConfigInventorySectionHeader" xml:space="preserve">
+    <value>Inventory Updates</value>
+  </data>
+    <data name="UpdateOnItemChangeCheckbox" xml:space="preserve">
+    <value>Item Changes</value>
+  </data>
+    <data name="UpdateOnItemChangeHelp" xml:space="preserve">
+    <value>When a change is detected in character inventories, update gearsets with items in inventories (inventory, armoury chest, equipped)</value>
+  </data>
+    <data name="UpdateOnLoginLoadCheckbox" xml:space="preserve">
+    <value>Login/Load</value>
+  </data>
+    <data name="UpdateOnLoginLoadHelp" xml:space="preserve">
+    <value>When logging in or loading {0}, update gearsets with items in inventories (inventory, armoury chest, equipped)</value>
+  </data>
+    <data name="ConfigWindowTitle" xml:space="preserve">
+    <value>{0} Config</value>
+  </data>
+    <data name="ImportFailBase" xml:space="preserve">
+    <value>Import Fail:</value>
+  </data>
+    <data name="ImportSuccess" xml:space="preserve">
+    <value>Import Success: {2} gearset(s) imported</value>
+  </data>
+    <data name="ImportFailInternalError" xml:space="preserve">
+    <value>{0} Internal error</value>
+  </data>
+    <data name="ImportInvalidUrl" xml:space="preserve">
+    <value>Invalid URL</value>
+  </data>
+    <data name="ImportNoGearsets" xml:space="preserve">
+    <value>No Gearsets Found</value>
+  </data>
+    <data name="ImportWindowTitle" xml:space="preserve">
+    <value>Add New Gearset</value>
+  </data>
+    <data name="ImportGearsetLoading" xml:space="preserve">
+    <value>Loading...</value>
+  </data>
+    <data name="MeldWindowHeader" xml:space="preserve">
+    <value>Select Materia Melds</value>
+  </data>
+    <data name="NewGearsetButton" xml:space="preserve">
+    <value>New Gearset</value>
+  </data>
+    <data name="ImportGearsetTooltip" xml:space="preserve">
+    <value>Import a new gearset from {0}</value>
+  </data>
+    <data name="NewGearsetTooltipMaxGearsets" xml:space="preserve">
+    <value>Maximum of {0} gearsets</value>
+  </data>
+    <data name="SyncInventoryButton" xml:space="preserve">
+    <value>Sync Inventory</value>
+  </data>
+    <data name="SyncInventoryTooltip" xml:space="preserve">
+    <value>Update gearsets with items from your inventory</value>
+  </data>
+    <data name="InventoryScanLoading" xml:space="preserve">
+    <value>Loading...</value>
+  </data>
+    <data name="InventoryScanUpdated" xml:space="preserve">
+    <value>{0} gearpieces updated</value>
+  </data>
+    <data name="OpenConfigTooltip" xml:space="preserve">
+    <value>Open config</value>
+  </data>
+    <data name="NoGearsetsText" xml:space="preserve">
+    <value>No gearsets found. Add one or more gearsets to get started</value>
+  </data>
+    <data name="LoggedOutText" xml:space="preserve">
+    <value>Please log in to view/add gearsets</value>
+  </data>
+    <data name="ManuallyCollectedTooltip" xml:space="preserve">
+    <value>Collection status locked. Inventory syncs will not uncollect</value>
+  </data>
+    <data name="AutomaticallyCollectedTooltip" xml:space="preserve">
+    <value>Mark as not Collected</value>
+  </data>
+    <data name="UncollectedTooltip" xml:space="preserve">
+    <value>Lock as Collected</value>
+  </data>
+    <data name="EnabledGearsetTooltip" xml:space="preserve">
+    <value>Disable Gearset</value>
+  </data>
+    <data name="DisabledGearsetTooltip" xml:space="preserve">
+    <value>Enable Gearset</value>
+  </data>
+    <data name="DeleteGearsetTooltipQuick" xml:space="preserve">
+    <value>Delete this Gearset. Click to quick delete</value>
+  </data>
+    <data name="DeleteGearsetTooltip" xml:space="preserve">
+    <value>Delete this Gearset. Shift+Click to quick delete</value>
+  </data>
+    <data name="DeleteGearsetPopupTitle" xml:space="preserve">
+    <value>Delete Gearset?</value>
+  </data>
+    <data name="DeleteGearsetConfirmButton" xml:space="preserve">
+    <value>Yes, Delete</value>
+  </data>
+    <data name="DeleteGearsetConfirmTooltip" xml:space="preserve">
+    <value>This cannot be undone!</value>
+  </data>
+    <data name="AllCollectedTooltip" xml:space="preserve">
+    <value>Mark all as not Collected</value>
+  </data>
+    <data name="AllUncollectedTooltip" xml:space="preserve">
+    <value>Lock all as Collected</value>
+  </data>
+    <data name="RenameGearsetTooltip" xml:space="preserve">
+    <value>Rename Gearset</value>
+  </data>
+    <data name="GearsetUrlButton" xml:space="preserve">
+    <value>Link</value>
+  </data>
+    <data name="GearsetUrlTooltip" xml:space="preserve">
+    <value>Copy {0} link to clipboard</value>
+  </data>
+    <data name="GearsetJsonButton" xml:space="preserve">
+    <value>JSON</value>
+  </data>
+    <data name="GearsetJsonTooltip" xml:space="preserve">
+    <value>Copy gearset JSON to clipboard</value>
+  </data>
+    <data name="MeldVerb" xml:space="preserve">
+    <value>Meld</value>
+  </data>
+    <data name="UnmeldVerb" xml:space="preserve">
+    <value>Unmeld</value>
+  </data>
+    <data name="UpdateOnPluginChangesCheckbox" xml:space="preserve">
+    <value>Plugin Changes</value>
+  </data>
+    <data name="UpdateOnPluginChangesHelp" xml:space="preserve">
+    <value>When updating {0} gearsets or settings, update gearsets with items in inventories (inventory, armoury chest, equipped)</value>
+  </data>
+    <data name="StrictMateriaMatchingCheckbox" xml:space="preserve">
+    <value>Strict Materia Matching</value>
+  </data>
+    <data name="StrictMateriaMatchingHelp" xml:space="preserve">
+    <value>Whether auto assignment treats gearpieces with different materia as unique items
+
+When ON: Each gearpiece entry is considered unique based on its materia. So if you have multiple entries for the same gearpiece with different materia, a single inventory item can only satisfy one of them
+When OFF: Auto assignment ignores the materia differences and only looks at the actual gearpiece. One inventory item can satisfy multiple entries for the same gearpiece even if their materia differ
+
+Example
+Inventory: 1x Archeo Kingdom Ring of Aiming [CRT]
+Gearset 1: 1x Archeo Kingdom Ring of Aiming [CRT, DET]
+Gearset 2: 1x Archeo Kingdom Ring of Aiming [DET, DET]
+
+When ON: Gearset 1 completed, Gearset 2 incomplete
+When OFF: Gearset 1 completed, Gearset 2 completed</value>
+  </data>
+    <data name="HighlightColorButtonTooltip" xml:space="preserve">
+    <value>Color needed items are highlighted in by default or with color conflicts</value>
+  </data>
+    <data name="HighlightColorButtonLabel" xml:space="preserve">
+    <value>Default Highlight Color</value>
+  </data>
+    <data name="HighlightColorHelp" xml:space="preserve">
+    <value>What color to highlight needed items in by default, or if an item is needed by gearsets different colors
+
+Use alpha channel to adjust highlight intensity on items/icons
+List menu highlights are not affected</value>
+  </data>
+    <data name="MateriaTooltip" xml:space="preserve">
+    <value>Left click to {0} {1}
+Right click to search for in inventory</value>
+  </data>
+    <data name="SearchInventoryForItemTooltip" xml:space="preserve">
+    <value>Search inventory for {0}</value>
+  </data>
+    <data name="PrerequisiteTooltipBase" xml:space="preserve">
+    <value>Left click to {0}
+Right click to search for in inventory</value>
+  </data>
+    <data name="ImportXivgearTooltip" xml:space="preserve">
+    <value>Gearset sheet link exported from Xivgear.app
+ex: https://xivgear.app/?page=sl%%7C9ee61d69-7daa-41bd-9c28-8a0f0055f90f</value>
+  </data>
+    <data name="ImportEtroTooltip" xml:space="preserve">
+    <value>Gearset sheet link from Etro.gg
+ex: https://etro.gg/gearset/4b5f4ed3-4832-4fd5-b134-3429ea8caf37</value>
+  </data>
+    <data name="ImportJsonTooltip" xml:space="preserve">
+    <value>Gearset JSON exported from existing plugin gearset
+ex: {"Id":"50399235-5794-4ccb-906f-ddd9...</value>
+  </data>
+    <data name="ImportTeamcraftTooltip" xml:space="preserve">
+    <value>Plaintext gearset exported from Teamcraft
+ex:
+**Everseeker's Pickaxe HQ**
+        
+- Gatherer's Guile Materia X
+
+**Everseeker's Coat of Gath...</value>
+  </data>
+    <data name="ImportGearsetButton" xml:space="preserve">
+    <value>Import from {0}</value>
+  </data>
+    <data name="ImportFailInvalidInput" xml:space="preserve">
+    <value>{0} Invalid input for {1}</value>
+  </data>
+    <data name="ImportFailInvalidResponse" xml:space="preserve">
+    <value>{0} Invalid response received</value>
+  </data>
+    <data name="ImportFailNoGearsets" xml:space="preserve">
+    <value>{0} No gearsets found/imported</value>
+  </data>
+    <data name="ImportFailTooManyGearsets" xml:space="preserve">
+    <value>{0} Import would exceed gearset limit</value>
+  </data>
+    <data name="NewGearsetTooltip" xml:space="preserve">
+    <value>Import a new gearset</value>
+  </data>
+    <data name="GearsetStringButton" xml:space="preserve">
+    <value>Text</value>
+  </data>
+    <data name="GearsetStringTooltip" xml:space="preserve">
+    <value>Copy {0} text to clipboard</value>
+  </data>
+    <data name="HighlightNextMateriaCheckbox" xml:space="preserve">
+    <value>Next Materia Only</value>
+  </data>
+    <data name="HighlightNextMateriaHelp" xml:space="preserve">
+    <value>Whether to only highlight the next materia, or to highlight all available materia to meld. Useful for advanced melding
+Note: Ensure no erroneous materia is already melded for most accurate highlighting
+
+When ON: Only the next materia a gearpiece needs to meld is highlighted
+When OFF: All materia a gearpiece needs is highlighted in the melding window
+
+Example
+Gearpiece needs the following melds: [+36 CRT, +36 DET]
+
+When ON: +36 CRT is highlighted
+When OFF: +36 CRT and +36 DET are highlighted</value>
+  </data>
+    <data name="HighlightCollectedItemMateriaCheckbox" xml:space="preserve">
+    <value>Collected Only</value>
+  </data>
+    <data name="HighlightPrerequisiteMateriaCheckbox" xml:space="preserve">
+    <value>Meld Prerequisites</value>
+  </data>
+    <data name="HighlightPrerequisiteMateriaHelp" xml:space="preserve">
+    <value>Whether prerequisites should be considered meld targets for the materia listed for gearpieces they are a prerequisite for
+
+When ON: Prerequisites will be highlighted when melding materia, requiring the materia the final gearpiece needs.
+The gearpiece in the menu will reflect the melds of the prerequisite while it is not yet obtained.
+When OFF: Only the main gearpiece will be highlighted when melding materia.
+
+Example
+Gearpiece (unobtained): Augmented Historia Ring of Casting [+54 DET, +54 CRT]
+Prerequisite (obtained): Historia Ring of Casting
+
+When ON: When melding, the Historia Ring of Casting is highlighted and the materia highlighted for it is [+54 DET, +54 CRT]
+When the Historia Ring of Casting is melded with a +54 DET, the gearpiece entry reports the +54 DET as melded
+When OFF: The Historia Ring of Casting is not highlighted.</value>
+  </data>
+    <data name="HighlightUncollectedItemMateriaCheckbox" xml:space="preserve">
+    <value>Uncollected Item Materia</value>
+  </data>
+    <data name="HighlightUncollectedItemMateriaHelp" xml:space="preserve">
+    <value>Whether materia needed for gearpieces that are not yet collected should be highlighted.
+
+When ON: Materia needed for gearpieces will be highlighted regardless of collected status
+When OFF: If a gearpiece isn't collected, its materia will not be highlighted anywhere</value>
+  </data>
+    <data name="BrightListItemHighlightingCheckbox" xml:space="preserve">
+    <value>Bright List Items</value>
+  </data>
+    <data name="BrightListItemHighlightingHelp" xml:space="preserve">
+    <value>Locks list item highlight opacity to max to increase contrast. Disabling may fix issues with some custom UIs</value>
+  </data>
+    <data name="GearsetHighlightColorLabel" xml:space="preserve">
+    <value>Gearset Highlight Color</value>
+  </data>
+    <data name="GearsetHighlightColorButtonTooltip" xml:space="preserve">
+    <value>Color needed items for this gearset are highlighted in</value>
+  </data>
+    <data name="GearsetDefaultColorCheckbox" xml:space="preserve">
+    <value>Use Default Color</value>
+  </data>
+    <data name="GearsetDefaultColorTooltip" xml:space="preserve">
+    <value>Whether to use the default highlight color (as set in configuration),
+or to have a unique color to highlight items in</value>
+  </data>
+    <data name="ConfigGeneralSectionHeader" xml:space="preserve">
+    <value>General Settings</value>
+  </data>
+    <data name="GeneralConfigurationHighlightAppearanceCategory" xml:space="preserve">
+    <value>Highlight Appearance</value>
+  </data>
+    <data name="GeneralConfigurationMiscellaneousCategory" xml:space="preserve">
+    <value>Miscellaneous</value>
+  </data>
+</root>

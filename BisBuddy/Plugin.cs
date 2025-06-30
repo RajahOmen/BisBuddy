@@ -1,301 +1,223 @@
+using Autofac;
+using Autofac.Extensions.DependencyInjection;
 using BisBuddy.Converters;
-using BisBuddy.EventListeners;
-using BisBuddy.EventListeners.AddonEventListeners;
-using BisBuddy.EventListeners.AddonEventListeners.Containers;
-using BisBuddy.EventListeners.AddonEventListeners.ShopExchange;
+using BisBuddy.Factories;
 using BisBuddy.Gear;
-using BisBuddy.Import;
-using BisBuddy.ItemAssignment;
+using BisBuddy.Gear.Prerequisites;
 using BisBuddy.Items;
+using BisBuddy.Mediators;
+using BisBuddy.Services;
+using BisBuddy.Services.Addon;
+using BisBuddy.Services.Addon.Containers;
+using BisBuddy.Services.Addon.ShopExchange;
+using BisBuddy.Services.Configuration;
+using BisBuddy.Services.Gearsets;
+using BisBuddy.Services.ImportGearset;
 using BisBuddy.Windows;
-using BisBuddy.Windows.ConfigWindow;
-using Dalamud.Game.Command;
+using BisBuddy.Windows.Config;
+using Dalamud.Interface;
 using Dalamud.Interface.Windowing;
+using Dalamud.Networking.Http;
 using Dalamud.Plugin;
-using FFXIVClientStructs.FFXIV.Client.UI.Misc;
+using Dalamud.Plugin.Services;
 using KamiToolKit;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.IO.Abstractions;
+using System.Net.Http;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace BisBuddy;
 
 public sealed partial class Plugin : IDalamudPlugin
 {
-    public static readonly string PluginName = "BISBuddy";
-    public static readonly int MaxGearsetCount = 25;
-    private readonly JsonSerializerOptions jsonOptions;
+    private readonly IHost host;
+    private readonly ITypedLogger<Plugin> logger;
 
-    private const string CommandName = "/bisbuddy";
-    private const string CommandNameAlias = "/bis";
-    private static readonly string MainCommandHelpMessage = $"View existing or add new gearsets\n      [config/c] - Open {PluginName} configuration\n      [new/n] - Add a new gearset";
-    private static readonly string AliasCommandHelpMessage = "Alias for /bisbuddy";
-
-    private ulong playerContentId = 0;
-    public ulong PlayerContentId
+    public Plugin(
+        IDalamudPluginInterface pluginInterface,
+        IChatGui chatGui,
+        ICommandManager commandManager,
+        IGameInventory gameInventory,
+        IGameGui gameGui,
+        IPluginLog pluginLog,
+        IAddonLifecycle addonLifecycle,
+        IDataManager dataManager,
+        IClientState clientState,
+        IFramework framework
+        )
     {
-        get => playerContentId;
-        set
-        {
-            playerContentId = value;
+        host = new HostBuilder()
+            .UseContentRoot(pluginInterface.ConfigDirectory.FullName)
+            .ConfigureLogging(lb =>
+            {
+                lb.ClearProviders();
+                lb.SetMinimumLevel(LogLevel.Trace);
+            })
+            .UseServiceProviderFactory(new AutofacServiceProviderFactory())
+            .ConfigureContainer<ContainerBuilder>(builder =>
+            {
+                builder.RegisterInstance(pluginInterface).As<IDalamudPluginInterface>().SingleInstance();
+                builder.RegisterInstance(pluginInterface.UiBuilder).As<IUiBuilder>().SingleInstance();
+                builder.RegisterInstance(chatGui).As<IChatGui>().SingleInstance();
+                builder.RegisterInstance(commandManager).As<ICommandManager>().SingleInstance();
+                builder.RegisterInstance(gameInventory).As<IGameInventory>().SingleInstance();
+                builder.RegisterInstance(gameGui).As<IGameGui>().SingleInstance();
+                builder.RegisterInstance(pluginLog).As<IPluginLog>().SingleInstance();
+                builder.RegisterInstance(addonLifecycle).As<IAddonLifecycle>().SingleInstance();
+                builder.RegisterInstance(dataManager).As<IDataManager>().SingleInstance();
+                builder.RegisterInstance(clientState).As<IClientState>().SingleInstance();
+                builder.RegisterInstance(framework).As<IFramework>().SingleInstance();
 
-            // update Gearsets to new character's gearsets
-            Gearsets = Configuration.GetCharacterGearsets(value, jsonOptions);
-            ItemRequirements = Gearset.BuildItemRequirements(Gearsets, Configuration.HighlightUncollectedItemMateria);
-        }
-    }
-    public Configuration Configuration { get; set; }
-    public List<Gearset> Gearsets { get; private set; } = [];
-    public Dictionary<uint, List<ItemRequirement>> ItemRequirements { get; private set; } = [];
-    // handle async FIFO item assignment
-    public ItemAssignmentQueue itemAssignmentQueue { get; private set; } = new();
+                // more rich logging information
+                builder.RegisterGeneric(typeof(TypedLogger<>)).As(typeof(ITypedLogger<>)).InstancePerDependency();
 
-    // plugin windows
-    public readonly WindowSystem WindowSystem = new(PluginName);
-    private ConfigWindow ConfigWindow { get; init; }
-    public MainWindow MainWindow { get; init; }
-    private ImportGearsetWindow ImportGearsetWindow { get; init; }
-    private MeldPlanSelectorWindow MeldPlanSelectorWindow { get; init; }
+                // item data service wrapper over game excel data
+                builder.RegisterType<ItemDataService>().As<IItemDataService>().SingleInstance();
 
-    // event listeners
-    // shops and other dialogs etc.
-    public readonly MateriaAttachEventListener MateriaAttachEventListener;
-    public readonly NeedGreedEventListener NeedGreedEventListener;
-    public readonly ShopExchangeItemEventListener ShopExchangeItemEventListener;
-    public readonly ShopExchangeCurrencyEventListener ShopExchangeCurrencyEventListener;
-    public readonly ItemSearchEventListener ItemSearchEventListener;
-    public readonly ItemSearchResultEventListener ItemSearchResultEventListener;
+                // kamitoolkit
+                builder.RegisterType<NativeController>().AsSelf().SingleInstance();
 
-    // player inventory windows
-    public readonly InventoryEventListener InventoryEventListener;
-    public readonly InventoryLargeEventListener InventoryLargeEventListener;
-    public readonly InventoryExpansionEventListener InventoryExpansionEventListener;
-    public readonly InventoryRetainerEventListener InventoryRetainerEventListener;
-    public readonly InventoryRetainerLargeEventListener InventoryRetainerLargeEventListener;
-    public readonly InventoryBuddyEventListener InventoryBuddyEventListener;
+                // importing gearsets
+                builder.RegisterType<HappyEyeballsCallback>().AsSelf().SingleInstance();
+                builder.Register(
+                    c => new HttpClient(
+                        new SocketsHttpHandler
+                        {
+                            ConnectCallback = c.Resolve<HappyEyeballsCallback>().ConnectCallback
+                        })
+                    ).As<HttpClient>()
+                    .SingleInstance();
+                builder.RegisterType<ImportGearsetService>().As<IImportGearsetService>().SingleInstance();
+                builder.RegisterType<XivgearSource>().As<IImportGearsetSource>().SingleInstance();
+                builder.RegisterType<EtroSource>().As<IImportGearsetSource>().SingleInstance();
+                builder.RegisterType<TeamcraftPlaintextSource>().As<IImportGearsetSource>().SingleInstance();
+                builder.RegisterType<JsonSource>().As<IImportGearsetSource>().SingleInstance();
 
-    // item tooltip
-    public readonly ItemDetailEventListener ItemDetailEventListener;
+                // creating runtime factories
+                builder.RegisterType<GearpieceFactory>().As<IGearpieceFactory>().SingleInstance();
 
-    // non-addon related
-    public readonly InventoryItemEventListener ItemUpdateEventListener;
-    public readonly LoginLoadEventListener LoginLoadEventListener;
+                // de/serialization
+                builder.RegisterType<FileSystem>().As<IFileSystem>().SingleInstance();
+                builder.RegisterType<FileService>().As<IFileService>().SingleInstance();
+                builder.RegisterType<ConfigurationLoaderService>().As<IConfigurationLoaderService>().SingleInstance();
 
-    // game data item sheet wrapper
-    public ItemData ItemData { get; init; }
+                // options for the serializer
+                builder.Register((c) =>
+                {
+                    JsonSerializerOptions jsonSerializerOptions = new()
+                    {
+                        PropertyNameCaseInsensitive = true,
+                        IncludeFields = true
+                    };
 
-    public Plugin(IDalamudPluginInterface pluginInterface)
-    {
-        // instantiate services
-        pluginInterface.Create<Services>();
+                    var converters = c.Resolve<IEnumerable<JsonConverter>>();
+                    foreach (var converter in converters)
+                        jsonSerializerOptions.Converters.Add(converter);
 
-        ItemData = new ItemData(Services.DataManager.Excel);
+                    return jsonSerializerOptions;
+                }).As<JsonSerializerOptions>()
+                .InstancePerDependency();
 
-        jsonOptions = new()
-        {
-            PropertyNameCaseInsensitive = true,
-            IncludeFields = true,
-        };
-        jsonOptions.Converters.Add(new GearpieceConverter(ItemData));
-        jsonOptions.Converters.Add(new MateriaConverter(ItemData));
-        jsonOptions.Converters.Add(new PrerequisiteNodeConverter());
-        jsonOptions.Converters.Add(new PrerequisiteAndNodeConverter(ItemData));
-        jsonOptions.Converters.Add(new PrerequisiteAtomNodeConverter(ItemData));
-        jsonOptions.Converters.Add(new PrerequisiteOrNodeConverter(ItemData));
+                builder.RegisterType<GearpieceConverter>().As<JsonConverter>().As<JsonConverter<Gearpiece>>().SingleInstance();
+                builder.RegisterType<MateriaConverter>().As<JsonConverter>().As<JsonConverter<Materia>>().SingleInstance();
+                builder.RegisterType<PrerequisiteNodeConverter>().As<JsonConverter>().As<JsonConverter<IPrerequisiteNode>>().SingleInstance();
+                builder.RegisterType<PrerequisiteAndNodeConverter>().As<JsonConverter>().As<JsonConverter<PrerequisiteAndNode>>().SingleInstance();
+                builder.RegisterType<PrerequisiteAtomNodeConverter>().As<JsonConverter>().As<JsonConverter<PrerequisiteAtomNode>>().SingleInstance();
+                builder.RegisterType<PrerequisiteOrNodeConverter>().As<JsonConverter>().As<JsonConverter<PrerequisiteOrNode>>().SingleInstance();
 
-        Services.HttpClient = new System.Net.Http.HttpClient();
-        Services.ImportGearsetService = new ImportGearsetService(this)
-            .RegisterSource(ImportSourceType.Xivgear, new XivgearSource(ItemData, Services.HttpClient))
-            .RegisterSource(ImportSourceType.Etro, new EtroSource(ItemData, Services.HttpClient))
-            .RegisterSource(ImportSourceType.Teamcraft, new TeamcraftPlaintextSource(ItemData))
-            .RegisterSource(ImportSourceType.Json, new JsonSource(jsonOptions));
-        Services.NativeController = new NativeController(pluginInterface);
+                // windows
+                builder.RegisterType<MainWindow>().As<Window>().AsSelf().SingleInstance();
+                builder.RegisterType<ConfigWindow>().As<Window>().AsSelf().SingleInstance();
+                builder.RegisterType<ImportGearsetWindow>().As<Window>().AsSelf().SingleInstance();
+                builder.RegisterType<MeldPlanSelectorWindow>().As<Window>().AsSelf().SingleInstance();
 
-        Configuration = Configuration.LoadConfig(ItemData, jsonOptions);
+                // display update count on inventory window
+                builder.RegisterType<InventoryUpdateDisplayMediator>().As<IInventoryUpdateDisplayService>().SingleInstance();
 
-        // INSTANTIATE WINDOWS
-        ConfigWindow = new ConfigWindow(this);
-        MainWindow = new MainWindow(this);
-        ImportGearsetWindow = new ImportGearsetWindow(this);
-        MeldPlanSelectorWindow = new MeldPlanSelectorWindow(this);
+                // display and pick meld plans
+                builder.RegisterType<MeldPlanMediator>().As<IMeldPlanService>().SingleInstance();
 
-        WindowSystem.AddWindow(ConfigWindow);
-        WindowSystem.AddWindow(MainWindow);
-        WindowSystem.AddWindow(ImportGearsetWindow);
-        WindowSystem.AddWindow(MeldPlanSelectorWindow);
+                // event listener dependencies
+                builder.RegisterGeneric(typeof(AddonServiceDependencies<>)).AsSelf().InstancePerDependency();
 
-        Services.PluginInterface.UiBuilder.Draw += DrawUI;
+                // item assignment solver
+                builder.RegisterType<ItemAssignmentSolverFactory>().As<IItemAssignmentSolverFactory>().SingleInstance();
+            })
+            // hosted services
+            .ConfigureContainer<ContainerBuilder>(builder =>
+            {
+                // manages windows
+                builder.RegisterType<WindowService>().AsImplementedInterfaces().SingleInstance();
 
-        // INSTANTIATE LISTENERS
-        // when characters log in (INSTANTIATE THIS FIRST)
-        LoginLoadEventListener = new LoginLoadEventListener(this);
-        // materia melding windows
-        MateriaAttachEventListener = new MateriaAttachEventListener(this);
-        // need/greed windows
-        NeedGreedEventListener = new NeedGreedEventListener(this);
-        // item exchange shop windows
-        ShopExchangeItemEventListener = new ShopExchangeItemEventListener(this);
-        // currency exchange shop windows
-        ShopExchangeCurrencyEventListener = new ShopExchangeCurrencyEventListener(this);
-        // inventory windows
-        InventoryEventListener = new InventoryEventListener(this);
-        InventoryLargeEventListener = new InventoryLargeEventListener(this);
-        InventoryExpansionEventListener = new InventoryExpansionEventListener(this);
-        InventoryRetainerEventListener = new InventoryRetainerEventListener(this);
-        InventoryRetainerLargeEventListener = new InventoryRetainerLargeEventListener(this);
-        InventoryBuddyEventListener = new InventoryBuddyEventListener(this);
-        // marketboard
-        ItemSearchEventListener = new ItemSearchEventListener(this);
-        ItemSearchResultEventListener = new ItemSearchResultEventListener(this);
-        // when item tooltips are shown
-        ItemDetailEventListener = new ItemDetailEventListener(this);
-        // when items added to inventory
-        ItemUpdateEventListener = new InventoryItemEventListener(this);
+                // manage current gearsets
+                builder.RegisterType<GearsetsService>().AsImplementedInterfaces().SingleInstance();
 
-        Services.CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
-        {
-            HelpMessage = MainCommandHelpMessage,
-            ShowInHelp = true,
-        });
-        Services.CommandManager.AddHandler(CommandNameAlias, new CommandInfo(OnCommand)
-        {
-            HelpMessage = AliasCommandHelpMessage,
-            ShowInHelp = true,
-        });
+                // handles changes to player inventories
+                builder.RegisterType<InventoryChangeService>().AsImplementedInterfaces().SingleInstance();
 
-        // This adds a button to the plugin installer entry of this plugin which allows
-        // to toggle the display status of the configuration ui
-        Services.PluginInterface.UiBuilder.OpenConfigUi += ToggleConfigUI;
+                // a FIFO queue for executing item assignment tasks off thread
+                builder.RegisterType<QueueService>().AsImplementedInterfaces().SingleInstance();
 
-        // Adds another button that is doing the same but for the main ui of the plugin
-        Services.PluginInterface.UiBuilder.OpenMainUi += ToggleMainUI;
+                // plugin configuration
+                builder.RegisterType<ConfigurationService>().AsImplementedInterfaces().SingleInstance();
+
+                // commands
+                builder.RegisterType<CommandService>().AsImplementedInterfaces().SingleInstance();
+
+                // handle active language
+                builder.RegisterType<LanguageService>().AsImplementedInterfaces().SingleInstance();
+
+                // addon listeners
+                //   inventories
+                builder.RegisterType<InventoryBuddyService>().AsImplementedInterfaces().AsSelf().SingleInstance();
+                builder.RegisterType<InventoryExpansionService>().AsImplementedInterfaces().AsSelf().SingleInstance();
+                builder.RegisterType<InventoryLargeService>().AsImplementedInterfaces().AsSelf().SingleInstance();
+                builder.RegisterType<InventoryRetainerLargeService>().AsImplementedInterfaces().AsSelf().SingleInstance();
+                builder.RegisterType<InventoryRetainerService>().AsImplementedInterfaces().AsSelf().SingleInstance();
+                builder.RegisterType<InventoryService>().AsImplementedInterfaces().AsSelf().SingleInstance();
+                //   shops
+                builder.RegisterType<ShopExchangeCurrencyService>().AsImplementedInterfaces().AsSelf().SingleInstance();
+                builder.RegisterType<ShopExchangeItemService>().AsImplementedInterfaces().AsSelf().SingleInstance();
+                //   tooltip
+                builder.RegisterType<ItemDetailService>().AsImplementedInterfaces().AsSelf().SingleInstance();
+                //   marketboard
+                builder.RegisterType<ItemSearchService>().AsImplementedInterfaces().AsSelf().SingleInstance();
+                builder.RegisterType<ItemSearchResultService>().AsImplementedInterfaces().AsSelf().SingleInstance();
+                //   materia melding
+                builder.RegisterType<MateriaAttachService>().AsImplementedInterfaces().AsSelf().SingleInstance();
+                //   need greed
+                builder.RegisterType<NeedGreedService>().AsImplementedInterfaces().AsSelf().SingleInstance();
+            })
+            .ConfigureServices(col =>
+            {
+                // register converters to json options
+                col.AddOptions<JsonSerializerOptions>()
+                .Configure<IServiceProvider>((opts, serviceProvider) =>
+                {
+                    opts.PropertyNameCaseInsensitive = true;
+                    opts.IncludeFields = true;
+
+                    foreach (var converter in serviceProvider.GetServices<JsonConverter>())
+                        opts.Converters.Add(converter);
+                });
+            }).Build();
+
+        logger = host.Services.GetRequiredService<ITypedLogger<Plugin>>();
+
+        logger.Info($"Initialization complete, starting...");
+        _ = host.StartAsync();
     }
 
     public void Dispose()
     {
-        Services.CommandManager.RemoveHandler(CommandName);
-        Services.CommandManager.RemoveHandler(CommandNameAlias);
-
-        WindowSystem.RemoveAllWindows();
-
-        // Dispose of plugin windows
-        ConfigWindow.Dispose();
-        MainWindow.Dispose();
-        ImportGearsetWindow.Dispose();
-        MeldPlanSelectorWindow.Dispose();
-
-        Services.PluginInterface.UiBuilder.Draw -= DrawUI;
-
-        // Dispose of listeners
-        MateriaAttachEventListener.Dispose();
-        NeedGreedEventListener.Dispose();
-        ShopExchangeItemEventListener.Dispose();
-        ShopExchangeCurrencyEventListener.Dispose();
-        ItemDetailEventListener.Dispose();
-        InventoryEventListener.Dispose();
-        InventoryLargeEventListener.Dispose();
-        InventoryExpansionEventListener.Dispose();
-        InventoryRetainerEventListener.Dispose();
-        InventoryRetainerLargeEventListener.Dispose();
-        InventoryBuddyEventListener.Dispose();
-        ItemSearchResultEventListener.Dispose();
-        ItemSearchEventListener.Dispose();
-        ItemUpdateEventListener.Dispose();
-
-        // dispose last (probably)
-        LoginLoadEventListener.Dispose();
-
-        // stop worker thread
-        itemAssignmentQueue.Stop();
-
-        // dispose of http client
-        Services.HttpClient.Dispose();
-
-        // dispose of native UI controller
-        Services.NativeController.Dispose();
-    }
-
-    private void OnCommand(string command, string args)
-    {
-        if (args == "config" || args == "c")
-        {
-            ToggleConfigUI();
-        }
-        else if (args == "new" || args == "n")
-        {
-            ToggleImportGearsetUI();
-        }
-        else
-        {
-            ToggleMainUI();
-        }
-    }
-
-    private void DrawUI()
-    {
-        WindowSystem.Draw();
-    }
-
-    public void ToggleConfigUI() => ConfigWindow.Toggle();
-    public void ToggleMainUI() => MainWindow.Toggle();
-    public void ToggleImportGearsetUI() => ImportGearsetWindow.Toggle();
-
-    public delegate void GearsetsUpdateHandler();
-
-    public event GearsetsUpdateHandler? OnGearsetsUpdate;
-
-    public void TriggerGearsetsUpdate()
-    {
-        ItemRequirements = Gearset.BuildItemRequirements(Gearsets, Configuration.HighlightUncollectedItemMateria);
-        OnGearsetsUpdate?.Invoke();
-    }
-
-    public delegate void SelectedMeldPlanIdxChangeHandler(int newIdx);
-
-    public event SelectedMeldPlanIdxChangeHandler? OnSelectedMeldPlanIdxChange;
-
-    public void TriggerSelectedMeldPlanChange(int newIdx)
-    {
-        OnSelectedMeldPlanIdxChange?.Invoke(newIdx);
-    }
-
-    public void SaveGearsetsWithUpdate(bool pluginChange = false)
-    {
-        // save gearsets to configuration and trigger update event
-        SaveConfiguration(pluginChange);
-        TriggerGearsetsUpdate();
-    }
-
-    public void UpdateMeldPlanSelectorWindow(List<MeldPlan> meldPlans)
-    {
-        MeldPlanSelectorWindow.MeldPlans = meldPlans;
-        MeldPlanSelectorWindow.IsOpen = meldPlans.Count > 0;
-    }
-
-    public static unsafe void SearchItemById(uint itemId)
-    {
-        try
-        {
-            Services.Log.Debug($"Searching for item \"{itemId}\"");
-            ItemFinderModule.Instance()->SearchForItem(itemId, false);
-        }
-        catch (Exception ex)
-        {
-            Services.Log.Error(ex, $"Error searching for \"{itemId}\"");
-
-        }
-    }
-
-    public void SaveConfiguration(bool pluginUpdate = false)
-    {
-        if (Configuration.PluginUpdateInventoryScan && pluginUpdate)
-            ScheduleUpdateFromInventory(Gearsets, saveChanges: true);
-        else
-            Configuration.Save(jsonOptions);
-    }
-
-    public string ExportGearsetToJsonStr(Gearset gearset)
-    {
-        return JsonSerializer.Serialize(gearset, jsonOptions);
+        logger.Info($"Teardown start");
+        host.StopAsync().GetAwaiter().GetResult();
+        host.Dispose();
+        logger.Info($"Teardown finish");
     }
 }
