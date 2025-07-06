@@ -129,6 +129,7 @@ public sealed partial class Plugin : IDalamudPlugin
                 builder.RegisterType<PrerequisiteAndNodeConverter>().As<JsonConverter>().As<JsonConverter<PrerequisiteAndNode>>().SingleInstance();
                 builder.RegisterType<PrerequisiteAtomNodeConverter>().As<JsonConverter>().As<JsonConverter<PrerequisiteAtomNode>>().SingleInstance();
                 builder.RegisterType<PrerequisiteOrNodeConverter>().As<JsonConverter>().As<JsonConverter<PrerequisiteOrNode>>().SingleInstance();
+                builder.RegisterType<GearsetsListConverter>().As<JsonConverter>().As<JsonConverter<List<Gearset>>>().SingleInstance();
 
                 // windows
                 builder.RegisterType<MainWindow>().As<Window>().AsSelf().SingleInstance();

@@ -14,11 +14,37 @@ namespace BisBuddy.Gear
 
         private readonly IReadOnlyList<Gearpiece> gearpieces = [];
         private HighlightColor? highlightColor = null;
+        private int? priority = null;
+        private DateTime importDate = DateTime.UtcNow;
 
         // set to random uuid
         public string Id { get; private set; } = Guid.NewGuid().ToString();
         public bool IsActive { get; private set; } = true;
         public string Name { get; private set; } = "New Gearset";
+        public int? Priority
+        {
+            get => priority;
+            set
+            {
+                if (priority == value)
+                    return;
+
+                priority = value;
+                triggerGearsetChange();
+            }
+        }
+        public DateTime ImportDate
+        {
+            get => importDate;
+            set
+            {
+                if (importDate == value)
+                    return;
+
+                importDate = value;
+                triggerGearsetChange();
+            }
+        }
         public IReadOnlyList<Gearpiece> Gearpieces
         {
             get => gearpieces;
