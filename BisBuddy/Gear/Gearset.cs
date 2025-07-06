@@ -41,7 +41,7 @@ namespace BisBuddy.Gear
                 if (importDate == value)
                     return;
 
-                importDate = value;
+                importDate = value.ToUniversalTime();
                 triggerGearsetChange();
             }
         }
@@ -98,20 +98,15 @@ namespace BisBuddy.Gear
 
         public event GearsetChangeHandler? OnGearsetChange;
 
-        public Gearset(string name, string? sourceUrl, ImportGearsetSourceType? sourceType)
-        {
-            Name = name;
-            SourceUrl = sourceUrl;
-            SourceType = sourceType;
-        }
-
-        internal Gearset(
+        public Gearset(
             string name,
             List<Gearpiece> gearpieces,
             string jobAbbrv,
             ImportGearsetSourceType? sourceType,
             string? sourceUrl = null,
-            string? sourceString = null
+            string? sourceString = null,
+            int priority = 0,
+            DateTime? importDate = null
             )
         {
             Name = name;
@@ -123,6 +118,8 @@ namespace BisBuddy.Gear
             // ensure ordering after adding
             gearpieces.Sort((a, b) => a.GearpieceType.CompareTo(b.GearpieceType));
             Gearpieces = gearpieces;
+
+            ImportDate = importDate ?? DateTime.UtcNow;
         }
 
         ~Gearset()
