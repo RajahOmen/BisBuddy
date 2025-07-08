@@ -1,25 +1,28 @@
 using BisBuddy.Import;
+using Dalamud.Plugin.Services;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace BisBuddy.Services.ImportGearset
 {
-    public class ImportGearsetService : IImportGearsetService
+    public class ImportGearsetService : ImportGearsetService
     {
         private readonly ITypedLogger<ImportGearsetService> logger;
+        private readonly IClientState clientState;
         private readonly Dictionary<ImportGearsetSourceType, IImportGearsetSource> sources;
 
         public ImportGearsetService(
             ITypedLogger<ImportGearsetService> logger,
+            IClientState clientState,
             IEnumerable<IImportGearsetSource> sources
             )
         {
+            this.logger = logger;
+            this.clientState = clientState;
             this.sources = [];
             foreach (var source in sources)
                 this.sources[source.SourceType] = source;
-
-            this.logger = logger;
         }
 
         public IReadOnlyList<ImportGearsetSourceType> RegisteredSourceTypes => [.. sources.Keys];
@@ -32,6 +35,9 @@ namespace BisBuddy.Services.ImportGearset
         {
             try
             {
+                if (!clientState.IsLoggedIn)
+                    throw new GearsetImportException(GearsetImportStatusType.NotLoggedIn);
+
                 if (sourceString.Length == 0)
                     throw new GearsetImportException(GearsetImportStatusType.InvalidInput);
 
@@ -69,7 +75,7 @@ namespace BisBuddy.Services.ImportGearset
         }
     }
 
-    public interface IImportGearsetService
+    public interface ImportGearsetService
     {
         public Task<ImportGearsetsResult> ImportGearsets(
             ImportGearsetSourceType sourceType,

@@ -554,6 +554,15 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Etro.gg.
+        /// </summary>
+        public static string ImportEtroName {
+            get {
+                return ResourceManager.GetString("ImportEtroName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Gearset sheet link from Etro.gg
         ///ex: https://etro.gg/gearset/4b5f4ed3-4832-4fd5-b134-3429ea8caf37.
         /// </summary>
@@ -609,6 +618,24 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} No response from server.
+        /// </summary>
+        public static string ImportFailNoResponse {
+            get {
+                return ResourceManager.GetString("ImportFailNoResponse", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} Must be logged in to import gearsets.
+        /// </summary>
+        public static string ImportFailNotLoggedIn {
+            get {
+                return ResourceManager.GetString("ImportFailNotLoggedIn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} Import would exceed gearset limit.
         /// </summary>
         internal static string ImportFailTooManyGearsets {
@@ -636,6 +663,15 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Log in to import gearsets.
+        /// </summary>
+        public static string ImportGearsetLoggedOut {
+            get {
+                return ResourceManager.GetString("ImportGearsetLoggedOut", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Import a new gearset from {0}.
         /// </summary>
         internal static string ImportGearsetTooltip {
@@ -650,6 +686,15 @@ namespace BisBuddy.Resources {
         internal static string ImportInvalidUrl {
             get {
                 return ResourceManager.GetString("ImportInvalidUrl", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to JSON.
+        /// </summary>
+        public static string ImportJsonName {
+            get {
+                return ResourceManager.GetString("ImportJsonName", resourceCulture);
             }
         }
         
@@ -682,6 +727,15 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Teamcraft.
+        /// </summary>
+        public static string ImportTeamcraftName {
+            get {
+                return ResourceManager.GetString("ImportTeamcraftName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Plaintext gearset exported from Teamcraft
         ///ex:
         ///**Everseeker&apos;s Pickaxe HQ**
@@ -702,6 +756,15 @@ namespace BisBuddy.Resources {
         internal static string ImportWindowTitle {
             get {
                 return ResourceManager.GetString("ImportWindowTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Xivgear.app.
+        /// </summary>
+        public static string ImportXivgearName {
+            get {
+                return ResourceManager.GetString("ImportXivgearName", resourceCulture);
             }
         }
         
