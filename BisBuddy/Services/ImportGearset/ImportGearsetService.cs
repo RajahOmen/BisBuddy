@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace BisBuddy.Services.ImportGearset
 {
-    public class ImportGearsetService : ImportGearsetService
+    public class ImportGearsetService : IImportGearsetService
     {
         private readonly ITypedLogger<ImportGearsetService> logger;
         private readonly IClientState clientState;
@@ -75,7 +75,7 @@ namespace BisBuddy.Services.ImportGearset
         }
     }
 
-    public interface ImportGearsetService
+    public interface IImportGearsetService
     {
         public Task<ImportGearsetsResult> ImportGearsets(
             ImportGearsetSourceType sourceType,
