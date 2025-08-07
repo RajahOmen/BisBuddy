@@ -107,7 +107,7 @@ namespace BisBuddy.Services.Addon
             // update list of materia names that are needed
             var materiaNames = meldPlanService
                 .CurrentMeldPlan?
-                .Materia
+                .MateriaGroup
                 .Where(m => !m.IsMelded)
                 .Select(m => m.ItemName) ?? [];
 

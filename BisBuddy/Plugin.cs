@@ -13,8 +13,9 @@ using BisBuddy.Services.Addon.ShopExchange;
 using BisBuddy.Services.Configuration;
 using BisBuddy.Services.Gearsets;
 using BisBuddy.Services.ImportGearset;
-using BisBuddy.Windows;
-using BisBuddy.Windows.Config;
+using BisBuddy.Ui;
+using BisBuddy.Ui.Config;
+using BisBuddy.Ui.Main.Tabs;
 using Dalamud.Interface;
 using Dalamud.Interface.Windowing;
 using Dalamud.Networking.Http;
@@ -30,6 +31,11 @@ using System.IO.Abstractions;
 using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.Caching.Memory;
+using BisBuddy.Ui.Components;
+using BisBuddy.Gear.Melds;
+using BisBuddy.Mappers;
+using BisBuddy.Commands;
 
 namespace BisBuddy;
 
@@ -48,6 +54,7 @@ public sealed partial class Plugin : IDalamudPlugin
         IAddonLifecycle addonLifecycle,
         IDataManager dataManager,
         IClientState clientState,
+        ITextureProvider textureProvider,
         IFramework framework
         )
     {
@@ -71,10 +78,16 @@ public sealed partial class Plugin : IDalamudPlugin
                 builder.RegisterInstance(addonLifecycle).As<IAddonLifecycle>().SingleInstance();
                 builder.RegisterInstance(dataManager).As<IDataManager>().SingleInstance();
                 builder.RegisterInstance(clientState).As<IClientState>().SingleInstance();
+                builder.RegisterInstance(textureProvider).As<ITextureProvider>().SingleInstance();
                 builder.RegisterInstance(framework).As<IFramework>().SingleInstance();
 
                 // more rich logging information
                 builder.RegisterGeneric(typeof(TypedLogger<>)).As(typeof(ITypedLogger<>)).InstancePerDependency();
+
+                // commands
+                builder.RegisterType<OpenMainCommand>().AsImplementedInterfaces().SingleInstance();
+                builder.RegisterType<OpenConfigCommand>().AsImplementedInterfaces().SingleInstance();
+                builder.RegisterType<AddGearsetCommand>().AsImplementedInterfaces().SingleInstance();
 
                 // item data service wrapper over game excel data
                 builder.RegisterType<ItemDataService>().As<IItemDataService>().SingleInstance();
@@ -100,11 +113,20 @@ public sealed partial class Plugin : IDalamudPlugin
 
                 // creating runtime factories
                 builder.RegisterType<GearpieceFactory>().As<IGearpieceFactory>().SingleInstance();
+                builder.RegisterType<GearsetFactory>().As<IGearsetFactory>().SingleInstance();
+                builder.RegisterType<ItemAssignmentSolverFactory>().As<IItemAssignmentSolverFactory>().SingleInstance();
+                builder.RegisterType<MateriaFactory>().As<IMateriaFactory>().SingleInstance();
 
                 // de/serialization
                 builder.RegisterType<FileSystem>().As<IFileSystem>().SingleInstance();
                 builder.RegisterType<FileService>().As<IFileService>().SingleInstance();
                 builder.RegisterType<ConfigurationLoaderService>().As<IConfigurationLoaderService>().SingleInstance();
+
+                // cached attribute retrieval
+                builder.RegisterType<AttributeService>().As<IAttributeService>().SingleInstance();
+
+                // mappers
+                builder.RegisterType<GearpieceTypeMapper>().AsImplementedInterfaces().SingleInstance();
 
                 // options for the serializer
                 builder.Register((c) =>
@@ -123,19 +145,37 @@ public sealed partial class Plugin : IDalamudPlugin
                 }).As<JsonSerializerOptions>()
                 .InstancePerDependency();
 
+                // converters
                 builder.RegisterType<GearpieceConverter>().As<JsonConverter>().As<JsonConverter<Gearpiece>>().SingleInstance();
+                builder.RegisterType<MateriaGroupConverter>().As<JsonConverter>().As<JsonConverter<MateriaGroup>>().SingleInstance();
                 builder.RegisterType<MateriaConverter>().As<JsonConverter>().As<JsonConverter<Materia>>().SingleInstance();
                 builder.RegisterType<PrerequisiteNodeConverter>().As<JsonConverter>().As<JsonConverter<IPrerequisiteNode>>().SingleInstance();
                 builder.RegisterType<PrerequisiteAndNodeConverter>().As<JsonConverter>().As<JsonConverter<PrerequisiteAndNode>>().SingleInstance();
                 builder.RegisterType<PrerequisiteAtomNodeConverter>().As<JsonConverter>().As<JsonConverter<PrerequisiteAtomNode>>().SingleInstance();
                 builder.RegisterType<PrerequisiteOrNodeConverter>().As<JsonConverter>().As<JsonConverter<PrerequisiteOrNode>>().SingleInstance();
                 builder.RegisterType<GearsetsListConverter>().As<JsonConverter>().As<JsonConverter<List<Gearset>>>().SingleInstance();
+                builder.RegisterType<GearsetConverter>().As<JsonConverter>().As<JsonConverter<Gearset>>().SingleInstance();
 
                 // windows
-                builder.RegisterType<MainWindow>().As<Window>().AsSelf().SingleInstance();
-                builder.RegisterType<ConfigWindow>().As<Window>().AsSelf().SingleInstance();
-                builder.RegisterType<ImportGearsetWindow>().As<Window>().AsSelf().SingleInstance();
-                builder.RegisterType<MeldPlanSelectorWindow>().As<Window>().AsSelf().SingleInstance();
+                builder.RegisterType<MainWindow>().Keyed<Window>(WindowType.Main).As<Window>().AsSelf().SingleInstance();
+                builder.RegisterType<ConfigWindow>().Keyed<Window>(WindowType.Config).As<Window>().AsSelf().SingleInstance();
+                builder.RegisterType<ImportGearsetWindow>().Keyed<Window>(WindowType.ImportGearset).As<Window>().AsSelf().SingleInstance();
+                builder.RegisterType<MeldPlanSelectorWindow>().Keyed<Window>(WindowType.MeldPlanSelector).As<Window>().AsSelf().SingleInstance();
+
+                // other ui elements
+                builder.RegisterType<UiComponents>().AsSelf().SingleInstance();
+                builder.RegisterType<UserGearsetsTab>().Keyed<TabRenderer>(MainWindowTab.UserGearsets).SingleInstance();
+                builder.RegisterType<ItemPlannerTab>().Keyed<TabRenderer>(MainWindowTab.ItemPlanner).SingleInstance();
+                builder.RegisterType<ItemExchangesTab>().Keyed<TabRenderer>(MainWindowTab.ItemExchanges).SingleInstance();
+                builder.RegisterType<ItemTrackerTab>().Keyed<TabRenderer>(MainWindowTab.ItemTracker).SingleInstance();
+                builder.RegisterType<ConfigTab>().Keyed<TabRenderer>(MainWindowTab.PluginConfig).AsSelf().SingleInstance();
+
+                // component renderers
+                builder.RegisterType<CachingComponentRendererFactory>().AsImplementedInterfaces().SingleInstance();
+                builder.RegisterType<GearsetComponentRenderer>().AsImplementedInterfaces().InstancePerLifetimeScope();
+                builder.RegisterType<GearpieceComponentRenderer>().AsImplementedInterfaces().InstancePerLifetimeScope();
+                builder.RegisterType<PrerequisiteNodeComponentRenderer>().AsImplementedInterfaces().InstancePerLifetimeScope();
+                builder.RegisterType<MateriaGroupComponentRenderer>().AsImplementedInterfaces().InstancePerLifetimeScope();
 
                 // display update count on inventory window
                 builder.RegisterType<InventoryUpdateDisplayMediator>().As<IInventoryUpdateDisplayService>().SingleInstance();
@@ -145,9 +185,6 @@ public sealed partial class Plugin : IDalamudPlugin
 
                 // event listener dependencies
                 builder.RegisterGeneric(typeof(AddonServiceDependencies<>)).AsSelf().InstancePerDependency();
-
-                // item assignment solver
-                builder.RegisterType<ItemAssignmentSolverFactory>().As<IItemAssignmentSolverFactory>().SingleInstance();
             })
             // hosted services
             .ConfigureContainer<ContainerBuilder>(builder =>
@@ -194,10 +231,10 @@ public sealed partial class Plugin : IDalamudPlugin
                 //   need greed
                 builder.RegisterType<NeedGreedService>().AsImplementedInterfaces().AsSelf().SingleInstance();
             })
-            .ConfigureServices(col =>
+            .ConfigureServices(services =>
             {
                 // register converters to json options
-                col.AddOptions<JsonSerializerOptions>()
+                services.AddOptions<JsonSerializerOptions>()
                 .Configure<IServiceProvider>((opts, serviceProvider) =>
                 {
                     opts.PropertyNameCaseInsensitive = true;
@@ -206,12 +243,24 @@ public sealed partial class Plugin : IDalamudPlugin
                     foreach (var converter in serviceProvider.GetServices<JsonConverter>())
                         opts.Converters.Add(converter);
                 });
-            }).Build();
+
+                // add memory cache for attribute caching, etc.
+                services.AddMemoryCache();
+            })
+            .Build();
 
         logger = host.Services.GetRequiredService<ITypedLogger<Plugin>>();
 
         logger.Info($"Initialization complete, starting...");
-        _ = host.StartAsync();
+        try
+        {
+            host.StartAsync().GetAwaiter().GetResult();
+            logger.Info($"Started successfully");
+        }
+        catch (Exception ex) {
+            logger.Fatal(ex, $"Failed to start");
+            Dispose();
+        }
     }
 
     public void Dispose()

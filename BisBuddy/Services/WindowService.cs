@@ -1,9 +1,11 @@
 using Autofac;
-using BisBuddy.Windows;
-using BisBuddy.Windows.Config;
+using Autofac.Features.Indexed;
+using BisBuddy.Ui;
+using BisBuddy.Ui.Config;
 using Dalamud.Interface;
 using Dalamud.Interface.Windowing;
 using Microsoft.Extensions.Hosting;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,6 +16,7 @@ namespace BisBuddy.Services
     {
         private readonly IUiBuilder uiBuilder;
         private readonly WindowSystem windowSystem;
+        private readonly IIndex<WindowType, Window> windowIndex;
         private readonly MainWindow mainWindow;
         private readonly ConfigWindow configWindow;
         private readonly ImportGearsetWindow importGearsetWindow;
@@ -22,6 +25,7 @@ namespace BisBuddy.Services
         public WindowService(
             IUiBuilder uiBuilder,
             IComponentContext componentContext,
+            IIndex<WindowType, Window> windowIndex,
             IEnumerable<Window> windows,
             MainWindow mainWindow,
             ConfigWindow configWindow,
@@ -30,6 +34,7 @@ namespace BisBuddy.Services
             )
         {
             this.uiBuilder = uiBuilder;
+            this.windowIndex = windowIndex;
             this.mainWindow = mainWindow;
             this.configWindow = configWindow;
             this.importGearsetWindow = importGearsetWindow;
@@ -60,24 +65,26 @@ namespace BisBuddy.Services
             return Task.CompletedTask;
         }
 
-        public void ToggleMainWindow() =>
-            mainWindow.Toggle();
+        public void ToggleWindow(WindowType windowType)
+        {
+            if (!windowIndex.TryGetValue(windowType, out var window))
+                throw new ArgumentException($"Window type {Enum.GetName(windowType)} not registered");
 
-        public void ToggleConfigWindow() =>
-            configWindow.Toggle();
+            window.Toggle();
+        }
 
-        public void ToggleImportGearsetWindow() =>
-            importGearsetWindow.Toggle();
+        public void SetWindowState(WindowType windowType, bool state)
+        {
+            if (!windowIndex.TryGetValue(windowType, out var window))
+                throw new ArgumentException($"Window type {Enum.GetName(windowType)} not registered");
 
-        public void ToggleMeldPlanSelectorWindow() =>
-            meldPlanSelectorWindow.Toggle();
+            window.IsOpen = state;
+        }
     }
 
     public interface IWindowService : IHostedService
     {
-        public void ToggleMainWindow();
-        public void ToggleConfigWindow();
-        public void ToggleImportGearsetWindow();
-        public void ToggleMeldPlanSelectorWindow();
+        public void ToggleWindow(WindowType windowType);
+        public void SetWindowState(WindowType windowType, bool open);
     }
 }

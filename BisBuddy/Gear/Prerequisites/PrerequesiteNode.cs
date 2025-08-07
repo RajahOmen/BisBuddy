@@ -4,7 +4,7 @@ namespace BisBuddy.Gear.Prerequisites
 {
     public delegate void PrerequisiteChangeHandler();
 
-    public interface IPrerequisiteNode
+    public interface IPrerequisiteNode : ICollectableItem
     {
         public string NodeId { get; }
         public uint ItemId { get; set; }

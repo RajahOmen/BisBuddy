@@ -1,11 +1,12 @@
+using BisBuddy.Gear;
 using System;
 using System.Collections.Generic;
 
-namespace BisBuddy.Gear
+namespace BisBuddy.Mappers
 {
-    public static class GearpieceTypeMapper
+    public class GearpieceTypeMapper : Mapper<string, GearpieceType>
     {
-        private static readonly Dictionary<string, GearpieceType> Mapping = new(StringComparer.OrdinalIgnoreCase)
+        private static readonly Dictionary<string, GearpieceType> Map = new(StringComparer.OrdinalIgnoreCase)
         {
             { "Weapon", GearpieceType.Weapon },
             { "MainHand", GearpieceType.Weapon },
@@ -68,16 +69,6 @@ namespace BisBuddy.Gear
             { "accessory", GearpieceType.RightSide },   // normal raid gear tokens
         };
 
-        public static GearpieceType Parse(string input)
-        {
-            if (Mapping.TryGetValue(input, out var gearpieceType)) return gearpieceType;
-
-            throw new ArgumentException($"Invalid gear piece type: {input}");
-        }
-
-        public static bool TryParse(string input, out GearpieceType gearpieceType)
-        {
-            return Mapping.TryGetValue(input, out gearpieceType);
-        }
+        protected override Dictionary<string, GearpieceType> Mapping => Map;
     }
 }

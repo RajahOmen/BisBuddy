@@ -36,15 +36,9 @@ namespace BisBuddy.Services
 
         public FileSystemStream OpenReadGearsetsStream(ulong contentId)
         {
-            try
-            {
-                return file.OpenRead(getCharacterGearsetPath(contentId));
-            }
-            catch (DirectoryNotFoundException)
-            {
+            if (!fileSystem.Directory.Exists(gearsetsDirectoryPath))
                 createGearsetsDirectory();
-                throw new FileNotFoundException();
-            }
+            return file.OpenRead(getCharacterGearsetPath(contentId));
         }
 
         public Task WriteConfigAsync(string serializedConfigData, CancellationToken cancellationToken = default)

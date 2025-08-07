@@ -1,4 +1,5 @@
 using BisBuddy.Gear;
+using BisBuddy.Gear.Melds;
 using System.Collections.Generic;
 
 namespace BisBuddy.ItemAssignment
@@ -9,6 +10,6 @@ namespace BisBuddy.ItemAssignment
         public uint ItemId { get; }
         public bool NeedsItemId(uint candidateItemId);
         public bool AddMatchingGearpiece(Gearpiece gearpiece, Gearset gearset);
-        public int CandidateEdgeWeight(uint candidateId, List<Materia> candidateMateria);
+        public int CandidateEdgeWeight(uint candidateId, MateriaGroup candidateMateria);
     }
 }

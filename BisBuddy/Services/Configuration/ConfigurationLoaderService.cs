@@ -29,33 +29,33 @@ namespace BisBuddy.Services.Configuration
         public IConfigurationProperties LoadConfig()
             => loadConfigAsync().Result;
 
-        private async Task<BisBuddy.Configuration> loadConfigAsync(CancellationToken cancellationToken = default)
+        private async Task<Configuration> loadConfigAsync(CancellationToken cancellationToken = default)
         {
             try
             {
                 logger.Verbose($"Loading config...");
-                var configStream = fileService.OpenReadConfigStream();
+                using var configStream = fileService.OpenReadConfigStream();
                 using var configJson = await JsonDocument.ParseAsync(configStream, cancellationToken: cancellationToken);
                 var configVersion = configJson
                     .RootElement
                     .GetProperty(nameof(IConfigurationProperties.Version))
                     .GetInt32();
 
-                if (configVersion != BisBuddy.Configuration.CurrentVersion)
+                if (configVersion != Configuration.CurrentVersion)
                 {
-                    logger.Warning($"Config version {configVersion} found, current {BisBuddy.Configuration.CurrentVersion}. Attempting migration");
+                    logger.Warning($"Config version {configVersion} found, current {Configuration.CurrentVersion}. Attempting migration");
                     return await migrateOldConfig(configJson, configStream, configVersion, cancellationToken);
                 }
-                return configJson.Deserialize<BisBuddy.Configuration>(jsonSerializerOptions) ?? new BisBuddy.Configuration();
+                return configJson.Deserialize<Configuration>(jsonSerializerOptions) ?? new Configuration();
             }
             catch (FileNotFoundException)
             {
-                return new BisBuddy.Configuration();
+                return new Configuration();
             }
             catch (JsonException ex)
             {
                 logger.Error(ex, "Error loading/converting config file, creating new");
-                return new BisBuddy.Configuration();
+                return new Configuration();
             }
             catch (Exception ex)
             {
@@ -64,15 +64,15 @@ namespace BisBuddy.Services.Configuration
             }
         }
 
-        private async Task<BisBuddy.Configuration> migrateOldConfig(
+        private async Task<Configuration> migrateOldConfig(
             JsonDocument configJson,
             Stream configStream,
             int configVersion,
             CancellationToken cancellationToken = default
             )
         {
-            var newConfig = new BisBuddy.Configuration();
-            for (var version = configVersion; version < BisBuddy.Configuration.CurrentVersion; version++)
+            var newConfig = new Configuration();
+            for (var version = configVersion; version < Configuration.CurrentVersion; version++)
             {
                 newConfig = version switch
                 {
@@ -96,7 +96,7 @@ namespace BisBuddy.Services.Configuration
         /// <param name="configStream">The stream of text for the serialized config to migrate</param>
         /// <returns></returns>
         /// <exception cref="JsonException">If the config fails to deserialize with the old system</exception>
-        private async Task<BisBuddy.Configuration> migrate1To2(Stream configStream, CancellationToken cancellationToken = default)
+        private async Task<Configuration> migrate1To2(Stream configStream, CancellationToken cancellationToken = default)
         {
             /// <summary>
             /// migrate from newtonsoft to stj
@@ -106,7 +106,7 @@ namespace BisBuddy.Services.Configuration
             {
                 var reader = new StreamReader(configStream);
                 var configText = await reader.ReadToEndAsync(cancellationToken);
-                var config = JsonConvert.DeserializeObject<BisBuddy.Configuration>(configText)
+                var config = JsonConvert.DeserializeObject<Configuration>(configText)
                     ?? throw new JsonException("Old config result is null");
 
                 foreach (var charData in config.CharactersData)
@@ -137,7 +137,7 @@ namespace BisBuddy.Services.Configuration
         /// <param name="configJson">JsonDocument config</param>
         /// <returns>The migrated and deserialized config</returns>
         /// <exception cref="JsonException">If the config cannot be migrated or deserialized</exception>
-        private BisBuddy.Configuration migrate2To3(JsonDocument configJson)
+        private Configuration migrate2To3(JsonDocument configJson)
         {
             HighlightColor? highlightColor = null;
             if (configJson.RootElement.TryGetProperty("HighlightColor", out var highlightColorProperty))
@@ -146,7 +146,7 @@ namespace BisBuddy.Services.Configuration
                 highlightColor = new HighlightColor(highlightColorVector);
             }
 
-            var config = configJson.Deserialize<BisBuddy.Configuration>(jsonSerializerOptions) ?? new BisBuddy.Configuration();
+            var config = configJson.Deserialize<Configuration>(jsonSerializerOptions) ?? new Configuration();
             if (highlightColor is not null)
                 config.DefaultHighlightColor = highlightColor;
 
@@ -158,10 +158,10 @@ namespace BisBuddy.Services.Configuration
         /// </summary>
         /// <param name="configJson">JsonDocument config</param>
         /// <returns></returns>
-        private async Task<BisBuddy.Configuration> migrate3To4(JsonDocument configJson, CancellationToken cancellationToken = default)
+        private async Task<Configuration> migrate3To4(JsonDocument configJson, CancellationToken cancellationToken = default)
         {
-            var config = configJson.Deserialize<BisBuddy.Configuration>(jsonSerializerOptions)
-                ?? new BisBuddy.Configuration();
+            var config = configJson.Deserialize<Configuration>(jsonSerializerOptions)
+                ?? new Configuration();
 
             // no gearsets stored in configuration
             if (config.CharactersData.Count == 0)

@@ -1,3 +1,4 @@
+using BisBuddy.Extensions;
 using BisBuddy.Import;
 using BisBuddy.Resources;
 using BisBuddy.Services;
@@ -24,6 +25,7 @@ public class ImportGearsetWindow : Window, IDisposable
     private readonly IClientState clientState;
     private readonly IGearsetsService gearsetsService;
     private readonly List<IImportGearsetSource> importGearsetSources;
+    private readonly IAttributeService attributeService;
 
     private string gearsetSourceString = string.Empty;
     private ImportGearsetSourceType gearsetSourceType = ImportGearsetSourceType.Xivgear;
@@ -35,7 +37,8 @@ public class ImportGearsetWindow : Window, IDisposable
         ITypedLogger<ImportGearsetWindow> logger,
         IClientState clientState,
         IGearsetsService gearsetsService,
-        IEnumerable<IImportGearsetSource> importGearsetSources
+        IEnumerable<IImportGearsetSource> importGearsetSources,
+        IAttributeService attributeService
         )
         : base($"{Resource.ImportWindowTitle}##bisbuddy import gearset", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
@@ -52,6 +55,7 @@ public class ImportGearsetWindow : Window, IDisposable
         this.clientState = clientState;
         this.gearsetsService = gearsetsService;
         this.importGearsetSources = importGearsetSources.ToList();
+        this.attributeService = attributeService;
     }
 
     private async Task ImportNewGearsets()
@@ -120,7 +124,7 @@ public class ImportGearsetWindow : Window, IDisposable
                 ImGui.TableNextColumn();
 
                 var sourceSelected = gearsetSourceType == source.SourceType;
-                var sourceDisplay = source.SourceType.GetAttribute<DisplayAttribute>()!;
+                var sourceDisplay = attributeService.GetEnumAttribute<DisplayAttribute>(source.SourceType)!;
 
                 if (ImGui.Selectable(sourceDisplay.GetName(), sourceSelected))
                 {
@@ -130,7 +134,7 @@ public class ImportGearsetWindow : Window, IDisposable
                 }
 
                 if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip(sourceDisplay.GetDescription());
+                    ImGui.SetTooltip(sourceDisplay.GetDescription()!);
             }
         }
 
@@ -152,16 +156,17 @@ public class ImportGearsetWindow : Window, IDisposable
             new Vector2(sizeAvailable.X, sizeAvailable.Y - footerHeight)
             );
 
-        var gearsetSourceDisplay = gearsetSourceType.GetAttribute<DisplayAttribute>()!;
+        var gearsetSourceDisplay = attributeService
+                .GetEnumAttribute<DisplayAttribute>(gearsetSourceType)!;
 
         if (ImGui.IsItemHovered())
-            ImGui.SetTooltip(gearsetSourceDisplay.GetDescription());
+            ImGui.SetTooltip(gearsetSourceDisplay.GetDescription()!);
 
         ImGui.Spacing();
         ImGui.Separator();
         ImGui.Spacing();
 
-        var sourceName = gearsetSourceDisplay.GetName();
+        var sourceName = gearsetSourceDisplay.GetName()!;
 
         using (ImRaii.Disabled(importLoading || gearsetSourceString == string.Empty))
         {
@@ -179,7 +184,9 @@ public class ImportGearsetWindow : Window, IDisposable
         ImGui.SameLine();
         if (importStatus is GearsetImportStatusType importedStatus)
         {
-            var importStatusDescription = importedStatus.GetAttribute<DisplayAttribute>()!.GetDescription()!;
+            var importStatusDescription = attributeService
+                .GetEnumAttribute<DisplayAttribute>(importedStatus)!
+                .GetDescription()!;
             ImGui.Text(string.Format(importStatusDescription, Resource.ImportFailBase, sourceName, importedGearsetCount));
         }
         else if (importLoading)

@@ -11,11 +11,13 @@ namespace BisBuddy.Factories
     public class ItemAssignmentSolverFactory(
         ITypedLogger<ItemAssigmentSolver> logger,
         IItemDataService itemDataService,
+        IMateriaFactory materiaFactory,
         IConfigurationService configurationService
         ) : IItemAssignmentSolverFactory
     {
         private readonly ITypedLogger<ItemAssigmentSolver> logger = logger;
         private readonly IItemDataService itemDataService = itemDataService;
+        private readonly IMateriaFactory materiaFactory = materiaFactory;
         private readonly IConfigurationService configurationService = configurationService;
 
         public IItemAssignmentSolver Create(
@@ -30,6 +32,7 @@ namespace BisBuddy.Factories
                 assignableGearsets,
                 inventoryItems,
                 itemDataService,
+                materiaFactory,
                 configurationService.StrictMateriaMatching,
                 configurationService.HighlightPrerequisiteMateria
                 );

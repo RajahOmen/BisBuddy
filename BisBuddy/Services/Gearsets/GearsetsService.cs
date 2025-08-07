@@ -1,5 +1,6 @@
 using BisBuddy.Factories;
 using BisBuddy.Gear;
+using BisBuddy.Gear.Melds;
 using BisBuddy.Import;
 using BisBuddy.Mediators;
 using BisBuddy.Services.Configuration;
@@ -52,6 +53,8 @@ namespace BisBuddy.Services.Gearsets
 
         private List<Gearset> currentGearsets = [];
         private Dictionary<uint, List<ItemRequirement>> currentItemRequirements = [];
+        private GearsetSortType currentGearsetsSortType = GearsetSortType.Priority;
+        private bool currentGearsetsSortDescending = false;
 
         public IReadOnlyList<Gearset> CurrentGearsets
         {
@@ -123,12 +126,16 @@ namespace BisBuddy.Services.Gearsets
                     gearset.OnGearsetChange -= handleGearsetChange;
 
                 if (currentLocalContentId == 0)
+                {
                     currentGearsets = [];
-                else
-                    currentGearsets = JsonSerializer.Deserialize<List<Gearset>>(
-                        fileService.OpenReadGearsetsStream(currentLocalContentId),
-                        jsonSerializerOptions
-                        ) ?? [];
+                    return;
+                }
+
+                using var gearsetsStream = fileService.OpenReadGearsetsStream(currentLocalContentId);
+                currentGearsets = JsonSerializer.Deserialize<List<Gearset>>(
+                    gearsetsStream,
+                    jsonSerializerOptions
+                    ) ?? [];
             }
             catch (FileNotFoundException)
             {
@@ -188,6 +195,7 @@ namespace BisBuddy.Services.Gearsets
         public Task<ImportGearsetsResult> AddGearsetsFromSource(ImportGearsetSourceType sourceType, string sourceString);
         public void RemoveGearset(Gearset gearset);
         public string ExportGearsetToJsonStr(Gearset gearset);
+        public void ChangeGearsetSortOrder(GearsetSortType? newSortType = null, bool? sortDescending = null);
 
         /// <summary>
         /// Fires whenever a change to the current gearsets is made
@@ -221,7 +229,7 @@ namespace BisBuddy.Services.Gearsets
             bool includeObtainable = false,
             bool includeCollectedPrereqs = false
         );
-        public List<MeldPlan> GetNeededItemMeldPlans(uint itemId);
+        public List<(Gearset, MateriaGroup)> GetNeededItemMeldPlans(uint itemId);
         public Dictionary<string, HighlightColor> GetUnmeldedMateriaColors();
 
         /// <summary>

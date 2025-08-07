@@ -3,13 +3,12 @@ using Dalamud.Configuration;
 using System;
 using System.Collections.Generic;
 
-namespace BisBuddy;
+namespace BisBuddy.Services.Configuration;
 
 [Serializable]
 public class Configuration : IConfigurationProperties
 {
     public static readonly int CurrentVersion = 4;
-    public static readonly string DefaultGearsetName = "New Gearset";
 
     public int Version { get; set; } = 4;
 
@@ -29,6 +28,7 @@ public class Configuration : IConfigurationProperties
 
     public bool BrightListItemHighlighting { get; set; } = true;
     public HighlightColor DefaultHighlightColor { get; set; } = new(0.0f, 1.0f, 0.0f, 0.393f);
+    public UiTheme UiTheme { get; set; } = new();
 
     public Dictionary<ulong, CharacterInfo> CharactersData { get; set; } = [];
 }
@@ -50,5 +50,6 @@ public interface IConfigurationProperties : IPluginConfiguration
     public bool StrictMateriaMatching { get; set; }
     public bool BrightListItemHighlighting { get; set; }
     public HighlightColor DefaultHighlightColor { get; }
+    public UiTheme UiTheme { get; set; }
 }
 

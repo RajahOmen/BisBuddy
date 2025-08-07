@@ -1,4 +1,5 @@
 using BisBuddy.Import;
+using BisBuddy.Ui.Components;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +10,7 @@ namespace BisBuddy.Gear
     public delegate void GearsetChangeHandler();
 
     [Serializable]
-    public partial class Gearset
+    public class Gearset
     {
         private readonly IReadOnlyList<Gearpiece> gearpieces;
 
@@ -95,7 +96,9 @@ namespace BisBuddy.Gear
         // for local representations of the gearset that aren't native JSON (ex: teamcraft plaintext)
         public string? SourceString { get; init; }
         public ImportGearsetSourceType? SourceType { get; init; }
-        public string JobAbbrv { get; init; }
+        public ClassJobInfo ClassJobInfo { get; init; }
+        public string ClassJobAbbreviation => ClassJobInfo.Abbreviation;
+        public string ClassJobName => ClassJobInfo.Name;
         public HighlightColor? HighlightColor
         {
             get => highlightColor;
@@ -132,46 +135,45 @@ namespace BisBuddy.Gear
 
         public event GearsetChangeHandler? OnGearsetChange;
 
-        public Gearset(
-            string name,
-            List<Gearpiece> gearpieces,
-            string jobAbbrv,
-            ImportGearsetSourceType? sourceType,
-            bool isActive = true,
-            string? id = null,
-            string? sourceUrl = null,
-            string? sourceString = null,
-            int priority = 0,
-            DateTime? importDate = null
-            )
-        {
-            this.id = id ?? Guid.NewGuid().ToString();
-            this.isActive = isActive;
-            this.name = name;
-            SourceUrl = sourceUrl;
-            SourceString = sourceString;
-            SourceType = sourceType;
-            JobAbbrv = jobAbbrv;
-            this.priority = priority;
+        //public Gearset(
+        //    string name,
+        //    List<Gearpiece> gearpieces,
+        //    uint classJobId,
+        //    ImportGearsetSourceType? sourceType,
+        //    bool isActive = true,
+        //    string? id = null,
+        //    string? sourceUrl = null,
+        //    string? sourceString = null,
+        //    int priority = 0,
+        //    DateTime? importDate = null
+        //    )
+        //{
+        //    this.id = id ?? Guid.NewGuid().ToString();
+        //    this.isActive = isActive;
+        //    this.name = name;
+        //    SourceUrl = sourceUrl;
+        //    SourceString = sourceString;
+        //    SourceType = sourceType;
+        //    ClassJobId = classJobId;
+        //    this.priority = priority;
 
-            // ensure ordering after adding
-            gearpieces.Sort((a, b) => a.GearpieceType.CompareTo(b.GearpieceType));
-            this.gearpieces = gearpieces;
+        //    // ensure ordering after adding
+        //    gearpieces.Sort((a, b) => a.GearpieceType.CompareTo(b.GearpieceType));
+        //    this.gearpieces = gearpieces;
 
-            this.importDate = importDate ?? DateTime.UtcNow;
-        }
+        //    this.importDate = importDate ?? DateTime.UtcNow;
+        //}
 
-        [JsonConstructor]
         public Gearset(
             string id,
             bool isActive,
             string name,
             IReadOnlyList<Gearpiece> gearpieces,
-            string jobAbbrv,
+            ClassJobInfo classJobInfo,
             ImportGearsetSourceType? sourceType,
             string? sourceUrl,
             string? sourceString,
-            int? priority,
+            int priority,
             DateTime importDate,
             HighlightColor? highlightColor
             )
@@ -182,7 +184,7 @@ namespace BisBuddy.Gear
             SourceUrl = sourceUrl;
             SourceString = sourceString;
             SourceType = sourceType;
-            JobAbbrv = jobAbbrv;
+            ClassJobInfo = classJobInfo;
             this.priority = priority;
             this.importDate = importDate;
             this.highlightColor = highlightColor;

@@ -3,6 +3,7 @@ using BisBuddy.Resources;
 using BisBuddy.Services;
 using BisBuddy.Services.Configuration;
 using BisBuddy.Services.Gearsets;
+using BisBuddy.Ui.Components;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
@@ -13,7 +14,7 @@ using ImGuiNET;
 using System;
 using System.Numerics;
 
-namespace BisBuddy.Windows;
+namespace BisBuddy.Ui;
 
 public unsafe class MeldPlanSelectorWindow : Window, IDisposable
 {
@@ -25,6 +26,7 @@ public unsafe class MeldPlanSelectorWindow : Window, IDisposable
     private readonly IGearsetsService gearsetsService;
     private readonly IMeldPlanService meldPlanService;
     private readonly IConfigurationService configService;
+    private readonly IComponentRendererFactory componentRendererFactory;
 
     private AtkUnitBase* addon = null;
 
@@ -33,7 +35,8 @@ public unsafe class MeldPlanSelectorWindow : Window, IDisposable
         IGameGui gameGui,
         IGearsetsService gearsetsService,
         IMeldPlanService meldPlanService,
-        IConfigurationService configService
+        IConfigurationService configService,
+        IComponentRendererFactory componentRendererFactory
         )
         : base("Meld Plan###meld plan selector bisbuddy")
     {
@@ -47,6 +50,7 @@ public unsafe class MeldPlanSelectorWindow : Window, IDisposable
         this.gearsetsService = gearsetsService;
         this.meldPlanService = meldPlanService;
         this.configService = configService;
+        this.componentRendererFactory = componentRendererFactory;
     }
 
     public void Dispose() { }
@@ -128,17 +132,14 @@ public unsafe class MeldPlanSelectorWindow : Window, IDisposable
             using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(0, 0)))
             {
                 // add left spacing
-                ImGui.Text($" {plan.PlanText}");
+                ImGui.Text($" [{plan.Gearset.ClassJobAbbreviation}] {plan.Gearset.Name}");
                 ImGui.Text($" ");
                 ImGui.SameLine();
             }
 
-            foreach (var materia in plan.MateriaInfo)
-            {
-                var color = materia.IsMelded ? MainWindow.ObtainedColor : MainWindow.UnobtainedColor;
-                ImGui.TextColored(color, materia.MateriaText);
-                ImGui.SameLine();
-            }
+            componentRendererFactory
+                .GetComponentRenderer(plan.MateriaGroup)
+                .Draw();
             ImGui.NewLine();
         }
     }

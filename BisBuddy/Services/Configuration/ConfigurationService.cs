@@ -13,8 +13,8 @@ namespace BisBuddy.Services.Configuration
     /// <summary>
     /// Handles when the configuration data changes
     /// </summary>
-    /// <param name="effectsAssignments">If the configuration data change may effect how items are assigned</param>
-    public delegate void ConfigurationChangeDelegate(bool effectsAssignments);
+    /// <param name="affectsAssignments">If the configuration data change may effect how items are assigned</param>
+    public delegate void ConfigurationChangeDelegate(bool affectsAssignments);
 
     public class ConfigurationService : IConfigurationService
     {
@@ -43,16 +43,16 @@ namespace BisBuddy.Services.Configuration
 
         public event ConfigurationChangeDelegate? OnConfigurationChange;
 
-        private void triggerConfigurationChange(bool effectsAssignments)
+        private void triggerConfigurationChange(bool affectsAssignments)
         {
-            logger.Verbose($"OnConfigurationChange (effectsAssignments: {effectsAssignments})");
-            OnConfigurationChange?.Invoke(effectsAssignments);
+            logger.Verbose($"OnConfigurationChange (affectsAssignments: {affectsAssignments})");
+            OnConfigurationChange?.Invoke(affectsAssignments);
         }
 
         private void updateConfigProperty<T>(
             Expression<Func<IConfigurationProperties, T>> propertyExp,
             T newValue,
-            bool effectsAssignments
+            bool affectsAssignments
             )
         {
             if (propertyExp.Body is not MemberExpression memberExpr)
@@ -69,97 +69,97 @@ namespace BisBuddy.Services.Configuration
 
             propInfo.SetValue(configuration, newValue);
             scheduleSave();
-            triggerConfigurationChange(effectsAssignments: effectsAssignments);
+            triggerConfigurationChange(affectsAssignments: affectsAssignments);
         }
 
         public int Version
         {
             get => configuration.Version;
-            set => updateConfigProperty(cfg => cfg.Version, value, false);
+            set => updateConfigProperty(cfg => cfg.Version, value, affectsAssignments: false);
         }
 
         public bool HighlightNeedGreed
         {
             get => configuration.HighlightNeedGreed;
-            set => updateConfigProperty(cfg => cfg.HighlightNeedGreed, value, false);
+            set => updateConfigProperty(cfg => cfg.HighlightNeedGreed, value, affectsAssignments: false);
         }
 
         public bool HighlightShops
         {
             get => configuration.HighlightShops;
-            set => updateConfigProperty(cfg => cfg.HighlightShops, value, false);
+            set => updateConfigProperty(cfg => cfg.HighlightShops, value, affectsAssignments: false);
         }
 
         public bool HighlightMateriaMeld
         {
             get => configuration.HighlightMateriaMeld;
-            set => updateConfigProperty(cfg => cfg.HighlightMateriaMeld, value, false);
+            set => updateConfigProperty(cfg => cfg.HighlightMateriaMeld, value, affectsAssignments: false);
         }
 
         public bool HighlightNextMateria
         {
             get => configuration.HighlightNextMateria;
-            set => updateConfigProperty(cfg => cfg.HighlightNextMateria, value, false);
+            set => updateConfigProperty(cfg => cfg.HighlightNextMateria, value, affectsAssignments: false);
         }
 
         public bool HighlightUncollectedItemMateria
         {
             get => configuration.HighlightUncollectedItemMateria;
-            set => updateConfigProperty(cfg => cfg.HighlightUncollectedItemMateria, value, true);
+            set => updateConfigProperty(cfg => cfg.HighlightUncollectedItemMateria, value, affectsAssignments: true);
         }
 
         public bool HighlightPrerequisiteMateria
         {
             get => configuration.HighlightPrerequisiteMateria;
-            set => updateConfigProperty(cfg => cfg.HighlightPrerequisiteMateria, value, false);
+            set => updateConfigProperty(cfg => cfg.HighlightPrerequisiteMateria, value, affectsAssignments: false);
         }
 
         public bool HighlightInventories
         {
             get => configuration.HighlightInventories;
-            set => updateConfigProperty(cfg => cfg.HighlightInventories, value, false);
+            set => updateConfigProperty(cfg => cfg.HighlightInventories, value, affectsAssignments: false);
         }
 
         public bool HighlightMarketboard
         {
             get => configuration.HighlightMarketboard;
-            set => updateConfigProperty(cfg => cfg.HighlightMarketboard, value, false);
+            set => updateConfigProperty(cfg => cfg.HighlightMarketboard, value, affectsAssignments: false);
         }
 
         public bool AnnotateTooltips
         {
             get => configuration.AnnotateTooltips;
-            set => updateConfigProperty(cfg => cfg.AnnotateTooltips, value, false);
+            set => updateConfigProperty(cfg => cfg.AnnotateTooltips, value, affectsAssignments: false);
         }
 
         public bool AutoCompleteItems
         {
             get => configuration.AutoCompleteItems;
-            set => updateConfigProperty(cfg => cfg.AutoCompleteItems, value, false);
+            set => updateConfigProperty(cfg => cfg.AutoCompleteItems, value, affectsAssignments: false);
         }
 
         public bool AutoScanInventory
         {
             get => configuration.AutoScanInventory;
-            set => updateConfigProperty(cfg => cfg.AutoScanInventory, value, true);
+            set => updateConfigProperty(cfg => cfg.AutoScanInventory, value, affectsAssignments: true);
         }
 
         public bool PluginUpdateInventoryScan
         {
             get => configuration.PluginUpdateInventoryScan;
-            set => updateConfigProperty(cfg => cfg.PluginUpdateInventoryScan, value, true);
+            set => updateConfigProperty(cfg => cfg.PluginUpdateInventoryScan, value, affectsAssignments: true);
         }
 
         public bool StrictMateriaMatching
         {
             get => configuration.StrictMateriaMatching;
-            set => updateConfigProperty(cfg => cfg.StrictMateriaMatching, value, true);
+            set => updateConfigProperty(cfg => cfg.StrictMateriaMatching, value, affectsAssignments: true);
         }
 
         public bool BrightListItemHighlighting
         {
             get => configuration.BrightListItemHighlighting;
-            set => updateConfigProperty(cfg => cfg.BrightListItemHighlighting, value, false);
+            set => updateConfigProperty(cfg => cfg.BrightListItemHighlighting, value, affectsAssignments: false);
         }
 
         public HighlightColor DefaultHighlightColor
@@ -167,10 +167,22 @@ namespace BisBuddy.Services.Configuration
             get => configuration.DefaultHighlightColor;
         }
 
+        public UiTheme UiTheme
+        {
+            get => configuration.UiTheme;
+            set => updateConfigProperty(cfg => cfg.UiTheme, value, affectsAssignments: false);
+        }
+
+        public void ResetUiTheme()
+        {
+            logger.Info($"Resetting UI theme to default");
+            configuration.UiTheme = new UiTheme();
+        }
+
         private void handleDefaultHighlightColorChange()
         {
             scheduleSave();
-            triggerConfigurationChange(effectsAssignments: false);
+            triggerConfigurationChange(affectsAssignments: false);
         }
 
         private async Task saveAsync(CancellationToken cancellationToken = default)
@@ -204,5 +216,10 @@ namespace BisBuddy.Services.Configuration
     public interface IConfigurationService : IHostedService, IConfigurationProperties
     {
         public event ConfigurationChangeDelegate? OnConfigurationChange;
+
+        /// <summary>
+        /// Resets the UI theme to whatever is default
+        /// </summary>
+        public void ResetUiTheme();
     }
 }

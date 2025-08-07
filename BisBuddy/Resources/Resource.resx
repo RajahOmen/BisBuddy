@@ -225,8 +225,8 @@
   <data name="NoGearsetsText" xml:space="preserve">
     <value>No gearsets found. Add one or more gearsets to get started</value>
   </data>
-  <data name="LoggedOutText" xml:space="preserve">
-    <value>Please log in to view/add gearsets</value>
+  <data name="GearsetsTabLoggedOutText" xml:space="preserve">
+    <value>Log in to view/add gearsets</value>
   </data>
   <data name="ManuallyCollectedTooltip" xml:space="preserve">
     <value>Collection status locked. Inventory syncs will not uncollect</value>
@@ -450,21 +450,134 @@ or to have a unique color to highlight items in</value>
   <data name="GeneralConfigurationMiscellaneousCategory" xml:space="preserve">
     <value>Miscellaneous</value>
   </data>
-  <data name="MainChatCommandName" xml:space="preserve">
-    <value>/bisbuddy</value>
-  </data>
-  <data name="AliasChatCommandName" xml:space="preserve">
-    <value>/bis</value>
-  </data>
   <data name="MainChatCommandHelpMessage" xml:space="preserve">
-    <value>View existing or add new gearsets
-      [config/c] - Open {0} configuration
-      [new/n] - Add a new gearset</value>
+    <value>Open main plugin window{0}</value>
+    <comment>{0} is the descriptions of the sub-commands</comment>
   </data>
   <data name="AliasChatCommandHelpMessage" xml:space="preserve">
     <value>Alias for {0}</value>
   </data>
   <data name="PluginDisplayName" xml:space="preserve">
     <value>BISBuddy</value>
+  </data>
+  <data name="UserGearsetsTabName" xml:space="preserve">
+    <value>Gearsets</value>
+  </data>
+  <data name="ItemPlannerTabName" xml:space="preserve">
+    <value>Weekly Planner</value>
+  </data>
+  <data name="ItemExchangesTabName" xml:space="preserve">
+    <value>Inventory</value>
+  </data>
+  <data name="ItemTrackerTabName" xml:space="preserve">
+    <value>Item Tracker</value>
+  </data>
+  <data name="ConfigTabName" xml:space="preserve">
+    <value>Config</value>
+  </data>
+  <data name="GearsetSortName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="GearsetSortJob" xml:space="preserve">
+    <value>Job</value>
+  </data>
+  <data name="GearsetSortImportDate" xml:space="preserve">
+    <value>Date Added</value>
+  </data>
+  <data name="GearsetSortPriority" xml:space="preserve">
+    <value>Priority</value>
+  </data>
+  <data name="GearsetSortActive" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="ImportXivgearName" xml:space="preserve">
+    <value>Xivgear.app</value>
+  </data>
+  <data name="ImportEtroName" xml:space="preserve">
+    <value>Etro.gg</value>
+  </data>
+  <data name="ImportJsonName" xml:space="preserve">
+    <value>JSON</value>
+  </data>
+  <data name="ImportTeamcraftName" xml:space="preserve">
+    <value>Teamcraft</value>
+  </data>
+  <data name="ImportFailNoResponse" xml:space="preserve">
+    <value>{0} No response from server</value>
+  </data>
+  <data name="ImportFailNotLoggedIn" xml:space="preserve">
+    <value>{0} Must be logged in to import gearsets</value>
+  </data>
+  <data name="ImportGearsetLoggedOut" xml:space="preserve">
+    <value>Log in to import gearsets</value>
+  </data>
+  <data name="UnknownClassJobName" xml:space="preserve">
+    <value>Unknown Class/Job</value>
+  </data>
+  <data name="UnknownClassJobAbbreviation" xml:space="preserve">
+    <value>???</value>
+  </data>
+  <data name="DefaultNewGearsetName" xml:space="preserve">
+    <value>New Gearset</value>
+  </data>
+  <data name="ConfigUiThemeSectionHeader" xml:space="preserve">
+    <value>Plugin Styles</value>
+  </data>
+  <data name="ResetUiThemeButton" xml:space="preserve">
+    <value>Default</value>
+  </data>
+  <data name="ResetUiThemeHelp" xml:space="preserve">
+    <value>Reset plugin styles to default</value>
+  </data>
+  <data name="MateriaAbbrevDirectHitRate" xml:space="preserve">
+    <value>DHT</value>
+  </data>
+  <data name="MateriaAbbrevCriticalHit" xml:space="preserve">
+    <value>CRT</value>
+  </data>
+  <data name="MateriaAbbrevDetermination" xml:space="preserve">
+    <value>DET</value>
+  </data>
+  <data name="MateriaAbbrevPiety" xml:space="preserve">
+    <value>PIE</value>
+  </data>
+  <data name="MateriaAbbrevTenacity" xml:space="preserve">
+    <value>TNC</value>
+  </data>
+  <data name="MateriaAbbrevSkillSpeed" xml:space="preserve">
+    <value>SKS</value>
+  </data>
+  <data name="MateriaAbbrevSpellSpeed" xml:space="preserve">
+    <value>SPS</value>
+  </data>
+  <data name="MateriaAbbrevGathering" xml:space="preserve">
+    <value>GATH</value>
+  </data>
+  <data name="MateriaAbbrevPerception" xml:space="preserve">
+    <value>PERC</value>
+  </data>
+  <data name="MateriaAbbrevGatheringPoints" xml:space="preserve">
+    <value>GP</value>
+  </data>
+  <data name="MateriaAbbrevCraftsmanship" xml:space="preserve">
+    <value>CRFT</value>
+  </data>
+  <data name="MateriaAbbrevCraftingPoints" xml:space="preserve">
+    <value>CP</value>
+  </data>
+  <data name="MateriaAbbrevControl" xml:space="preserve">
+    <value>CNTL</value>
+  </data>
+  <data name="UserGearsetsTabNoGearsetsTextNavigation" xml:space="preserve">
+    <value>Add a gearset</value>
+  </data>
+  <data name="CommandDescriptionAddGearset" xml:space="preserve">
+    <value>Add a new gearset</value>
+  </data>
+  <data name="CommandDescriptionOpenConfig" xml:space="preserve">
+    <value>Open plugin configuration</value>
+  </data>
+  <data name="UserGearsetsTabNoGearsetsTextPanel" xml:space="preserve">
+    <value>Gearset details appear here</value>
   </data>
 </root>

@@ -1,4 +1,5 @@
 using BisBuddy.Gear;
+using BisBuddy.Gear.Melds;
 using BisBuddy.Gear.Prerequisites;
 using BisBuddy.Items;
 using BisBuddy.Services;
@@ -19,7 +20,7 @@ namespace BisBuddy.Factories
 
         public Gearpiece Create(
             uint itemId,
-            List<Materia>? itemMateria,
+            MateriaGroup? itemMateria,
             bool isCollected = false,
             bool isManuallyCollected = false
             )
@@ -42,7 +43,7 @@ namespace BisBuddy.Factories
 
         public Gearpiece Create(
             uint itemId,
-            List<Materia>? itemMateria,
+            MateriaGroup? itemMateria,
             IPrerequisiteNode? prerequisiteTree,
             bool isCollected = false,
             bool isManuallyCollected = false,
@@ -97,7 +98,7 @@ namespace BisBuddy.Factories
         /// <exception cref="ArgumentException">If the gearpiece could not be created due to invalid inputs</exception>
         public Gearpiece Create(
             uint itemId,
-            List<Materia>? itemMateria,
+            MateriaGroup? itemMateria,
             bool isCollected = false,
             bool isManuallyCollected = false
             );
@@ -115,7 +116,7 @@ namespace BisBuddy.Factories
         /// <exception cref="ArgumentException">If the gearpiece could not be created due to invalid inputs</exception>
         public Gearpiece Create(
             uint itemId,
-            List<Materia>? itemMateria,
+            MateriaGroup? itemMateria,
             IPrerequisiteNode? prerequisiteTree,
             bool isCollected = false,
             bool isManuallyCollected = false,

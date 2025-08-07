@@ -1,3 +1,4 @@
+using BisBuddy.Resources;
 using Dalamud.Game.Inventory;
 using System.Collections.Generic;
 using System.Numerics;
@@ -6,11 +7,21 @@ namespace BisBuddy.Util
     public static class Constants
     {
         public static readonly string PluginName = "BISBuddy";
+        public static readonly string FullChatCommand = "/bisbuddy";
+        public static readonly string ShortChatCommand = "/bis";
         public static readonly int MaxGearsetCount = 25;
+        public static readonly int DefaultGearsetPriority = 0;
 
         public static readonly uint ItemIdHqOffset = 1_000_000;
         public static readonly char HqIcon = '';
         public static readonly char GlamourIcon = '';
+        
+        /// <summary>
+        /// The id of the icon corresponding to the icon directly preceding the icons for the classes and jobs
+        /// When given a ClassJob rowId, the IconId matching the ClassJob is ClassJobIconIdOffset + IconId
+        /// </summary>
+        public static readonly int ClassJobIconIdOffset = 62100;
+        public static readonly int CompanionIconOffset = 2;
 
         public static readonly Vector3 CustomNodeMultiplyColor = new(0.393f, 0.393f, 0.393f);
         public static readonly float BrightListItemAlpha = 1.0f;
@@ -33,5 +44,7 @@ namespace BisBuddy.Util
             GameInventoryType.ArmoryWrist,
             GameInventoryType.ArmoryRings,
             ];
+
+        public static readonly Vector2 SelectableListSpacing = new(5, 5);
     }
 }

@@ -31,6 +31,18 @@ namespace BisBuddy.Gear.Prerequisites
         public bool IsManuallyCollected => PrerequisiteTree.All(p => p.IsManuallyCollected);
         public bool IsObtainable => IsCollected || PrerequisiteTree.All(p => p.IsObtainable);
         public HashSet<string> ChildNodeIds => [.. PrerequisiteTree.Select(p => p.NodeId), .. PrerequisiteTree.SelectMany(p => p.ChildNodeIds)];
+        public CollectionStatusType CollectionStatus
+        {
+            get
+            {
+                if (IsCollected)
+                    return CollectionStatusType.ObtainedComplete;
+                if (IsObtainable)
+                    return CollectionStatusType.Obtainable;
+                return CollectionStatusType.NotObtainable;
+            }
+        }
+
 
         public List<(IPrerequisiteNode Node, int Count)> Groups()
         {

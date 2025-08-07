@@ -1,3 +1,4 @@
+using BisBuddy.Gear.Melds;
 using BisBuddy.Gear.Prerequisites;
 using BisBuddy.Services;
 using System;
@@ -9,7 +10,7 @@ namespace BisBuddy.Gear
     public delegate void GearpieceChangeHandler();
 
     [Serializable]
-    public class Gearpiece
+    public class Gearpiece : ICollectableItem
     {
         private readonly ITypedLogger<Gearpiece> logger;
         public uint ItemId { get; set; }
@@ -19,8 +20,7 @@ namespace BisBuddy.Gear
         public bool IsCollected { get; private set; }
         public bool IsManuallyCollected { get; private set; }
         public bool IsObtainable => PrerequisiteTree?.IsObtainable ?? false; // If no prerequisites known, assume not obtainable
-        public List<Materia> ItemMateria { get; init; }
-        private List<(Materia Materia, int Count)>? itemMateriaGrouped = null;
+        public MateriaGroup ItemMateria { get; init; }
 
         public Gearpiece(
             ITypedLogger<Gearpiece> logger,
@@ -28,7 +28,7 @@ namespace BisBuddy.Gear
             string itemName,
             GearpieceType gearpieceType,
             IPrerequisiteNode? prerequisiteTree,
-            List<Materia>? itemMateria,
+            MateriaGroup? itemMateria,
             bool isCollected = false,
             bool isManuallyCollected = false
         )
@@ -44,25 +44,21 @@ namespace BisBuddy.Gear
 
             if (PrerequisiteTree is IPrerequisiteNode node)
                 node.OnPrerequisiteChange += triggerGearpieceChange;
+
+            ItemMateria.OnMateriaGroupChange += triggerGearpieceChange;
         }
 
-        public List<(Materia Materia, int Count)>? ItemMateriaGrouped
+        public CollectionStatusType CollectionStatus
         {
             get
             {
-                itemMateriaGrouped ??= ItemMateria
-                    .GroupBy(m => new
-                    {
-                        m.IsMelded,
-                        m.ItemId,
-                    }).OrderBy(g => g.Key.IsMelded)
-                    .Select(g => (g.First(), g.Count()))
-                    .ToList();
-                return itemMateriaGrouped;
-            }
-            set
-            {
-                itemMateriaGrouped = value;
+                if (IsCollected)
+                    return ItemMateria.All(m => m.CollectionStatus == CollectionStatusType.ObtainedComplete)
+                        ? CollectionStatusType.ObtainedComplete
+                        : CollectionStatusType.ObtainedPartial;
+                if (IsObtainable)
+                    return CollectionStatusType.Obtainable;
+                return CollectionStatusType.NotObtainable;
             }
         }
 
@@ -124,7 +120,7 @@ namespace BisBuddy.Gear
 
             // if not manually collected, uncollecting item will unmeld all materia
             if (!collected && !IsManuallyCollected)
-                ItemMateria.ForEach(m => m.IsMelded = false);
+                ItemMateria.UnmeldAllMateria();
 
             // if collected, mark all prerequisites as collected
             if (collected && PrerequisiteTree != null)
@@ -146,99 +142,6 @@ namespace BisBuddy.Gear
                 return [];
 
             return PrerequisiteTree.ManuallyCollectedItemIds();
-        }
-
-        public void MeldSingleMateria(uint materiaId)
-        {
-            itemMateriaGrouped = null;
-            for (var i = 0; i < ItemMateria.Count; i++)
-            {
-                var materia = ItemMateria[i];
-                if (materia.ItemId == materiaId && !materia.IsMelded)
-                {
-                    materia.IsMelded = true;
-                    ItemMateria[i] = materia;
-                    triggerGearpieceChange();
-                    break;
-                }
-            }
-        }
-
-        public int MeldMultipleMateria(List<Materia> materiaList)
-        {
-            itemMateriaGrouped = null;
-
-            // copy, since this will be modified here
-            var materiaIdList = new List<uint>(materiaList.Select(m => m.ItemId).ToList());
-
-            var slottedCount = 0;
-
-            // iterate over gearpiece slots
-            for (var gearIdx = 0; gearIdx < ItemMateria.Count; gearIdx++)
-            {
-                var materiaSlot = ItemMateria[gearIdx];
-                var assignedIdx = -1;
-
-                // iterate over candidate materia list
-                for (var candidateIdx = 0; candidateIdx < materiaIdList.Count; candidateIdx++)
-                {
-                    var candidateItemId = materiaIdList[candidateIdx];
-
-                    // gearpiece slot requires this candidate materia id
-                    if (candidateItemId == materiaSlot.ItemId)
-                    {
-                        // materia slot was previously not melded
-                        if (!materiaSlot.IsMelded)
-                        {
-                            // meld candidate piece into slot
-                            materiaSlot.IsMelded = true;
-                            slottedCount++;
-                        }
-
-                        // this candidate is now "filling" this slot. Remove it from further slot assignments
-                        assignedIdx = candidateIdx;
-                        break;
-                    }
-                }
-
-                // remove candidate from list if it was assigned
-                if (assignedIdx > -1)
-                {
-                    materiaIdList.RemoveAt(assignedIdx);
-                }
-                else
-                {
-                    materiaSlot.IsMelded = false;
-                }
-            }
-
-            triggerGearpieceChange();
-            return slottedCount;
-        }
-
-        public void UnmeldSingleMateria(uint materiaId)
-        {
-            itemMateriaGrouped = null;
-            for (var i = 0; i < ItemMateria.Count; i++)
-            {
-                var materia = ItemMateria[i];
-                if (materia.ItemId == materiaId && materia.IsMelded)
-                {
-                    materia.IsMelded = false;
-                    ItemMateria[i] = materia;
-                    triggerGearpieceChange();
-                    break;
-                }
-            }
-        }
-
-        public void UnmeldAllMateria()
-        {
-            itemMateriaGrouped = null;
-            foreach (var materia in ItemMateria)
-                materia.IsMelded = false;
-
-            triggerGearpieceChange();
         }
     }
 }

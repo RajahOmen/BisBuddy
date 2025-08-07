@@ -1,6 +1,10 @@
+using BisBuddy.Factories;
 using BisBuddy.Gear;
+using BisBuddy.Gear.Melds;
 using BisBuddy.Gear.Prerequisites;
+using BisBuddy.Mappers;
 using BisBuddy.Services;
+using Dalamud.Game;
 using Dalamud.Game.Inventory;
 using Dalamud.Plugin.Services;
 using Lumina.Excel;
@@ -10,7 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using GearMateria = BisBuddy.Gear.Materia;
+using GearMateria = BisBuddy.Gear.Melds.Materia;
 using SheetMateria = Lumina.Excel.Sheets.Materia;
 
 namespace BisBuddy.Items
@@ -20,6 +24,7 @@ namespace BisBuddy.Items
         private readonly ITypedLogger<ItemDataService> logger;
         private readonly IDataManager dataManager;
         private readonly IGameInventory gameInventory;
+        private readonly IMapper<string, GearpieceType> gearpieceTypeMapper;
 
         private ILookup<uint, uint>? itemsCoffers = null;
         private ILookup<uint, List<uint>>? itemsPrerequisites = null;
@@ -29,6 +34,7 @@ namespace BisBuddy.Items
         private ExcelSheet<Item> ItemSheetEn { get; init; }
         private ExcelSheet<SpecialShop> ShopSheet { get; init; }
         private ExcelSheet<SheetMateria> Materia { get; init; }
+        private ExcelSheet<ClassJob> ClassJobEn { get; init; }
         public ILookup<uint, uint> ItemsCoffers
         {
             get
@@ -62,24 +68,27 @@ namespace BisBuddy.Items
             }
         }
         private Dictionary<string, uint> NameToId { get; init; }
-        private Dictionary<string, (uint statId, string statName, int statLevel, int statQuantity)> MateriaNameToStat { get; init; } = [];
+        private Dictionary<uint, MateriaDetails> MateriaDetailsCache { get; init; } = [];
         private Dictionary<(uint materiaId, int materiaGrade), uint> materiaItemIds { get; init; }
 
         public ItemDataService(
             ITypedLogger<ItemDataService> logger,
             IDataManager dataManager,
-            IGameInventory gameInventory
+            IGameInventory gameInventory,
+            IMapper<string, GearpieceType> gearpieceTypeMapper
+
             )
         {
             this.logger = logger;
             this.gameInventory = gameInventory;
             this.dataManager = dataManager;
+            this.gearpieceTypeMapper = gearpieceTypeMapper;
 
-            var luminaExcelModule = dataManager.Excel;
-            ItemSheet = luminaExcelModule.GetSheet<Item>() ?? throw new ArgumentException("Item sheet not found");
-            ItemSheetEn = luminaExcelModule.GetSheet<Item>(language: Lumina.Data.Language.English) ?? throw new ArgumentException("Item sheet not found");
-            ShopSheet = luminaExcelModule.GetSheet<SpecialShop>() ?? throw new InvalidOperationException("Special shop sheet not found");
-            Materia = luminaExcelModule.GetSheet<SheetMateria>() ?? throw new InvalidOperationException("Materia sheet not found");
+            ItemSheet = dataManager.GetExcelSheet<Item>() ?? throw new ArgumentException("Item sheet not found");
+            ItemSheetEn = dataManager.GetExcelSheet<Item>(language: ClientLanguage.English) ?? throw new ArgumentException("Item sheet not found");
+            ShopSheet = dataManager.GetExcelSheet<SpecialShop>() ?? throw new InvalidOperationException("Special shop sheet not found");
+            Materia = dataManager.GetExcelSheet<SheetMateria>() ?? throw new InvalidOperationException("Materia sheet not found");
+            ClassJobEn = dataManager.GetExcelSheet<ClassJob>() ?? throw new InvalidOperationException("ClassJob sheet not found");
             NameToId = [];
             materiaItemIds = [];
 #if DEBUG
@@ -126,7 +135,6 @@ namespace BisBuddy.Items
         public string GetItemNameById(uint id);
         public uint GetItemIdByName(string name);
         public List<uint> GetItemMateriaIds(GameInventoryItem item);
-        public List<GearMateria> GetItemMateria(GameInventoryItem item);
 
         /// <summary>
         /// Returns if an item can have materia attached to it
@@ -159,7 +167,12 @@ namespace BisBuddy.Items
             bool isManuallyCollected = false
             );
 
-        public GearMateria BuildMateria(uint itemId, bool isMelded = false);
+        /// <summary>
+        /// Returns information about a specific materia item
+        /// </summary>
+        /// <param name="materiaItemId">The RowId of a materia item</param>
+        /// <returns>A <see cref="MateriaDetails"/> struct containing information on the given materia item id</returns>
+        public MateriaDetails GetMateriaInfo(uint materiaItemId);
 
         public bool ItemIsShield(uint itemId);
 
@@ -177,5 +190,23 @@ namespace BisBuddy.Items
         /// <param name="itemId">The RowId or HQ-Offset RowId for the item</param>
         /// <returns>The corresponding GearpieceType</returns>
         public GearpieceType GetItemGearpieceType(uint itemId);
+
+        /// <summary>
+        /// Retrieve the <see cref="ClassJobInfo"/> data for the job that uses the 3-letter <paramref name="abbrevation"/>
+        /// when shown with the game loaded in the provided <paramref name="language"/>
+        /// </summary>
+        /// <param name="abbrevation">The 3-letter localized job abbreviation string. Ex: (GLA, SMN, LTW)</param>
+        /// <param name="language">The language the provided abbreviation is in/param>
+        /// <returns>The <see cref="ClassJobInfo"/> for the matching job if one is found, else a default JobInfo object
+        /// representing no job being found with a 0 JobId</returns>
+        public ClassJobInfo GetClassJobInfoByAbbreviation(string abbrevation, ClientLanguage language = ClientLanguage.English);
+
+        /// <summary>
+        /// Retrieve the <see cref="ClassJobInfo"/> data for the job with the matching <paramref name="jobId"/>
+        /// </summary>
+        /// <param name="jobId">The row index of the job found in the ClassJob table</param>
+        /// <returns>The <see cref="ClassJobInfo"/> for the matching job if one is found, else a default JobInfo object
+        /// representing no job being found with a 0 JobId</returns>
+        public ClassJobInfo GetClassJobInfoById(uint jobId);
     }
 }

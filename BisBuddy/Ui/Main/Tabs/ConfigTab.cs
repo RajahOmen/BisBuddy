@@ -1,42 +1,125 @@
+using Autofac.Util;
+using BisBuddy.Extensions;
 using BisBuddy.Resources;
+using BisBuddy.Services;
 using BisBuddy.Services.Configuration;
+using BisBuddy.Ui.Config;
 using BisBuddy.Util;
+using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
-using Dalamud.Interface.Windowing;
+using Dalamud.Utility;
 using ImGuiNET;
 using System;
-using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Numerics;
+using static Dalamud.Interface.Windowing.Window;
 
-namespace BisBuddy.Windows.Config;
+namespace BisBuddy.Ui.Main.Tabs;
 
-public class ConfigWindow : Window, IDisposable
+public class ConfigTab : TabRenderer, IDisposable
 {
-    private readonly IConfigurationService configurationService;
-    private ConfigMenuGroup selectedConfigMenu = ConfigMenuGroup.General;
-    private float? subMenuMaxLength;
-
-    public ConfigWindow(
-        IConfigurationService configurationService
-        ) : base($"{string.Format(Resource.ConfigWindowTitle, Constants.PluginName)}###bisbuddyconfiguration")
+    private static readonly WindowSizeConstraints? SizeConstraints = new()
     {
-        Flags = ImGuiWindowFlags.AlwaysAutoResize
-                | ImGuiWindowFlags.NoScrollbar
-                | ImGuiWindowFlags.NoScrollWithMouse;
+        MinimumSize = new(405, 200),
+        MaximumSize = new(1000, 1000),
+    };
 
-        SizeConstraints = new()
-        {
-            MinimumSize = new(300, 0),
-            MaximumSize = new(1000, 1000)
-        };
+    private readonly IConfigurationService configurationService;
+    private readonly ILanguageService languageService;
+    private readonly IAttributeService attributeService;
 
+    private string? longestSubMenuName = null;
+    private ConfigMenuGroup selectedConfigMenu = ConfigMenuGroup.General;
+
+    public WindowSizeConstraints? TabSizeConstraints => SizeConstraints;
+
+    public ConfigTab(
+        IConfigurationService configurationService,
+        ILanguageService languageService,
+        IAttributeService attributeService
+        )
+    {
         this.configurationService = configurationService;
+        this.languageService = languageService;
+        this.attributeService = attributeService;
+        languageService.OnLanguageChange += SetMaxSubMenuCharLength;
     }
 
-    public void Dispose() { }
+    public void Dispose()
+    {
+        languageService.OnLanguageChange -= SetMaxSubMenuCharLength;
+    }
 
-    public void drawGeneralMenu()
+    // TODO: This might break if language is changed dynamically: might need a fix!
+    private void SetMaxSubMenuCharLength(string langCode = "") =>
+        longestSubMenuName = Enum.GetValues<ConfigMenuGroup>()
+            .Select(
+                val => attributeService.GetEnumAttribute<DisplayAttribute>(val)?.GetName() ?? ""
+            ).MaxBy(
+                name => ImGui.CalcTextSize(name).X
+            ) ?? "";
+
+    private float CalcSubMenuWidth()
+    {
+        if (longestSubMenuName == null)
+            SetMaxSubMenuCharLength();
+
+        return ImGui.CalcTextSize(longestSubMenuName).X
+            + (ImGui.GetStyle().FramePadding.X * 5 * ImGuiHelpers.GlobalScale);
+    }
+
+    public void SetTabState(TabState state)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void PreDraw() { }
+
+    public void Draw()
+        => Draw(subMenuHeight: 0, panelWidth: 0, panelHeight: 0);
+
+    public void Draw(float subMenuHeight, float panelWidth, float panelHeight)
+    {
+        var subMenuWidth = CalcSubMenuWidth();
+
+        using (ImRaii.Child("subconfig_menu_selection", new(subMenuWidth, subMenuHeight * ImGuiHelpers.GlobalScale), true))
+        using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, Constants.SelectableListSpacing * ImGuiHelpers.GlobalScale))
+        {
+            foreach (var subMenu in Enum.GetValues<ConfigMenuGroup>())
+            {
+                var subMenuTitle = attributeService.GetEnumAttribute<DisplayAttribute>(subMenu)!.GetName()!;
+                if (ImGui.Selectable(subMenuTitle, selectedConfigMenu == subMenu))
+                    selectedConfigMenu = subMenu;
+            }
+        }
+
+        ImGui.SameLine();
+
+        var panelSize = new Vector2(panelWidth * ImGuiHelpers.GlobalScale, panelHeight * ImGuiHelpers.GlobalScale);
+        using (ImRaii.Child("subconfig_settings_panel", panelSize, true))
+        {
+            switch (selectedConfigMenu)
+            {
+                case ConfigMenuGroup.General:
+                    drawGeneralMenu();
+                    break;
+                case ConfigMenuGroup.Highlighting:
+                    drawHighlightingMenu();
+                    break;
+                case ConfigMenuGroup.Inventory:
+                    drawInventoryMenu();
+                    break;
+                case ConfigMenuGroup.UiTheme:
+                    drawUiThemeConfig();
+                    break;
+                default:
+                    throw new ArgumentException($"unknown config menu type: {selectedConfigMenu}");
+            }
+        }
+    }
+
+    private void drawGeneralMenu()
     {
         using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(3.0f, 4.0f)))
         {
@@ -61,7 +144,7 @@ public class ConfigWindow : Window, IDisposable
                         | ImGuiColorEditFlags.AlphaBar
                         | ImGuiColorEditFlags.NoSidePreview
                         | ImGuiColorEditFlags.DisplayRGB
-                        | ImGuiColorEditFlags.NoBorder
+                    | ImGuiColorEditFlags.NoBorder
                         ))
                     {
                         if (existingColor != configurationService.DefaultHighlightColor.BaseColor)
@@ -104,7 +187,7 @@ public class ConfigWindow : Window, IDisposable
             ImGui.SetTooltip(Resource.StrictMateriaMatchingHelp);
     }
 
-    public void drawHighlightingMenu()
+    private void drawHighlightingMenu()
     {
         // NEED GREED
         var highlightNeedGreed = configurationService.HighlightNeedGreed;
@@ -184,7 +267,7 @@ public class ConfigWindow : Window, IDisposable
             ImGui.SetTooltip(Resource.HighlightItemTooltipsHelp);
     }
 
-    public void drawInventoryMenu()
+    private void drawInventoryMenu()
     {
         // ITEM COLLECTION
         var enableAutoComplete = configurationService.AutoCompleteItems;
@@ -207,51 +290,12 @@ public class ConfigWindow : Window, IDisposable
         if (ImGui.IsItemHovered())
             ImGui.SetTooltip(string.Format(Resource.UpdateOnPluginChangesHelp, Constants.PluginName));
     }
-    public override void Draw()
+
+    private void drawUiThemeConfig()
     {
-        if (subMenuMaxLength is null)
-        {
-            List<string> subMenuNameLengths = [
-            Resource.ConfigGeneralSectionHeader,
-            Resource.ConfigHighlightingSectionHeader,
-            Resource.ConfigInventorySectionHeader
-            ];
-            subMenuMaxLength = ImGui.CalcTextSize(subMenuNameLengths.MaxBy(name => name.Length)).X
-                + ImGui.GetStyle().FramePadding.X * 5;
-        }
-
-        using (ImRaii.Child("subconfig_menu_selection", new(subMenuMaxLength.Value, 230), true))
-        {
-            if (ImGui.Selectable(Resource.ConfigGeneralSectionHeader, selectedConfigMenu == ConfigMenuGroup.General))
-                selectedConfigMenu = ConfigMenuGroup.General;
-
-            ImGui.Spacing();
-            if (ImGui.Selectable(Resource.ConfigHighlightingSectionHeader, selectedConfigMenu == ConfigMenuGroup.Highlighting))
-                selectedConfigMenu = ConfigMenuGroup.Highlighting;
-
-            ImGui.Spacing();
-            if (ImGui.Selectable(Resource.ConfigInventorySectionHeader, selectedConfigMenu == ConfigMenuGroup.Inventory))
-                selectedConfigMenu = ConfigMenuGroup.Inventory;
-        }
-
-        ImGui.SameLine();
-
-        using (ImRaii.Child("subconfig_settings_panel", new(250, 230), true))
-        {
-            switch (selectedConfigMenu)
-            {
-                case ConfigMenuGroup.General:
-                    drawGeneralMenu();
-                    break;
-                case ConfigMenuGroup.Highlighting:
-                    drawHighlightingMenu();
-                    break;
-                case ConfigMenuGroup.Inventory:
-                    drawInventoryMenu();
-                    break;
-                default:
-                    throw new ArgumentException($"unknown config menu type: {selectedConfigMenu}");
-            }
-        }
+        if (ImGui.Button(Resource.ResetUiThemeButton))
+            configurationService.ResetUiTheme();
+        if (ImGui.IsItemHovered())
+            ImGui.SetTooltip(Resource.ResetUiThemeHelp);
     }
 }

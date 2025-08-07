@@ -1,4 +1,5 @@
 using BisBuddy.Gear;
+using BisBuddy.Gear.Melds;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -161,7 +162,7 @@ namespace BisBuddy.Services.Gearsets
             return GetRequirementColor(itemIdRequirements);
         }
 
-        public List<MeldPlan> GetNeededItemMeldPlans(uint itemId)
+        public List<(Gearset, MateriaGroup)> GetNeededItemMeldPlans(uint itemId)
         {
             // get item requirements, a max of one per gearpiece
             var itemIdRequirements = GetItemRequirements(
@@ -174,12 +175,11 @@ namespace BisBuddy.Services.Gearsets
                 ).DistinctBy(requirement => requirement.Gearpiece)
                 .ToList();
 
-            var neededMeldPlans = new List<MeldPlan>();
-
-            foreach (var requirement in itemIdRequirements)
-                // if there are any melds needed, add this 'meld plan' to the list
-                if (requirement.Gearpiece.ItemMateria.Any(m => !m.IsMelded))
-                    neededMeldPlans.Add(new MeldPlan(requirement.Gearset, requirement.Gearpiece, requirement.Gearpiece.ItemMateria));
+            // if there are any melds needed, add this materia group to the list
+            var neededMeldPlans = itemIdRequirements
+                .Select(req => (req.Gearset, req.Gearpiece.ItemMateria))
+                .Where(group => group.ItemMateria.Any(m => !m.IsMelded))
+                .ToList();
 
             return neededMeldPlans;
         }

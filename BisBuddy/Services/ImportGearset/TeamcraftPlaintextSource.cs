@@ -1,5 +1,6 @@
 using BisBuddy.Factories;
 using BisBuddy.Gear;
+using BisBuddy.Gear.Melds;
 using BisBuddy.Import;
 using BisBuddy.Items;
 using BisBuddy.Util;
@@ -13,8 +14,10 @@ using System.Threading.Tasks;
 namespace BisBuddy.Services.ImportGearset
 {
     public class TeamcraftPlaintextSource(
-        IItemDataService itemData,
-        IGearpieceFactory gearpieceFactory
+        IItemDataService itemDataService,
+        IMateriaFactory materiaFactory,
+        IGearpieceFactory gearpieceFactory,
+        IGearsetFactory gearsetFactory
         ) : IImportGearsetSource
     {
         public ImportGearsetSourceType SourceType => ImportGearsetSourceType.Teamcraft;
@@ -22,8 +25,10 @@ namespace BisBuddy.Services.ImportGearset
         private static readonly string MateriaStartingStr = "- ";
         private static readonly string HqIndicatorStr = "HQ";
 
-        private readonly IItemDataService itemData = itemData;
+        private readonly IItemDataService itemDataService = itemDataService;
+        private readonly IMateriaFactory materiaFactory = materiaFactory;
         private readonly IGearpieceFactory gearpieceFactory = gearpieceFactory;
+        private readonly IGearsetFactory gearsetFactory = gearsetFactory;
 
         public async Task<List<Gearset>> ImportGearsets(string importString)
         {
@@ -101,12 +106,12 @@ namespace BisBuddy.Services.ImportGearset
 
             // did gearpieces narrow possibilities down to 1? Pick it, else unknown
             var actualJobAbbrev = possibleJobAbbrevs.Count == 1 ? possibleJobAbbrevs.First() : "???";
+            var classJobId = itemDataService.GetClassJobInfoByAbbreviation(actualJobAbbrev).ClassJobId;
 
-            return new Gearset(
-                BisBuddy.Configuration.DefaultGearsetName,
-                gearpieces,
-                actualJobAbbrev,
-                ImportGearsetSourceType.Teamcraft,
+            return gearsetFactory.Create(
+                gearpieces: gearpieces,
+                classJobId: classJobId,
+                sourceType: ImportGearsetSourceType.Teamcraft,
                 sourceString: importString
                 );
         }
@@ -123,14 +128,14 @@ namespace BisBuddy.Services.ImportGearset
 
             // handle HQ parsing
             gearpieceName = gearpieceName.Replace(HqIndicatorStr, Constants.HqIcon.ToString());
-            var itemId = itemData.GetItemIdByName(gearpieceName);
+            var itemId = itemDataService.GetItemIdByName(gearpieceName);
 
             // invalid item name
             if (itemId == 0)
                 return (null, possibleJobAbbrevs);
 
             // update possible job abbrevs
-            var currentItemJobAbbrevs = itemData.GetItemClassJobCategories(itemId);
+            var currentItemJobAbbrevs = itemDataService.GetItemClassJobCategories(itemId);
 
             if (possibleJobAbbrevs.Count == 0)
                 possibleJobAbbrevs = currentItemJobAbbrevs;
@@ -139,16 +144,15 @@ namespace BisBuddy.Services.ImportGearset
                     .Intersect(currentItemJobAbbrevs)
                     .ToHashSet();
 
-            var itemMateria = materiaNames
-                .Select(itemData.GetItemIdByName)
+            var itemMateria = new MateriaGroup(materiaNames
+                .Select(itemDataService.GetItemIdByName)
                 .Where(id => id > 0)
-                .Select(id => itemData.BuildMateria(id))
-                .ToList();
+                .Select(id => materiaFactory.Create(id)));
 
 
             var gearpiece = gearpieceFactory.Create(
-                itemId,
-                itemMateria
+                itemId: itemId,
+                itemMateria: itemMateria
                 );
 
             return (gearpiece, possibleJobAbbrevs);

@@ -1,14 +1,21 @@
 using BisBuddy.Gear;
+using BisBuddy.Gear.Melds;
 using BisBuddy.Gear.Prerequisites;
+using BisBuddy.Mappers;
+using BisBuddy.Resources;
 using BisBuddy.Util;
+using Dalamud.Game;
 using Dalamud.Game.Inventory;
+using Lumina.Data;
 using Lumina.Excel.Sheets;
 using Lumina.Text.ReadOnly;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using GearMateria = BisBuddy.Gear.Materia;
+using System.Xml.Linq;
+using GearMateria = BisBuddy.Gear.Melds.Materia;
 using SheetMateria = Lumina.Excel.Sheets.Materia;
 
 namespace BisBuddy.Items
@@ -33,7 +40,7 @@ namespace BisBuddy.Items
             return input.ExtractText().Replace("\u00AD", string.Empty);
         }
 
-        public string GetItemNameById(uint id)
+        public string GetItemNameById(uint id)  
         {
             // check if item is HQ, change Id to NQ if it is
             var modifiedId = id;
@@ -93,7 +100,7 @@ namespace BisBuddy.Items
                 // add item id of materia to list
                 try
                 {
-                    var materiaItemId = GetMateriaItemId(materiaId, materiaGrade);
+                    var materiaItemId = getMateriaItemId(materiaId, materiaGrade);
                     if (materiaItemId != 0) materiaList.Add(materiaItemId);
                 }
                 catch (Exception e)
@@ -118,22 +125,11 @@ namespace BisBuddy.Items
             logger.Fatal(str);
         }
 
-        public List<GearMateria> GetItemMateria(GameInventoryItem item)
-        {
-            var materiaIds = GetItemMateriaIds(item);
-            var materiaList = new List<GearMateria>();
-            foreach (var id in materiaIds)
-            {
-                materiaList.Add(BuildMateria(id));
-            }
-
-            return materiaList;
-        }
-
-        private uint GetMateriaItemId(ushort materiaId, byte materiaGrade)
+        private uint getMateriaItemId(ushort materiaId, byte materiaGrade)
         {
             // can fail for weird gear, like Eternal Ring//
-            if (!Materia.TryGetRow(materiaId, out var materiaRow)) return 0;
+            if (!Materia.TryGetRow(materiaId, out var materiaRow))
+                return 0;
 
             // row is materiaId (the type: crt, det, etc), column is materia grade (I, II, III, etc)
             var materiaItem = materiaRow.Item[materiaGrade];
@@ -357,9 +353,12 @@ namespace BisBuddy.Items
             return group;
         }
 
-        private (uint statId, string statName, int statLevel, int statQuantity) getMateriaInfo(string materiaName)
+        public MateriaDetails GetMateriaInfo(uint materiaItemId)
         {
-            if (MateriaNameToStat.TryGetValue(materiaName, out var value)) return value;
+            if (MateriaDetailsCache.TryGetValue(materiaItemId, out var value))
+                return value;
+
+            var materiaName = GetItemNameById(materiaItemId);
 
             var maxMateriaRow = 40;
             SheetMateria? materiaRow = null;
@@ -381,29 +380,25 @@ namespace BisBuddy.Items
                 if (materiaCol > 0) break;
             }
 
-            if (materiaRow == null || materiaCol < 0)
+            if (materiaRow is not SheetMateria materiaRowValue || materiaCol < 0)
                 throw new InvalidOperationException($"Materia {materiaName} not found in materia sheet");
 
-            var statName = SeStringToString(materiaRow.Value.BaseParam.Value.Name);
-            var statQuantity = materiaRow.Value.Value[materiaCol];
+            var statName = SeStringToString(materiaRowValue.BaseParam.Value.Name);
+            var statType = (MateriaStatType) materiaRowValue.RowId;
+            var statQuantity = materiaRowValue.Value[materiaCol];
 
-            return (materiaRow.Value.RowId, statName, materiaCol, statQuantity);
-        }
-
-        public GearMateria BuildMateria(uint itemId, bool isMelded = false)
-        {
-            var materiaName = GetItemNameById(itemId);
-            var (statId, statName, statLevel, statQuantity) = getMateriaInfo(materiaName);
-
-            return new GearMateria(
-                itemId,
-                materiaName,
-                statLevel,
-                statId,
-                statName,
-                statQuantity,
-                isMelded
-                );
+            var materiaDetails = new MateriaDetails()
+            {
+                ItemId = materiaItemId,
+                MateriaId = materiaRowValue.RowId,
+                ItemName = materiaName,
+                StatName = statName,
+                StatType = statType,
+                Level = materiaCol,
+                Strength = statQuantity
+            };
+            MateriaDetailsCache.Add(materiaItemId, materiaDetails);
+            return materiaDetails;
         }
 
         public bool ItemIsShield(uint itemId)
@@ -467,7 +462,7 @@ namespace BisBuddy.Items
                     if (value != null && (sbyte)value == 1)
                     {
                         // return first gearpiece type match
-                        if (GearpieceTypeMapper.TryParse(property.Name, out var type))
+                        if (gearpieceTypeMapper.TryParse(property.Name, out var type))
                             return type;
                     }
                 }
@@ -476,5 +471,45 @@ namespace BisBuddy.Items
             // none found
             return GearpieceType.None;
         }
+
+        public ClassJobInfo GetClassJobInfoByAbbreviation(string abbrevation, ClientLanguage language = ClientLanguage.English)
+        {
+            var sheet = language == ClientLanguage.English
+                ? ClassJobEn
+                : dataManager.GetExcelSheet<ClassJob>(language);
+
+            foreach (var row in sheet)
+            {
+                if (row.Abbreviation.ExtractText().Equals(abbrevation, StringComparison.InvariantCultureIgnoreCase))
+                    return new(
+                        classJobId: row.RowId,
+                        name: row.Name.ExtractText(),
+                        abbreviation: row.Abbreviation.ExtractText()
+                        );
+            }
+
+            return nullJobInfo(ClassJobEn.Count);
+        }
+
+        public ClassJobInfo GetClassJobInfoById(uint jobId)
+        {
+            if (jobId == 0 || !ClassJobEn.TryGetRow(jobId, out var row))
+                return nullJobInfo(ClassJobEn.Count);
+
+            var titleCaseName = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(row.Name.ExtractText().ToLower());
+
+            return new(
+                classJobId: row.RowId,
+                name: titleCaseName,
+                abbreviation: row.Abbreviation.ExtractText()
+                );
+        }
+
+        private static ClassJobInfo nullJobInfo(int numJobs) => new(
+            classJobId: 0,
+            name: Resource.UnknownClassJobName,
+            abbreviation: Resource.UnknownClassJobAbbreviation,
+            iconIdIndex: numJobs + Constants.CompanionIconOffset
+            );
     }
 }
