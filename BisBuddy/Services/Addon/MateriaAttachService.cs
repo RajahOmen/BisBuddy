@@ -117,7 +117,7 @@ namespace BisBuddy.Services.Addon
                 materiaNames = materiaNames.Take(1);
 
             var materiaColor = currentMeldPlan?.Gearset.HighlightColor ?? configurationService.DefaultHighlightColor;
-            neededMateriaNames = materiaNames.Select(name => (name, materiaColor)).ToDictionary();
+            neededMateriaNames = materiaNames.Select(name => (name, materiaColor)).Distinct().ToDictionary();
         }
 
         private unsafe bool updateItemSelected(AtkUnitBase* addon)
