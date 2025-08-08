@@ -59,7 +59,7 @@ namespace BisBuddy.Services.Addon
                     unmarkNodes();
                     return;
                 };
-                var addon = (AddonItemSearchResult*)gameGui.GetAddonByName(AddonName);
+                var addon = (AddonItemSearchResult*)gameGui.GetAddonByName(AddonName).Address;
 
                 // addon not visible/rendered
                 if (addon == null || !addon->IsVisible)
@@ -189,7 +189,6 @@ namespace BisBuddy.Services.Addon
                     ->GetAsAtkNineGridNode();
 
                 customNode = UiHelper.CloneHighlightNineGridNode(
-                    AddonCustomNodeId,
                     hoverNode,
                     color.CustomNodeColor,
                     color.CustomNodeAlpha(configurationService.BrightListItemHighlighting)

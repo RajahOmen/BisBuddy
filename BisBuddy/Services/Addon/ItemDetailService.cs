@@ -109,7 +109,7 @@ namespace BisBuddy.Services.Addon
                 };
                 setNodeVisibility(true);
 
-                var addonPtr = (AtkUnitBase*)gameGui.GetAddonByName(AddonName);
+                var addonPtr = (AtkUnitBase*)gameGui.GetAddonByName(AddonName).Address;
 
                 if (addonPtr == null || !addonPtr->IsVisible)
                     return;
@@ -204,7 +204,7 @@ namespace BisBuddy.Services.Addon
             if (customTextNode == null)
                 return; // doesn't exist, nothing to hide
 
-            var addon = (AtkUnitBase*)gameGui.GetAddonByName(AddonName);
+            var addon = (AtkUnitBase*)gameGui.GetAddonByName(AddonName).Address;
             if (addon == null)
                 return; // addon doesn't exist somehow
 
@@ -268,7 +268,6 @@ namespace BisBuddy.Services.Addon
             {
                 customTextNode = new TextNode()
                 {
-                    NodeID = AddonCustomNodeId,
                     // text propreties
                     TextColor = CustomNodeTextColor.ToVector4(),
                     FontSize = CustomNodeTextSize,

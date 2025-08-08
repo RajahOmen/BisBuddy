@@ -191,7 +191,7 @@ namespace BisBuddy.Services.Addon
                 if (color is null)
                     return false;
 
-                var addon = (AtkUnitBase*)gameGui.GetAddonByName(AddonName);
+                var addon = (AtkUnitBase*)gameGui.GetAddonByName(AddonName).Address;
                 customNodeData = (createCustomNode(parentNode, addon, color), color);
             }
 

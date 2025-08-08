@@ -84,7 +84,7 @@ namespace BisBuddy.Services.Addon
         private unsafe void handlePreDraw(AddonEvent type, AddonArgs args)
         {
             var updateArgs = (AddonDrawArgs)args;
-            var addon = (AtkUnitBase*)updateArgs.Addon;
+            var addon = (AtkUnitBase*)updateArgs.Addon.Address;
             if (addon == null || !addon->IsVisible || !addon->WindowNode->IsVisible())
             {
                 unmarkNodes();
@@ -329,7 +329,6 @@ namespace BisBuddy.Services.Addon
                     ->GetAsAtkNineGridNode();
 
                 customNode = UiHelper.CloneHighlightNineGridNode(
-                    AddonCustomNodeId,
                     hoverNode,
                     color.CustomNodeColor,
                     color.CustomNodeAlpha(configurationService.BrightListItemHighlighting)

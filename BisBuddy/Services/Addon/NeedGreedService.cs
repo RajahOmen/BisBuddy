@@ -37,7 +37,7 @@ namespace BisBuddy.Services.Addon
 
         private unsafe void handlePreDraw(AddonEvent type, AddonArgs args)
         {
-            var addon = (AddonNeedGreed*)args.Addon;
+            var addon = (AddonNeedGreed*)args.Addon.Address;
             try
             {
                 if (addon == null || !addon->IsVisible) return;
