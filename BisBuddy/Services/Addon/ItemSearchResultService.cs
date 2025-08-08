@@ -8,6 +8,7 @@ using FFXIVClientStructs.FFXIV.Client.UI.Info;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using KamiToolKit.Classes;
 using KamiToolKit.Nodes;
+using KamiToolKit.System;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -195,10 +196,10 @@ namespace BisBuddy.Services.Addon
                     ) ?? throw new Exception($"Could not clone node \"{hoverNode->NodeId}\"");
 
                 // mark as dirty
-                customNode.InternalNode->DrawFlags |= 0x1;
+                customNode.MarkDirty();
 
                 // attach it to the addon
-                nativeController.AttachToAddon(customNode, addon, addon->RootNode, NodePosition.AsLastChild);
+                nativeController.AttachNode(customNode, addon->RootNode, NodePosition.AsLastChild);
 
                 return customNode;
             }
@@ -220,7 +221,7 @@ namespace BisBuddy.Services.Addon
             if (parentNodePtr == nint.Zero)
                 return;
 
-            nativeController.DetachFromAddon(node, (AtkUnitBase*)addon);
+            nativeController.DetachNode(node);
         }
     }
 }

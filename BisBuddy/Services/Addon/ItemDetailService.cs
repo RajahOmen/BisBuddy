@@ -6,6 +6,7 @@ using FFXIVClientStructs.FFXIV.Component.GUI;
 using KamiToolKit.Classes;
 using KamiToolKit.Extensions;
 using KamiToolKit.Nodes;
+using KamiToolKit.System;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -136,8 +137,6 @@ namespace BisBuddy.Services.Addon
             var outputStr = startStr;
             // ensure doesn't overlap with item name if the item name is two lines
             var maxLength = twoLines ? CustomNodeMaxTextWidthTwoLines : CustomNodeMaxTextWidth;
-            ushort textWidth = 0;
-            ushort textHeight = 0;
             List<(string name, string countNeeded, string separator)> neededStrings = [(startStr, string.Empty, string.Empty)];
 
             // if only 2 or less gearsets need, make max gearset length longer to better use the space
@@ -166,13 +165,10 @@ namespace BisBuddy.Services.Addon
                 }
 
                 var newOutputStr = string.Concat(outputStr, outputGearsetName, gearsetCount, nextSeparator);
-                var newOutputSeString = new SeString(new TextPayload(newOutputStr)).Encode();
-                fixed (byte* newOutputPtr = newOutputSeString)
-                {
-                    node.InternalNode->GetTextDrawSize(&textWidth, &textHeight, newOutputPtr);
-                }
+                var newOutputSeString = new SeString(new TextPayload(newOutputStr));
+                var textSize = node.GetTextDrawSize(newOutputSeString);
 
-                if (textWidth + separatorLength <= maxLength)
+                if (textSize.X + separatorLength <= maxLength)
                 { // enough space, include it
                     neededStrings.Add((outputGearsetName, gearsetCount, nextSeparator));
                     outputStr = newOutputStr;
@@ -287,7 +283,7 @@ namespace BisBuddy.Services.Addon
                     NodeFlags = NodeFlags.AnchorTop | NodeFlags.AnchorLeft | NodeFlags.Visible | NodeFlags.Enabled,
                 };
 
-                nativeController.AttachToAddon(customTextNode, addon, parentNodePtr, NodePosition.AsLastChild);
+                nativeController.AttachNode(customTextNode, parentNodePtr, NodePosition.AsLastChild);
                 return customTextNode;
             }
             catch (Exception ex)
@@ -308,7 +304,7 @@ namespace BisBuddy.Services.Addon
             if (parentNodePtr == nint.Zero)
                 return;
 
-            nativeController.DetachFromAddon(node, (AtkUnitBase*)addon);
+            nativeController.DetachNode(node);
         }
     }
 }

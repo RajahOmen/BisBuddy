@@ -1,6 +1,6 @@
 using BisBuddy.Util;
 using FFXIVClientStructs.FFXIV.Component.GUI;
-using KamiToolKit.Nodes;
+using KamiToolKit.System;
 using System;
 using System.Numerics;
 using System.Text.Json.Serialization;

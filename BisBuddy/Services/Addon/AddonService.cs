@@ -7,7 +7,7 @@ using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
 using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using KamiToolKit;
-using KamiToolKit.Nodes;
+using KamiToolKit.System;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
@@ -199,7 +199,7 @@ namespace BisBuddy.Services.Addon
             if (color is not null && !customNodeData.Color.Equals(color))
             {
                 logger.Verbose(
-                    $"Changing custom node \"{customNodeData.Node.NodeID}\" color " +
+                    $"Changing custom node \"{customNodeData.Node.NodeId}\" color " +
                     $"from {customNodeData.Color.BaseColor} to {color.BaseColor}"
                     );
                 color.ColorCustomNode(customNodeData.Node, configurationService.BrightListItemHighlighting);

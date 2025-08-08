@@ -5,9 +5,11 @@ using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using KamiToolKit.Classes;
 using KamiToolKit.Nodes;
+using KamiToolKit.System;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using ComponentNode = BisBuddy.Util.ComponentNode;
 using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
 
 namespace BisBuddy.Services.Addon.ShopExchange
