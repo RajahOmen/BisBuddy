@@ -3,7 +3,7 @@ using BisBuddy.Resources;
 using Dalamud.Interface;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility.Raii;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using System.Linq;
 using System.Numerics;
 
@@ -203,7 +203,7 @@ namespace BisBuddy.Windows
                                     ImGuiColorEditFlags.NoPicker
                                     | ImGuiColorEditFlags.AlphaBar
                                     | ImGuiColorEditFlags.NoSidePreview
-                                    | ImGuiColorEditFlags.DisplayRGB
+                                    | ImGuiColorEditFlags.DisplayRgb
                                     | ImGuiColorEditFlags.NoBorder
                                 )))
                                 gearset.HighlightColor?.UpdateColor(existingColor);

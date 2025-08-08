@@ -5,9 +5,11 @@ using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using KamiToolKit.Classes;
 using KamiToolKit.Nodes;
+using KamiToolKit.System;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using ComponentNode = BisBuddy.Util.ComponentNode;
 using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
 
 namespace BisBuddy.Services.Addon.ShopExchange
@@ -66,7 +68,7 @@ namespace BisBuddy.Services.Addon.ShopExchange
         {
             try
             {
-                var addon = (AtkUnitBase*)((AddonDrawArgs)args).Addon;
+                var addon = (AtkUnitBase*)((AddonDrawArgs)args).Addon.Address;
 
                 var shopExchangeNode = new BaseNode(addon);
 
@@ -80,6 +82,8 @@ namespace BisBuddy.Services.Addon.ShopExchange
                     unmarkNodes();
                     return;
                 };
+
+
 
                 if (addon == null || !addon->IsVisible) return;
 
@@ -160,7 +164,7 @@ namespace BisBuddy.Services.Addon.ShopExchange
                 var itemIdAtkValue = atkValues[AtkValueItemIdListStartingIndex + i];
                 if (itemIdAtkValue.Type != ValueType.UInt)
                 {
-                    throw new Exception($"Item id at index {i} is a {itemIdAtkValue.Type}, not a UInt");
+                    throw new Exception($"Item id at index {i}/{AtkValueItemIdListStartingIndex + i} is a {itemIdAtkValue.Type}, not a UInt");
                 };
                 var itemId = itemIdAtkValue.UInt;
                 var shieldOffset = shieldInAtkValues && i >= AddonShieldIndex
@@ -207,7 +211,7 @@ namespace BisBuddy.Services.Addon.ShopExchange
                 var value = atkValues[i + AtkValueFilteredItemsListStartingIndex];
                 if (value.Type != ValueType.UInt)
                 {
-                    logger.Error($"Filter list item type \"{value.Type}\" unexpected");
+                    logger.Error($"Filter list item type \"{value.Type}\" unexpected at index {i}/{AtkValueFilteredItemsListStartingIndex + i}");
                     return -1;
                 }
 
@@ -245,17 +249,16 @@ namespace BisBuddy.Services.Addon.ShopExchange
                     : parentNode.GetNode<AtkNineGridNode>(AddonShopHoverNodeId);
 
                 customNode = UiHelper.CloneHighlightNineGridNode(
-                    AddonCustomNodeId,
                     hoverNode,
                     color.CustomNodeColor,
                     color.CustomNodeAlpha(configurationService.BrightListItemHighlighting)
                     ) ?? throw new Exception($"Could not clone node \"{hoverNode->NodeId}\"");
 
                 // mark as dirty
-                customNode.InternalNode->DrawFlags |= 0x1;
+                customNode.MarkDirty();
 
                 // attach it to the addon
-                nativeController.AttachToAddon(customNode, addon, addon->RootNode, NodePosition.AsLastChild);
+                nativeController.AttachNode(customNode, addon->RootNode, NodePosition.AsLastChild);
 
                 return customNode;
             }
@@ -277,7 +280,7 @@ namespace BisBuddy.Services.Addon.ShopExchange
             if (parentNodePtr == nint.Zero)
                 return;
 
-            nativeController.DetachFromAddon(node, (AtkUnitBase*)addon);
+            nativeController.DetachNode(node);
         }
     }
 }

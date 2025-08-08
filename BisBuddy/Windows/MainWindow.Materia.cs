@@ -1,7 +1,7 @@
 using BisBuddy.Gear;
 using BisBuddy.Resources;
 using Dalamud.Interface.Utility.Raii;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using System.Numerics;
 
 namespace BisBuddy.Windows

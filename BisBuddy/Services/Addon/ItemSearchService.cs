@@ -7,6 +7,7 @@ using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using KamiToolKit.Classes;
 using KamiToolKit.Nodes;
+using KamiToolKit.System;
 using System;
 using System.Collections.Generic;
 
@@ -48,7 +49,7 @@ namespace BisBuddy.Services.Addon
                     unmarkNodes();
                     return;
                 };
-                var addon = (AddonItemSearch*)gameGui.GetAddonByName(AddonName);
+                var addon = (AddonItemSearch*)gameGui.GetAddonByName(AddonName).Address;
                 if (addon == null || !addon->IsVisible) return; // addon not visible/rendered
                 if (addon->ResultsList == null || addon->ResultsList->ListLength == 0) return; // no items in search
 
@@ -126,17 +127,16 @@ namespace BisBuddy.Services.Addon
                     ->GetAsAtkNineGridNode();
 
                 customNode = UiHelper.CloneHighlightNineGridNode(
-                    AddonCustomNodeId,
                     hoverNode,
                     color.CustomNodeColor,
                     color.CustomNodeAlpha(configurationService.BrightListItemHighlighting)
                     ) ?? throw new Exception($"Could not clone node \"{hoverNode->NodeId}\"");
 
                 // mark as dirty
-                customNode.InternalNode->DrawFlags |= 0x1;
+                customNode.MarkDirty();
 
                 // attach it to the addon
-                nativeController.AttachToAddon(customNode, addon, addon->RootNode, NodePosition.AsLastChild);
+                nativeController.AttachNode(customNode, addon->RootNode, NodePosition.AsLastChild);
 
                 return customNode;
             }
@@ -158,7 +158,7 @@ namespace BisBuddy.Services.Addon
             if (parentNodePtr == nint.Zero)
                 return;
 
-            nativeController.DetachFromAddon(node, (AtkUnitBase*)addon);
+            nativeController.DetachNode(node);
         }
     }
 }

@@ -21,14 +21,14 @@ namespace BisBuddy.Services.Addon.Containers
 
         protected override unsafe int getTabIndex()
         {
-            var addon = (AddonInventoryLarge*)gameGui.GetAddonByName(AddonName);
+            var addon = (AddonInventoryLarge*)gameGui.GetAddonByName(AddonName).Address;
             if (addon == null || !addon->IsVisible) return -1;
             return addon->TabIndex;
         }
 
         protected override unsafe List<nint> getAddons()
         {
-            var addon = (AddonInventoryLarge*)gameGui.GetAddonByName(AddonName);
+            var addon = (AddonInventoryLarge*)gameGui.GetAddonByName(AddonName).Address;
             if (addon == null)
                 return [];
 
