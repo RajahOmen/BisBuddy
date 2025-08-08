@@ -3,7 +3,7 @@ using BisBuddy.Services.Configuration;
 using BisBuddy.Util;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -60,7 +60,7 @@ public class ConfigWindow : Window, IDisposable
                         ImGuiColorEditFlags.NoPicker
                         | ImGuiColorEditFlags.AlphaBar
                         | ImGuiColorEditFlags.NoSidePreview
-                        | ImGuiColorEditFlags.DisplayRGB
+                        | ImGuiColorEditFlags.DisplayRgb
                         | ImGuiColorEditFlags.NoBorder
                         ))
                     {
