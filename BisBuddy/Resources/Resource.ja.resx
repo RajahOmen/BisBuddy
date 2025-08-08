@@ -450,21 +450,21 @@ or to have a unique color to highlight items in</value>
   <data name="GeneralConfigurationMiscellaneousCategory" xml:space="preserve">
     <value>Miscellaneous</value>
   </data>
-    <data name="MainChatCommandName" xml:space="preserve">
+  <data name="MainChatCommandName" xml:space="preserve">
     <value>/bisbuddy</value>
   </data>
-    <data name="AliasChatCommandName" xml:space="preserve">
+  <data name="AliasChatCommandName" xml:space="preserve">
     <value>/bis</value>
   </data>
-    <data name="MainChatCommandHelpMessage" xml:space="preserve">
+  <data name="MainChatCommandHelpMessage" xml:space="preserve">
     <value>View existing or add new gearsets
       [config/c] - Open {0} configuration
       [new/n] - Add a new gearset</value>
   </data>
-    <data name="AliasChatCommandHelpMessage" xml:space="preserve">
+  <data name="AliasChatCommandHelpMessage" xml:space="preserve">
     <value>Alias for {0}</value>
   </data>
-    <data name="PluginDisplayName" xml:space="preserve">
+  <data name="PluginDisplayName" xml:space="preserve">
     <value>BISBuddy</value>
   </data>
 </root>
