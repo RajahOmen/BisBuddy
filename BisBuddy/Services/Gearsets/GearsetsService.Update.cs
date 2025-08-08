@@ -128,7 +128,7 @@ namespace BisBuddy.Services.Gearsets
                 try
                 {
                     logger.Verbose($"Updating current gearsets with new assignments");
-                    if (gearsetsToUpdate.Any() || !clientState.IsLoggedIn)
+                    if (!gearsetsToUpdate.Any() || !clientState.IsLoggedIn)
                         return;
 
                     var itemsList = getGameInventoryItems();
