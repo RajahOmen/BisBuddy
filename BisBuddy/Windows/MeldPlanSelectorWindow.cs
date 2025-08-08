@@ -51,6 +51,16 @@ public unsafe class MeldPlanSelectorWindow : Window, IDisposable
 
     public void Dispose() { }
 
+    public override void PreOpenCheck()
+    {
+        IsOpen = (
+            meldPlanService.CurrentMeldPlans.Count > 0
+            && (addon is null || addon->IsVisible)
+            );
+
+        base.PreOpenCheck();
+    }
+
     public override void PreDraw()
     {
         if (configService.HighlightMateriaMeld)
