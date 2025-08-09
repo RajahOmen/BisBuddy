@@ -45,7 +45,11 @@ namespace BisBuddy.Services
             => file.WriteAllTextAsync(pluginInterface.ConfigFile.FullName, serializedConfigData, cancellationToken);
 
         public Task WriteGearsetsAsync(ulong contentId, string serializedGearsetsData, CancellationToken cancellationToken = default)
-            => file.WriteAllTextAsync(getCharacterGearsetPath(contentId), serializedGearsetsData, cancellationToken);
+        {
+            if (!fileSystem.Directory.Exists(gearsetsDirectoryPath))
+                createGearsetsDirectory();
+            return file.WriteAllTextAsync(getCharacterGearsetPath(contentId), serializedGearsetsData, cancellationToken);
+        }
     }
 
     public interface IFileService
