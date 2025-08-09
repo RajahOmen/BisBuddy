@@ -15,7 +15,12 @@ namespace BisBuddy.Util
         public static readonly uint ItemIdHqOffset = 1_000_000;
         public static readonly char HqIcon = '';
         public static readonly char GlamourIcon = '';
-        
+
+        /// <summary>
+        /// The name of the directory under the plugin config directory where gearsets are saved
+        /// </summary>
+        public static readonly string GearsetsDirectoryName = "gearsets";
+
         /// <summary>
         /// The id of the icon corresponding to the icon directly preceding the icons for the classes and jobs
         /// When given a ClassJob rowId, the IconId matching the ClassJob is ClassJobIconIdOffset + IconId
