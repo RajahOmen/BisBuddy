@@ -125,10 +125,14 @@ namespace BisBuddy.Services.Gearsets
                 if (currentLocalContentId == 0)
                     currentGearsets = [];
                 else
+                {
+                    using var gearsetsReadStream = fileService.OpenReadGearsetsStream(currentLocalContentId);
                     currentGearsets = JsonSerializer.Deserialize<List<Gearset>>(
-                        fileService.OpenReadGearsetsStream(currentLocalContentId),
+                        gearsetsReadStream,
                         jsonSerializerOptions
                         ) ?? [];
+                }
+                    
             }
             catch (FileNotFoundException)
             {

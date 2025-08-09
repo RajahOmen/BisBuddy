@@ -34,7 +34,7 @@ namespace BisBuddy.Services.Configuration
             try
             {
                 logger.Verbose($"Loading config...");
-                var configStream = fileService.OpenReadConfigStream();
+                using var configStream = fileService.OpenReadConfigStream();
                 using var configJson = await JsonDocument.ParseAsync(configStream, cancellationToken: cancellationToken);
                 var configVersion = configJson
                     .RootElement
