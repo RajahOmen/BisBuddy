@@ -3,7 +3,7 @@ using Dalamud.Game.Addon.Lifecycle;
 using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Component.GUI;
-using KamiToolKit.Nodes;
+using KamiToolKit.System;
 using System;
 using System.Collections.Generic;
 
@@ -37,7 +37,7 @@ namespace BisBuddy.Services.Addon
 
         private unsafe void handlePreDraw(AddonEvent type, AddonArgs args)
         {
-            var addon = (AddonNeedGreed*)args.Addon;
+            var addon = (AddonNeedGreed*)args.Addon.Address;
             try
             {
                 if (addon == null || !addon->IsVisible) return;

@@ -10,7 +10,7 @@ using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Component.GUI;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using System;
 using System.Numerics;
 
@@ -55,12 +55,22 @@ public unsafe class MeldPlanSelectorWindow : Window, IDisposable
 
     public void Dispose() { }
 
+    public override void PreOpenCheck()
+    {
+        IsOpen = (
+            meldPlanService.CurrentMeldPlans.Count > 0
+            && (addon is null || addon->IsVisible)
+            );
+
+        base.PreOpenCheck();
+    }
+
     public override void PreDraw()
     {
         if (configService.HighlightMateriaMeld)
         {
             addon = null;
-            var addonPtr = gameGui.GetAddonByName("MateriaAttach");
+            var addonPtr = gameGui.GetAddonByName("MateriaAttach").Address;
             if (addonPtr != nint.Zero)
                 addon = (AtkUnitBase*)addonPtr;
 

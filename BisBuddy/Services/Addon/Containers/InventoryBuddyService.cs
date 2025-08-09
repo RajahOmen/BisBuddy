@@ -17,7 +17,7 @@ namespace BisBuddy.Services.Addon.Containers
             {
                 // since buddy broken up by normal/premium, select sorter based on
                 // true tab index
-                var addon = (AddonInventoryBuddy*)gameGui.GetAddonByName(AddonName);
+                var addon = (AddonInventoryBuddy*)gameGui.GetAddonByName(AddonName).Address;
                 if (addon == null) return null;
                 if (addon->TabIndex == 0)
                     return ItemOrderModule.Instance()->SaddleBagSorter;
@@ -33,7 +33,7 @@ namespace BisBuddy.Services.Addon.Containers
 
         protected override unsafe int getTabIndex()
         {
-            var addon = (AddonInventoryBuddy*)gameGui.GetAddonByName(AddonName);
+            var addon = (AddonInventoryBuddy*)gameGui.GetAddonByName(AddonName).Address;
             if (addon == null || !addon->IsVisible) return -1;
 
             // since tabs are split into two separate sorters of 1 page each, always on tab "0"
@@ -43,7 +43,7 @@ namespace BisBuddy.Services.Addon.Containers
         protected override unsafe List<nint> getAddons()
         {
             // inventory buddy has no child addons, stores everything in InventoryBuddy
-            var addon = (AddonInventoryBuddy*)gameGui.GetAddonByName(AddonName);
+            var addon = (AddonInventoryBuddy*)gameGui.GetAddonByName(AddonName).Address;
             if (addon == null) return [];
 
 

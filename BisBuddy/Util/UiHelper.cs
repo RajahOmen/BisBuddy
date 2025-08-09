@@ -1,8 +1,8 @@
 using FFXIVClientStructs.FFXIV.Client.System.Memory;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using KamiToolKit.Extensions;
+using KamiToolKit.NodeParts;
 using KamiToolKit.Nodes;
-using KamiToolKit.Nodes.Parts;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -99,7 +99,6 @@ public static unsafe partial class UiHelper
         return textNode;
     }
     public static unsafe NineGridNode? CloneHighlightNineGridNode(
-        uint newNodeId,
         AtkNineGridNode* clonedNode,
         Vector3 addColor,
         float alpha
@@ -112,7 +111,6 @@ public static unsafe partial class UiHelper
             // initialize new custom ninegridnode to show the highlight
             newNode = new NineGridNode()
             {
-                NodeID = newNodeId,
                 NodeFlags = NodeFlags.Enabled | NodeFlags.Visible | NodeFlags.AnchorRight | NodeFlags.AnchorLeft,
                 Width = clonedNode->Width,
                 Height = clonedNode->Height,
@@ -124,7 +122,7 @@ public static unsafe partial class UiHelper
                 Rotation = clonedNode->Rotation,
                 Offsets = new(clonedNode->TopOffset, clonedNode->BottomOffset, clonedNode->LeftOffset, clonedNode->RightOffset),
                 BlendMode = clonedNode->BlendMode,
-                PartsRenderType = (PartsRenderType)clonedNode->PartsTypeRenderType,
+                PartsRenderType = clonedNode->PartsTypeRenderType,
                 Color = clonedNode->Color.ToVector4(),
                 AddColor = addColor,
                 MultiplyColor = Constants.CustomNodeMultiplyColor,

@@ -7,8 +7,8 @@ using BisBuddy.Ui.Config;
 using BisBuddy.Util;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
-using Dalamud.Utility;
-using ImGuiNET;
+using Dalamud.Interface.Windowing;
+using Dalamud.Bindings.ImGui;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -143,8 +143,8 @@ public class ConfigTab : TabRenderer, IDisposable
                         ImGuiColorEditFlags.NoPicker
                         | ImGuiColorEditFlags.AlphaBar
                         | ImGuiColorEditFlags.NoSidePreview
-                        | ImGuiColorEditFlags.DisplayRGB
-                    | ImGuiColorEditFlags.NoBorder
+                        | ImGuiColorEditFlags.DisplayRgb
+                        | ImGuiColorEditFlags.NoBorder
                         ))
                     {
                         if (existingColor != configurationService.DefaultHighlightColor.BaseColor)
