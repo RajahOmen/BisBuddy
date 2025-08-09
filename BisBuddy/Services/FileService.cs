@@ -36,22 +36,20 @@ namespace BisBuddy.Services
 
         public FileSystemStream OpenReadGearsetsStream(ulong contentId)
         {
-            try
-            {
-                return file.OpenRead(getCharacterGearsetPath(contentId));
-            }
-            catch (DirectoryNotFoundException)
-            {
+            if (!fileSystem.Directory.Exists(gearsetsDirectoryPath))
                 createGearsetsDirectory();
-                throw new FileNotFoundException();
-            }
+            return file.OpenRead(getCharacterGearsetPath(contentId));
         }
 
         public Task WriteConfigAsync(string serializedConfigData, CancellationToken cancellationToken = default)
             => file.WriteAllTextAsync(pluginInterface.ConfigFile.FullName, serializedConfigData, cancellationToken);
 
         public Task WriteGearsetsAsync(ulong contentId, string serializedGearsetsData, CancellationToken cancellationToken = default)
-            => file.WriteAllTextAsync(getCharacterGearsetPath(contentId), serializedGearsetsData, cancellationToken);
+        {
+            if (!fileSystem.Directory.Exists(gearsetsDirectoryPath))
+                createGearsetsDirectory();
+            return file.WriteAllTextAsync(getCharacterGearsetPath(contentId), serializedGearsetsData, cancellationToken);
+        }
     }
 
     public interface IFileService
