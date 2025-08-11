@@ -138,13 +138,8 @@ namespace BisBuddy.Services.Gearsets
             catch (FileNotFoundException)
             {
                 logger.Debug($"No gearsets file found for \"{currentLocalContentId}\", creating new");
-
-                var emptyGearsetsListStr = serializeGearsets([]);
-                fileService.WriteGearsetsAsync(
-                    currentLocalContentId,
-                    emptyGearsetsListStr
-                    );
                 currentGearsets = [];
+                _ = saveCurrentGearsetsAsync();
             }
             finally
             {
@@ -156,7 +151,23 @@ namespace BisBuddy.Services.Gearsets
 
         private void scheduleSaveCurrentGearsets()
         {
-            queueService.Enqueue(() => saveCurrentGearsetsAsync().WaitSafely());
+            queueService.Enqueue(saveCurrentGearsets);
+        }
+
+        private void saveCurrentGearsets()
+        {
+            // don't save anything if no character is logged in
+            if (currentLocalContentId == 0 || !clientState.IsLoggedIn)
+                return;
+
+            var gearsetsListStr = serializeGearsets(currentGearsets);
+
+            logger.Verbose($"Saving {currentLocalContentId}'s current gearsets");
+
+            fileService.WriteGearsetsString(
+                currentLocalContentId,
+                gearsetsListStr
+                );
         }
 
         private async Task saveCurrentGearsetsAsync()
@@ -169,7 +180,7 @@ namespace BisBuddy.Services.Gearsets
 
             logger.Verbose($"Saving {currentLocalContentId}'s current gearsets");
 
-            await fileService.WriteGearsetsAsync(
+            await fileService.WriteGearsetsStringAsync(
                 currentLocalContentId,
                 gearsetsListStr
                 );

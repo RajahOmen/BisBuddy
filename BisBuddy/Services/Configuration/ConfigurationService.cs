@@ -174,13 +174,13 @@ namespace BisBuddy.Services.Configuration
             triggerConfigurationChange(effectsAssignments: false);
         }
 
-        private async Task saveAsync(CancellationToken cancellationToken = default)
+        private void saveConfig()
         {
             try
             {
                 logger.Verbose($"Saving configuration file");
                 var configText = JsonSerializer.Serialize(configuration, jsonSerializerOptions);
-                await fileService.WriteConfigAsync(configText, cancellationToken);
+                fileService.WriteConfigString(configText);
             }
             catch (Exception ex)
             {
@@ -189,7 +189,7 @@ namespace BisBuddy.Services.Configuration
         }
 
         public void scheduleSave() =>
-            queueService.Enqueue(() => saveAsync().WaitSafely());
+            queueService.Enqueue(saveConfig);
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
@@ -198,7 +198,16 @@ namespace BisBuddy.Services.Configuration
 
         public async Task StopAsync(CancellationToken cancellationToken)
         {
-            await saveAsync(cancellationToken);
+            try
+            {
+                logger.Verbose($"Saving configuration file");
+                var configText = JsonSerializer.Serialize(configuration, jsonSerializerOptions);
+                await fileService.WriteConfigStringAsync(configText, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"Error saving config file", ex);
+            }
         }
     }
 
