@@ -214,7 +214,7 @@ namespace BisBuddy.Services.Addon
         {
             var addon = gameGui.GetAddonByName(AddonName);
 
-            if (addon == nint.Zero)
+            if (addon.IsNull)
                 return;
 
             if (parentNodePtr == nint.Zero)
