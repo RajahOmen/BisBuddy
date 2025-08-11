@@ -178,7 +178,10 @@ namespace BisBuddy.Windows
                     if (useDefaultColor)
                         gearset.HighlightColor = null;
                     else
-                        gearset.HighlightColor = configurationService.DefaultHighlightColor;
+                    {
+                        var newColor = new HighlightColor(configurationService.DefaultHighlightColor.BaseColor);
+                        gearset.HighlightColor = newColor;
+                    }
                 }
                 if (ImGui.IsItemHovered())
                     ImGui.SetTooltip(Resource.GearsetDefaultColorTooltip);
