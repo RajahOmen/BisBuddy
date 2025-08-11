@@ -1,4 +1,5 @@
 using Dalamud.Plugin;
+using System;
 using System.IO;
 using System.IO.Abstractions;
 using System.Threading;
@@ -7,10 +8,12 @@ using System.Threading.Tasks;
 namespace BisBuddy.Services
 {
     public class FileService(
+        ITypedLogger<FileService> logger,
         IDalamudPluginInterface pluginInterface,
         IFileSystem fileSystem
         ) : IFileService
     {
+        private readonly ITypedLogger<FileService> logger = logger;
         private readonly IDalamudPluginInterface pluginInterface = pluginInterface;
         private readonly IFileSystem fileSystem = fileSystem;
         private readonly IFile file = fileSystem.File;
@@ -42,13 +45,31 @@ namespace BisBuddy.Services
         }
 
         public Task WriteConfigAsync(string serializedConfigData, CancellationToken cancellationToken = default)
-            => file.WriteAllTextAsync(pluginInterface.ConfigFile.FullName, serializedConfigData, cancellationToken);
+        {
+            try
+            {
+                return file.WriteAllTextAsync(pluginInterface.ConfigFile.FullName, serializedConfigData, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, "Error writing configuration data");
+                return Task.CompletedTask;
+            }
+        }
 
         public Task WriteGearsetsAsync(ulong contentId, string serializedGearsetsData, CancellationToken cancellationToken = default)
         {
-            if (!fileSystem.Directory.Exists(gearsetsDirectoryPath))
-                createGearsetsDirectory();
-            return file.WriteAllTextAsync(getCharacterGearsetPath(contentId), serializedGearsetsData, cancellationToken);
+            try
+            {
+                if (!fileSystem.Directory.Exists(gearsetsDirectoryPath))
+                    createGearsetsDirectory();
+                return file.WriteAllTextAsync(getCharacterGearsetPath(contentId), serializedGearsetsData, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, $"Error writing gearsets for contentId {contentId}");
+                return Task.CompletedTask;
+            }
         }
     }
 
