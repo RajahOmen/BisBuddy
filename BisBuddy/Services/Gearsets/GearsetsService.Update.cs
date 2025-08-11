@@ -89,7 +89,10 @@ namespace BisBuddy.Services.Gearsets
                 gearset.OnGearsetChange += handleGearsetChange;
             }
 
-            scheduleGearsetsChange();
+            if (configurationService.PluginUpdateInventoryScan)
+                ScheduleUpdateFromInventory();
+            else
+                scheduleGearsetsChange();
         }
 
         public void RemoveGearset(Gearset gearset)
@@ -103,7 +106,10 @@ namespace BisBuddy.Services.Gearsets
             gearset.OnGearsetChange -= handleGearsetChange;
             currentGearsets.Remove(gearset);
 
-            scheduleGearsetsChange();
+            if (configurationService.PluginUpdateInventoryScan)
+                ScheduleUpdateFromInventory();
+            else
+                scheduleGearsetsChange();
         }
 
         public void ScheduleUpdateFromInventory(
@@ -128,7 +134,7 @@ namespace BisBuddy.Services.Gearsets
                 try
                 {
                     logger.Verbose($"Updating current gearsets with new assignments");
-                    if (!gearsetsToUpdate.Any() || !clientState.IsLoggedIn)
+                    if (!clientState.IsLoggedIn)
                         return;
 
                     var itemsList = getGameInventoryItems();
@@ -143,6 +149,8 @@ namespace BisBuddy.Services.Gearsets
                     var updatedGearpieces = solver.SolveAndAssign();
 
                     logger.Debug($"Updated {updatedGearpieces?.Count ?? 0} gearpieces from inventories");
+
+                    scheduleGearsetsChange();
 
                     inventoryUpdateDisplayService.GearpieceUpdateCount = updatedGearpieces?.Count ?? 0;
                 }
