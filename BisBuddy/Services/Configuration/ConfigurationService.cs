@@ -1,4 +1,5 @@
 using BisBuddy.Gear;
+using Dalamud.Utility;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Linq.Expressions;
@@ -188,7 +189,7 @@ namespace BisBuddy.Services.Configuration
         }
 
         public void scheduleSave() =>
-            queueService.Enqueue(async () => await saveAsync());
+            queueService.Enqueue(() => saveAsync().WaitSafely());
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
