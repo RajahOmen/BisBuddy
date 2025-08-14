@@ -14,12 +14,14 @@ namespace BisBuddy.Services
 {
     public class InventoryChangeService(
         ITypedLogger<InventoryChangeService> logger,
+        IClientState clientState,
         IGameInventory gameInventory,
         IGearsetsService gearsetsService,
         IConfigurationService configurationService
         ) : IInventoryChangeService
     {
         private readonly ITypedLogger<InventoryChangeService> logger = logger;
+        private readonly IClientState clientState = clientState;
         private readonly IGameInventory gameInventory = gameInventory;
         private readonly IGearsetsService gearsetsService = gearsetsService;
         private readonly IConfigurationService configurationService = configurationService;
@@ -72,6 +74,10 @@ namespace BisBuddy.Services
         {
             try
             {
+                // if not logged in, ignore
+                if (!clientState.IsLoggedIn)
+                    return;
+
                 var addedArgs = (InventoryItemAddedArgs)args;
 
                 // not added to a inventory type we track, ignore
@@ -101,6 +107,10 @@ namespace BisBuddy.Services
         {
             try
             {
+                // if not logged in, ignore
+                if (!clientState.IsLoggedIn)
+                    return;
+
                 var removedArgs = (InventoryItemRemovedArgs)args;
 
                 // not removed from a inventory type we track, ignore
@@ -130,6 +140,10 @@ namespace BisBuddy.Services
         {
             try
             {
+                // if not logged in, ignore
+                if (!clientState.IsLoggedIn)
+                    return;
+
                 var changedArgs = (InventoryItemChangedArgs)args;
 
                 // not changed in a inventory type we track, ignore
@@ -158,6 +172,10 @@ namespace BisBuddy.Services
         {
             try
             {
+                // if not logged in, ignore
+                if (!clientState.IsLoggedIn)
+                    return;
+
                 var movedArgs = (InventoryItemMovedArgs)args;
 
                 // either untracked -> untracked, or tracked -> tracked. Either way, don't change.
