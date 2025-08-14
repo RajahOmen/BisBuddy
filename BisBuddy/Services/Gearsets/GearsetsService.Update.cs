@@ -130,6 +130,13 @@ namespace BisBuddy.Services.Gearsets
             bool manualUpdate = false
             )
         {
+            // do not update if there is no player currently logged in
+            if (!clientState.IsLoggedIn)
+            {
+                logger.Warning($"Tried to update gearsets from inventory (count: {gearsetsToUpdate.Count()}) while not logged in, ignoring request");
+                return;
+            }
+
             // display loading state in main menu
             inventoryUpdateDisplayService.UpdateIsQueued = true;
             inventoryUpdateDisplayService.IsManualUpdate = manualUpdate;
