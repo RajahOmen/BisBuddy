@@ -31,8 +31,11 @@ namespace BisBuddy.Services
         private string getCharacterGearsetPath(ulong contentId) =>
             Path.Combine(gearsetsDirectoryPath, $"{contentId}.json");
 
-        private void createGearsetsDirectory() =>
+        private void createGearsetsDirectory()
+        {
+            logger.Info("Creating gearsets directory");
             fileSystem.Directory.CreateDirectory(gearsetsDirectoryPath);
+        }
 
         public FileSystemStream OpenReadConfigStream() =>
             file.OpenRead(pluginInterface.ConfigFile.FullName);

@@ -44,13 +44,17 @@ namespace BisBuddy.Services.Gearsets
 
         private void handleLogin()
         {
+            logger.Debug($"handling login");
             loadGearsets();
             if (configurationService.AutoScanInventory)
                 ScheduleUpdateFromInventory();
         }
 
         private void handleLogout(int type, int code)
-            => currentGearsets = [];
+        {
+            logger.Debug($"handling logout");
+            currentGearsets = [];
+        }
 
         private void handleConfigChange(bool effectsAssignments)
         {
@@ -62,6 +66,7 @@ namespace BisBuddy.Services.Gearsets
             if (!configurationService.PluginUpdateInventoryScan)
                 return;
 
+            logger.Debug($"handling config change");
             ScheduleUpdateFromInventory();
         }
 
@@ -89,6 +94,7 @@ namespace BisBuddy.Services.Gearsets
                 gearset.OnGearsetChange += handleGearsetChange;
             }
 
+            logger.Info($"Adding {gearsetsToAdd.Count()} gearsets to current gearsets");
             if (configurationService.PluginUpdateInventoryScan)
                 ScheduleUpdateFromInventory();
             else
@@ -103,6 +109,7 @@ namespace BisBuddy.Services.Gearsets
                 return;
             }
 
+            logger.Info($"Removing gearset \"{gearset.Id}\" from current gearsets");
             gearset.OnGearsetChange -= handleGearsetChange;
             currentGearsets.Remove(gearset);
 

@@ -35,7 +35,8 @@ namespace BisBuddy.Windows
                 {
                     gearset.SetActiveStatus(isActive);
                     logger.Debug($"{(isActive ? "enabled" : "disabled")} gearset \"{gearset.Name}\"");
-                    gearsetsService.ScheduleUpdateFromInventory();
+                    if (configurationService.PluginUpdateInventoryScan)
+                        gearsetsService.ScheduleUpdateFromInventory();
                 }
 
                 if (ImGui.IsItemHovered())

@@ -88,6 +88,7 @@ namespace BisBuddy.Services
                     return;
 
                 // added to type we track, update gearsets
+                logger.Verbose($"item added, scehduling gearset update");
                 gearsetsService.ScheduleUpdateFromInventory();
             }
             catch (Exception ex)
@@ -116,6 +117,7 @@ namespace BisBuddy.Services
                     return;
 
                 // removed from type we track, update gearsets
+                logger.Verbose($"item removed, scehduling gearset update");
                 gearsetsService.ScheduleUpdateFromInventory();
             }
             catch (Exception ex)
@@ -142,7 +144,7 @@ namespace BisBuddy.Services
                         includeCollectedPrereqs: true
                     ))
                     return;
-
+                logger.Verbose($"item changed, scehduling gearset update");
                 // changed in a type we track, update gearsets
                 gearsetsService.ScheduleUpdateFromInventory();
             }
@@ -173,6 +175,7 @@ namespace BisBuddy.Services
                     ))
                     return;
 
+                logger.Verbose($"item moved, scehduling gearset update");
                 // moved untracked -> tracked or tracked -> untracked, update gearsets
                 gearsetsService.ScheduleUpdateFromInventory();
             }
