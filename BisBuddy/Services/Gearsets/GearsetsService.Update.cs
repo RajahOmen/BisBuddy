@@ -54,6 +54,7 @@ namespace BisBuddy.Services.Gearsets
         {
             logger.Debug($"handling logout");
             currentGearsets = [];
+            GearsetsLoaded = false;
         }
 
         private void handleConfigChange(bool effectsAssignments)
@@ -131,7 +132,7 @@ namespace BisBuddy.Services.Gearsets
             )
         {
             // do not update if there is no player currently logged in
-            if (!clientState.IsLoggedIn)
+            if (!GearsetsLoaded)
             {
                 logger.Warning($"Tried to update gearsets from inventory (count: {gearsetsToUpdate.Count()}) while not logged in, ignoring request");
                 return;
@@ -148,7 +149,7 @@ namespace BisBuddy.Services.Gearsets
                 try
                 {
                     logger.Verbose($"Updating current gearsets with new assignments");
-                    if (!clientState.IsLoggedIn)
+                    if (!GearsetsLoaded)
                         return;
 
                     var itemsList = getGameInventoryItems();

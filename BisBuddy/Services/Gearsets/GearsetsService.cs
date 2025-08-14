@@ -64,6 +64,8 @@ namespace BisBuddy.Services.Gearsets
             }
         }
 
+        public bool GearsetsLoaded { get; private set; } = false;
+
         public Task StartAsync(CancellationToken cancellationToken)
         {
             // updating gearset data per framework update
@@ -132,14 +134,15 @@ namespace BisBuddy.Services.Gearsets
                         gearsetsReadStream,
                         jsonSerializerOptions
                         ) ?? [];
+                    GearsetsLoaded = true;
                 }
-                    
             }
             catch (FileNotFoundException)
             {
                 logger.Warning($"No gearsets file found for \"{currentLocalContentId}\", creating new");
                 currentGearsets = [];
                 _ = saveCurrentGearsetsAsync();
+                GearsetsLoaded = true;
             }
             finally
             {
@@ -156,8 +159,8 @@ namespace BisBuddy.Services.Gearsets
 
         private void saveCurrentGearsets()
         {
-            // don't save anything if no character is logged in
-            if (currentLocalContentId == 0 || !clientState.IsLoggedIn)
+            // don't save anything if no gearsets are actually loaded
+            if (!GearsetsLoaded || currentLocalContentId == 0)
                 return;
 
             var gearsetsListStr = serializeGearsets(currentGearsets);
@@ -172,8 +175,8 @@ namespace BisBuddy.Services.Gearsets
 
         private async Task saveCurrentGearsetsAsync()
         {
-            // don't save anything if no character is logged in
-            if (currentLocalContentId == 0 || !clientState.IsLoggedIn)
+            // don't save anything if no gearsets are actually loaded
+            if (!GearsetsLoaded || currentLocalContentId == 0)
                 return;
 
             var gearsetsListStr = serializeGearsets(currentGearsets);
@@ -201,6 +204,10 @@ namespace BisBuddy.Services.Gearsets
     public interface IGearsetsService : IHostedService
     {
         public IReadOnlyList<Gearset> CurrentGearsets { get; }
+        /// <summary>
+        /// Indicates if gearsets for the current character have been loaded
+        /// </summary>
+        public bool GearsetsLoaded { get; }
         public Task<ImportGearsetsResult> AddGearsetsFromSource(ImportGearsetSourceType sourceType, string sourceString);
         public void RemoveGearset(Gearset gearset);
         public string ExportGearsetToJsonStr(Gearset gearset);

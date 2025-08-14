@@ -86,13 +86,13 @@ public partial class MainWindow : Window, IDisposable
             ? inventoryUpdateService.GearpieceUpdateCount
             : -1;
 
-        using (ImRaii.Disabled(!clientState.IsLoggedIn))
+        using (ImRaii.Disabled(!gearsetsService.GearsetsLoaded))
         {
             using (ImRaii.Disabled(gearsetsService.CurrentGearsets.Count >= Constants.MaxGearsetCount))
             {
                 if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.Plus, $"{Resource.NewGearsetButton}##importgearset"))
                 {
-                    if (clientState.IsLoggedIn)
+                    if (gearsetsService.GearsetsLoaded)
                         importGearsetWindow.Toggle();
                 }
                 if (ImGui.IsItemHovered())
@@ -137,7 +137,7 @@ public partial class MainWindow : Window, IDisposable
 
     private void drawNoGearsets()
     {
-        var errorText = clientState.IsLoggedIn
+        var errorText = gearsetsService.GearsetsLoaded
             ? Resource.NoGearsetsText
             : Resource.LoggedOutText;
         var textWidth = ImGui.CalcTextSize(errorText).X;

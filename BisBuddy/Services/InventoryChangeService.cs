@@ -74,8 +74,8 @@ namespace BisBuddy.Services
         {
             try
             {
-                // if not logged in, ignore
-                if (!clientState.IsLoggedIn)
+                // if gearsets haven't been loaded, ignore
+                if (!gearsetsService.GearsetsLoaded)
                     return;
 
                 var addedArgs = (InventoryItemAddedArgs)args;
@@ -107,8 +107,8 @@ namespace BisBuddy.Services
         {
             try
             {
-                // if not logged in, ignore
-                if (!clientState.IsLoggedIn)
+                // if gearsets haven't been loaded, ignore
+                if (!gearsetsService.GearsetsLoaded)
                     return;
 
                 var removedArgs = (InventoryItemRemovedArgs)args;
@@ -140,8 +140,8 @@ namespace BisBuddy.Services
         {
             try
             {
-                // if not logged in, ignore
-                if (!clientState.IsLoggedIn)
+                // if gearsets haven't been loaded, ignore
+                if (!gearsetsService.GearsetsLoaded)
                     return;
 
                 var changedArgs = (InventoryItemChangedArgs)args;
@@ -172,8 +172,8 @@ namespace BisBuddy.Services
         {
             try
             {
-                // if not logged in, ignore
-                if (!clientState.IsLoggedIn)
+                // if gearsets haven't been loaded, ignore
+                if (!gearsetsService.GearsetsLoaded)
                     return;
 
                 var movedArgs = (InventoryItemMovedArgs)args;
