@@ -137,7 +137,7 @@ namespace BisBuddy.Services.Gearsets
             }
             catch (FileNotFoundException)
             {
-                logger.Debug($"No gearsets file found for \"{currentLocalContentId}\", creating new");
+                logger.Warning($"No gearsets file found for \"{currentLocalContentId}\", creating new");
                 currentGearsets = [];
                 _ = saveCurrentGearsetsAsync();
             }
