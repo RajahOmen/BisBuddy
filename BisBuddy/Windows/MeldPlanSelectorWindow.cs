@@ -8,10 +8,10 @@ using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;
-using FFXIVClientStructs.FFXIV.Component.GUI;
 using Dalamud.Bindings.ImGui;
 using System;
 using System.Numerics;
+using Dalamud.Game.NativeWrapper;
 
 namespace BisBuddy.Windows;
 
@@ -22,16 +22,14 @@ public unsafe class MeldPlanSelectorWindow : Window, IDisposable
 
     private readonly ITypedLogger<MeldPlanSelectorWindow> logger;
     private readonly IGameGui gameGui;
-    private readonly IGearsetsService gearsetsService;
     private readonly IMeldPlanService meldPlanService;
     private readonly IConfigurationService configService;
 
-    private AtkUnitBase* addon = null;
+    private AtkUnitBasePtr addonPtr = nint.Zero;
 
     public MeldPlanSelectorWindow(
         ITypedLogger<MeldPlanSelectorWindow> logger,
         IGameGui gameGui,
-        IGearsetsService gearsetsService,
         IMeldPlanService meldPlanService,
         IConfigurationService configService
         )
@@ -44,7 +42,6 @@ public unsafe class MeldPlanSelectorWindow : Window, IDisposable
 
         this.logger = logger;
         this.gameGui = gameGui;
-        this.gearsetsService = gearsetsService;
         this.meldPlanService = meldPlanService;
         this.configService = configService;
     }
@@ -53,66 +50,41 @@ public unsafe class MeldPlanSelectorWindow : Window, IDisposable
 
     public override void PreOpenCheck()
     {
-        IsOpen = (
-            meldPlanService.CurrentMeldPlans.Count > 0
-            && (addon is null || addon->IsVisible)
-            );
+        if (!configService.HighlightMateriaMeld)
+            return;
+
+        if (meldPlanService.CurrentMeldPlans.Count == 0)
+            return;
+
+        addonPtr = gameGui.GetAddonByName("MateriaAttach");
+
+        if (!addonPtr.IsVisible || !addonPtr.IsReady)
+            return;
+
+        var windowOffset = new Vector2(addonPtr.ScaledSize.X, WindowYValueOffset);
+        Position = ImGuiHelpers.MainViewport.Pos + addonPtr.Position + windowOffset;
+        IsOpen = true;
 
         base.PreOpenCheck();
     }
 
     public override void PreDraw()
     {
-        if (configService.HighlightMateriaMeld)
-        {
-            addon = null;
-            var addonPtr = gameGui.GetAddonByName("MateriaAttach").Address;
-            if (addonPtr != nint.Zero)
-                addon = (AtkUnitBase*)addonPtr;
+        if (Position is Vector2 nextWindowPos)
+            ImGui.SetNextWindowPos(nextWindowPos, ImGuiCond.Always);
 
-            if (Position.HasValue)
-                ImGui.SetNextWindowPos(Position.Value, ImGuiCond.Always);
-
-            Position = null;
-        }
         base.PreDraw();
-    }
-
-    public override void PostDraw()
-    {
-        if (addon != null && addon->IsVisible)
-        {
-            // wait until addon is initialised to show
-            var rootNode = addon->RootNode;
-            if (rootNode == null)
-                return;
-
-            short addonWidth = 0;
-            short addonHeight = 0;
-            addon->GetSize(&addonWidth, &addonHeight, true);
-            Position = ImGuiHelpers.MainViewport.Pos + new Vector2(addon->X + addonWidth, addon->Y + WindowYValueOffset);
-        }
-        base.PostDraw();
     }
 
     public override void Draw()
     {
         var curIdx = meldPlanService.CurrentMeldPlanIndex;
 
-        // don't show if addon isn't currently visible (ie. during a meld action)
-        if (addon == null || !addon->IsVisible || !addon->WindowNode->IsVisible())
-            return;
+        logger.Verbose($"plan counts: {meldPlanService.CurrentMeldPlans.Count}");
 
         ImGui.Text(Resource.MeldWindowHeader);
 
-        // copy next materia setting from config for convenience
-        var highlightNextMateria = configService.HighlightNextMateria;
-        if (ImGui.Checkbox(Resource.HighlightNextMateriaCheckbox, ref highlightNextMateria))
-        {
-            configService.HighlightNextMateria = highlightNextMateria;
-        }
-        ImGui.SameLine();
-        ImGuiComponents.HelpMarker(Resource.HighlightNextMateriaHelp);
+        drawHighlightNextMateriaCheckbox();
 
         ImGui.Separator();
         ImGui.Spacing();
@@ -151,5 +123,18 @@ public unsafe class MeldPlanSelectorWindow : Window, IDisposable
             }
             ImGui.NewLine();
         }
+
+        IsOpen = false;
+        Position = null;
+    }
+
+    private void drawHighlightNextMateriaCheckbox()
+    {
+        // copy next materia setting from config for convenience
+        var highlightNextMateria = configService.HighlightNextMateria;
+        if (ImGui.Checkbox(Resource.HighlightNextMateriaCheckbox, ref highlightNextMateria))
+            configService.HighlightNextMateria = highlightNextMateria;
+        ImGui.SameLine();
+        ImGuiComponents.HelpMarker(Resource.HighlightNextMateriaHelp);
     }
 }

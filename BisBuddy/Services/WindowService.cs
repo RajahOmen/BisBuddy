@@ -68,9 +68,6 @@ namespace BisBuddy.Services
 
         public void ToggleImportGearsetWindow() =>
             importGearsetWindow.Toggle();
-
-        public void ToggleMeldPlanSelectorWindow() =>
-            meldPlanSelectorWindow.Toggle();
     }
 
     public interface IWindowService : IHostedService
@@ -78,6 +75,5 @@ namespace BisBuddy.Services
         public void ToggleMainWindow();
         public void ToggleConfigWindow();
         public void ToggleImportGearsetWindow();
-        public void ToggleMeldPlanSelectorWindow();
     }
 }
