@@ -152,7 +152,7 @@ namespace BisBuddy.Services.Addon
             return customNode;
         }
 
-        private unsafe bool setAddGreen(AtkResNode* node, HighlightColor? color)
+        private unsafe bool setAddColor(AtkResNode* node, HighlightColor? color)
         {
             if (gameGui.GetAddonByName(AddonName).IsNull)
                 throw new Exception($"Addon \"{AddonName}\" is not loaded, cannot set node highlight color");
@@ -240,7 +240,7 @@ namespace BisBuddy.Services.Addon
 
             // normal highlighting logic
             if (highlightParent)
-                changeMade = setAddGreen(parentNode, color);
+                changeMade = setAddColor(parentNode, color);
 
             // custom node logic
             if (useCustomNode)
@@ -271,7 +271,7 @@ namespace BisBuddy.Services.Addon
 
                         if (node != null)
                         {
-                            setAddGreen(node, null);
+                            setAddColor(node, null);
                             logger.Verbose($"Unhighlighted {node->NodeId} in \"{AddonName}\"");
                         }
                     }
