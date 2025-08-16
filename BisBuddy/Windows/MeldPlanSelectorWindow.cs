@@ -80,8 +80,6 @@ public unsafe class MeldPlanSelectorWindow : Window, IDisposable
     {
         var curIdx = meldPlanService.CurrentMeldPlanIndex;
 
-        logger.Verbose($"plan counts: {meldPlanService.CurrentMeldPlans.Count}");
-
         ImGui.Text(Resource.MeldWindowHeader);
 
         drawHighlightNextMateriaCheckbox();
