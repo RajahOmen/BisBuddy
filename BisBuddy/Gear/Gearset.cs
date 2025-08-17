@@ -72,11 +72,12 @@ namespace BisBuddy.Gear
 
         public event GearsetChangeHandler? OnGearsetChange;
 
-        public Gearset(string name, string? sourceUrl, ImportGearsetSourceType? sourceType)
+        public Gearset(string name, string? sourceUrl, ImportGearsetSourceType? sourceType, bool isActive)
         {
             Name = name;
             SourceUrl = sourceUrl;
             SourceType = sourceType;
+            IsActive = isActive;
         }
 
         internal Gearset(

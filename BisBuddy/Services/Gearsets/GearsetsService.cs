@@ -121,6 +121,7 @@ namespace BisBuddy.Services.Gearsets
         {
             try
             {
+                logger.Debug($"Loading gearsets for \"{currentLocalContentId}\"");
                 // unregister change listening from old gearsets
                 foreach (var gearset in currentGearsets)
                     gearset.OnGearsetChange -= handleGearsetChange;
