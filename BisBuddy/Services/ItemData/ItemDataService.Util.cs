@@ -191,11 +191,11 @@ namespace BisBuddy.Items
                     .PrerequisiteTree
                     .Index()
                     .First(node =>
-                        node.Item.ItemId == oldPrerequisiteNode.ItemId
-                        && node.Item.GetType() == oldPrerequisiteNode.GetType()
+                        node.Item.GetType() == oldPrerequisiteNode.GetType()
+                        && sameItemRequirements(node.Item, oldPrerequisiteNode)
                     ).Index;
 
-                logger.Verbose($"New alternative found for \"{itemId}\", added as new {nameof(PrerequisiteOrNode)} layer");
+                logger.Verbose($"New alternative found for \"{itemId}\", added as new {nameof(PrerequisiteOrNode)} layer (idx: {oldNodeIndex})");
 
                 // add to new node. If no index found, insert at start
                 if (oldNodeIndex >= 0)
@@ -226,6 +226,14 @@ namespace BisBuddy.Items
                 }
                 return oldPrerequisiteNode;
             }
+        }
+
+        private static bool sameItemRequirements(IPrerequisiteNode node1, IPrerequisiteNode node2)
+        {
+            var items1 = node1.ItemRequirements;
+            var items2 = node2.ItemRequirements;
+
+            return items1.Count() == items2.Count() && !items1.Except(items2).Any();
         }
 
         public IPrerequisiteNode? BuildGearpiecePrerequisiteTree(uint itemId, bool isCollected = false, bool isManuallyCollected = false)
