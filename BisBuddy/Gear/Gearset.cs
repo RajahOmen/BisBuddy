@@ -129,7 +129,7 @@ namespace BisBuddy.Gear
             triggerGearsetChange();
         }
 
-        public IEnumerable<ItemRequirement> ItemRequirements(bool includeUncollectedItemMateria)
+        public IEnumerable<ItemRequirementOwned> ItemRequirements(bool includeUncollectedItemMateria)
         {
             if (!IsActive)
                 yield break;

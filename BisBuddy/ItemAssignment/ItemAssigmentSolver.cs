@@ -153,7 +153,9 @@ namespace BisBuddy.ItemAssignment
             int[] gearpieceAssignments;
             try
             {
+                logger.Verbose($"Solving with {gearpieceEdges.Length} edges...");
                 gearpieceAssignments = Solver.Solve(gearpieceEdges, maximize: true).RowAssignment;
+                logger.Verbose($"Solved gearpiece assignments with {gearpieceAssignments.Length} assignments");
             }
             catch (InvalidOperationException)
             {

@@ -52,7 +52,7 @@ namespace BisBuddy.Services.Gearsets
         private ulong currentLocalContentId => clientState.LocalContentId;
 
         private List<Gearset> currentGearsets = [];
-        private Dictionary<uint, List<ItemRequirement>> currentItemRequirements = [];
+        private Dictionary<uint, List<ItemRequirementOwned>> currentItemRequirements = [];
 
         public IReadOnlyList<Gearset> CurrentGearsets
         {
@@ -226,7 +226,7 @@ namespace BisBuddy.Services.Gearsets
             bool includeObtainable = false,
             bool includeCollectedPrereqs = false
         );
-        public IEnumerable<ItemRequirement> GetItemRequirements(
+        public IEnumerable<ItemRequirementOwned> GetItemRequirements(
             uint itemId,
             bool includePrereqs = true,
             bool includeMateria = true,
@@ -235,7 +235,7 @@ namespace BisBuddy.Services.Gearsets
             bool includeCollectedPrereqs = false
         );
         public HighlightColor? GetRequirementColor(
-            IEnumerable<ItemRequirement> itemRequirements
+            IEnumerable<ItemRequirementOwned> itemRequirements
         );
         public HighlightColor? GetRequirementColor(
             uint itemId,

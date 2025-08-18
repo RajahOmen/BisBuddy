@@ -32,6 +32,15 @@ namespace BisBuddy.Gear.Prerequisites
         public bool IsManuallyCollected => PrerequisiteTree.Any(p => p.IsManuallyCollected);
         public bool IsObtainable => IsCollected || PrerequisiteTree.Any(p => p.IsObtainable);
         public HashSet<string> ChildNodeIds => [.. PrerequisiteTree.Select(p => p.NodeId), .. PrerequisiteTree.SelectMany(p => p.ChildNodeIds)];
+        public IEnumerable<ItemRequirement> ItemRequirements
+        {
+            get
+            {
+                foreach (var prereq in PrerequisiteTree)
+                    foreach (var requirement in prereq.ItemRequirements)
+                        yield return requirement;
+            }
+        }
 
         public PrerequisiteOrNode(
             uint itemId,
@@ -130,13 +139,7 @@ namespace BisBuddy.Gear.Prerequisites
                 .SelectMany(p => p.MeldableItemNames())
                 .ToHashSet();
         }
-
-        public IEnumerable<ItemRequirement> ItemRequirements(Gearset parentGearset, Gearpiece parentGearpiece)
-        {
-            foreach (var prereq in PrerequisiteTree)
-                foreach (var requirement in prereq.ItemRequirements(parentGearset, parentGearpiece))
-                    yield return requirement;
-        }
+            
 
         public string GroupKey()
         {
@@ -148,7 +151,7 @@ namespace BisBuddy.Gear.Prerequisites
 
         public override string ToString()
         {
-            return $"([OR] [{PrerequisiteTree.Count}] {string.Join("\n", PrerequisiteTree.Select(p => p.ToString()))})";
+            return $"([OR] [{PrerequisiteTree.Count}] {string.Join("\n    ", PrerequisiteTree.Select(p => p.ToString()))})";
         }
     }
 }

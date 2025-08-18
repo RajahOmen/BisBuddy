@@ -14,6 +14,7 @@ namespace BisBuddy.Gear.Prerequisites
         public bool IsObtainable { get; }
         public IReadOnlyList<IPrerequisiteNode> PrerequisiteTree { get; set; }
         public HashSet<string> ChildNodeIds { get; }
+        public IEnumerable<ItemRequirement> ItemRequirements { get; }
         public PrerequisiteNodeSourceType SourceType { get; set; }
 
         public event PrerequisiteChangeHandler? OnPrerequisiteChange;
@@ -26,7 +27,6 @@ namespace BisBuddy.Gear.Prerequisites
         public IPrerequisiteNode? AssignItemId(uint itemId);
         public List<uint> ManuallyCollectedItemIds();
         public int PrerequisiteCount();
-        public IEnumerable<ItemRequirement> ItemRequirements(Gearset parentGearset, Gearpiece parentGearpiece);
         public HashSet<string> MeldableItemNames();
         public string GroupKey();
     }
