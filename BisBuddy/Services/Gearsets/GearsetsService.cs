@@ -86,7 +86,7 @@ namespace BisBuddy.Services.Gearsets
                 gearset.OnGearsetChange += handleGearsetChange;
 
             // if configured to, run scan to ensure up-to-date
-            if (configurationService.AutoScanInventory)
+            if (GearsetsLoaded && configurationService.AutoScanInventory)
                 ScheduleUpdateFromInventory();
 
             return Task.CompletedTask;
