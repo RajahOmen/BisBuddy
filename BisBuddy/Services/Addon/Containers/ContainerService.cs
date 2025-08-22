@@ -134,6 +134,7 @@ namespace BisBuddy.Services.Addon.Containers
                 var itemId = itemDataService.ConvertItemIdToHq(item.ItemId);
                 var itemColor = gearsetsService.GetRequirementColor(
                     itemId,
+                    includeCollected: configurationService.HighlightCollectedInInventory,
                     includeCollectedPrereqs: true,
                     includeObtainable: true
                     );
