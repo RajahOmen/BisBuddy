@@ -121,6 +121,12 @@ namespace BisBuddy.Services.Configuration
             set => updateConfigProperty(cfg => cfg.HighlightInventories, value, false);
         }
 
+        public bool HighlightCollectedInInventory
+        {
+            get => configuration.HighlightCollectedInInventory;
+            set => updateConfigProperty(cfg => cfg.HighlightCollectedInInventory, value, false);
+        }
+
         public bool HighlightMarketboard
         {
             get => configuration.HighlightMarketboard;

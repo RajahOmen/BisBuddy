@@ -467,4 +467,10 @@ or to have a unique color to highlight items in</value>
   <data name="PluginDisplayName" xml:space="preserve">
     <value>BISBuddy</value>
   </data>
+  <data name="HighlightCollectedInInventoryHelp" xml:space="preserve">
+    <value>Whether to highlight items in player inventories (inventory, retainer, saddlebag) that are marked as collected.</value>
+  </data>
+  <data name="HighlightCollectedInInventoryCheckbox" xml:space="preserve">
+    <value>Include Collected</value>
+  </data>
 </root>
