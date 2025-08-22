@@ -27,7 +27,7 @@ namespace BisBuddy.Gear
                 foreach (var gearpiece in value)
                     gearpiece.OnGearpieceChange += triggerGearsetChange;
 
-                gearpieces = value;
+                gearpieces = value ?? [];
             }
         }
         // for links to externally sourced sites

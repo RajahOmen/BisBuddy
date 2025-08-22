@@ -19,7 +19,7 @@ namespace BisBuddy.Mediators
             get => currentMeldPlans;
             set
             {
-                currentMeldPlans = value;
+                currentMeldPlans = value ?? [];
                 // "refresh" this to perform new bounds check
                 CurrentMeldPlanIndex = CurrentMeldPlanIndex;
             }

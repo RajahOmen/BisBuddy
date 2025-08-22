@@ -43,7 +43,7 @@ namespace BisBuddy.ItemAssignment
             get => materiaList;
             set
             {
-                materiaList = value;
+                materiaList = value ?? [];
                 // sort by highest id first (rough approx of StatQuantity)
                 materiaList.Sort((m1, m2) => m2.ItemId.CompareTo(m1.ItemId));
             }
