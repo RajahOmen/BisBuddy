@@ -67,40 +67,46 @@ namespace BisBuddy.Gear
         private void triggerGearpieceChange() =>
             OnGearpieceChange?.Invoke();
 
-        public IEnumerable<ItemRequirement> ItemRequirements(Gearset parentGearset, bool includeUncollectedItemMateria)
+        public IEnumerable<ItemRequirementOwned> ItemRequirements(Gearset parentGearset, bool includeUncollectedItemMateria)
         {
-            yield return new ItemRequirement()
-            {
-                ItemId = ItemId,
-                Gearset = parentGearset,
-                Gearpiece = this,
-                IsCollected = IsCollected || IsManuallyCollected,
-                IsObtainable = IsObtainable,
-                RequirementType = RequirementType.Gearpiece,
-            };
+            yield return new ItemRequirementOwned(
+                new(
+                    ItemId,
+                    IsCollected || IsManuallyCollected,
+                    IsObtainable,
+                    RequirementType.Gearpiece
+                    ),
+                parentGearset,
+                this
+                );
 
             // ignore materia if uncollected item materia is not enabled
             if (IsCollected || IsManuallyCollected || includeUncollectedItemMateria)
             {
                 foreach (var materia in ItemMateria)
                 {
-                    yield return new ItemRequirement()
-                    {
-                        ItemId = materia.ItemId,
-                        Gearset = parentGearset,
-                        Gearpiece = this,
-                        IsCollected = materia.IsMelded,
-                        IsObtainable = false, // materia has no prerequisites
-                        RequirementType = RequirementType.Materia,
-                    };
+                    yield return new ItemRequirementOwned(
+                        new(
+                            materia.ItemId,
+                            materia.IsMelded,
+                            false, // materia has no prerequisites
+                            RequirementType.Materia
+                            ),
+                        parentGearset,
+                        this
+                        );
                 }
             }
 
             if (!IsCollected && PrerequisiteTree is not null)
             {
-                var prerequisiteRequirements = PrerequisiteTree.ItemRequirements(parentGearset, this);
+                var prerequisiteRequirements = PrerequisiteTree.ItemRequirements;
                 foreach (var requirement in prerequisiteRequirements)
-                    yield return requirement;
+                    yield return new(
+                        requirement,
+                        parentGearset,
+                        this
+                        );
             }
         }
 

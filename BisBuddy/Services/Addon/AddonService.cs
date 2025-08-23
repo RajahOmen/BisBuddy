@@ -152,8 +152,11 @@ namespace BisBuddy.Services.Addon
             return customNode;
         }
 
-        private unsafe bool setAddGreen(AtkResNode* node, HighlightColor? color)
+        private unsafe bool setAddColor(AtkResNode* node, HighlightColor? color)
         {
+            if (gameGui.GetAddonByName(AddonName).IsNull)
+                throw new Exception($"Addon \"{AddonName}\" is not loaded, cannot set node highlight color");
+
             var nodeHighlighted = highlightedNodes.TryGetValue((nint)node, out var currentColor);
 
             // unhighlighting node
@@ -237,7 +240,7 @@ namespace BisBuddy.Services.Addon
 
             // normal highlighting logic
             if (highlightParent)
-                changeMade = setAddGreen(parentNode, color);
+                changeMade = setAddColor(parentNode, color);
 
             // custom node logic
             if (useCustomNode)
@@ -255,17 +258,22 @@ namespace BisBuddy.Services.Addon
             try
             {
                 var highlightedNodesCount = highlightedNodes.Count;
-                for (var i = 0; i < highlightedNodesCount; i++)
+
+                // only unhighlight nodes if the addon is loaded
+                if (!gameGui.GetAddonByName(AddonName).IsNull)
                 {
-                    var node = (AtkResNode*)highlightedNodes.First().Key;
-
-                    if (parentNodeFilter != null && parentNodeFilter != node->ParentNode)
-                        continue;
-
-                    if (node != null)
+                    for (var i = 0; i < highlightedNodesCount; i++)
                     {
-                        setAddGreen(node, null);
-                        logger.Verbose($"Unhighlighted {node->NodeId} in \"{AddonName}\"");
+                        var node = (AtkResNode*)highlightedNodes.First().Key;
+
+                        if (parentNodeFilter != null && parentNodeFilter != node->ParentNode)
+                            continue;
+
+                        if (node != null)
+                        {
+                            setAddColor(node, null);
+                            logger.Verbose($"Unhighlighted {node->NodeId} in \"{AddonName}\"");
+                        }
                     }
                 }
 

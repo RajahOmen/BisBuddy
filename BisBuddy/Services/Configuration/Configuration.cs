@@ -19,6 +19,7 @@ public class Configuration : IConfigurationProperties
     public bool HighlightUncollectedItemMateria { get; set; } = true;
     public bool HighlightPrerequisiteMateria { get; set; } = true;
     public bool HighlightInventories { get; set; } = true;
+    public bool HighlightCollectedInInventory { get; set; } = true;
     public bool HighlightMarketboard { get; set; } = true;
     public bool AnnotateTooltips { get; set; } = true;
     public bool AutoCompleteItems { get; set; } = true;
@@ -42,6 +43,7 @@ public interface IConfigurationProperties : IPluginConfiguration
     public bool HighlightUncollectedItemMateria { get; set; }
     public bool HighlightPrerequisiteMateria { get; set; }
     public bool HighlightInventories { get; set; }
+    public bool HighlightCollectedInInventory { get; set; }
     public bool HighlightMarketboard { get; set; }
     public bool AnnotateTooltips { get; set; }
     public bool AutoCompleteItems { get; set; }

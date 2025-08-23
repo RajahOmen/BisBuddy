@@ -14,12 +14,14 @@ namespace BisBuddy.Services
 {
     public class InventoryChangeService(
         ITypedLogger<InventoryChangeService> logger,
+        IClientState clientState,
         IGameInventory gameInventory,
         IGearsetsService gearsetsService,
         IConfigurationService configurationService
         ) : IInventoryChangeService
     {
         private readonly ITypedLogger<InventoryChangeService> logger = logger;
+        private readonly IClientState clientState = clientState;
         private readonly IGameInventory gameInventory = gameInventory;
         private readonly IGearsetsService gearsetsService = gearsetsService;
         private readonly IConfigurationService configurationService = configurationService;
@@ -72,6 +74,10 @@ namespace BisBuddy.Services
         {
             try
             {
+                // if gearsets haven't been loaded, ignore
+                if (!gearsetsService.GearsetsLoaded)
+                    return;
+
                 var addedArgs = (InventoryItemAddedArgs)args;
 
                 // not added to a inventory type we track, ignore
@@ -88,6 +94,7 @@ namespace BisBuddy.Services
                     return;
 
                 // added to type we track, update gearsets
+                logger.Verbose($"item added, scehduling gearset update");
                 gearsetsService.ScheduleUpdateFromInventory();
             }
             catch (Exception ex)
@@ -100,6 +107,10 @@ namespace BisBuddy.Services
         {
             try
             {
+                // if gearsets haven't been loaded, ignore
+                if (!gearsetsService.GearsetsLoaded)
+                    return;
+
                 var removedArgs = (InventoryItemRemovedArgs)args;
 
                 // not removed from a inventory type we track, ignore
@@ -116,6 +127,7 @@ namespace BisBuddy.Services
                     return;
 
                 // removed from type we track, update gearsets
+                logger.Verbose($"item removed, scehduling gearset update");
                 gearsetsService.ScheduleUpdateFromInventory();
             }
             catch (Exception ex)
@@ -128,6 +140,10 @@ namespace BisBuddy.Services
         {
             try
             {
+                // if gearsets haven't been loaded, ignore
+                if (!gearsetsService.GearsetsLoaded)
+                    return;
+
                 var changedArgs = (InventoryItemChangedArgs)args;
 
                 // not changed in a inventory type we track, ignore
@@ -142,7 +158,7 @@ namespace BisBuddy.Services
                         includeCollectedPrereqs: true
                     ))
                     return;
-
+                logger.Verbose($"item changed, scehduling gearset update");
                 // changed in a type we track, update gearsets
                 gearsetsService.ScheduleUpdateFromInventory();
             }
@@ -156,6 +172,10 @@ namespace BisBuddy.Services
         {
             try
             {
+                // if gearsets haven't been loaded, ignore
+                if (!gearsetsService.GearsetsLoaded)
+                    return;
+
                 var movedArgs = (InventoryItemMovedArgs)args;
 
                 // either untracked -> untracked, or tracked -> tracked. Either way, don't change.
@@ -173,6 +193,7 @@ namespace BisBuddy.Services
                     ))
                     return;
 
+                logger.Verbose($"item moved, scehduling gearset update");
                 // moved untracked -> tracked or tracked -> untracked, update gearsets
                 gearsetsService.ScheduleUpdateFromInventory();
             }

@@ -6,6 +6,7 @@ using BisBuddy.Mediators;
 using BisBuddy.Services.Configuration;
 using BisBuddy.Services.ImportGearset;
 using Dalamud.Plugin.Services;
+using Dalamud.Utility;
 using Microsoft.Extensions.Hosting;
 using System.Collections.Generic;
 using System.IO;
@@ -52,7 +53,7 @@ namespace BisBuddy.Services.Gearsets
         private ulong currentLocalContentId => clientState.LocalContentId;
 
         private List<Gearset> currentGearsets = [];
-        private Dictionary<uint, List<ItemRequirement>> currentItemRequirements = [];
+        private Dictionary<uint, List<ItemRequirementOwned>> currentItemRequirements = [];
         private GearsetSortType currentGearsetsSortType = GearsetSortType.Priority;
         private bool currentGearsetsSortDescending = false;
 
@@ -65,6 +66,8 @@ namespace BisBuddy.Services.Gearsets
                 scheduleGearsetsChange();
             }
         }
+
+        public bool GearsetsLoaded { get; private set; } = false;
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
@@ -86,7 +89,7 @@ namespace BisBuddy.Services.Gearsets
                 gearset.OnGearsetChange += handleGearsetChange;
 
             // if configured to, run scan to ensure up-to-date
-            if (configurationService.AutoScanInventory)
+            if (GearsetsLoaded && configurationService.AutoScanInventory)
                 ScheduleUpdateFromInventory();
 
             return Task.CompletedTask;
@@ -121,6 +124,7 @@ namespace BisBuddy.Services.Gearsets
         {
             try
             {
+                logger.Debug($"Loading gearsets for \"{currentLocalContentId}\"");
                 // unregister change listening from old gearsets
                 foreach (var gearset in currentGearsets)
                     gearset.OnGearsetChange -= handleGearsetChange;
@@ -128,25 +132,22 @@ namespace BisBuddy.Services.Gearsets
                 if (currentLocalContentId == 0)
                 {
                     currentGearsets = [];
-                    return;
+                else
+                {
+                    using var gearsetsReadStream = fileService.OpenReadGearsetsStream(currentLocalContentId);
+                    currentGearsets = JsonSerializer.Deserialize<List<Gearset>>(
+                        gearsetsReadStream,
+                        jsonSerializerOptions
+                        ) ?? [];
+                    GearsetsLoaded = true;
                 }
-
-                using var gearsetsStream = fileService.OpenReadGearsetsStream(currentLocalContentId);
-                currentGearsets = JsonSerializer.Deserialize<List<Gearset>>(
-                    gearsetsStream,
-                    jsonSerializerOptions
-                    ) ?? [];
             }
             catch (FileNotFoundException)
             {
-                logger.Debug($"No gearsets file found for \"{currentLocalContentId}\", creating new");
-
-                var emptyGearsetsListStr = serializeGearsets([]);
-                fileService.WriteGearsetsAsync(
-                    currentLocalContentId,
-                    emptyGearsetsListStr
-                    );
+                logger.Warning($"No gearsets file found for \"{currentLocalContentId}\", creating new");
                 currentGearsets = [];
+                _ = saveCurrentGearsetsAsync();
+                GearsetsLoaded = true;
             }
             finally
             {
@@ -158,20 +159,36 @@ namespace BisBuddy.Services.Gearsets
 
         private void scheduleSaveCurrentGearsets()
         {
-            queueService.Enqueue(async () => await saveCurrentGearsetsAsync());
+            queueService.Enqueue(saveCurrentGearsets);
         }
 
-        private async Task saveCurrentGearsetsAsync()
+        private void saveCurrentGearsets()
         {
-            // don't save anything if no character is logged in
-            if (currentLocalContentId == 0 || !clientState.IsLoggedIn)
+            // don't save anything if no gearsets are actually loaded
+            if (!GearsetsLoaded || currentLocalContentId == 0)
                 return;
 
             var gearsetsListStr = serializeGearsets(currentGearsets);
 
             logger.Verbose($"Saving {currentLocalContentId}'s current gearsets");
 
-            await fileService.WriteGearsetsAsync(
+            fileService.WriteGearsetsString(
+                currentLocalContentId,
+                gearsetsListStr
+                );
+        }
+
+        private async Task saveCurrentGearsetsAsync()
+        {
+            // don't save anything if no gearsets are actually loaded
+            if (!GearsetsLoaded || currentLocalContentId == 0)
+                return;
+
+            var gearsetsListStr = serializeGearsets(currentGearsets);
+
+            logger.Verbose($"Saving {currentLocalContentId}'s current gearsets");
+
+            await fileService.WriteGearsetsStringAsync(
                 currentLocalContentId,
                 gearsetsListStr
                 );
@@ -192,6 +209,10 @@ namespace BisBuddy.Services.Gearsets
     public interface IGearsetsService : IHostedService
     {
         public IReadOnlyList<Gearset> CurrentGearsets { get; }
+        /// <summary>
+        /// Indicates if gearsets for the current character have been loaded
+        /// </summary>
+        public bool GearsetsLoaded { get; }
         public Task<ImportGearsetsResult> AddGearsetsFromSource(ImportGearsetSourceType sourceType, string sourceString);
         public void RemoveGearset(Gearset gearset);
         public string ExportGearsetToJsonStr(Gearset gearset);
@@ -210,7 +231,7 @@ namespace BisBuddy.Services.Gearsets
             bool includeObtainable = false,
             bool includeCollectedPrereqs = false
         );
-        public IEnumerable<ItemRequirement> GetItemRequirements(
+        public IEnumerable<ItemRequirementOwned> GetItemRequirements(
             uint itemId,
             bool includePrereqs = true,
             bool includeMateria = true,
@@ -219,7 +240,7 @@ namespace BisBuddy.Services.Gearsets
             bool includeCollectedPrereqs = false
         );
         public HighlightColor? GetRequirementColor(
-            IEnumerable<ItemRequirement> itemRequirements
+            IEnumerable<ItemRequirementOwned> itemRequirements
         );
         public HighlightColor? GetRequirementColor(
             uint itemId,

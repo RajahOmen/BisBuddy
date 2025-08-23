@@ -252,6 +252,24 @@ public class ConfigTab : TabRenderer, IDisposable
         if (ImGui.IsItemHovered())
             ImGui.SetTooltip(Resource.HighlightInventoriesHelp);
 
+        using (ImRaii.Disabled(!highlightInventories))
+        {
+            var drawList = ImGui.GetWindowDrawList();
+            var curLoc = ImGui.GetCursorScreenPos();
+            var col = ImGui.GetColorU32(new Vector4(1, 1, 1, 1));
+            var halfButtonHeight = ImGui.GetTextLineHeight() / 2 + ImGui.GetStyle().FramePadding.Y;
+            drawList.AddLine(curLoc + new Vector2(10, 0), curLoc + new Vector2(10, halfButtonHeight), col, 2);
+            drawList.AddLine(curLoc + new Vector2(10, halfButtonHeight), curLoc + new Vector2(20, halfButtonHeight), col, 2);
+            using (ImRaii.PushIndent(25.0f, scaled: false))
+            {
+                var highlightCollectedInInventory = configurationService.HighlightCollectedInInventory;
+                if (ImGui.Checkbox(Resource.HighlightCollectedInInventoryCheckbox, ref highlightCollectedInInventory))
+                    configurationService.HighlightCollectedInInventory = highlightCollectedInInventory;
+                if (ImGui.IsItemHovered())
+                    ImGui.SetTooltip(Resource.HighlightCollectedInInventoryHelp);
+            }
+        }
+
         // MARKETBOARD
         var highlightMarketboard = configurationService.HighlightMarketboard;
         if (ImGui.Checkbox(Resource.HighlightMarketboardCheckbox, ref highlightMarketboard))

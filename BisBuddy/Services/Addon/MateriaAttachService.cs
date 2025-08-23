@@ -24,12 +24,19 @@ namespace BisBuddy.Services.Addon
     {
         private readonly IMeldPlanService meldPlanService = meldPlanService;
 
+        // for marking the filter checkbox red when filtering is enabled
+        private static readonly HighlightColor RedColor = new(1.0f, -1.0f, -1.0f, 1.0f);
+
         public override string AddonName => "MateriaAttach";
 
         // ADDON NODE IDS
         // node ids for gearpiece side
         // list of gearpieces to meld materia to
         public static readonly uint AddonGearpieceListNodeId = 13;
+        // component for the checkbox to filter out gearpieces that cannot have more materia attached
+        public static readonly uint AddonGearpieceFilterCheckboxNodeId = 7;
+        // image node for when the checkbox is filled / selected
+        public static readonly uint AddonGearpieceFilterCheckboxFilledImageNodeId = 3;
         // hover highlight node for gearpieces
         public static readonly uint AddonGearpieceSelectedHighlightNodeId = 12;
 
@@ -192,7 +199,8 @@ namespace BisBuddy.Services.Addon
                 var atkValues = addon->AtkValues;
 
                 // update didn't include up to selected index = dont have data to update
-                if (addon->AtkValuesCount < atkValueListStartIndex + 1) return;
+                if (addon->AtkValuesCount < atkValueListStartIndex + 1)
+                    return;
 
                 indexesToFill.Clear();
 
@@ -234,6 +242,24 @@ namespace BisBuddy.Services.Addon
 
         private unsafe void updateUnmeldedItemIndexes(AtkUnitBase* addon)
         {
+            // check if filtering right side items is enabled. If so, do not highlight right items
+            // and mark the button in red to indicate that it should be adjusted
+            var baseNode = new BaseNode(addon);
+            var checkboxComponentNode = baseNode
+                .GetComponentNode(AddonGearpieceFilterCheckboxNodeId);
+            var checkboxComponentNodePtr = checkboxComponentNode.GetPointer();
+            var checkboxFillNode = checkboxComponentNode
+                .GetNode<AtkImageNode>(AddonGearpieceFilterCheckboxFilledImageNodeId);
+
+            if (checkboxFillNode != null && !checkboxFillNode->IsVisible())
+            {
+                setNodeNeededMark((AtkResNode*)checkboxComponentNodePtr, RedColor, true, false);
+                unmeldedItemIndexes.Clear();
+                return;
+            }
+
+            setNodeNeededMark((AtkResNode*)checkboxComponentNodePtr, null, true, false);
+
             // update with item parameters
             updateRequiredIndexes(
                 addon,
@@ -269,7 +295,8 @@ namespace BisBuddy.Services.Addon
         {
             try
             {
-                if (!addon->IsReady) return;
+                if (!addon->IsReady)
+                    return;
 
                 var addonNode = new BaseNode(addon);
 
@@ -278,7 +305,7 @@ namespace BisBuddy.Services.Addon
             }
             catch (Exception ex)
             {
-                logger.Error(ex, "Error in HandleMateriaAttachAddonPostReceiveEvent");
+                logger.Error(ex, "Error updating highlights");
             }
         }
 
@@ -301,7 +328,7 @@ namespace BisBuddy.Services.Addon
         {
             var parentNodeComponent = (AtkComponentList*)parentNode->Component;
 
-            if (parentNodeComponent->ListLength == 0)
+            if (highlightedIndexColors.Count == 0 || parentNodeComponent->ListLength == 0)
                 unmarkNodes((AtkResNode*)parentNode);
 
             for (var i = 0; i < parentNodeComponent->ListLength; i++)
@@ -354,7 +381,7 @@ namespace BisBuddy.Services.Addon
         {
             var addon = gameGui.GetAddonByName(AddonName);
 
-            if (addon == nint.Zero)
+            if (addon.IsNull)
                 return;
 
             if (parentNodePtr == nint.Zero)

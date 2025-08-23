@@ -88,7 +88,7 @@ namespace BisBuddy.Gear
                 foreach (var gearpiece in value)
                     gearpiece.OnGearpieceChange += triggerGearsetChange;
 
-                gearpieces = value;
+                gearpieces = value ?? [];
             }
         }
         // for links to externally sourced sites
@@ -203,7 +203,7 @@ namespace BisBuddy.Gear
             OnGearsetChange?.Invoke();
         }
 
-        public IEnumerable<ItemRequirement> ItemRequirements(bool includeUncollectedItemMateria)
+        public IEnumerable<ItemRequirementOwned> ItemRequirements(bool includeUncollectedItemMateria)
         {
             if (!IsActive)
                 yield break;

@@ -77,13 +77,18 @@ namespace BisBuddy.Services.Gearsets
 
         private void handleLogin()
         {
+            logger.Debug($"handling login");
             loadGearsets();
             if (configurationService.AutoScanInventory)
                 ScheduleUpdateFromInventory();
         }
 
         private void handleLogout(int type, int code)
-            => currentGearsets = [];
+        {
+            logger.Debug($"handling logout");
+            currentGearsets = [];
+            GearsetsLoaded = false;
+        }
 
         private void handleConfigChange(bool effectsAssignments)
         {
@@ -95,6 +100,7 @@ namespace BisBuddy.Services.Gearsets
             if (!configurationService.PluginUpdateInventoryScan)
                 return;
 
+            logger.Debug($"handling config change");
             ScheduleUpdateFromInventory();
         }
 
@@ -122,7 +128,11 @@ namespace BisBuddy.Services.Gearsets
                 gearset.OnGearsetChange += handleGearsetChange;
             }
 
-            scheduleGearsetsChange();
+            logger.Info($"Adding {gearsetsToAdd.Count()} gearsets to current gearsets");
+            if (configurationService.PluginUpdateInventoryScan)
+                ScheduleUpdateFromInventory();
+            else
+                scheduleGearsetsChange();
         }
 
         private void sortGearsets(GearsetSortType sortType, bool sortDescending)
@@ -175,7 +185,10 @@ namespace BisBuddy.Services.Gearsets
             gearset.OnGearsetChange -= handleGearsetChange;
             currentGearsets.Remove(gearset);
 
-            scheduleGearsetsChange();
+            if (configurationService.PluginUpdateInventoryScan)
+                ScheduleUpdateFromInventory();
+            else
+                scheduleGearsetsChange();
         }
 
         public void ScheduleUpdateFromInventory(
@@ -189,6 +202,13 @@ namespace BisBuddy.Services.Gearsets
             bool manualUpdate = false
             )
         {
+            // do not update if there is no player currently logged in
+            if (!GearsetsLoaded)
+            {
+                logger.Warning($"Tried to update gearsets from inventory (count: {gearsetsToUpdate.Count()}) while not logged in, ignoring request");
+                return;
+            }
+
             // display loading state in main menu
             inventoryUpdateDisplayService.UpdateIsQueued = true;
             inventoryUpdateDisplayService.IsManualUpdate = manualUpdate;
@@ -200,7 +220,7 @@ namespace BisBuddy.Services.Gearsets
                 try
                 {
                     logger.Verbose($"Updating current gearsets with new assignments");
-                    if (!gearsetsToUpdate.Any() || !clientState.IsLoggedIn)
+                    if (!GearsetsLoaded)
                         return;
 
                     var itemsList = getGameInventoryItems();
@@ -215,6 +235,8 @@ namespace BisBuddy.Services.Gearsets
                     var updatedGearpieces = solver.SolveAndAssign();
 
                     logger.Debug($"Updated {updatedGearpieces?.Count ?? 0} gearpieces from inventories");
+
+                    scheduleGearsetsChange();
 
                     inventoryUpdateDisplayService.GearpieceUpdateCount = updatedGearpieces?.Count ?? 0;
                 }

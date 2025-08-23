@@ -12,15 +12,15 @@ namespace BisBuddy.Services.Gearsets
         /// </summary>
         private void updateItemRequirements()
         {
-            var requirements = new Dictionary<uint, List<ItemRequirement>>();
+            var requirements = new Dictionary<uint, List<ItemRequirementOwned>>();
             foreach (var gearset in currentGearsets)
             {
                 foreach (var requirement in gearset.ItemRequirements(configurationService.HighlightUncollectedItemMateria))
                 {
-                    if (requirements.TryGetValue(requirement.ItemId, out var itemIdRequirements))
+                    if (requirements.TryGetValue(requirement.ItemRequirement.ItemId, out var itemIdRequirements))
                         itemIdRequirements.Add(requirement);
                     else
-                        requirements[requirement.ItemId] = [requirement];
+                        requirements[requirement.ItemRequirement.ItemId] = [requirement];
                 }
             }
             currentItemRequirements = requirements;
@@ -71,7 +71,7 @@ namespace BisBuddy.Services.Gearsets
         /// <param name="includeCollectedPrereqs">If includePrereqs is true, whether to include prerequisites marked as collected.
         /// True for 'internal' inventory sources. False for 'external' sources outside of player inventory</param>
         /// <returns>List of the items ItemRequirements that match the filters</returns>
-        public IEnumerable<ItemRequirement> GetItemRequirements(
+        public IEnumerable<ItemRequirementOwned> GetItemRequirements(
             uint itemId,
             bool includePrereqs = true,
             bool includeMateria = true,
@@ -88,21 +88,21 @@ namespace BisBuddy.Services.Gearsets
 
             foreach (var req in itemIdRequirements)
             {
-                if (!includeObtainable && req.IsObtainable && !req.IsCollected)
+                if (!includeObtainable && req.ItemRequirement.IsObtainable && !req.ItemRequirement.IsCollected)
                     continue;
 
-                switch (req.RequirementType)
+                switch (req.ItemRequirement.RequirementType)
                 {
                     case RequirementType.Gearpiece:
-                        if (includeCollected || !req.IsCollected)
+                        if (includeCollected || !req.ItemRequirement.IsCollected)
                             yield return req;
                         break;
                     case RequirementType.Materia:
-                        if (includeMateria && (includeCollected || !req.IsCollected))
+                        if (includeMateria && (includeCollected || !req.ItemRequirement.IsCollected))
                             yield return req;
                         break;
                     case RequirementType.Prerequisite:
-                        if (includePrereqs && (includeCollectedPrereqs || !req.IsCollected))
+                        if (includePrereqs && (includeCollectedPrereqs || !req.ItemRequirement.IsCollected))
                             yield return req;
                         break;
                 }
@@ -112,7 +112,7 @@ namespace BisBuddy.Services.Gearsets
         }
 
         public HighlightColor? GetRequirementColor(
-            IEnumerable<ItemRequirement> itemRequirements
+            IEnumerable<ItemRequirementOwned> itemRequirements
             )
         {
             if (!itemRequirements.Any())

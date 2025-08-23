@@ -44,6 +44,25 @@ namespace BisBuddy.Gear.Prerequisites
         public bool IsObtainable =>
             IsCollected || (PrerequisiteTree.Count > 0 && PrerequisiteTree.All(p => p.IsObtainable));
         public HashSet<string> ChildNodeIds => [.. PrerequisiteTree.Select(p => p.NodeId), .. PrerequisiteTree.SelectMany(p => p.ChildNodeIds)];
+        public IEnumerable<ItemRequirement> ItemRequirements
+        {
+            get
+            {
+                yield return new ItemRequirement()
+                {
+                    ItemId = ItemId,
+                    IsCollected = IsCollected,
+                    IsObtainable = IsObtainable,
+                    RequirementType = RequirementType.Prerequisite,
+                };
+
+                if (PrerequisiteTree.Count > 0)
+                    foreach (var requirement in PrerequisiteTree[0].ItemRequirements)
+                        yield return requirement;
+            }
+        }
+
+
         public CollectionStatusType CollectionStatus
         {
             get
@@ -205,23 +224,6 @@ namespace BisBuddy.Gear.Prerequisites
             return prereqNames;
         }
 
-        public IEnumerable<ItemRequirement> ItemRequirements(Gearset parentGearset, Gearpiece parentGearpiece)
-        {
-            yield return new ItemRequirement()
-            {
-                ItemId = ItemId,
-                Gearset = parentGearset,
-                Gearpiece = parentGearpiece,
-                IsCollected = IsCollected,
-                IsObtainable = IsObtainable,
-                RequirementType = RequirementType.Prerequisite,
-            };
-
-            if (PrerequisiteTree.Count > 0)
-                foreach (var requirement in PrerequisiteTree[0].ItemRequirements(parentGearset, parentGearpiece))
-                    yield return requirement;
-        }
-
         public string GroupKey()
         {
             return $"""
@@ -232,7 +234,10 @@ namespace BisBuddy.Gear.Prerequisites
 
         public override string ToString()
         {
-            return $"([UNIT] [{PrerequisiteTree.Count}] {ItemName} => \n{string.Join("\n", PrerequisiteTree.Select(p => p.ToString()))})";
+            var childrenStr = PrerequisiteTree.Count > 0
+                ? $"=>\n    {string.Join("\n", PrerequisiteTree.Select(p => p.ToString()))}"
+                : "";
+            return $"[UNIT] {ItemName}{childrenStr}";
         }
     }
 }

@@ -171,7 +171,7 @@ namespace BisBuddy.Services.Configuration
             var writeGearsetsTasks = config.CharactersData.Select(async charData =>
             {
                 var gearsets = JsonSerializer.Serialize(charData.Value.Gearsets, jsonSerializerOptions);
-                await fileService.WriteGearsetsAsync(charData.Key, gearsets, cancellationToken);
+                await fileService.WriteGearsetsStringAsync(charData.Key, gearsets, cancellationToken);
             });
             await Task.WhenAll(writeGearsetsTasks);
 

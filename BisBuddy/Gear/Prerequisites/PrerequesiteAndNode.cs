@@ -1,3 +1,4 @@
+using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,6 +32,15 @@ namespace BisBuddy.Gear.Prerequisites
         public bool IsManuallyCollected => PrerequisiteTree.All(p => p.IsManuallyCollected);
         public bool IsObtainable => IsCollected || PrerequisiteTree.All(p => p.IsObtainable);
         public HashSet<string> ChildNodeIds => [.. PrerequisiteTree.Select(p => p.NodeId), .. PrerequisiteTree.SelectMany(p => p.ChildNodeIds)];
+        public IEnumerable<ItemRequirement> ItemRequirements
+        {
+            get
+            {
+                foreach (var prereq in PrerequisiteTree)
+                    foreach (var requirement in prereq.ItemRequirements)
+                        yield return requirement;
+            }
+        }
         public CollectionStatusType CollectionStatus
         {
             get
@@ -42,6 +52,7 @@ namespace BisBuddy.Gear.Prerequisites
                 return CollectionStatusType.NotObtainable;
             }
         }
+
 
 
         public List<(IPrerequisiteNode Node, int Count)> Groups()
@@ -171,13 +182,6 @@ namespace BisBuddy.Gear.Prerequisites
                 .ToHashSet();
         }
 
-        public IEnumerable<ItemRequirement> ItemRequirements(Gearset parentGearset, Gearpiece parentGearpiece)
-        {
-            foreach (var prereq in PrerequisiteTree)
-                foreach (var requirement in prereq.ItemRequirements(parentGearset, parentGearpiece))
-                    yield return requirement;
-        }
-
         public string GroupKey()
         {
             return $"""
@@ -188,7 +192,7 @@ namespace BisBuddy.Gear.Prerequisites
 
         public override string ToString()
         {
-            return $"([AND] [{PrerequisiteTree.Count}] {string.Join("\n", PrerequisiteTree.Select(p => p.ToString()))})";
+            return $"([AND] [{PrerequisiteTree.Count}] {string.Join("\n    ", PrerequisiteTree.Select(p => p.ToString()))})";
         }
     }
 }

@@ -1,4 +1,5 @@
 using BisBuddy.Gear;
+using Dalamud.Utility;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Linq.Expressions;
@@ -120,6 +121,12 @@ namespace BisBuddy.Services.Configuration
             set => updateConfigProperty(cfg => cfg.HighlightInventories, value, affectsAssignments: false);
         }
 
+        public bool HighlightCollectedInInventory
+        {
+            get => configuration.HighlightCollectedInInventory;
+            set => updateConfigProperty(cfg => cfg.HighlightCollectedInInventory, value, false);
+        }
+
         public bool HighlightMarketboard
         {
             get => configuration.HighlightMarketboard;
@@ -185,13 +192,13 @@ namespace BisBuddy.Services.Configuration
             triggerConfigurationChange(affectsAssignments: false);
         }
 
-        private async Task saveAsync(CancellationToken cancellationToken = default)
+        private void saveConfig()
         {
             try
             {
                 logger.Verbose($"Saving configuration file");
                 var configText = JsonSerializer.Serialize(configuration, jsonSerializerOptions);
-                await fileService.WriteConfigAsync(configText, cancellationToken);
+                fileService.WriteConfigString(configText);
             }
             catch (Exception ex)
             {
@@ -200,7 +207,7 @@ namespace BisBuddy.Services.Configuration
         }
 
         public void scheduleSave() =>
-            queueService.Enqueue(async () => await saveAsync());
+            queueService.Enqueue(saveConfig);
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
@@ -209,7 +216,16 @@ namespace BisBuddy.Services.Configuration
 
         public async Task StopAsync(CancellationToken cancellationToken)
         {
-            await saveAsync(cancellationToken);
+            try
+            {
+                logger.Verbose($"Saving configuration file");
+                var configText = JsonSerializer.Serialize(configuration, jsonSerializerOptions);
+                await fileService.WriteConfigStringAsync(configText, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"Error saving config file", ex);
+            }
         }
     }
 
