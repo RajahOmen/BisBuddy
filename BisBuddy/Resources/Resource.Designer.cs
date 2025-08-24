@@ -424,7 +424,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Include Collected.
         /// </summary>
-        internal static string HighlightCollectedInInventoryCheckbox {
+        public static string HighlightCollectedInInventoryCheckbox {
             get {
                 return ResourceManager.GetString("HighlightCollectedInInventoryCheckbox", resourceCulture);
             }
@@ -433,7 +433,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Whether to highlight items in player inventories (inventory, retainer, saddlebag) that are marked as collected..
         /// </summary>
-        internal static string HighlightCollectedInInventoryHelp {
+        public static string HighlightCollectedInInventoryHelp {
             get {
                 return ResourceManager.GetString("HighlightCollectedInInventoryHelp", resourceCulture);
             }
