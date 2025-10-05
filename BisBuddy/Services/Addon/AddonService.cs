@@ -300,15 +300,10 @@ namespace BisBuddy.Services.Addon
             var count = customNodes.Count;
             foreach (var customNodeEntry in customNodes)
             {
-                unlinkCustomNode(customNodeEntry.Key, customNodeEntry.Value.Node);
-
-                customNodeEntry.Value.Node.Dispose();
-
+                var node = customNodeEntry.Value.Node;
+                nativeController.DisposeNode(ref node);
                 customNodes.Remove(customNodeEntry.Key);
             }
-
-            if (customNodes.Count > 0)
-                throw new Exception($"Not all nodes destroyed in \"{AddonName}\". {customNodes.Count} nodes remaining.");
 
             if (count > 0)
                 logger.Verbose($"Destroyed all {count} custom nodes in \"{AddonName}\"");

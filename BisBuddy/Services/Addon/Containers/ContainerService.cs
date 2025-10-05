@@ -211,11 +211,5 @@ namespace BisBuddy.Services.Addon.Containers
             // doesn't use custom nodes
             return null;
         }
-
-        protected override void unlinkCustomNode(nint parentNodePtr, NodeBase node)
-        {
-            // doesn't use custom nodes
-            return;
-        }
     }
 }

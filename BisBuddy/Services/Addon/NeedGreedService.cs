@@ -78,11 +78,5 @@ namespace BisBuddy.Services.Addon
             // doesn't use custom nodes
             return null;
         }
-
-        protected override void unlinkCustomNode(nint parentNodePtr, NodeBase node)
-        {
-            // doesn't use custom nodes
-            return;
-        }
     }
 }

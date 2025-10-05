@@ -292,18 +292,5 @@ namespace BisBuddy.Services.Addon
                 return null;
             }
         }
-
-        protected override unsafe void unlinkCustomNode(nint parentNodePtr, NodeBase node)
-        {
-            var addon = gameGui.GetAddonByName(AddonName);
-
-            if (addon == nint.Zero)
-                return;
-
-            if (parentNodePtr == nint.Zero)
-                return;
-
-            nativeController.DetachNode(node);
-        }
     }
 }
