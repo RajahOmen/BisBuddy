@@ -16,8 +16,6 @@ namespace BisBuddy.Services.Addon
         // the node id of the list of items in the addon
         public static readonly uint AddonItemListNodeId = 6;
 
-        public override uint AddonCustomNodeId => throw new NotImplementedException();
-
         public override string AddonName => "NeedGreed";
 
         protected override float CustomNodeMaxY => float.MaxValue;

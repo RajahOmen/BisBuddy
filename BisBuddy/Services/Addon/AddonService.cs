@@ -35,15 +35,12 @@ namespace BisBuddy.Services.Addon
         protected IReadOnlyDictionary<nint, (NodeBase Node, HighlightColor Color)> CustomNodes => customNodes;
 
         protected bool isEnabled { get; private set; } = false;
-        public virtual uint AddonCustomNodeId => 420000;
         public abstract string AddonName { get; }
 
         // for lists that scroll, to avoid them rendering off the bottom
         protected abstract float CustomNodeMaxY { get; }
 
         protected abstract unsafe NodeBase? initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon, HighlightColor color);
-
-        protected abstract unsafe void unlinkCustomNode(nint parentNodePtr, NodeBase node);
 
         protected abstract void registerAddonListeners();
         protected abstract void unregisterAddonListeners();

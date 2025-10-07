@@ -16,8 +16,6 @@ namespace BisBuddy.Services.Addon.Containers
         AddonServiceDependencies<T> deps
         ) : AddonService<T>(deps) where T : class
     {
-        public override uint AddonCustomNodeId => throw new NotImplementedException();
-
         protected readonly Dictionary<int, HighlightColor> neededItemColors = [];
         protected readonly List<nint> dragDropComponentNodes = [];
 
