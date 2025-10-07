@@ -116,6 +116,9 @@ namespace BisBuddy.Services.Addon
 
         private unsafe void handleUpdateHighlightColor()
         {
+            if (gameGui.GetAddonByName(AddonName).IsNull)
+                throw new Exception($"Addon \"{AddonName}\" is not loaded, cannot update node highlight colors");
+
             // update colors for existing atk nodes that was just highlighted
             foreach (var nodeData in highlightedNodes)
                 nodeData.Value.ColorExistingNode((AtkResNode*)nodeData.Key);
@@ -138,7 +141,7 @@ namespace BisBuddy.Services.Addon
         protected unsafe NodeBase createCustomNode(AtkResNode* parentNode, AtkUnitBase* addon, HighlightColor color)
         {
             logger.Verbose(
-                $"Creating custom node \"{AddonCustomNodeId}\" (parent node \"{parentNode->NodeId}\") " +
+                $"Creating custom node (parent node \"{parentNode->NodeId}\") " +
                 $"in \"{AddonName}\" with color {color.BaseColor}"
                 );
 
@@ -289,6 +292,11 @@ namespace BisBuddy.Services.Addon
             catch (Exception ex)
             {
                 logger.Warning(ex, $"Failed to unmark all nodes in \"{AddonName}\"");
+            }
+            finally
+            {
+                if (parentNodeFilter is null)
+                    highlightedNodes.Clear();
             }
         }
 
