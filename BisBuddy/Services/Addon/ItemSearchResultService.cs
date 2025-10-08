@@ -198,7 +198,7 @@ namespace BisBuddy.Services.Addon
                 customNode.MarkDirty();
 
                 // attach it to the addon
-                nativeController.AttachNode(customNode, addon->RootNode, NodePosition.AsLastChild);
+                nativeController.AttachNode(customNode, parentNode);
 
                 return customNode;
             }

@@ -84,7 +84,6 @@ namespace BisBuddy.Services.Addon.ShopExchange
                 };
 
 
-
                 if (addon == null || !addon->IsVisible) return;
 
                 var itemTreeListComponent = (AtkComponentTreeList*)shopExchangeNode
@@ -258,7 +257,7 @@ namespace BisBuddy.Services.Addon.ShopExchange
                 customNode.MarkDirty();
 
                 // attach it to the addon
-                nativeController.AttachNode(customNode, addon->RootNode, NodePosition.AsLastChild);
+                nativeController.AttachNode(customNode, (AtkComponentNode*)parentNodePtr);
 
                 return customNode;
             }
