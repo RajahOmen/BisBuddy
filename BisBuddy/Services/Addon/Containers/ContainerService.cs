@@ -204,10 +204,10 @@ namespace BisBuddy.Services.Addon.Containers
             return container->GetInventorySlot(item->Slot);
         }
 
-        protected override unsafe NodeBase? initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon, HighlightColor color)
+        protected override unsafe NodeBase initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon, HighlightColor color)
         {
             // doesn't use custom nodes
-            return null;
+            throw new NotSupportedException($"{GetType().Name} does not use custom nodes");
         }
     }
 }

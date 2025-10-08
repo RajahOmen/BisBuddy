@@ -236,7 +236,7 @@ namespace BisBuddy.Services.Addon.ShopExchange
             ;
         }
 
-        protected override unsafe NodeBase? initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon, HighlightColor color)
+        protected override unsafe NodeBase initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon, HighlightColor color)
         {
             NineGridNode? customNode = null;
             try
@@ -251,21 +251,14 @@ namespace BisBuddy.Services.Addon.ShopExchange
                     hoverNode,
                     color.CustomNodeColor,
                     color.CustomNodeAlpha(configurationService.BrightListItemHighlighting)
-                    ) ?? throw new Exception($"Could not clone node \"{hoverNode->NodeId}\"");
-
-                // mark as dirty
-                customNode.MarkDirty();
-
-                // attach it to the addon
-                nativeController.AttachNode(customNode, (AtkComponentNode*)parentNodePtr);
+                    ) ?? throw new InvalidOperationException($"Could not clone node \"{hoverNode->NodeId}\"");
 
                 return customNode;
             }
-            catch (Exception ex)
+            catch
             {
                 customNode?.Dispose();
-                logger.Error(ex, "Failed to create custom highlight node");
-                return null;
+                throw;
             }
         }
     }

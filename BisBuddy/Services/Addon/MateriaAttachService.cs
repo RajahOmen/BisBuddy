@@ -339,7 +339,7 @@ namespace BisBuddy.Services.Addon
             }
         }
 
-        protected override unsafe NodeBase? initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon, HighlightColor color)
+        protected override unsafe NodeBase initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon, HighlightColor color)
         {
             NineGridNode? customNode = null;
             try
@@ -359,21 +359,14 @@ namespace BisBuddy.Services.Addon
                     hoverNode,
                     color.CustomNodeColor,
                     color.CustomNodeAlpha(configurationService.BrightListItemHighlighting)
-                    ) ?? throw new Exception($"Could not clone node \"{hoverNodeId}\"");
-
-                // mark as dirty
-                customNode.MarkDirty();
-
-                // attach it to the addon
-                nativeController.AttachNode(customNode, parentNode, NodePosition.AsLastChild);
+                    ) ?? throw new InvalidOperationException($"Could not clone node \"{hoverNodeId}\"");
 
                 return customNode;
             }
-            catch (Exception ex)
+            catch
             {
                 customNode?.Dispose();
-                logger.Error(ex, "Failed to initialize custom node");
-                return null;
+                throw;
             }
         }
     }

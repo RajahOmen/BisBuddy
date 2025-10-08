@@ -40,7 +40,7 @@ namespace BisBuddy.Services.Addon
         // for lists that scroll, to avoid them rendering off the bottom
         protected abstract float CustomNodeMaxY { get; }
 
-        protected abstract unsafe NodeBase? initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon, HighlightColor color);
+        protected abstract unsafe NodeBase initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon, HighlightColor color);
 
         protected abstract void registerAddonListeners();
         protected abstract void unregisterAddonListeners();
@@ -145,11 +145,23 @@ namespace BisBuddy.Services.Addon
                 $"in \"{AddonName}\" with color {color.BaseColor}"
                 );
 
-            var customNode = initializeCustomNode(parentNode, addon, color)
-                ?? throw new Exception($"Failed to create custom node for \"{AddonName}\"");
+            var customNode = initializeCustomNode(parentNode, addon, color);
 
-            customNodes.Add((nint)parentNode, (customNode, color));
-            return customNode;
+            try
+            {
+                customNode.MarkDirty();
+                if (parentNode->GetNodeType() is NodeType.Component)
+                    nativeController.AttachNode(customNode, (AtkComponentNode*)parentNode);
+                else
+                    nativeController.AttachNode(customNode, parentNode);
+                customNodes.Add((nint)parentNode, (customNode, color));
+                return customNode;
+            } catch (Exception ex)
+            {
+                nativeController.DisposeNode(ref customNode);
+                logger.Error(ex, $"Failed to create custom node in \"{AddonName}\"");
+                throw;
+            }
         }
 
         private unsafe bool setAddColor(AtkResNode* node, HighlightColor? color)
