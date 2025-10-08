@@ -116,8 +116,8 @@ namespace BisBuddy.Services.Addon
 
         private unsafe void handleUpdateHighlightColor()
         {
-            if (gameGui.GetAddonByName(AddonName).IsNull)
-                throw new Exception($"Addon \"{AddonName}\" is not loaded, cannot update node highlight colors");
+            if (gameGui.GetAddonByName(AddonName).IsNull && highlightedNodes.Count > 0)
+                throw new Exception($"Addon \"{AddonName}\" is not loaded, cannot update \"{highlightedNodes.Count}\" node highlight colors");
 
             // update colors for existing atk nodes that was just highlighted
             foreach (var nodeData in highlightedNodes)
