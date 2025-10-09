@@ -16,8 +16,6 @@ namespace BisBuddy.Services.Addon
         // the node id of the list of items in the addon
         public static readonly uint AddonItemListNodeId = 6;
 
-        public override uint AddonCustomNodeId => throw new NotImplementedException();
-
         public override string AddonName => "NeedGreed";
 
         protected override float CustomNodeMaxY => float.MaxValue;
@@ -73,16 +71,10 @@ namespace BisBuddy.Services.Addon
             }
         }
 
-        protected override unsafe NodeBase? initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon, HighlightColor color)
+        protected override unsafe NodeBase initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon, HighlightColor color)
         {
             // doesn't use custom nodes
-            return null;
-        }
-
-        protected override void unlinkCustomNode(nint parentNodePtr, NodeBase node)
-        {
-            // doesn't use custom nodes
-            return;
+            throw new NotSupportedException($"{GetType().Name} does not use custom nodes");
         }
     }
 }

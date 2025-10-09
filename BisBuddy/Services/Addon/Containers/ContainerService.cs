@@ -16,8 +16,6 @@ namespace BisBuddy.Services.Addon.Containers
         AddonServiceDependencies<T> deps
         ) : AddonService<T>(deps) where T : class
     {
-        public override uint AddonCustomNodeId => throw new NotImplementedException();
-
         protected readonly Dictionary<int, HighlightColor> neededItemColors = [];
         protected readonly List<nint> dragDropComponentNodes = [];
 
@@ -206,16 +204,10 @@ namespace BisBuddy.Services.Addon.Containers
             return container->GetInventorySlot(item->Slot);
         }
 
-        protected override unsafe NodeBase? initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon, HighlightColor color)
+        protected override unsafe NodeBase initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon, HighlightColor color)
         {
             // doesn't use custom nodes
-            return null;
-        }
-
-        protected override void unlinkCustomNode(nint parentNodePtr, NodeBase node)
-        {
-            // doesn't use custom nodes
-            return;
+            throw new NotSupportedException($"{GetType().Name} does not use custom nodes");
         }
     }
 }
