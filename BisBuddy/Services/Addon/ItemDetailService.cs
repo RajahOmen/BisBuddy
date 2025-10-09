@@ -258,10 +258,10 @@ namespace BisBuddy.Services.Addon
             var customSeString = usedInSeString(customTextNode, itemNameTwoLines);
 
             // update node text
-            customTextNode.Text = customSeString;
+            customTextNode.SeString = customSeString;
         }
 
-        protected override NodeBase? initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon, HighlightColor color)
+        protected override NodeBase initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon, HighlightColor color)
         {
             TextNode? customTextNode = null;
             try
@@ -282,28 +282,13 @@ namespace BisBuddy.Services.Addon
                     NodeFlags = NodeFlags.AnchorTop | NodeFlags.AnchorLeft | NodeFlags.Visible | NodeFlags.Enabled,
                 };
 
-                nativeController.AttachNode(customTextNode, parentNodePtr, NodePosition.AsLastChild);
                 return customTextNode;
             }
-            catch (Exception ex)
+            catch
             {
                 customTextNode?.Dispose();
-                logger.Error(ex, "Failed to initialize custom node");
-                return null;
+                throw;
             }
-        }
-
-        protected override unsafe void unlinkCustomNode(nint parentNodePtr, NodeBase node)
-        {
-            var addon = gameGui.GetAddonByName(AddonName);
-
-            if (addon == nint.Zero)
-                return;
-
-            if (parentNodePtr == nint.Zero)
-                return;
-
-            nativeController.DetachNode(node);
         }
     }
 }

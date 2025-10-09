@@ -138,9 +138,9 @@ public static unsafe partial class UiHelper
                 Width = hoverNodePart.Width,
                 Height = hoverNodePart.Height,
                 Id = 0,
+                TexturePath = NineGridTexturePath
             };
 
-            part.LoadTexture(NineGridTexturePath.ToString());
             newNode.AddPart(part);
 
             return newNode;

@@ -35,15 +35,12 @@ namespace BisBuddy.Services.Addon
         protected IReadOnlyDictionary<nint, (NodeBase Node, HighlightColor Color)> CustomNodes => customNodes;
 
         protected bool isEnabled { get; private set; } = false;
-        public virtual uint AddonCustomNodeId => 420000;
         public abstract string AddonName { get; }
 
         // for lists that scroll, to avoid them rendering off the bottom
         protected abstract float CustomNodeMaxY { get; }
 
-        protected abstract unsafe NodeBase? initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon, HighlightColor color);
-
-        protected abstract unsafe void unlinkCustomNode(nint parentNodePtr, NodeBase node);
+        protected abstract unsafe NodeBase initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon, HighlightColor color);
 
         protected abstract void registerAddonListeners();
         protected abstract void unregisterAddonListeners();
@@ -119,6 +116,9 @@ namespace BisBuddy.Services.Addon
 
         private unsafe void handleUpdateHighlightColor()
         {
+            if (gameGui.GetAddonByName(AddonName).IsNull && highlightedNodes.Count > 0)
+                throw new Exception($"Addon \"{AddonName}\" is not loaded, cannot update \"{highlightedNodes.Count}\" node highlight colors");
+
             // update colors for existing atk nodes that was just highlighted
             foreach (var nodeData in highlightedNodes)
                 nodeData.Value.ColorExistingNode((AtkResNode*)nodeData.Key);
@@ -141,15 +141,27 @@ namespace BisBuddy.Services.Addon
         protected unsafe NodeBase createCustomNode(AtkResNode* parentNode, AtkUnitBase* addon, HighlightColor color)
         {
             logger.Verbose(
-                $"Creating custom node \"{AddonCustomNodeId}\" (parent node \"{parentNode->NodeId}\") " +
+                $"Creating custom node (parent node \"{parentNode->NodeId}\") " +
                 $"in \"{AddonName}\" with color {color.BaseColor}"
                 );
 
-            var customNode = initializeCustomNode(parentNode, addon, color)
-                ?? throw new Exception($"Failed to create custom node for \"{AddonName}\"");
+            var customNode = initializeCustomNode(parentNode, addon, color);
 
-            customNodes.Add((nint)parentNode, (customNode, color));
-            return customNode;
+            try
+            {
+                customNode.MarkDirty();
+                if (parentNode->GetNodeType() is NodeType.Component)
+                    nativeController.AttachNode(customNode, (AtkComponentNode*)parentNode);
+                else
+                    nativeController.AttachNode(customNode, parentNode);
+                customNodes.Add((nint)parentNode, (customNode, color));
+                return customNode;
+            } catch (Exception ex)
+            {
+                nativeController.DisposeNode(ref customNode);
+                logger.Error(ex, $"Failed to create custom node in \"{AddonName}\"");
+                throw;
+            }
         }
 
         private unsafe bool setAddColor(AtkResNode* node, HighlightColor? color)
@@ -211,17 +223,7 @@ namespace BisBuddy.Services.Addon
             }
 
             // only make visible if color to mark is provided & custom node within min and max values
-            var makeVisible = color is not null
-                && parentNode->Y + customNodeData.Node.Height >= customNodeData.Node.Height / 2
-                && parentNode->Y + customNodeData.Node.Height / 2 <= CustomNodeMaxY;
-
-            // update position if showing the node
-            if (makeVisible)
-            {
-                // move node to be positioned where it should be
-                customNodeData.Node.ScreenX = parentNode->ScreenX + customNodeData.Node.X;
-                customNodeData.Node.ScreenY = parentNode->ScreenY + customNodeData.Node.Y;
-            }
+            var makeVisible = color is not null;
 
             if (customNodeData.Node.IsVisible == makeVisible)
                 return false;
@@ -293,6 +295,11 @@ namespace BisBuddy.Services.Addon
             {
                 logger.Warning(ex, $"Failed to unmark all nodes in \"{AddonName}\"");
             }
+            finally
+            {
+                if (parentNodeFilter is null)
+                    highlightedNodes.Clear();
+            }
         }
 
         protected unsafe void destroyNodes()
@@ -300,15 +307,10 @@ namespace BisBuddy.Services.Addon
             var count = customNodes.Count;
             foreach (var customNodeEntry in customNodes)
             {
-                unlinkCustomNode(customNodeEntry.Key, customNodeEntry.Value.Node);
-
-                customNodeEntry.Value.Node.Dispose();
-
+                var node = customNodeEntry.Value.Node;
+                nativeController.DisposeNode(ref node);
                 customNodes.Remove(customNodeEntry.Key);
             }
-
-            if (customNodes.Count > 0)
-                throw new Exception($"Not all nodes destroyed in \"{AddonName}\". {customNodes.Count} nodes remaining.");
 
             if (count > 0)
                 logger.Verbose($"Destroyed all {count} custom nodes in \"{AddonName}\"");
