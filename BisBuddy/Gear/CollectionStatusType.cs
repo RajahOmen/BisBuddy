@@ -1,8 +1,6 @@
+using BisBuddy.Resources;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
 
 namespace BisBuddy.Gear
 {
@@ -12,23 +10,27 @@ namespace BisBuddy.Gear
     public enum CollectionStatusType
     {
         /// <summary>
-        /// An item is marked collected and all sub-items (like materia) are marked collected.
+        /// An item is not marked collected and cannot be determined to be collectable
         /// </summary>
-        ObtainedComplete,
-
-        /// <summary>
-        /// An item is marked collected, but some sub-items (like materia) are not marked collected.
-        /// </summary>
-        ObtainedPartial,
+        [Display(ResourceType = typeof(Resource), Description = nameof(Resource.NotObtainableHelp))]
+        NotObtainable = 0,
 
         /// <summary>
         /// An item is not marked collected, but it can be collected (via trade-in or prerequisites are collected)
         /// </summary>
-        Obtainable,
+        [Display(ResourceType = typeof(Resource), Description = nameof(Resource.ObtainableHelp))]
+        Obtainable = 1,
 
         /// <summary>
-        /// An item is not marked collected and cannot be determined to be collectable
+        /// An item is marked collected, but some sub-items (like materia) are not marked collected.
         /// </summary>
-        NotObtainable,
+        [Display(ResourceType = typeof(Resource), Description = nameof(Resource.ObtainedPartialHelp))]
+        ObtainedPartial = 2,
+
+        /// <summary>
+        /// An item is marked collected and all sub-items (like materia) are marked collected.
+        /// </summary>
+        [Display(ResourceType = typeof(Resource), Description = nameof(Resource.ObtainedCompleteHelp))]
+        ObtainedComplete = 3,
     }
 }

@@ -112,7 +112,7 @@ namespace BisBuddy.Services.ImportGearset
                 && jobProp.ValueKind == JsonValueKind.String
                 )
             {
-                classJobId = itemDataService.GetClassJobInfoByAbbreviation(jobProp.GetString() ?? "").ClassJobId;
+                classJobId = itemDataService.GetClassJobInfoByEnAbbreviation(jobProp.GetString() ?? "").ClassJobId;
             }
 
             JsonElement? materiaProp = null;

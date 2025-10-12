@@ -247,7 +247,8 @@
     <value>Delete this Gearset. Click to quick delete</value>
   </data>
   <data name="DeleteGearsetTooltip" xml:space="preserve">
-    <value>Delete this Gearset. Shift+Click to quick delete</value>
+    <value>Delete {0}</value>
+    <comment>{0} - Gearset name</comment>
   </data>
   <data name="DeleteGearsetPopupTitle" xml:space="preserve">
     <value>Delete Gearset?</value>
@@ -482,7 +483,7 @@ or to have a unique color to highlight items in</value>
     <value>Job</value>
   </data>
   <data name="GearsetSortImportDate" xml:space="preserve">
-    <value>Date Added</value>
+    <value>Added</value>
   </data>
   <data name="GearsetSortPriority" xml:space="preserve">
     <value>Priority</value>
@@ -585,5 +586,40 @@ or to have a unique color to highlight items in</value>
   </data>
   <data name="HighlightCollectedInInventoryCheckbox" xml:space="preserve">
     <value>Include Collected</value>
+  </data>
+  <data name="ObtainedCompleteHelp" xml:space="preserve">
+    <value>Item collected</value>
+  </data>
+  <data name="ObtainedPartialHelp" xml:space="preserve">
+    <value>Item collected, missing materia</value>
+  </data>
+  <data name="ObtainableHelp" xml:space="preserve">
+    <value>Item obtainable using prerequisites</value>
+  </data>
+  <data name="NotObtainableHelp" xml:space="preserve">
+    <value>Item not collected</value>
+  </data>
+  <data name="CollectionStatusLockTooltip" xml:space="preserve">
+    <value>Collection status locked</value>
+  </data>
+  <data name="AdvancedMateriaMeldTooltip" xml:space="preserve">
+    <value>[Advanced] </value>
+  </data>
+  <data name="PrerequisiteGearpieceHeader" xml:space="preserve">
+    <value>Prerequisites</value>
+  </data>
+  <data name="DeleteGearsetDisabledTooltip" xml:space="preserve">
+    <value>Shift+Click to delete {0}</value>
+    <comment>{0} - Active gearset</comment>
+  </data>
+  <data name="DeleteGearsetTooltipGearsetNameDummy" xml:space="preserve">
+    <value>selected gearset</value>
+    <comment>Replaces gearset name in tooltip when no gearset selected</comment>
+  </data>
+  <data name="GearsetGearpiecesTabName" xml:space="preserve">
+    <value>Gearpieces</value>
+  </data>
+  <data name="GearsetPropertiesTabName" xml:space="preserve">
+    <value>Properties</value>
   </data>
 </root>

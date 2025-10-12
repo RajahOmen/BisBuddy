@@ -9,6 +9,8 @@ namespace BisBuddy.Converters
 {
     internal class PrerequisiteAtomNodeConverter(IItemDataService itemData) : JsonConverter<PrerequisiteAtomNode>
     {
+        private const string LegacyIsManuallyCollectedPropertyName = "IsManuallyCollected";
+
         public const string TypeDescriminatorValue = "atom";
         private readonly IItemDataService itemData = itemData;
 
@@ -24,6 +26,7 @@ namespace BisBuddy.Converters
             PrerequisiteNodeSourceType? sourceType = null;
             bool? isCollected = null;
             bool? isManuallyCollected = null;
+            bool? collectLock = null;
             bool isMeldable = false;
 
             while (reader.Read())
@@ -53,7 +56,10 @@ namespace BisBuddy.Converters
                     case nameof(IPrerequisiteNode.IsCollected):
                         isCollected = reader.GetBoolean();
                         break;
-                    case nameof(IPrerequisiteNode.IsManuallyCollected):
+                    case nameof(IPrerequisiteNode.CollectLock):
+                        collectLock = reader.GetBoolean();
+                        break;
+                    case LegacyIsManuallyCollectedPropertyName:
                         isManuallyCollected = reader.GetBoolean();
                         break;
                     default:
@@ -61,6 +67,8 @@ namespace BisBuddy.Converters
                         break;
                 }
             }
+
+            collectLock ??= isManuallyCollected;
 
             if (itemId == null)
                 throw new JsonException("No itemId found for PrerequisiteAtomNode");
@@ -76,7 +84,7 @@ namespace BisBuddy.Converters
                 itemId!.Value,
                 prerequisiteNode,
                 isCollected ?? false,
-                isManuallyCollected ?? false
+                collectLock ?? false
                 );
 
             if (newPrerequisiteNode != null)
@@ -88,7 +96,7 @@ namespace BisBuddy.Converters
                 prerequisiteTree,
                 sourceType ?? throw new JsonException("No sourceType found for PrerequisiteAtomNode"),
                 isCollected ?? throw new JsonException("No isCollected found for PrerequisiteAtomNode"),
-                isManuallyCollected ?? throw new JsonException("No isManuallyCollected found for PrerequisiteAtomNode"),
+                collectLock ?? throw new JsonException("No isManuallyCollected found for PrerequisiteAtomNode"),
                 nodeId ?? throw new JsonException("No nodeId found for PrerequisiteAtomNode"),
                 isMeldable
                 );
@@ -103,7 +111,7 @@ namespace BisBuddy.Converters
             writer.WriteNumber(nameof(IPrerequisiteNode.ItemId), value.ItemId);
             writer.WriteNumber(nameof(IPrerequisiteNode.SourceType), (int)value.SourceType);
             writer.WriteBoolean(nameof(IPrerequisiteNode.IsCollected), value.IsCollected);
-            writer.WriteBoolean(nameof(IPrerequisiteNode.IsManuallyCollected), value.IsManuallyCollected);
+            writer.WriteBoolean(nameof(IPrerequisiteNode.CollectLock), value.CollectLock);
 
             writer.WritePropertyName(nameof(IPrerequisiteNode.PrerequisiteTree));
             writer.WriteStartArray();

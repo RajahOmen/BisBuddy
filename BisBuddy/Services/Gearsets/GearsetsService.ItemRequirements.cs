@@ -88,21 +88,22 @@ namespace BisBuddy.Services.Gearsets
 
             foreach (var req in itemIdRequirements)
             {
-                if (!includeObtainable && req.ItemRequirement.IsObtainable && !req.ItemRequirement.IsCollected)
+                var reqStatus = req.ItemRequirement.CollectionStatus;
+                if (!includeObtainable && reqStatus == CollectionStatusType.Obtainable)
                     continue;
 
                 switch (req.ItemRequirement.RequirementType)
                 {
                     case RequirementType.Gearpiece:
-                        if (includeCollected || !req.ItemRequirement.IsCollected)
+                        if (includeCollected || reqStatus <= CollectionStatusType.NotObtainable)
                             yield return req;
                         break;
                     case RequirementType.Materia:
-                        if (includeMateria && (includeCollected || !req.ItemRequirement.IsCollected))
+                        if (includeMateria && (includeCollected || reqStatus <= CollectionStatusType.NotObtainable))
                             yield return req;
                         break;
                     case RequirementType.Prerequisite:
-                        if (includePrereqs && (includeCollectedPrereqs || !req.ItemRequirement.IsCollected))
+                        if (includePrereqs && (includeCollectedPrereqs || reqStatus <= CollectionStatusType.NotObtainable))
                             yield return req;
                         break;
                 }
@@ -178,7 +179,7 @@ namespace BisBuddy.Services.Gearsets
             // if there are any melds needed, add this materia group to the list
             var neededMeldPlans = itemIdRequirements
                 .Select(req => (req.Gearset, req.Gearpiece.ItemMateria))
-                .Where(group => group.ItemMateria.Any(m => !m.IsMelded))
+                .Where(group => group.ItemMateria.Any(m => !m.IsCollected))
                 .ToList();
 
             return neededMeldPlans;
@@ -195,7 +196,7 @@ namespace BisBuddy.Services.Gearsets
                 foreach (var gearpiece in gearset.Gearpieces)
                 {
                     // all gearpiece materia is melded, no melds required
-                    if (gearpiece.ItemMateria.All(m => m.IsMelded))
+                    if (gearpiece.ItemMateria.All(m => m.IsCollected))
                         continue;
 
                     HashSet<string> newItemNames;

@@ -2,7 +2,7 @@ using BisBuddy.Resources;
 using BisBuddy.Ui.Main.Tabs;
 using BisBuddy.Util;
 using Dalamud.Interface.Windowing;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using System;
 
 namespace BisBuddy.Ui.Config;

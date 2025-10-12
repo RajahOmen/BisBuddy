@@ -5,10 +5,8 @@ using BisBuddy.Items;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace BisBuddy.Converters
 {
@@ -18,7 +16,7 @@ namespace BisBuddy.Converters
         ) : JsonConverter<Gearset>
     {
         private const string ClassJobIdPropertyName = "ClassJobId";
-        private const string JobAbbrevPropertyName = "JobAbbrev";
+        private const string JobAbbrevPropertyName = "JobAbbrv";
 
         public override Gearset? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
@@ -66,7 +64,7 @@ namespace BisBuddy.Converters
                     // legacy encoding via string abbreviation
                     case JobAbbrevPropertyName:
                         classJobId = itemDataService
-                            .GetClassJobInfoByAbbreviation(reader.GetString() ?? "")
+                            .GetClassJobInfoByEnAbbreviation(reader.GetString() ?? "")
                             .ClassJobId;
                         break;
                     case nameof(Gearset.IsActive):
@@ -91,6 +89,15 @@ namespace BisBuddy.Converters
                         reader.TrySkip();
                         break;
                 }
+            }
+
+            // try to get the class job id if none was found
+            if ((classJobId is null || classJobId == 0) && gearpieces is not null)
+            {
+                var validJobIds = itemDataService
+                    .FindClassJobIdUsers(gearpieces.Select(g => g.ItemId));
+                if (validJobIds.Count() == 1)
+                    classJobId = validJobIds.First();
             }
 
             return gearsetFactory.Create(

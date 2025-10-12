@@ -52,6 +52,8 @@ namespace BisBuddy.Services
             if (toListen == isListening)
                 return;
 
+            logger.Verbose($"{(toListen ? "Registering" : "Unregistering")} listeners");
+
             if (toListen)
             {
                 gameInventory.ItemAdded += handleItemAdded;

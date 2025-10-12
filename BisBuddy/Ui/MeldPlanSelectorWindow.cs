@@ -3,7 +3,7 @@ using BisBuddy.Resources;
 using BisBuddy.Services;
 using BisBuddy.Services.Configuration;
 using BisBuddy.Services.Gearsets;
-using BisBuddy.Ui.Components;
+using BisBuddy.Ui.Renderers;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
@@ -25,7 +25,7 @@ public unsafe class MeldPlanSelectorWindow : Window, IDisposable
     private readonly IGameGui gameGui;
     private readonly IMeldPlanService meldPlanService;
     private readonly IConfigurationService configService;
-    private readonly IComponentRendererFactory componentRendererFactory;
+    private readonly IRendererFactory rendererFactory;
 
     private AtkUnitBasePtr addonPtr = nint.Zero;
 
@@ -34,7 +34,7 @@ public unsafe class MeldPlanSelectorWindow : Window, IDisposable
         IGameGui gameGui,
         IMeldPlanService meldPlanService,
         IConfigurationService configService,
-        IComponentRendererFactory componentRendererFactory
+        IRendererFactory rendererFactory
         )
         : base("Meld Plan###meld plan selector bisbuddy")
     {
@@ -47,7 +47,7 @@ public unsafe class MeldPlanSelectorWindow : Window, IDisposable
         this.gameGui = gameGui;
         this.meldPlanService = meldPlanService;
         this.configService = configService;
-        this.componentRendererFactory = componentRendererFactory;
+        this.rendererFactory = rendererFactory;
     }
 
     public void Dispose() { }
@@ -117,8 +117,8 @@ public unsafe class MeldPlanSelectorWindow : Window, IDisposable
                 ImGui.SameLine();
             }
 
-            componentRendererFactory
-                .GetComponentRenderer(plan.MateriaGroup)
+            rendererFactory
+                .GetRenderer(plan.MateriaGroup, RendererType.Component)
                 .Draw();
             ImGui.NewLine();
         }

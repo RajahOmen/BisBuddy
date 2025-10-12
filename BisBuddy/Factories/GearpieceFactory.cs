@@ -22,13 +22,13 @@ namespace BisBuddy.Factories
             uint itemId,
             MateriaGroup? itemMateria,
             bool isCollected = false,
-            bool isManuallyCollected = false
+            bool collectLock = false
             )
         {
             var prerequisiteTree = itemDataService.BuildGearpiecePrerequisiteTree(
                 itemId,
                 isCollected,
-                isManuallyCollected
+                collectLock
                 );
 
             return Create(
@@ -36,7 +36,7 @@ namespace BisBuddy.Factories
                 itemMateria,
                 prerequisiteTree,
                 isCollected,
-                isManuallyCollected,
+                collectLock,
                 false
                 );
         }
@@ -46,7 +46,7 @@ namespace BisBuddy.Factories
             MateriaGroup? itemMateria,
             IPrerequisiteNode? prerequisiteTree,
             bool isCollected = false,
-            bool isManuallyCollected = false,
+            bool collectLock = false,
             bool extendTree = true
             )
         {
@@ -61,7 +61,7 @@ namespace BisBuddy.Factories
                         itemId,
                         prerequisiteTree,
                         isCollected,
-                        isManuallyCollected
+                        collectLock
                         );
 
                 var newGearpiece = new Gearpiece(
@@ -72,7 +72,7 @@ namespace BisBuddy.Factories
                     prerequisiteTree,
                     itemMateria,
                     isCollected,
-                    isManuallyCollected
+                    collectLock
                     );
 
                 return newGearpiece;
@@ -93,14 +93,14 @@ namespace BisBuddy.Factories
         /// <param name="itemId">The item id of the gearpiece</param>
         /// <param name="itemMateria">The materia this gearpiece needs melded</param>
         /// <param name="isCollected">If the item should be marked as collected</param>
-        /// <param name="isManuallyCollected">If the item should be marked as manually collected (via user action)</param>
+        /// <param name="collectLock">If the item's collection state should be locked</param>
         /// <returns>The created gearpiece</returns>
         /// <exception cref="ArgumentException">If the gearpiece could not be created due to invalid inputs</exception>
         public Gearpiece Create(
             uint itemId,
             MateriaGroup? itemMateria,
             bool isCollected = false,
-            bool isManuallyCollected = false
+            bool collectLock = false
             );
 
         /// <summary>
@@ -110,7 +110,7 @@ namespace BisBuddy.Factories
         /// <param name="itemMateria">The materia this gearpiece needs melded</param>
         /// <param name="prerequisiteTree">The prerequisite items needed to obtain this gearpiece</param>
         /// <param name="isCollected">If the item should be marked as collected</param>
-        /// <param name="isManuallyCollected">If the item should be marked as manually collected (via user action)</param>
+        /// <param name="collectLock">If the item's collection state should be locked</param>
         /// <param name="extendTree">If extending the provided prerequisite tree with more leaves should be attempted</param>
         /// <returns>The created gearpiece</returns>
         /// <exception cref="ArgumentException">If the gearpiece could not be created due to invalid inputs</exception>
@@ -119,7 +119,7 @@ namespace BisBuddy.Factories
             MateriaGroup? itemMateria,
             IPrerequisiteNode? prerequisiteTree,
             bool isCollected = false,
-            bool isManuallyCollected = false,
+            bool collectLock = false,
             bool extendTree = true
             );
     }

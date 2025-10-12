@@ -143,6 +143,20 @@ namespace BisBuddy.Items
         /// <returns>If it can be melded. If invalid item id, returns false.</returns>
         public bool ItemIsMeldable(uint itemId);
 
+        /// <summary>
+        /// Returns the ItemUICategory for the given item id
+        /// </summary>
+        /// <param name="itemId">The item id to check</param>
+        /// <returns>The corresponding ItemUiCategory</returns>
+        public ItemUICategory GetItemUICategory(uint itemId);
+
+        /// <summary>
+        /// Returns the number of normal (non-advanced) materia slots an item has
+        /// </summary>
+        /// <param name="itemId">The item id to check</param>
+        /// <returns>How many materia can be attached to this item without advanced melding.</returns>
+        public int GetItemMateriaSlotCount(uint itemId);
+
         /// <summary>   
         /// Extends the given PrerequisiteNode with new leaves at the node's direct child level according to current
         /// data. Used on config loading to automatically add new prerequisite information that wasn't available when the gearset
@@ -152,19 +166,19 @@ namespace BisBuddy.Items
         /// <param name="itemId">The id of the item to extend prerequisites for</param>
         /// <param name="oldPrerequisiteNode">The old tree of prerequisites for this item</param>
         /// <param name="isCollected">If the config has this node set as collected</param>
-        /// <param name="isManuallyCollected">If the config has this node set as manually collected</param>
+        /// <param name="collectLock">If the config has this node's collect state as locked</param>
         /// <returns>The most up-to-date PrerequisiteNode. Could be the unmodified original if no changes were made</returns>
         public IPrerequisiteNode? ExtendItemPrerequisites(
             uint itemId,
             IPrerequisiteNode? oldPrerequisiteNode,
             bool isCollected,
-            bool isManuallyCollected
+            bool collectLock
             );
 
         public IPrerequisiteNode? BuildGearpiecePrerequisiteTree(
             uint itemId,
             bool isCollected = false,
-            bool isManuallyCollected = false
+            bool collectLock = false
             );
 
         /// <summary>
@@ -199,7 +213,7 @@ namespace BisBuddy.Items
         /// <param name="language">The language the provided abbreviation is in/param>
         /// <returns>The <see cref="ClassJobInfo"/> for the matching job if one is found, else a default JobInfo object
         /// representing no job being found with a 0 JobId</returns>
-        public ClassJobInfo GetClassJobInfoByAbbreviation(string abbrevation, ClientLanguage language = ClientLanguage.English);
+        public ClassJobInfo GetClassJobInfoByEnAbbreviation(string abbrevation, ClientLanguage language = ClientLanguage.English);
 
         /// <summary>
         /// Retrieve the <see cref="ClassJobInfo"/> data for the job with the matching <paramref name="jobId"/>
@@ -208,5 +222,13 @@ namespace BisBuddy.Items
         /// <returns>The <see cref="ClassJobInfo"/> for the matching job if one is found, else a default JobInfo object
         /// representing no job being found with a 0 JobId</returns>
         public ClassJobInfo GetClassJobInfoById(uint jobId);
+
+        /// <summary>
+        /// Given a list of item ids, return all class job ids that can use them all
+        /// If none can use them all, returns 0
+        /// </summary>
+        /// <param name="itemIds">The item ids to check</param>
+        /// <returns>Enumerable of class job ids that can use all the item ids provided</returns>
+        public IEnumerable<uint> FindClassJobIdUsers(IEnumerable<uint> itemIds);
     }
 }

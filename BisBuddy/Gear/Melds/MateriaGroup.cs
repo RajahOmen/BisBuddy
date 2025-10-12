@@ -64,8 +64,8 @@ namespace BisBuddy.Gear.Melds
         private void updateStatusGroups()
         {
             statusGroups = materiaList
-                .GroupBy(m => (m.ItemId, m.IsMelded))
-                .OrderBy(g => g.Key.IsMelded)
+                .GroupBy(m => (m.ItemId, m.IsCollected))
+                .OrderBy(g => g.Key.IsCollected)
                 .Select(g => (g.First(), g.Count()))
                 .ToList();
         }
@@ -76,9 +76,9 @@ namespace BisBuddy.Gear.Melds
                 .Select(m => (
                     // MateriaText
                     // TODO: USE SHORT NAME HERE
-                    $"+{m.StatQuantity} {m.StatFullName}{(m.IsMelded ? "" : UnmeldedColorblindIndicator)}",
+                    $"+{m.StatQuantity} {m.StatFullName}{(m.IsCollected ? "" : UnmeldedColorblindIndicator)}",
                     // IsMelded
-                    m.IsMelded
+                    m.IsCollected
                     ))
                 .ToList();
         }
@@ -109,9 +109,9 @@ namespace BisBuddy.Gear.Melds
             for (var i = 0; i < materiaList.Count; i++)
             {
                 var materia = materiaList[i];
-                if (materia.ItemId == materiaId && !materia.IsMelded)
+                if (materia.ItemId == materiaId && !materia.IsCollected)
                 {
-                    materia.IsMelded = true;
+                    materia.IsCollected = true;
                     materiaList[i] = materia;
                     break;
                 }
@@ -140,10 +140,10 @@ namespace BisBuddy.Gear.Melds
                     if (candidateItemId == materiaSlot.ItemId)
                     {
                         // materia slot was previously not melded
-                        if (!materiaSlot.IsMelded)
+                        if (!materiaSlot.IsCollected)
                         {
                             // meld candidate piece into slot
-                            materiaSlot.IsMelded = true;
+                            materiaSlot.IsCollected = true;
                             slottedCount++;
                         }
 
@@ -160,7 +160,7 @@ namespace BisBuddy.Gear.Melds
                 }
                 else
                 {
-                    materiaSlot.IsMelded = false;
+                    materiaSlot.IsCollected = false;
                 }
             }
 
@@ -171,9 +171,9 @@ namespace BisBuddy.Gear.Melds
         {
             foreach (var materia in materiaList)
             {
-                if (materia.ItemId == materiaId && materia.IsMelded)
+                if (materia.ItemId == materiaId && materia.IsCollected)
                 {
-                    materia.IsMelded = false;
+                    materia.IsCollected = false;
                     break;
                 }
             }
@@ -182,7 +182,7 @@ namespace BisBuddy.Gear.Melds
         public void UnmeldAllMateria()
         {
             foreach (var materia in materiaList)
-                materia.IsMelded = false;
+                materia.IsCollected = false;
         }
 
         public List<Materia> GetMatchingMateria(IEnumerable<Materia> materiaToCompare)

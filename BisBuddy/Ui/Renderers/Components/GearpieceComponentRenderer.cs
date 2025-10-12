@@ -42,6 +42,7 @@ namespace BisBuddy.Ui.Renderers.Components
         private readonly UiComponents uiComponents = uiComponents;
         private Gearpiece? gearpiece;
         private bool isExpanded = false;
+        private bool? nextIsExpanded = null;
         private bool prereqExpanded = defaultPrereqExpandedState(null);
 
         private UiTheme uiTheme =>
@@ -55,7 +56,7 @@ namespace BisBuddy.Ui.Renderers.Components
             if (gearpiece == null)
                 return false;
 
-            if ((gearpiece.CollectionStatus & CollectionStatusType.IsObtainedOrObtainable) != 0)
+            if (gearpiece.CollectionStatus >= CollectionStatusType.Obtainable)
                 return false;
 
             return true;
@@ -63,6 +64,9 @@ namespace BisBuddy.Ui.Renderers.Components
 
         public override void Draw()
         {
+            isExpanded = nextIsExpanded ?? isExpanded;
+            nextIsExpanded = null;
+
             if (gearpiece is null)
             {
                 logger.Error("Attempted to draw uninitialized component renderer");
@@ -160,8 +164,6 @@ namespace BisBuddy.Ui.Renderers.Components
             using (ImRaii.PushStyle(ImGuiStyleVar.ButtonTextAlign, new Vector2(0, 0.5f)))
             using (ImRaii.PushStyle(ImGuiStyleVar.FramePadding, Vector2.One * 5))
             using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(0.0f, ImGui.GetStyle().ItemSpacing.Y)))
-            using (ImRaii.PushStyle(ImGuiStyleVar.DisabledAlpha, 1.0f))
-            using (ImRaii.Disabled(!hasSubItems))
             {
                 var buttonSize = new Vector2(
                     x: ImGui.GetContentRegionAvail().X,
@@ -180,9 +182,16 @@ namespace BisBuddy.Ui.Renderers.Components
                 using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(0, 0), isExpanded))
                     if (ImGui.Button($"###{gearpiece.ItemId}gearpiece_expand_button", buttonSize))
                     {
-                        isExpanded = !isExpanded;
+                        nextIsExpanded = !isExpanded;
                         prereqExpanded = defaultPrereqExpandedState(gearpiece);
                     }
+                if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+                {
+                    if (gearpiece.ItemMateria.Count > 0 || gearpiece.PrerequisiteTree is not null)
+                        ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+                    else
+                        ImGui.SetMouseCursor(ImGuiMouseCursor.NotAllowed);
+                }
                 rendererFactory
                     .GetRenderer(gearpiece, RendererType.ContextMenu)
                     .Draw();

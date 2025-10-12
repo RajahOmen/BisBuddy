@@ -32,10 +32,15 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Caching.Memory;
-using BisBuddy.Ui.Components;
 using BisBuddy.Gear.Melds;
 using BisBuddy.Mappers;
 using BisBuddy.Commands;
+using BisBuddy.Ui.Renderers.Components;
+using BisBuddy.Ui.Renderers;
+using Lumina.Data.Parsing.Layer;
+using System.Linq;
+using System.Reflection;
+using BisBuddy.Ui.Renderers.ContextMenus;
 
 namespace BisBuddy;
 
@@ -81,6 +86,9 @@ public sealed partial class Plugin : IDalamudPlugin
                 builder.RegisterInstance(textureProvider).As<ITextureProvider>().SingleInstance();
                 builder.RegisterInstance(framework).As<IFramework>().SingleInstance();
 
+                // wrap item finder module into service
+                builder.RegisterType<ItemFinderService>().As<IItemFinderService>().SingleInstance();
+
                 // more rich logging information
                 builder.RegisterGeneric(typeof(TypedLogger<>)).As(typeof(ITypedLogger<>)).InstancePerDependency();
 
@@ -116,6 +124,7 @@ public sealed partial class Plugin : IDalamudPlugin
                 builder.RegisterType<GearsetFactory>().As<IGearsetFactory>().SingleInstance();
                 builder.RegisterType<ItemAssignmentSolverFactory>().As<IItemAssignmentSolverFactory>().SingleInstance();
                 builder.RegisterType<MateriaFactory>().As<IMateriaFactory>().SingleInstance();
+                builder.RegisterType<ContextMenuEntryFactory>().As<IContextMenuEntryFactory>().SingleInstance();
 
                 // de/serialization
                 builder.RegisterType<FileSystem>().As<IFileSystem>().SingleInstance();
@@ -170,13 +179,35 @@ public sealed partial class Plugin : IDalamudPlugin
                 builder.RegisterType<ItemTrackerTab>().Keyed<TabRenderer>(MainWindowTab.ItemTracker).SingleInstance();
                 builder.RegisterType<ConfigTab>().Keyed<TabRenderer>(MainWindowTab.PluginConfig).AsSelf().SingleInstance();
 
-                // component renderers
-                builder.RegisterType<CachingComponentRendererFactory>().AsImplementedInterfaces().SingleInstance();
-                builder.RegisterType<GearsetComponentRenderer>().AsImplementedInterfaces().InstancePerLifetimeScope();
-                builder.RegisterType<GearpieceComponentRenderer>().AsImplementedInterfaces().InstancePerLifetimeScope();
-                builder.RegisterType<PrerequisiteNodeComponentRenderer>().AsImplementedInterfaces().InstancePerLifetimeScope();
-                builder.RegisterType<MateriaGroupComponentRenderer>().AsImplementedInterfaces().InstancePerLifetimeScope();
+                // renderer factory
+                builder.RegisterType<CachingRendererFactory>().As<IRendererFactory>().SingleInstance();
 
+
+                List<Type> renderers = [
+                    typeof(GearsetComponentRenderer),
+                    typeof(GearpieceComponentRenderer),
+                    typeof(PrerequisiteNodeComponentRenderer),
+                    typeof(MateriaGroupComponentRenderer),
+                    typeof(GearpieceContextMenu),
+                    typeof(GearsetContextMenu)
+                    ];
+
+                foreach (var renderer in renderers)
+                {
+                    var interfaceType = renderer.GetInterfaces()
+                        .FirstOrDefault(i =>
+                            i.IsGenericType &&
+                            i.IsConstructedGenericType &&
+                            i.GetGenericTypeDefinition() == typeof(IRenderer<>))
+                        ?? throw new InvalidOperationException($"{renderer.Name} does not implement IRenderer<T>.");
+                    var rendererType = renderer
+                        .GetProperty("RendererType", BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
+                        ?.GetValue(null)
+                        ?? throw new InvalidOperationException($"{renderer.Name} Static property 'RendererType' not found.");
+
+                    builder.RegisterType(renderer).Keyed(rendererType, interfaceType).InstancePerLifetimeScope();
+                }
+                
                 // display update count on inventory window
                 builder.RegisterType<InventoryUpdateDisplayMediator>().As<IInventoryUpdateDisplayService>().SingleInstance();
 
@@ -256,6 +287,11 @@ public sealed partial class Plugin : IDalamudPlugin
         {
             host.StartAsync().GetAwaiter().GetResult();
             logger.Info($"Started successfully");
+
+#if DEBUG
+            var commandService = host.Services.GetRequiredService<ICommandService>();
+            commandService.ExecuteCommand("/bis", "");
+#endif
         }
         catch (Exception ex) {
             logger.Fatal(ex, $"Failed to start");

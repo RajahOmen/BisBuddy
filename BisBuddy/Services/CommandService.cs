@@ -55,6 +55,11 @@ namespace BisBuddy.Services
             return Task.CompletedTask;
         }
 
+        public void ExecuteCommand(string command, string args)
+        {
+            onCommand(command, args);
+        }
+
         private void onCommand(string command, string args)
         {
             var subCommand = args.Split(' ')[0];
@@ -110,6 +115,6 @@ namespace BisBuddy.Services
 
     public interface ICommandService : IHostedService
     {
-
+        public void ExecuteCommand(string command, string args);
     }
 }

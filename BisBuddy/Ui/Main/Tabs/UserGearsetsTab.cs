@@ -1,5 +1,5 @@
 using System;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using BisBuddy.Gear;
 using BisBuddy.Services.Gearsets;
 using Dalamud.Interface.Utility.Raii;
@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using Dalamud.Plugin.Services;
 using BisBuddy.Resources;
-using BisBuddy.Ui.Components;
+using BisBuddy.Ui.Renderers;
 using static Dalamud.Interface.Windowing.Window;
 using Dalamud.Interface;
 using Dalamud.Interface.Utility;
@@ -16,25 +16,30 @@ using BisBuddy.Util;
 using BisBuddy.Services;
 using System.Linq;
 using Dalamud.Utility;
+using BisBuddy.Mediators;
+using BisBuddy.Ui.Renderers.Components;
 
 namespace BisBuddy.Ui.Main.Tabs
 {
     public class UserGearsetsTab : TabRenderer, IDisposable
     {
+        private readonly ITypedLogger<UserGearsetsTab> logger;
         private readonly IClientState clientState;
         private readonly ITextureProvider textureProvider;
         private readonly IGearsetsService gearsetsService;
         private readonly IConfigurationService configurationService;
         private readonly IWindowService windowService;
         private readonly UiComponents uiComponents;
-        private readonly IComponentRendererFactory componentRendererFactory;
+        private readonly IRendererFactory rendererFactory;
+        private readonly IInventoryUpdateDisplayService inventoryUpdate;
 
         private Gearset? activeGearset = null;
         private Gearpiece? nextActiveGearpiece = null;
         private Gearset? gearsetToDelete = null;
         private GearsetSortType activeSortType = GearsetSortType.Priority;
         private bool sortDescending = false;
-        private bool firstLoggedInDrawCall = false;
+        private bool firstLoggedInDrawCall = true;
+        private UiTheme uiTheme => configurationService.UiTheme;
 
         public WindowSizeConstraints? TabSizeConstraints => new()
         {
@@ -43,22 +48,26 @@ namespace BisBuddy.Ui.Main.Tabs
         };
 
         public UserGearsetsTab(
+            ITypedLogger<UserGearsetsTab> logger,
             IClientState clientState,
             ITextureProvider textureProvider,
             IGearsetsService gearsetsService,
             IConfigurationService configurationService,
             IWindowService windowService,
             UiComponents uiComponents,
-            IComponentRendererFactory componentRendererFactory
+            IRendererFactory rendererFactory,
+            IInventoryUpdateDisplayService inventoryUpdate
             )
         {
+            this.logger = logger;
             this.clientState = clientState;
             this.textureProvider = textureProvider;
             this.gearsetsService = gearsetsService;
             this.configurationService = configurationService;
             this.windowService = windowService;
             this.uiComponents = uiComponents;
-            this.componentRendererFactory = componentRendererFactory;
+            this.rendererFactory = rendererFactory;
+            this.inventoryUpdate = inventoryUpdate;
             this.clientState.Login += handleLogin;
         }
 
@@ -81,6 +90,9 @@ namespace BisBuddy.Ui.Main.Tabs
             removeDeletedGearset();
         }
 
+        private double numIterations = 0d;
+        private long elapsedTicks = 0;
+
         public void Draw()
         {
             if (clientState.IsLoggedIn)
@@ -91,9 +103,27 @@ namespace BisBuddy.Ui.Main.Tabs
                     firstLoggedInDrawCall = false;
                 }
 
+                var tableFlags = (
+                    ImGuiTableFlags.BordersInnerV
+                    | ImGuiTableFlags.BordersOuter
+                    //| ImGuiTableFlags.BordersOuterV
+                    //| ImGuiTableFlags.Resizable
+                    );
+
+                ImGui.PushStyleVar(ImGuiStyleVar.CellPadding, new Vector2(0f, 0f));
+                using var table = ImRaii.Table("gearset_table", 2, tableFlags);
+                ImGui.PopStyleVar();
+                if (!table)
+                    return;
+
+                ImGui.TableSetupColumn("###navigation", ImGuiTableColumnFlags.WidthFixed);
+                ImGui.TableSetupColumn("###gearset_details", ImGuiTableColumnFlags.WidthStretch);
+                ImGui.TableNextRow();
+                ImGui.TableNextColumn();
+
                 DrawGearsetsNavigationPanel();
 
-                ImGui.SameLine();
+                ImGui.TableNextColumn();
                 
                 DrawGearsetPanel();
             } else
@@ -125,18 +155,22 @@ namespace BisBuddy.Ui.Main.Tabs
 
         private void DrawGearsetsNavigationPanel()
         {
-            var panelSize = new Vector2(230, 0);
+            var panelSize = new Vector2(200, 0);
             using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(0, 0)))
             using (ImRaii.Child("gearsets_selector", panelSize * ImGuiHelpers.GlobalScale))
             {
                 // draw the list of gearsets to select from
                 var panelSelectableSize = new Vector2(panelSize.X, 35) * ImGuiHelpers.GlobalScale;
                 var availHeight = ImGui.GetContentRegionAvail().Y;
-                var buttonSize = new Vector2(35, 25) * ImGuiHelpers.GlobalScale;
-                var iconSize = new Vector2(25, 25) * ImGuiHelpers.GlobalScale;
+                var buttonSize = new Vector2(30, 24) * ImGuiHelpers.GlobalScale;
+                var iconSize = new Vector2(28, 28) * ImGuiHelpers.GlobalScale;
                 var iconYOffset = (panelSelectableSize.Y - iconSize.Y) / 2;
                 var itemSpacing = new Vector2(10, 0) * ImGuiHelpers.GlobalScale;
-                using (ImRaii.Child("gearsets_selector_panel", new Vector2(0, availHeight - buttonSize.Y), border: true))
+                var padding = new Vector2(4f, 3f);
+                var iconXOffset = iconYOffset - padding.X / 2;
+
+                using (ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, padding))
+                using (ImRaii.Child("gearsets_selector_paneldd", new Vector2(0, availHeight - buttonSize.Y), border: false, ImGuiWindowFlags.AlwaysUseWindowPadding))
                 using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, itemSpacing))
                 {
                     if (gearsetsService.CurrentGearsets.Count == 0)
@@ -145,62 +179,77 @@ namespace BisBuddy.Ui.Main.Tabs
                         ImGui.SetCursorPosY(ImGui.GetCursorPosY() + verticalOffset);
                         ImGuiHelpers.CenteredText(Resource.UserGearsetsTabNoGearsetsTextNavigation);
                     }
-                    foreach (var gearset in gearsetsService.CurrentGearsets)
+                    //var gearsetIdx = 0;
+                    //while (gearsetIdx < gearsetsService.CurrentGearsets.Count)
+                    //{
+                    //    var gearset = gearsetsService.CurrentGearsets[gearsetIdx];
+                    //    gearsetIdx++;
+                    //}
+
+                    var gearsetsToDraw = gearsetsService.CurrentGearsets.ToList();
+                    foreach (var gearset in gearsetsToDraw)
                     {
+                        using var _ = ImRaii.PushId(gearset.Id);
                         var cursorPos = ImGui.GetCursorPos();
+                        var cursorScreenPos = ImGui.GetCursorScreenPos();
+
                         var gearsetSelected = gearset == activeGearset;
 
                         using (ImRaii.PushStyle(ImGuiStyleVar.Alpha, 0.6f, !gearset.IsActive))
                         {
                             var gearsetLabel = $"{gearset.Name}";
-                            var gearsetNameWidth = ImGui.CalcTextSize(gearsetLabel).X;
+                            var gearsetNameSize = ImGui.CalcTextSize(gearsetLabel);
 
-                            var priorityText = $"[{gearset.Priority}]";
-                            var priorityTextSize = ImGui.CalcTextSize(priorityText);
-                            var elementsWidthWithPriority = gearsetNameWidth
-                                + priorityTextSize.X
-                                + iconSize.X
-                                + (itemSpacing.X * 3);
-                            // priority number
-                            if (gearset.Priority != Constants.DefaultGearsetPriority
-                                && elementsWidthWithPriority <= panelSelectableSize.X
-                                )
+                            var rightEdgePadding = padding.X;
+                            var drawingPriority = gearset.Priority != Constants.DefaultGearsetPriority;
+                            var availRegion = ImGui.GetContentRegionAvail();
+                            if (drawingPriority)
                             {
+                                var priorityText = $"[{gearset.Priority}]";
+                                var priorityTextSize = ImGui.CalcTextSize(priorityText);
+                                rightEdgePadding += priorityTextSize.X;
                                 var textOffsetY = (panelSelectableSize.Y - priorityTextSize.Y) / 2;
-                                ImGui.SetCursorPos(new(ImGui.GetContentRegionMax().X - priorityTextSize.X, cursorPos.Y + textOffsetY));
-                                ImGui.Text(priorityText);
+                                ImGui.SetCursorPos(new(availRegion.X + padding.X - priorityTextSize.X, cursorPos.Y + textOffsetY));
+                                using (ImRaii.PushStyle(ImGuiStyleVar.Alpha, 0.6f))
+                                    ImGui.Text(priorityText);
                                 if (ImGui.IsItemHovered())
                                     ImGui.SetTooltip(Resource.GearsetSortPriority);
-                                ImGui.SameLine();
                             }
 
                             ImGui.SetCursorPos(cursorPos);
 
-                            // gearset name
-                            if (UiComponents.SelectableCentered(
-                                $"{gearsetLabel}##{gearset.Id}",
-                                centerY: true,
-                                labelPosOffset: new(iconSize.X, 0),
-                                labelPosOffsetScaled: new(5, 0),
-                                selected: gearsetSelected,
-                                size: panelSelectableSize
-                                ))
-                            {
-                                if (activeGearset == gearset)
-                                    activeGearset = null;
-                                else
-                                    activeGearset = gearset;
-                            }
+                            if (ImGui.Selectable("###gearset_selectable", gearsetSelected, ImGuiSelectableFlags.None, panelSelectableSize))
+                                activeGearset = activeGearset != gearset
+                                    ? gearset
+                                    : null;
+                            // right click context menu
+                            rendererFactory
+                                .GetRenderer(gearset, RendererType.ContextMenu)
+                                .Draw();
+
+                            var textPosOffset = new Vector2(
+                                x: iconSize.X + iconXOffset + 5f * ImGuiHelpers.GlobalScale,
+                                y: (panelSelectableSize.Y - gearsetNameSize.Y) / 2
+                                );
+
+                            ImGui.SetCursorPos(cursorPos + textPosOffset);
+
+                            var botRight = cursorScreenPos + new Vector2(availRegion.X, panelSelectableSize.Y);
+                            botRight.X -= rightEdgePadding;
+                            ImGui.PushClipRect(cursorScreenPos, botRight, true);
+                            ImGui.Text(gearsetLabel);
+                            ImGui.PopClipRect();
                         }
 
-                        ImGui.SetCursorPos(new(cursorPos.X, cursorPos.Y + iconYOffset));
+                        ImGui.SetCursorPos(new(cursorPos.X + iconXOffset, cursorPos.Y + iconYOffset));
 
                         var classJobInfo = gearset.ClassJobInfo;
                         using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(0, panelSelectableSize.Y - iconSize.Y)))
-                            if (textureProvider.GetFromGameIcon(classJobInfo.IconId).TryGetWrap(out var texture, out var exception))
+                            if (textureProvider.GetFromGameIcon(classJobInfo.IconIdFramed).TryGetWrap(out var texture, out var exception))
                             {
                                 using (ImRaii.PushStyle(ImGuiStyleVar.Alpha, 0.8f, gearsetSelected))
-                                    ImGui.Image(texture.ImGuiHandle, iconSize);
+                                using (ImRaii.PushStyle(ImGuiStyleVar.Alpha, 0.6f, !gearset.IsActive))
+                                    ImGui.Image(texture.Handle, iconSize);
                                 if (ImGui.IsItemHovered())
                                     ImGui.SetTooltip(classJobInfo.Name);
                             }
@@ -208,47 +257,89 @@ namespace BisBuddy.Ui.Main.Tabs
                     }
                 }
 
+                ImGui.Separator();
                 // draw buttons to add, delete, or sort gearsets
-                using (ImRaii.Child("gearsets_selector_buttons", new Vector2(0, buttonSize.Y)))
-                using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(3, 3)))
+                var oldWindowPadding = ImGui.GetStyle().WindowPadding;
+                using (ImRaii.PushStyle(ImGuiStyleVar.CellPadding, Vector2.Zero))
+                using (var table = ImRaii.Table("gearsets_selector_buttons_table", 5))
                 {
+                    if (!table)
+                        return;
+
+                    ImGui.TableSetupColumn("###add_gearset", ImGuiTableColumnFlags.WidthFixed, buttonSize.X);
+                    ImGui.TableSetupColumn("###sync_inventory", ImGuiTableColumnFlags.WidthFixed, buttonSize.X);
+                    ImGui.TableSetupColumn("###sort_direction", ImGuiTableColumnFlags.WidthFixed, buttonSize.X);
+                    ImGui.TableSetupColumn("###sort_type", ImGuiTableColumnFlags.WidthStretch);
+                    ImGui.TableSetupColumn("###delete_gearset", ImGuiTableColumnFlags.WidthFixed, buttonSize.X);
+
+                    ImGui.TableNextColumn();
+
+                    // ADD GEARSET
                     using (ImRaii.PushFont(UiBuilder.IconFont))
-                    {
                         if (UiComponents.SelectableCentered(FontAwesomeIcon.Plus.ToIconString(), size: buttonSize, labelPosOffsetScaled: new(1.5f, -1)))
                             windowService.SetWindowState(WindowType.ImportGearset, open: true);
+                    if (ImGui.IsItemHovered())
+                        ImGui.SetTooltip(Resource.NewGearsetTooltip);
 
-                        ImGui.SameLine();
+                    ImGui.TableNextColumn();
 
-                        var sortDirectionIconString = sortDescending
-                            ? FontAwesomeIcon.SortAmountDown.ToIconString()
-                            : FontAwesomeIcon.SortAmountUp.ToIconString();
+                    // SYNC INVENTORY
+                    using (ImRaii.Disabled(inventoryUpdate.UpdateIsQueued))
+                    using (ImRaii.PushFont(UiBuilder.IconFont))
+                        if (UiComponents.SelectableCentered(FontAwesomeIcon.Sync.ToIconString(), size: buttonSize, labelPosOffsetScaled: new(1.5f, -1)))
+                            gearsetsService.ScheduleUpdateFromInventory(saveChanges: true, manualUpdate: true);
+                    if (ImGui.IsItemHovered())
+                        ImGui.SetTooltip(Resource.SyncInventoryTooltip);
+
+                    ImGui.TableNextColumn();
+
+                    // SORT DIRECTION
+                    var sortDirectionIconString = sortDescending
+                        ? FontAwesomeIcon.SortAmountDown.ToIconString()
+                        : FontAwesomeIcon.SortAmountUp.ToIconString();
+                    using (ImRaii.PushFont(UiBuilder.IconFont))
                         if (UiComponents.SelectableCentered(label: sortDirectionIconString, size: buttonSize, labelPosOffsetScaled: new(0.5f, -0.5f)))
                         {
                             sortDescending = !sortDescending;
                             gearsetsService.ChangeGearsetSortOrder(activeSortType, sortDescending);
                         }
-                    }
-                    ImGui.SameLine();
 
+                    ImGui.TableNextColumn();
+
+                    // SORT KIND
                     var availWidth = ImGui.GetContentRegionAvail().X - ImGui.GetStyle().ItemSpacing.X;
-                    var nextSortType = uiComponents.DrawCachedEnumSelectableDropdown(activeSortType, size: new(availWidth - buttonSize.X, buttonSize.Y));
+                    var nextSortType = uiComponents.DrawCachedEnumSelectableDropdown(activeSortType, size: new(0, buttonSize.Y));
                     if (nextSortType != activeSortType)
                     {
                         activeSortType = nextSortType;
                         gearsetsService.ChangeGearsetSortOrder(activeSortType, sortDescending);
                     }
 
-                    ImGui.SameLine();
+                    ImGui.TableNextColumn();
+
+                    // DELETE GEARSET
+                    var canDelete = activeGearset != null && ImGui.IsKeyDown(ImGuiKey.LeftShift);
+                    using (ImRaii.Disabled(!canDelete))
+                    using (ImRaii.PushColor(ImGuiCol.HeaderHovered, ImGui.GetColorU32(new Vector4(0.6f, 0.1f, 0.1f, 0.25f))))
+                    using (ImRaii.PushColor(ImGuiCol.HeaderActive, uiTheme.DeleteColor))
                     using (ImRaii.PushFont(UiBuilder.IconFont))
-                    using (ImRaii.Disabled(activeGearset == null))
-                    using (ImRaii.PushColor(ImGuiCol.HeaderHovered, ImGui.GetColorU32(new Vector4(0.6f, 0.1f, 0.1f, 0.5f))))
-                    using (ImRaii.PushColor(ImGuiCol.HeaderActive, ImGui.GetColorU32(new Vector4(0.6f, 0.1f, 0.1f, 1))))
-                    {
-                        if (UiComponents.SelectableCentered(FontAwesomeIcon.Trash.ToIconString(), size: buttonSize, labelPosOffsetScaled: new(0.25f, 0)))
+                        if (UiComponents.SelectableCentered(FontAwesomeIcon.Trash.ToIconString(), size: buttonSize, labelPosOffsetScaled: new(0.05f, -0.05f)))
                             gearsetToDelete = activeGearset;
+                    if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+                    {
+                        var gearsetName = activeGearset != null
+                            ? $"\"{activeGearset.Name}\""
+                            : Resource.DeleteGearsetTooltipGearsetNameDummy;
+                        if (canDelete)
+                        {
+                            ImGui.SetTooltip(Resource.DeleteGearsetTooltip.Format(gearsetName));
+                        }
+                        else
+                        {
+                            ImGui.SetTooltip(Resource.DeleteGearsetDisabledTooltip.Format(gearsetName));
+                        }
                     }
                 }
-
             }
         }
 
@@ -258,14 +349,14 @@ namespace BisBuddy.Ui.Main.Tabs
             {
                 using (ImRaii.PushId(activeGearset.Id))
                 {
-                    componentRendererFactory
-                        .GetComponentRenderer(activeGearset)
+                    rendererFactory
+                        .GetRenderer(activeGearset, RendererType.Component)
                         .Draw();
                 }
             }
             else
             {
-                using var _ = ImRaii.Child("gearset_view_panel", new Vector2(0, 0), border: true);
+                using var _ = ImRaii.Child("gearset_view_panel", new Vector2(0, 0), border: false);
                 ImGui.NewLine();
                 ImGui.NewLine();
                 ImGuiHelpers.CenteredText(Resource.UserGearsetsTabNoGearsetsTextPanel);

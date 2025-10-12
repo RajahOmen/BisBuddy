@@ -106,7 +106,7 @@ namespace BisBuddy.Services.ImportGearset
 
             // did gearpieces narrow possibilities down to 1? Pick it, else unknown
             var actualJobAbbrev = possibleJobAbbrevs.Count == 1 ? possibleJobAbbrevs.First() : "???";
-            var classJobId = itemDataService.GetClassJobInfoByAbbreviation(actualJobAbbrev).ClassJobId;
+            var classJobId = itemDataService.GetClassJobInfoByEnAbbreviation(actualJobAbbrev).ClassJobId;
 
             return gearsetFactory.Create(
                 gearpieces: gearpieces,

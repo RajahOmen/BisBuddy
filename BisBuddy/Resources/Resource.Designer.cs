@@ -61,6 +61,15 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to [Advanced] .
+        /// </summary>
+        public static string AdvancedMateriaMeldTooltip {
+            get {
+                return ResourceManager.GetString("AdvancedMateriaMeldTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Alias for {0}.
         /// </summary>
         public static string AliasChatCommandHelpMessage {
@@ -111,6 +120,15 @@ namespace BisBuddy.Resources {
         public static string BrightListItemHighlightingHelp {
             get {
                 return ResourceManager.GetString("BrightListItemHighlightingHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Collection status locked.
+        /// </summary>
+        public static string CollectionStatusLockTooltip {
+            get {
+                return ResourceManager.GetString("CollectionStatusLockTooltip", resourceCulture);
             }
         }
         
@@ -214,6 +232,15 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Shift+Click to delete {0}.
+        /// </summary>
+        public static string DeleteGearsetDisabledTooltip {
+            get {
+                return ResourceManager.GetString("DeleteGearsetDisabledTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Delete Gearset?.
         /// </summary>
         public static string DeleteGearsetPopupTitle {
@@ -223,11 +250,20 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Delete this Gearset. Shift+Click to quick delete.
+        ///   Looks up a localized string similar to Delete {0}.
         /// </summary>
         public static string DeleteGearsetTooltip {
             get {
                 return ResourceManager.GetString("DeleteGearsetTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to selected gearset.
+        /// </summary>
+        public static string DeleteGearsetTooltipGearsetNameDummy {
+            get {
+                return ResourceManager.GetString("DeleteGearsetTooltipGearsetNameDummy", resourceCulture);
             }
         }
         
@@ -278,6 +314,15 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Gearpieces.
+        /// </summary>
+        public static string GearsetGearpiecesTabName {
+            get {
+                return ResourceManager.GetString("GearsetGearpiecesTabName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Color needed items for this gearset are highlighted in.
         /// </summary>
         public static string GearsetHighlightColorButtonTooltip {
@@ -314,6 +359,15 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Properties.
+        /// </summary>
+        public static string GearsetPropertiesTabName {
+            get {
+                return ResourceManager.GetString("GearsetPropertiesTabName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Active.
         /// </summary>
         public static string GearsetSortActive {
@@ -323,7 +377,7 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Date Added.
+        ///   Looks up a localized string similar to Added.
         /// </summary>
         public static string GearsetSortImportDate {
             get {
@@ -1131,6 +1185,42 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Item not collected.
+        /// </summary>
+        public static string NotObtainableHelp {
+            get {
+                return ResourceManager.GetString("NotObtainableHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Item obtainable using prerequisites.
+        /// </summary>
+        public static string ObtainableHelp {
+            get {
+                return ResourceManager.GetString("ObtainableHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Item collected.
+        /// </summary>
+        public static string ObtainedCompleteHelp {
+            get {
+                return ResourceManager.GetString("ObtainedCompleteHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Item collected, missing materia.
+        /// </summary>
+        public static string ObtainedPartialHelp {
+            get {
+                return ResourceManager.GetString("ObtainedPartialHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Open config.
         /// </summary>
         public static string OpenConfigTooltip {
@@ -1145,6 +1235,15 @@ namespace BisBuddy.Resources {
         public static string PluginDisplayName {
             get {
                 return ResourceManager.GetString("PluginDisplayName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Prerequisites.
+        /// </summary>
+        public static string PrerequisiteGearpieceHeader {
+            get {
+                return ResourceManager.GetString("PrerequisiteGearpieceHeader", resourceCulture);
             }
         }
         

@@ -56,11 +56,21 @@ namespace BisBuddy.Services.Gearsets
                 scheduleSaveCurrentGearsets();
         }
 
-        private void handleGearsetChange() =>
-            scheduleGearsetsChange();
+        private void handleGearsetChange(bool effectsAssignments)
+        {
+            // ignore any changes that occur while gearsets are being updated
+            if (gearsetsChangeLocked)
+                return;
 
-        private void scheduleGearsetsChange() =>
+            scheduleGearsetsChange(effectsAssignments);
+        }
+
+        private void scheduleGearsetsChange(bool updateAssignments)
+        {
             gearsetsDirty = true;
+            assignmentsDirty |= updateAssignments;
+        }
+            
 
         /// <summary>
         /// Coalesce gearset change event calls into one per framework
@@ -71,8 +81,18 @@ namespace BisBuddy.Services.Gearsets
             if (!gearsetsDirty)
                 return;
 
-            gearsetsDirty = false;
-            triggerGearsetsChange(saveToFile: true);
+            try
+            {
+                if (configurationService.PluginUpdateInventoryScan && assignmentsDirty)
+                    ScheduleUpdateFromInventory();
+                else
+                    triggerGearsetsChange(saveToFile: true);
+            }
+            finally
+            {
+                gearsetsDirty = false;
+                assignmentsDirty = false;
+            }
         }
 
         private void handleLogin()
@@ -129,10 +149,7 @@ namespace BisBuddy.Services.Gearsets
             }
 
             logger.Info($"Adding {gearsetsToAdd.Count()} gearsets to current gearsets");
-            if (configurationService.PluginUpdateInventoryScan)
-                ScheduleUpdateFromInventory();
-            else
-                scheduleGearsetsChange();
+            scheduleGearsetsChange(updateAssignments: true);
         }
 
         private void sortGearsets(GearsetSortType sortType, bool sortDescending)
@@ -185,10 +202,7 @@ namespace BisBuddy.Services.Gearsets
             gearset.OnGearsetChange -= handleGearsetChange;
             currentGearsets.Remove(gearset);
 
-            if (configurationService.PluginUpdateInventoryScan)
-                ScheduleUpdateFromInventory();
-            else
-                scheduleGearsetsChange();
+            scheduleGearsetsChange(updateAssignments: true);
         }
 
         public void ScheduleUpdateFromInventory(
@@ -220,14 +234,14 @@ namespace BisBuddy.Services.Gearsets
                 try
                 {
                     logger.Verbose($"Updating current gearsets with new assignments");
+                    gearsetsChangeLocked = true;
                     if (!GearsetsLoaded)
                         return;
 
                     var itemsList = getGameInventoryItems();
-                    var gearpiecesToUpdate = Gearset.GetGearpiecesFromGearsets(gearsetsToUpdate);
 
                     var solver = itemAssignmentSolverFactory.Create(
-                        allGearsets: currentGearsets.Where(g => g.IsActive),
+                        allGearsets: currentGearsets,
                         assignableGearsets: gearsetsToUpdate,
                         inventoryItems: itemsList
                         );
@@ -236,7 +250,7 @@ namespace BisBuddy.Services.Gearsets
 
                     logger.Debug($"Updated {updatedGearpieces?.Count ?? 0} gearpieces from inventories");
 
-                    scheduleGearsetsChange();
+                    triggerGearsetsChange(saveToFile: true);
 
                     inventoryUpdateDisplayService.GearpieceUpdateCount = updatedGearpieces?.Count ?? 0;
                 }
@@ -248,6 +262,7 @@ namespace BisBuddy.Services.Gearsets
                 finally
                 {
                     inventoryUpdateDisplayService.UpdateIsQueued = false;
+                    gearsetsChangeLocked = false;
                 }
             });
             if (!queuedUpdate)

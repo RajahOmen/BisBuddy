@@ -119,7 +119,7 @@ namespace BisBuddy.Services.Configuration
                             gearpiece.PrerequisiteTree = itemDataService.BuildGearpiecePrerequisiteTree(gearpiece.ItemId);
 
                             // if gearpiece is collected, this will collect prereqs as well
-                            gearpiece.SetCollected(gearpiece.IsCollected, gearpiece.IsManuallyCollected);
+                            gearpiece.IsCollected = gearpiece.IsCollected;
                         }
                     }
                 }

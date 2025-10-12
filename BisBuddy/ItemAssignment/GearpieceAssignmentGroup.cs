@@ -58,7 +58,7 @@ namespace BisBuddy.ItemAssignment
             Gearpieces = [gearpiece];
             Gearsets = [gearset];
             minGearpieceIdx = gearpieceIdx;
-            IsManuallyCollected = gearpiece.IsManuallyCollected;
+            IsManuallyCollected = gearpiece.CollectLock;
         }
 
         /// <summary>
@@ -94,7 +94,7 @@ namespace BisBuddy.ItemAssignment
             // ids and materia match, add it to group and return true
             Gearpieces.Add(gearpiece);
             Gearsets.Add(gearset);
-            IsManuallyCollected |= gearpiece.IsManuallyCollected;
+            IsManuallyCollected |= gearpiece.CollectLock;
 
             // gearpiece has MORE Materia required than on current group, overwrite
             if (gearpiece.ItemMateria.Count > MateriaList.Count)

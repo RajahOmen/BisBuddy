@@ -1,3 +1,4 @@
+using FFXIVClientStructs.FFXIV.Common.Lua;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,9 +29,30 @@ namespace BisBuddy.Gear.Prerequisites
             }
         }
 
-        public bool IsCollected => PrerequisiteTree.Any(p => p.IsCollected);
-        public bool IsManuallyCollected => PrerequisiteTree.Any(p => p.IsManuallyCollected);
-        public bool IsObtainable => IsCollected || PrerequisiteTree.Any(p => p.IsObtainable);
+        public bool IsCollected
+        {
+            get => PrerequisiteTree.Any(p => p.IsCollected);
+            set
+            {
+                foreach (var prereq in prerequisiteTree)
+                    if (!prereq.CollectLock)
+                        prereq.IsCollected = value;
+            }
+        }
+        public bool CollectLock
+        {
+            get => PrerequisiteTree.All(p => p.CollectLock);
+            set
+            {
+                foreach (var prereq in prerequisiteTree)
+                    prereq.CollectLock = value;
+            }
+        }
+        public void SetIsCollectedLocked(bool toCollect)
+        {
+            foreach (var prereq in prerequisiteTree)
+                prereq.SetIsCollectedLocked(toCollect);
+        }
         public HashSet<string> ChildNodeIds => [.. PrerequisiteTree.Select(p => p.NodeId), .. PrerequisiteTree.SelectMany(p => p.ChildNodeIds)];
         public IEnumerable<ItemRequirement> ItemRequirements
         {
@@ -47,7 +69,7 @@ namespace BisBuddy.Gear.Prerequisites
             {
                 if (IsCollected)
                     return CollectionStatusType.ObtainedComplete;
-                if (IsObtainable)
+                if (PrerequisiteTree.Any(p => p.CollectionStatus >= CollectionStatusType.Obtainable))
                     return CollectionStatusType.Obtainable;
                 return CollectionStatusType.NotObtainable;
             }
@@ -98,12 +120,6 @@ namespace BisBuddy.Gear.Prerequisites
             node.OnPrerequisiteChange += handlePrereqChange;
         }
 
-        public void SetCollected(bool collected, bool manualToggle)
-        {
-            foreach (var p in PrerequisiteTree)
-                p.SetCollected(collected, manualToggle);
-        }
-
         public int MinRemainingItems(uint? newItemId = null)
         {
             return PrerequisiteTree.Min(p => p.MinRemainingItems(newItemId) as int?) ?? 0;   // only need one, pick min needed
@@ -137,10 +153,10 @@ namespace BisBuddy.Gear.Prerequisites
             return null;
         }
 
-        public List<uint> ManuallyCollectedItemIds()
+        public List<uint> CollectLockItemIds()
         {
             return PrerequisiteTree
-                .SelectMany(p => p.ManuallyCollectedItemIds())
+                .SelectMany(p => p.CollectLockItemIds())
                 .ToList();
         }
 
@@ -155,7 +171,7 @@ namespace BisBuddy.Gear.Prerequisites
         public string GroupKey()
         {
             return $"""
-                OR {ItemId} {IsCollected} {IsManuallyCollected} {SourceType}
+                OR {ItemId} {IsCollected} {CollectLock} {SourceType}
                 {string.Join(" ", PrerequisiteTree.Select(p => p.GroupKey()))}
                 """;
         }

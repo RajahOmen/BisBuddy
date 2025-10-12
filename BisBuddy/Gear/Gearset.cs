@@ -1,18 +1,16 @@
 using BisBuddy.Import;
-using BisBuddy.Ui.Components;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json.Serialization;
 
 namespace BisBuddy.Gear
 {
-    public delegate void GearsetChangeHandler();
+    public delegate void GearsetChangeHandler(bool effectsAssignments);
 
     [Serializable]
     public class Gearset
     {
-        private readonly IReadOnlyList<Gearpiece> gearpieces;
+        private readonly IReadOnlyList<Gearpiece> gearpieces = [];
 
         private string id;
         private bool isActive;
@@ -31,7 +29,7 @@ namespace BisBuddy.Gear
                     return;
 
                 id = value;
-                triggerGearsetChange();
+                triggerGearsetChange(effectsAssignments: false);
             }
         }
         public bool IsActive {
@@ -42,7 +40,7 @@ namespace BisBuddy.Gear
                     return;
 
                 isActive = value;
-                triggerGearsetChange();
+                triggerGearsetChange(effectsAssignments: true);
             }
         }
         public string Name {
@@ -52,8 +50,8 @@ namespace BisBuddy.Gear
                 if (name == value)
                     return;
 
-                name = value;
-                triggerGearsetChange();
+                name = value ?? string.Empty;
+                triggerGearsetChange(effectsAssignments: false);
             }
         }
         public int? Priority
@@ -65,7 +63,7 @@ namespace BisBuddy.Gear
                     return;
 
                 priority = value;
-                triggerGearsetChange();
+                triggerGearsetChange(effectsAssignments: true);
             }
         }
         public DateTime ImportDate
@@ -77,7 +75,7 @@ namespace BisBuddy.Gear
                     return;
 
                 importDate = value.ToUniversalTime();
-                triggerGearsetChange();
+                triggerGearsetChange(effectsAssignments: false);
             }
         }
         public IReadOnlyList<Gearpiece> Gearpieces
@@ -86,9 +84,9 @@ namespace BisBuddy.Gear
             init
             {
                 foreach (var gearpiece in value)
-                    gearpiece.OnGearpieceChange += triggerGearsetChange;
+                    gearpiece.OnGearpieceChange += handleChangeWithAssignments;
 
-                gearpieces = value ?? [];
+                gearpieces = value.OrderBy(g => g.GearpieceType).ToList() ?? [];
             }
         }
         // for links to externally sourced sites
@@ -114,10 +112,10 @@ namespace BisBuddy.Gear
                         oldColor.UpdateColor(color.BaseColor);
                     else
                     {
-                        oldColor.OnColorChange -= triggerGearsetChange;
+                        oldColor.OnColorChange -= handleChangeWithoutAssignments;
                         highlightColor = null;
                         // changing to new binding (null), trigger update
-                        triggerGearsetChange();
+                        triggerGearsetChange(effectsAssignments: false);
                     }
                 // uses default highlight color
                 else
@@ -125,44 +123,15 @@ namespace BisBuddy.Gear
                     if (value is HighlightColor color)
                     {
                         highlightColor = color;
-                        highlightColor!.OnColorChange += triggerGearsetChange;
+                        highlightColor!.OnColorChange += handleChangeWithoutAssignments;
                         // changing to new binding, trigger update
-                        triggerGearsetChange();
+                        triggerGearsetChange(effectsAssignments: false);
                     }
                 }
             }
         }
 
         public event GearsetChangeHandler? OnGearsetChange;
-
-        //public Gearset(
-        //    string name,
-        //    List<Gearpiece> gearpieces,
-        //    uint classJobId,
-        //    ImportGearsetSourceType? sourceType,
-        //    bool isActive = true,
-        //    string? id = null,
-        //    string? sourceUrl = null,
-        //    string? sourceString = null,
-        //    int priority = 0,
-        //    DateTime? importDate = null
-        //    )
-        //{
-        //    this.id = id ?? Guid.NewGuid().ToString();
-        //    this.isActive = isActive;
-        //    this.name = name;
-        //    SourceUrl = sourceUrl;
-        //    SourceString = sourceString;
-        //    SourceType = sourceType;
-        //    ClassJobId = classJobId;
-        //    this.priority = priority;
-
-        //    // ensure ordering after adding
-        //    gearpieces.Sort((a, b) => a.GearpieceType.CompareTo(b.GearpieceType));
-        //    this.gearpieces = gearpieces;
-
-        //    this.importDate = importDate ?? DateTime.UtcNow;
-        //}
 
         public Gearset(
             string id,
@@ -185,23 +154,27 @@ namespace BisBuddy.Gear
             SourceString = sourceString;
             SourceType = sourceType;
             ClassJobInfo = classJobInfo;
+            Gearpieces = gearpieces;
             this.priority = priority;
             this.importDate = importDate;
             this.highlightColor = highlightColor;
-            this.gearpieces = gearpieces;
         }
 
 
         ~Gearset()
         {
             foreach (var gearpiece in Gearpieces)
-                gearpiece.OnGearpieceChange -= triggerGearsetChange;
+                gearpiece.OnGearpieceChange -= handleChangeWithAssignments;
         }
 
-        private void triggerGearsetChange()
-        {
-            OnGearsetChange?.Invoke();
-        }
+        private void handleChangeWithAssignments() =>
+            triggerGearsetChange(effectsAssignments: true);
+
+        private void handleChangeWithoutAssignments() =>
+            triggerGearsetChange(effectsAssignments: false);
+
+        private void triggerGearsetChange(bool effectsAssignments) =>
+            OnGearsetChange?.Invoke(effectsAssignments);
 
         public IEnumerable<ItemRequirementOwned> ItemRequirements(bool includeUncollectedItemMateria)
         {

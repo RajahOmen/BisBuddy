@@ -12,9 +12,9 @@ namespace BisBuddy.Ui
         // default CollectionStatus.ObtainedPartial icon
         YellowWarningTriangle = 60073,
         // default CollectionStatus.ObtainedComplete icon
-        BlueCheck = 60076,
+        BlueCheck = 60081,
         // default CollectionStatus.Unobtainable icon
         RedCrossSquare = 60861,
-        RedCross = 61502,
+        RedCross = 61552,
     }
 }

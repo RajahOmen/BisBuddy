@@ -144,7 +144,7 @@ namespace BisBuddy.Services.ImportGearset
                         && jobProp.ValueKind == JsonValueKind.String
                         )
                     {
-                        var classJobInfo = itemDataService.GetClassJobInfoByAbbreviation(jobProp.GetString() ?? "");
+                        var classJobInfo = itemDataService.GetClassJobInfoByEnAbbreviation(jobProp.GetString() ?? "");
                         if (classJobInfo.ClassJobId != 0)
                             classJobId = classJobInfo.ClassJobId;
                     }
@@ -185,7 +185,7 @@ namespace BisBuddy.Services.ImportGearset
                 && jobProp.ValueKind == JsonValueKind.String
                 )
             {
-                classJobId = itemDataService.GetClassJobInfoByAbbreviation(jobProp.GetString() ?? "").ClassJobId;
+                classJobId = itemDataService.GetClassJobInfoByEnAbbreviation(jobProp.GetString() ?? "").ClassJobId;
             }
 
             // get items from json

@@ -11,18 +11,25 @@ using System.Threading.Tasks;
 namespace BisBuddy.Factories
 {
     public class MateriaFactory(
-        IItemDataService itemDataService
+        ITypedLogger<Materia> materiaLogger,
+        IItemDataService itemDataService,
+        IAttributeService attributeService
         ) : IMateriaFactory
     {
+        private readonly ITypedLogger<Materia> materiaLogger = materiaLogger;
         private readonly IItemDataService itemDataService = itemDataService;
+        private readonly IAttributeService attributeService = attributeService;
 
-        public Materia Create(uint itemId, bool isMelded = false)
+        public Materia Create(uint itemId, bool isCollected = false, bool collectLock = false)
         {
             var materiaDetails = itemDataService.GetMateriaInfo(itemId);
 
             return new Materia(
+                materiaLogger,
+                attributeService,
                 materiaDetails,
-                isMelded
+                isCollected,
+                collectLock
                 );
         }
     }
@@ -33,8 +40,9 @@ namespace BisBuddy.Factories
         /// Creates a new materia instance.
         /// </summary>
         /// <param name="itemId">The item id of the materia to create.</param>
-        /// <param name="isMelded">If the initial state of the materia should be melded</param>
+        /// <param name="isCollected">If the initial state of the materia should be melded</param>
+        /// <param name="collectLock">If the initial collect state of the materia should be locked</param>
         /// <returns>A new instance of the specified materia.</returns>
-        Materia Create(uint itemId, bool isMelded = false);
+        Materia Create(uint itemId, bool isCollected = false, bool collectLock = false);
     }
 }

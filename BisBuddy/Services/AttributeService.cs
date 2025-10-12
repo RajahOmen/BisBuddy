@@ -11,7 +11,6 @@ namespace BisBuddy.Services
         private static readonly MemoryCacheEntryOptions CacheOptions = new()
         {
             SlidingExpiration = TimeSpan.FromSeconds(5),
-            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
         };
 
         private readonly IMemoryCache memoryCache = memoryCache;

@@ -25,7 +25,8 @@ namespace BisBuddy.Util
         /// The id of the icon corresponding to the icon directly preceding the icons for the classes and jobs
         /// When given a ClassJob rowId, the IconId matching the ClassJob is ClassJobIconIdOffset + IconId
         /// </summary>
-        public static readonly int ClassJobIconIdOffset = 62100;
+        public static readonly int ClassJobIconIdOffsetFramed = 62100;
+        public static readonly int ClassJobIconIdOffset = 62000;
         public static readonly int CompanionIconOffset = 2;
 
         public static readonly Vector3 CustomNodeMultiplyColor = new(0.393f, 0.393f, 0.393f);

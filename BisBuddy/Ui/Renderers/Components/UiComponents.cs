@@ -214,7 +214,7 @@ namespace BisBuddy.Ui.Renderers.Components
             var circleSize = new Vector2(diameter, diameter);
             var circlePos = cursorPos + circleSize / 2;
 
-            if (collectionStatus != CollectionStatusType.NotObtainable)
+            if (collectionStatus >= CollectionStatusType.ObtainedPartial)
             {
                 var innerCol = ImGui.GetColorU32(materiaColor * MateriaFillColorMult);
                 drawList.AddCircleFilled(circlePos, radius, innerCol);

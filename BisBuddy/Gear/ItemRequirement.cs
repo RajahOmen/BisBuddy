@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace BisBuddy.Gear;
 
@@ -12,12 +8,11 @@ namespace BisBuddy.Gear;
 /// RequirementType represents how the item is needed (be it the gearpiece itself, as a prerequisite, or as a materia)
 /// </summary>
 /// <param name="ItemId">The ItemId of the item required</param>
-/// <param name="IsCollected">If the requirement being satisfied by the ItemId is marked as collected</param>
+/// <param name="CollectionStatus">The current <see cref="ICollectableItem.CollectionStatus"/> of the requirement being satisfied by the ItemId is marked as collected</param>
 /// <param name="IsObtainable">If the requirement being satisfied by the ItemId is marked as obtainable</param>
 /// <param name="RequirementType">How is this item needed (gearpiece, prerequisite piece, materia)</param>
 public readonly record struct ItemRequirement(
     uint ItemId,
-    bool IsCollected,
-    bool IsObtainable,
+    CollectionStatusType CollectionStatus,
     RequirementType RequirementType
     );

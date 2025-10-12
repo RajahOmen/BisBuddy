@@ -49,6 +49,8 @@ namespace BisBuddy.Services.Gearsets
         private readonly IImportGearsetService importGearsetService = importGearsetService;
 
         private bool gearsetsDirty = false;
+        private bool assignmentsDirty = false;
+        private bool gearsetsChangeLocked = false;
 
         private ulong currentLocalContentId => clientState.LocalContentId;
 
@@ -63,7 +65,7 @@ namespace BisBuddy.Services.Gearsets
             private set
             {
                 currentGearsets = value.ToList();
-                scheduleGearsetsChange();
+                scheduleGearsetsChange(updateAssignments: true);
             }
         }
 
@@ -130,7 +132,6 @@ namespace BisBuddy.Services.Gearsets
                     gearset.OnGearsetChange -= handleGearsetChange;
 
                 if (currentLocalContentId == 0)
-                {
                     currentGearsets = [];
                 else
                 {
@@ -154,11 +155,13 @@ namespace BisBuddy.Services.Gearsets
                 foreach (var gearset in currentGearsets)
                     gearset.OnGearsetChange += handleGearsetChange;
                 triggerGearsetsChange(saveToFile: false);
+                logger.Verbose($"finish triggerGearsetsChange");
             }
         }
 
         private void scheduleSaveCurrentGearsets()
         {
+            logger.Verbose($"Enqueuing save of current gearsets for \"{currentLocalContentId}\"");
             queueService.Enqueue(saveCurrentGearsets);
         }
 

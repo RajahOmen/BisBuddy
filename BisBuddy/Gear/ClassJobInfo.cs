@@ -12,6 +12,8 @@ namespace BisBuddy.Gear
         public readonly uint ClassJobId = classJobId;
         public readonly string Name = name;
         public readonly string Abbreviation = abbreviation;
+        public readonly int IconIdFramed = Constants.ClassJobIconIdOffsetFramed
+            + (iconIdIndex ?? (int)classJobId);
         public readonly int IconId = Constants.ClassJobIconIdOffset
             + (iconIdIndex ?? (int)classJobId);
     }

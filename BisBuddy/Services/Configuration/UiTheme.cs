@@ -12,6 +12,13 @@ namespace BisBuddy.Services.Configuration;
 [Serializable]
 public class UiTheme
 {
+    public Vector4 DeleteColor { get; set; } = new Vector4(
+        x: 0.6f, // Red
+        y: 0.1f, // Green
+        z: 0.1f, // Blue
+        w: 1.0f  // Alpha
+    );
+
     /// <summary>
     /// The color of text used to indicate that an item is obtained and all materia are melded.
     /// </summary>
@@ -70,7 +77,28 @@ public class UiTheme
     /// <summary>
     /// The icon used to indicate that an item is currently not obtained.
     /// </summary>
-    public GameIcon UnobtainedIcon { get; set; } = GameIcon.RedCrossSquare;
+    public GameIcon UnobtainedIcon { get; set; } = GameIcon.RedCross;
+
+    /// <summary>
+    /// The color that the edge of a materia slot is when it isn't an advanced/overmeld slot
+    /// </summary>
+    public Vector4 MateriaSlotNormalColor { get; set; } = new(
+        x: 0.2f, // Red
+        y: 0.8f, // Green
+        z: 0.2f, // Blue
+        w: 1.0f  // Alpha
+        );
+
+
+    /// <summary>
+    /// The color that the edge of a materia slot is when it is an advanced/overmeld slot
+    /// </summary>
+    public Vector4 MateriaSlotAdvancedColor { get; set; } = new(
+        x: 0.8f, // Red
+        y: 0.2f, // Green
+        z: 0.2f, // Blue
+        w: 1.0f  // Alpha
+        );
 
     /// <summary>
     /// If true, gearsets will show the color accent on the header when it is viewed.

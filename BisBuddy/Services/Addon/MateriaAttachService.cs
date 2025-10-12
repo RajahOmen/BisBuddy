@@ -116,7 +116,7 @@ namespace BisBuddy.Services.Addon
             var materiaNames = meldPlanService
                 .CurrentMeldPlan?
                 .MateriaGroup
-                .Where(m => !m.IsMelded)
+                .Where(m => !m.IsCollected)
                 .Select(m => m.ItemName) ?? [];
 
             // limit to next materia to meld if configured

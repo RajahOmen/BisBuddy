@@ -27,7 +27,7 @@ namespace BisBuddy.Services
 
                 if (taskQueue.TryDequeue(out var task))
                 {
-                    logger.Verbose($"Executing queue task");
+                    logger.Verbose($"Executing queue task {task}");
                     task(); // Execute the task
                     logger.Verbose($"Queue task complete");
                 }

@@ -6,7 +6,9 @@ using BisBuddy.Resources;
 using BisBuddy.Util;
 using Dalamud.Game;
 using Dalamud.Game.Inventory;
+using Dalamud.Utility;
 using Lumina.Data;
+using Lumina.Excel;
 using Lumina.Excel.Sheets;
 using Lumina.Text.ReadOnly;
 using System;
@@ -148,6 +150,22 @@ namespace BisBuddy.Items
                 return false;
 
             return itemRow.MateriaSlotCount > 0;
+        }
+
+        public ItemUICategory GetItemUICategory(uint itemId)
+        {
+
+            if (!tryGetItemRowById(itemId, out var itemRow))
+                throw new ArgumentException($"Invalid itemId {itemId}");
+
+            return itemRow.ItemUICategory.Value;
+        }
+
+        public int GetItemMateriaSlotCount(uint itemId)
+        {
+            if (!tryGetItemRowById(itemId, out var itemRow))
+                throw new ArgumentException($"Invalid itemId {itemId}");
+            return itemRow.MateriaSlotCount;
         }
 
         /// <summary>   
@@ -480,7 +498,7 @@ namespace BisBuddy.Items
             return GearpieceType.None;
         }
 
-        public ClassJobInfo GetClassJobInfoByAbbreviation(string abbrevation, ClientLanguage language = ClientLanguage.English)
+        public ClassJobInfo GetClassJobInfoByEnAbbreviation(string abbrevation, ClientLanguage language = ClientLanguage.English)
         {
             var sheet = language == ClientLanguage.English
                 ? ClassJobEn
@@ -496,13 +514,13 @@ namespace BisBuddy.Items
                         );
             }
 
-            return nullJobInfo(ClassJobEn.Count);
+            return nullJobInfo;
         }
 
         public ClassJobInfo GetClassJobInfoById(uint jobId)
         {
             if (jobId == 0 || !ClassJobEn.TryGetRow(jobId, out var row))
-                return nullJobInfo(ClassJobEn.Count);
+                return nullJobInfo;
 
             var titleCaseName = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(row.Name.ExtractText().ToLower());
 
@@ -513,11 +531,39 @@ namespace BisBuddy.Items
                 );
         }
 
-        private static ClassJobInfo nullJobInfo(int numJobs) => new(
+        private int classJobCount =>
+            // +1 because "no job" is not included in the count
+            ClassJobEn.Count(c => !c.Name.ExtractText().IsNullOrEmpty()) + 1;
+
+        private ClassJobInfo nullJobInfo => new(
             classJobId: 0,
             name: Resource.UnknownClassJobName,
             abbreviation: Resource.UnknownClassJobAbbreviation,
-            iconIdIndex: numJobs + Constants.CompanionIconOffset
+            iconIdIndex: classJobCount + Constants.CompanionIconOffset
             );
+
+        public IEnumerable<uint> FindClassJobIdUsers(IEnumerable<uint> itemIds)
+        {
+            var allClassJobIds = ClassJobEn
+                .Where(job => !job.Name.IsEmpty)
+                .Select(job => job.RowId)
+                .ToHashSet();
+
+            var validJobs = itemIds.Aggregate(allClassJobIds, (validJobIds, nextItemId) =>
+            {
+                if (!tryGetItemRowById(nextItemId, out var item))
+                    return validJobIds;
+
+                var categoryRow = dataManager
+                    .GetExcelSheet<RawRow>(ClientLanguage.English, "ClassJobCategory")
+                    .GetRow(item.ClassJobCategory.RowId);
+
+                return validJobIds
+                    .Where(id => categoryRow.ReadBoolColumn((int)id + 1))
+                    .ToHashSet();
+            });
+
+            return validJobs;
+        }
     }
 }

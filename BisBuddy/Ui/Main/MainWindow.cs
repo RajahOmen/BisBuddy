@@ -13,14 +13,15 @@ using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;
 using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Numerics;
 using BisBuddy.Extensions;
-using BisBuddy.Ui.Components;
+using BisBuddy.Ui.Renderers;
+using System.Reflection;
 
 namespace BisBuddy.Ui;
 
@@ -42,6 +43,7 @@ public class MainWindow : Window, IDisposable
     private readonly IConfigurationService configurationService;
     private readonly IIndex<MainWindowTab, TabRenderer> tabRendererIndex;
     private readonly IAttributeService attributeService;
+    private readonly IItemFinderService itemFinderService;
 
     // what tab to currently render
     private MainWindowTab? activeTab = null;
@@ -49,6 +51,9 @@ public class MainWindow : Window, IDisposable
 
     // order using the value of the enum as a sort key
     private readonly IEnumerable<MainWindowTab> tabTypes = Enum.GetValues<MainWindowTab>().OrderBy(t => (int) t);
+
+    private static readonly string PluginVersion =
+        $" v{Assembly.GetExecutingAssembly().GetName().Version}";
 
     public MainWindow(
         ITypedLogger<MainWindow> logger,
@@ -59,9 +64,10 @@ public class MainWindow : Window, IDisposable
         IInventoryUpdateDisplayService inventoryUpdateService,
         IConfigurationService configurationService,
         IIndex<MainWindowTab, TabRenderer> tabRendererIndex,
-        IAttributeService attributeService
+        IAttributeService attributeService,
+        IItemFinderService itemFinderService
         )
-        : base($"{Constants.PluginName}##bisbuddymainwindow")
+        : base($"{Constants.PluginName}{PluginVersion}##bisbuddymainwindow")
     {
         this.logger = logger;
         this.clientState = clientState;
@@ -72,22 +78,10 @@ public class MainWindow : Window, IDisposable
         this.configurationService = configurationService;
         this.tabRendererIndex = tabRendererIndex;
         this.attributeService = attributeService;
+        this.itemFinderService = itemFinderService;
         SizeConstraints = MainSizeConstraints;
         Size = DefaultSize;
         SizeCondition = ImGuiCond.Appearing;
-    }
-
-    private unsafe void searchItemById(uint itemId)
-    {
-        try
-        {
-            logger.Debug($"Searching for item \"{itemId}\"");
-            ItemFinderModule.Instance()->SearchForItem(itemId, false);
-        }
-        catch (Exception ex)
-        {
-            logger.Error(ex, $"Error searching for \"{itemId}\"");
-        }
     }
 
     public void Dispose() { }
@@ -168,98 +162,4 @@ public class MainWindow : Window, IDisposable
             MaximumSize = maxSize
         };
     }
-
-    //private void drawHeader()
-    //{
-    //    var updateIsQueued = inventoryUpdateService.UpdateIsQueued;
-    //    var manualUpdatedCount = inventoryUpdateService.IsManualUpdate
-    //        ? inventoryUpdateService.GearpieceUpdateCount
-    //        : -1;
-
-    //    using (ImRaii.Disabled(!clientState.IsLoggedIn))
-    //    {
-    //        using (ImRaii.Disabled(gearsetsService.CurrentGearsets.Count >= Constants.MaxGearsetCount))
-    //        {
-    //            if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.Plus, $"{Resource.NewGearsetButton}##importgearset"))
-    //            {
-    //                if (clientState.IsLoggedIn)
-    //                    importGearsetWindow.Toggle();
-    //            }
-    //            if (ImGui.IsItemHovered())
-    //            {
-    //                var tooltip =
-    //                    gearsetsService.CurrentGearsets.Count >= Constants.MaxGearsetCount
-    //                    ? string.Format(Resource.NewGearsetTooltipMaxGearsets, Constants.MaxGearsetCount)
-    //                    : Resource.NewGearsetTooltip;
-    //                ImGui.SetTooltip(tooltip);
-    //            }
-    //        }
-
-    //        ImGui.SameLine();
-
-    //        using (ImRaii.Disabled(updateIsQueued || gearsetsService.CurrentGearsets.Count == 0))
-    //        {
-    //            if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.Sync, $"{Resource.SyncInventoryButton}##scaninventory"))
-    //                gearsetsService.ScheduleUpdateFromInventory(manualUpdate: true);
-    //            if (ImGui.IsItemHovered()) ImGui.SetTooltip(Resource.SyncInventoryTooltip);
-    //        }
-    //    }
-    //    if (updateIsQueued)
-    //    {
-    //        ImGui.SameLine();
-    //        ImGui.Text(Resource.InventoryScanLoading);
-    //    }
-    //    else if (manualUpdatedCount >= 0)
-    //    {
-    //        ImGui.SameLine();
-    //        ImGui.Text(string.Format(Resource.InventoryScanUpdated, manualUpdatedCount));
-    //    }
-
-    //    ImGui.SameLine();
-
-    //    var configButtonSize = ImGuiComponents.GetIconButtonWithTextWidth(FontAwesomeIcon.Cog, "");
-    //    ImGui.SetCursorPosX(ImGui.GetContentRegionMax().X - (configButtonSize + 12));
-    //    if (ImGuiComponents.IconButton(FontAwesomeIcon.Cog))
-    //        configWindow.Toggle();
-    //    if (ImGui.IsItemHovered())
-    //        ImGui.SetTooltip(Resource.OpenConfigTooltip);
-    //}
-
-    //private void drawNoGearsets()
-    //{
-    //    var errorText = clientState.IsLoggedIn
-    //        ? Resource.NoGearsetsText
-    //        : Resource.LoggedOutText;
-    //    var textWidth = ImGui.CalcTextSize(errorText).X;
-    //    var offsetX = (ImGui.GetWindowWidth() - textWidth) * 0.5f;
-    //    ImGui.SetCursorPosX(offsetX); // Center text
-    //    ImGui.Text(errorText);
-    //}
-
-    //private void drawGearsets(IReadOnlyList<Gearset> gearsets)
-    //{
-    //    var gearsetsToDelete = new List<Gearset>();
-
-    //    for (var i = 0; i < gearsets.Count; i++)
-    //    {
-    //        var gearset = gearsets[i];
-    //        using (ImRaii.PushId(gearset.Id))
-    //        {
-    //            var deleteGearset = drawGearset(gearset);
-    //            if (deleteGearset)
-    //            {
-    //                gearsetsToDelete.Add(gearset);
-    //            }
-    //        }
-    //    }
-
-    //    if (gearsetsToDelete.Count > 0)
-    //    {
-    //        foreach (var gearset in gearsetsToDelete)
-    //        {
-    //            logger.Verbose($"Removed gearset \"{gearset.Name}\"");
-    //            gearsetsService.RemoveGearset(gearset);
-    //        }
-    //    }
-    //}
 }

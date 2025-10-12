@@ -51,14 +51,14 @@ namespace BisBuddy.ItemAssignment
             this.assignPrerequisiteMateria = assignPrerequisiteMateria;
             this.itemData = itemData;
             this.materiaFactory = materiaFactory;
-            this.allGearsets = allGearsets;
-            this.assignableGearsets = assignableGearsets;
+            this.allGearsets = allGearsets.Where(g => g.IsActive);
+            this.assignableGearsets = assignableGearsets.Where(g => g.IsActive);
 
             // group gearpieces by id/materia
-            gearpieceGroups.AddRange(groupGearpieces(allGearsets));
+            gearpieceGroups.AddRange(groupGearpieces(this.allGearsets));
             var gearpieceItemIds = gearpieceGroups.Select(group => group.ItemId).ToHashSet();
 
-            removeManuallyCollectedItems(allGearsets, inventoryItems);
+            removeManuallyCollectedItems(this.allGearsets, inventoryItems);
 
             // filter out unused candidate items
             gearpieceCandidateItems = inventoryItems
@@ -82,7 +82,7 @@ namespace BisBuddy.ItemAssignment
             var manuallyCollectedItemIds = gearsets
                 .SelectMany(set =>
                     set.Gearpieces.SelectMany(gear =>
-                        gear.ManuallyCollectedItemIds()
+                        gear.CollectLockItemIds()
                 ));
 
             // try removing copies of manually collected items from pool of avaliable items to assign
@@ -224,7 +224,8 @@ namespace BisBuddy.ItemAssignment
         {
             foreach (var gearset in assignableGearsets)
                 foreach (var gearpiece in gearset.Gearpieces)
-                    gearpiece.PrerequisiteTree?.SetCollected(false, false);
+                    if (!(gearpiece.PrerequisiteTree?.CollectLock ?? true))
+                        gearpiece.PrerequisiteTree.IsCollected = false;
         }
 
         private int[] solveAndAssignPrerequisites(bool assignPrerequisiteMateria)
@@ -327,7 +328,7 @@ namespace BisBuddy.ItemAssignment
                 foreach (var gearpiece in gearset.Gearpieces)
                 {
                     // do not consider manually collected items in solver
-                    if (gearpiece.IsManuallyCollected)
+                    if (gearpiece.CollectLock)
                         continue;
 
                     overallGearpieceIdx++;
@@ -354,7 +355,7 @@ namespace BisBuddy.ItemAssignment
                     var gearpiece = gearset.Gearpieces[gearpieceIdx];
 
                     // do not consider manually collected items in solver
-                    if (gearpiece.IsManuallyCollected)
+                    if (gearpiece.CollectLock)
                         continue;
 
                     // has no prerequisites to potentially assign
@@ -362,7 +363,7 @@ namespace BisBuddy.ItemAssignment
                         continue;
 
                     // already assigned in gearpiece assignment solution or is manually collected, don't add this to any group
-                    if (assignedGearpieces.Contains(gearpiece) || gearpiece.IsManuallyCollected)
+                    if (assignedGearpieces.Contains(gearpiece) || gearpiece.CollectLock)
                         continue;
 
                     overallPrereqIdx++;

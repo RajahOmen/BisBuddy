@@ -1,7 +1,7 @@
+using BisBuddy.Factories;
 using BisBuddy.Gear;
 using BisBuddy.Services;
-using BisBuddy.Ui.Components.ContextMenus;
-using System;
+using Dalamud.Interface;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,20 +10,39 @@ using System.Threading.Tasks;
 namespace BisBuddy.Ui.Renderers.ContextMenus
 {
     public class GearpieceContextMenu(
-        ITypedLogger<GearpieceContextMenu> logger
-        ) : ContextMenuBase<Gearpiece, GearpieceContextMenu>(logger)
+        ITypedLogger<GearpieceContextMenu> logger,
+        IContextMenuEntryFactory factory,
+        IItemFinderService itemFinderService
+        ) : ContextMenuBase<Gearpiece, GearpieceContextMenu>(logger, factory)
     {
-        protected override List<ContextMenuEntry> buildMenuEntries()
+        private readonly IItemFinderService itemFinderService = itemFinderService;
+
+        protected override List<ContextMenuEntry> buildMenuEntries(Gearpiece newComponent)
         {
-            if (renderableComponent is not Gearpiece gearpiece)
+            if (newComponent is not Gearpiece gearpiece)
                 return [];
 
-            List<ContextMenuEntry> entries = [
-                new($"Collddect", onClick: () => gearpiece.SetIsCollectedLocked(true)),
-                new($"Uncollddect", onClick: () => gearpiece.SetIsCollectedLocked(false))
+            return [
+                factory.Create(
+                    entryName: "Lock as Collected",
+                    icon: FontAwesomeIcon.Lock,
+                    onClick: () => gearpiece.SetIsCollectedLocked(true),
+                    shouldDraw: () => !gearpiece.IsCollected || !gearpiece.CollectLock),
+                factory.Create(
+                    entryName: "Lock as Uncollected",
+                    icon: FontAwesomeIcon.Lock,
+                    onClick: () => gearpiece.SetIsCollectedLocked(false),
+                    shouldDraw: () => gearpiece.IsCollected || !gearpiece.CollectLock),
+                factory.Create(
+                    entryName: "Unlock",
+                    icon: FontAwesomeIcon.Unlock,
+                    onClick: () => gearpiece.CollectLock = false,
+                    shouldDraw: () => gearpiece.CollectLock),
+                factory.Create(
+                    entryName: "Search in Inventories",
+                    icon: FontAwesomeIcon.Search,
+                    onClick: () => itemFinderService.SearchForItem(gearpiece.ItemId))
                 ];
-
-            return entries;
         }
     }
 }
