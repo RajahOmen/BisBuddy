@@ -546,8 +546,7 @@ namespace BisBuddy.Items
         {
             var allClassJobIds = ClassJobEn
                 .Where(job => !job.Name.IsEmpty)
-                .Select(job => job.RowId)
-                .ToHashSet();
+                .Select(job => job.RowId);
 
             var validJobs = itemIds.Aggregate(allClassJobIds, (validJobIds, nextItemId) =>
             {
@@ -559,8 +558,7 @@ namespace BisBuddy.Items
                     .GetRow(item.ClassJobCategory.RowId);
 
                 return validJobIds
-                    .Where(id => categoryRow.ReadBoolColumn((int)id + 1))
-                    .ToHashSet();
+                    .Where(id => categoryRow.ReadBoolColumn((int)id + 1));
             });
 
             return validJobs;
