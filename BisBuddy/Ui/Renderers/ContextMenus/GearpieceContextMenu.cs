@@ -1,11 +1,9 @@
 using BisBuddy.Factories;
 using BisBuddy.Gear;
+using BisBuddy.Resources;
 using BisBuddy.Services;
 using Dalamud.Interface;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BisBuddy.Ui.Renderers.ContextMenus
 {
@@ -24,22 +22,22 @@ namespace BisBuddy.Ui.Renderers.ContextMenus
 
             return [
                 factory.Create(
-                    entryName: "Lock as Collected",
+                    entryName: Resource.ContextMenuLockCollected,
                     icon: FontAwesomeIcon.Lock,
                     onClick: () => gearpiece.SetIsCollectedLocked(true),
                     shouldDraw: () => !gearpiece.IsCollected || !gearpiece.CollectLock),
                 factory.Create(
-                    entryName: "Lock as Uncollected",
+                    entryName: Resource.ContextMenuLockUncollected,
                     icon: FontAwesomeIcon.Lock,
                     onClick: () => gearpiece.SetIsCollectedLocked(false),
                     shouldDraw: () => gearpiece.IsCollected || !gearpiece.CollectLock),
                 factory.Create(
-                    entryName: "Unlock",
+                    entryName: Resource.ContextMenuUnlock,
                     icon: FontAwesomeIcon.Unlock,
                     onClick: () => gearpiece.CollectLock = false,
                     shouldDraw: () => gearpiece.CollectLock),
                 factory.Create(
-                    entryName: "Search in Inventories",
+                    entryName: Resource.ContextMenuSearchInventory,
                     icon: FontAwesomeIcon.Search,
                     onClick: () => itemFinderService.SearchForItem(gearpiece.ItemId))
                 ];

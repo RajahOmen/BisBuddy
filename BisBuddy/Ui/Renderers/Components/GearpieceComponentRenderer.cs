@@ -160,7 +160,7 @@ namespace BisBuddy.Ui.Renderers.Components
             using (ImRaii.Disabled(!hasSubItems))
             using (ImRaii.PushColor(ImGuiCol.Button, GearpieceButtonColor))
             using (ImRaii.PushColor(ImGuiCol.ButtonHovered, new Vector4(0.35f, 0.35f, 0.35f, 1)))
-            using (ImRaii.PushColor(ImGuiCol.ButtonActive, new Vector4(0.6f, 0.6f, 0.6f, 1)))
+            using (ImRaii.PushColor(ImGuiCol.ButtonActive, new Vector4(0.5f, 0.5f, 0.5f, 1)))
             using (ImRaii.PushStyle(ImGuiStyleVar.ButtonTextAlign, new Vector2(0, 0.5f)))
             using (ImRaii.PushStyle(ImGuiStyleVar.FramePadding, Vector2.One * 5))
             using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(0.0f, ImGui.GetStyle().ItemSpacing.Y)))
@@ -185,20 +185,21 @@ namespace BisBuddy.Ui.Renderers.Components
                         nextIsExpanded = !isExpanded;
                         prereqExpanded = defaultPrereqExpandedState(gearpiece);
                     }
+                var mainButtonHovered = ImGui.IsItemHovered();
                 if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
                 {
                     if (gearpiece.ItemMateria.Count > 0 || gearpiece.PrerequisiteTree is not null)
                         ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
                     else
-                        ImGui.SetMouseCursor(ImGuiMouseCursor.NotAllowed);
+                        UiComponents.SetTooltipSolid(
+                            Resource.GearpieceNoSubItemsTooltip
+                            );
                 }
                 rendererFactory
                     .GetRenderer(gearpiece, RendererType.ContextMenu)
                     .Draw();
 
                 var nextPos = ImGui.GetCursorPos();
-
-                ImGui.SetItemAllowOverlap();
 
                 ImGui.PushClipRect(buttonScreenPos, buttonScreenPos + new Vector2(buttonSize.X - (materiaXOffset + materiaSpacing * 1), buttonSize.Y), true);
                 var textOffset = new Vector2(
@@ -210,14 +211,13 @@ namespace BisBuddy.Ui.Renderers.Components
                 ImGui.Text(buttonText);
                 ImGui.PopClipRect();
 
-                ImGui.SetItemAllowOverlap();
-
                 ImGui.SetCursorPos(buttonPos);
 
                 // COLLECTION STATUS BUTTON
-                using (ImRaii.PushColor(ImGuiCol.Button, collectionStatusTheme.TextColor * new Vector4(1, 1, 1, 0.1f)))
-                using (ImRaii.PushColor(ImGuiCol.ButtonHovered, collectionStatusTheme.TextColor * new Vector4(1, 1, 1, 0.3f)))
-                using (ImRaii.PushColor(ImGuiCol.ButtonActive, collectionStatusTheme.TextColor * new Vector4(1, 1, 1, 0.6f)))
+                var statusButtonColor = collectionStatusTheme.TextColor * new Vector4(1, 1, 1, 0.15f);
+                using (ImRaii.PushColor(ImGuiCol.Button, statusButtonColor))
+                using (ImRaii.PushColor(ImGuiCol.ButtonHovered, statusButtonColor))
+                using (ImRaii.PushColor(ImGuiCol.ButtonActive, statusButtonColor))
                 using (ImRaii.PushStyle(ImGuiStyleVar.ButtonTextAlign, Vector2.One * 0.5f))
                 {
                     if (ImGui.Button("##gearpiece_collection_status_button", collectionStatusButtonSize))
@@ -270,7 +270,10 @@ namespace BisBuddy.Ui.Renderers.Components
                     .TryGetWrap(out var uiCategoryTexture, out var uiCategoryException)
                     )
                 {
-                    ImGui.Image(uiCategoryTexture.Handle, collectionStatusButtonIconSize);
+                    using (ImRaii.PushStyle(ImGuiStyleVar.Alpha, 0.65f, mainButtonHovered))
+                    {
+                        ImGui.Image(uiCategoryTexture.Handle, collectionStatusButtonIconSize);
+                    }
                     if (ImGui.IsItemHovered())
                         using (ImRaii.PushColor(ImGuiCol.Text, StyleModelV1.DalamudStandard.BuiltInColors?.DalamudWhite ?? new Vector4(1, 1, 1, 1)))
                         {

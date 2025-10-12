@@ -13,6 +13,9 @@ namespace BisBuddy.Ui.Renderers.ContextMenus
 {
     public record class ContextMenuEntry
     {
+        private static readonly Vector4 HoveredAlpha = new(1, 1, 1, 0.8f);
+        private static readonly Vector4 SelectedAlpha = new(1, 1, 1, 0.4f);
+
         private readonly ITypedLogger<ContextMenuEntry> logger;
         public string EntryName { get; init; }
         public Func<bool> Draw { get; init; }
@@ -25,12 +28,14 @@ namespace BisBuddy.Ui.Renderers.ContextMenus
             FontAwesomeIcon? icon,
             Func<bool>? drawFunc,
             Func<bool>? shouldDraw,
-            Action? onClick
+            Action? onClick,
+            Func<Vector4>? textColor,
+            Func<Vector4>? backgroundColor
             )
         {
             this.logger = logger;
             EntryName = entryName;
-            Draw = drawFunc ?? (() => DefaultDrawFunc(entryName, icon));
+            Draw = drawFunc ?? (() => DefaultDrawFunc(entryName, icon, textColor, backgroundColor));
             ShouldDraw = shouldDraw ?? (() => true);
             OnClick = onClickWrapped(onClick ?? (() => { }));
         }
@@ -51,19 +56,36 @@ namespace BisBuddy.Ui.Renderers.ContextMenus
             };
         }
 
-        public static bool DefaultDrawFunc(
+        private static bool DefaultDrawFunc(
             string entryName,
             FontAwesomeIcon? entryIcon,
-            bool setSelected = false
+            Func<Vector4>? textColor = null,
+            Func<Vector4>? backgroundColor = null
             )
         {
+            var text = textColor is not null ? textColor() : ImGuiColors.DalamudWhite2;
             using (ImRaii.PushStyle(ImGuiStyleVar.Alpha, 1))
-            using (ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.DalamudWhite2))
+            using (ImRaii.PushColor(ImGuiCol.Text, text))
             using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(6, 6)))
             {
                 var pos = ImGui.GetCursorPos();
 
-                var menuItem = ImGui.Selectable("", selected: setSelected);
+                if (backgroundColor is Func<Vector4> bgFunc)
+                {
+                    var bgColor = bgFunc();
+                    ImGui.PushStyleColor(ImGuiCol.Header, bgColor * SelectedAlpha);
+                    ImGui.PushStyleColor(ImGuiCol.HeaderHovered, bgColor * HoveredAlpha);
+                    ImGui.PushStyleColor(ImGuiCol.HeaderActive, bgColor);
+                }
+
+                var menuItem = ImGui.Selectable("", selected: backgroundColor is not null);
+
+                if (backgroundColor is not null)
+                {
+                    ImGui.PopStyleColor();
+                    ImGui.PopStyleColor();
+                    ImGui.PopStyleColor();
+                }
 
                 ImGui.SetCursorPos(pos);
 

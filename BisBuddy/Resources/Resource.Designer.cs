@@ -205,6 +205,60 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Copy JSON.
+        /// </summary>
+        public static string ContextMenuCopyJson {
+            get {
+                return ResourceManager.GetString("ContextMenuCopyJson", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Delete Gearset.
+        /// </summary>
+        public static string ContextMenuDeleteGearset {
+            get {
+                return ResourceManager.GetString("ContextMenuDeleteGearset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Lock as Collected.
+        /// </summary>
+        public static string ContextMenuLockCollected {
+            get {
+                return ResourceManager.GetString("ContextMenuLockCollected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Lock as Uncollected.
+        /// </summary>
+        public static string ContextMenuLockUncollected {
+            get {
+                return ResourceManager.GetString("ContextMenuLockUncollected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search in Inventory.
+        /// </summary>
+        public static string ContextMenuSearchInventory {
+            get {
+                return ResourceManager.GetString("ContextMenuSearchInventory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unlock.
+        /// </summary>
+        public static string ContextMenuUnlock {
+            get {
+                return ResourceManager.GetString("ContextMenuUnlock", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to New Gearset.
         /// </summary>
         public static string DefaultNewGearsetName {
@@ -291,6 +345,15 @@ namespace BisBuddy.Resources {
         public static string EnabledGearsetTooltip {
             get {
                 return ResourceManager.GetString("EnabledGearsetTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No Materia/Prerequisites.
+        /// </summary>
+        public static string GearpieceNoSubItemsTooltip {
+            get {
+                return ResourceManager.GetString("GearpieceNoSubItemsTooltip", resourceCulture);
             }
         }
         

@@ -1,5 +1,6 @@
 using BisBuddy.Factories;
 using BisBuddy.Gear;
+using BisBuddy.Resources;
 using BisBuddy.Services;
 using BisBuddy.Services.Configuration;
 using BisBuddy.Services.Gearsets;
@@ -41,31 +42,24 @@ namespace BisBuddy.Ui.Renderers.ContextMenus
 
             return [
                 factory.Create(
-                    entryName: "Enable Gearset",
+                    entryName: Resource.DisabledGearsetTooltip,
                     icon: FontAwesomeIcon.CheckCircle,
                     onClick: () => gearset.IsActive = true,
                     shouldDraw: () => !gearset.IsActive),
                 factory.Create(
-                    entryName: "Disable Gearset",
+                    entryName: Resource.EnabledGearsetTooltip,
                     icon: FontAwesomeIcon.TimesCircle,
                     onClick: () => gearset.IsActive = false,
                     shouldDraw: () => gearset.IsActive),
                 factory.Create(
-                    entryName: "Copy JSON",
+                    entryName: Resource.ContextMenuCopyJson,
                     icon: FontAwesomeIcon.Copy,
                     onClick: () => ImGui.SetClipboardText(JsonSerializer.Serialize(gearset, jsonSerializerOptions))),
                 factory.Create(
-                    entryName: "Delete Gearset",
-                    drawFunc: () =>
-                    {
-                        using (ImRaii.PushColor(ImGuiCol.Header, uiTheme.DeleteColor * SelectedAlpha))
-                        using (ImRaii.PushColor(ImGuiCol.HeaderHovered, uiTheme.DeleteColor * HoveredAlpha))
-                        using (ImRaii.PushColor(ImGuiCol.HeaderActive, uiTheme.DeleteColor))
-                        {
-                            return ContextMenuEntry.DefaultDrawFunc("Delete Gearset", FontAwesomeIcon.Trash, setSelected: true);
-                        }
-                    },
-                    onClick: () => gearsetsService.RemoveGearset(gearset))
+                    entryName: Resource.ContextMenuDeleteGearset,
+                    icon: FontAwesomeIcon.Trash,
+                    onClick: () => gearsetsService.RemoveGearset(gearset),
+                    backgroundColor: () => uiTheme.DeleteColor),
                 ];
         }
     }

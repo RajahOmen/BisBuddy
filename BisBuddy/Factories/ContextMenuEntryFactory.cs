@@ -2,6 +2,7 @@ using BisBuddy.Services;
 using BisBuddy.Ui.Renderers.ContextMenus;
 using Dalamud.Interface;
 using System;
+using System.Numerics;
 
 namespace BisBuddy.Factories
 {
@@ -14,7 +15,9 @@ namespace BisBuddy.Factories
             FontAwesomeIcon? icon = null,
             Func<bool>? drawFunc = null,
             Func<bool>? shouldDraw = null,
-            Action? onClick = null
+            Action? onClick = null,
+            Func<Vector4>? textColor = null,
+            Func<Vector4>? backgroundColor = null
             )
         {
             return new ContextMenuEntry(
@@ -23,7 +26,9 @@ namespace BisBuddy.Factories
                 icon: icon,
                 drawFunc: drawFunc,
                 shouldDraw: shouldDraw,
-                onClick: onClick
+                onClick: onClick,
+                textColor: textColor,
+                backgroundColor: backgroundColor
                 );
         }
     }
@@ -35,7 +40,9 @@ namespace BisBuddy.Factories
             FontAwesomeIcon? icon = null,
             Func<bool>? drawFunc = null,
             Func<bool>? shouldDraw = null,
-            Action? onClick = null
+            Action? onClick = null,
+            Func<Vector4>? textColor = null,
+            Func<Vector4>? backgroundColor = null
             );
     }
 }
