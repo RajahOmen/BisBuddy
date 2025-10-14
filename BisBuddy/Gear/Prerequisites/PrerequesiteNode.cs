@@ -9,7 +9,7 @@ namespace BisBuddy.Gear.Prerequisites
         public string NodeId { get; }
         public uint ItemId { get; set; }
         public string ItemName { get; set; }
-        public IReadOnlyList<IPrerequisiteNode> PrerequisiteTree { get; set; }
+        public IReadOnlyList<IPrerequisiteNode> PrerequisiteTree { get; }
         public HashSet<string> ChildNodeIds { get; }
         public IEnumerable<ItemRequirement> ItemRequirements { get; }
         public PrerequisiteNodeSourceType SourceType { get; set; }

@@ -90,9 +90,6 @@ namespace BisBuddy.Ui.Main.Tabs
             removeDeletedGearset();
         }
 
-        private double numIterations = 0d;
-        private long elapsedTicks = 0;
-
         public void Draw()
         {
             if (clientState.IsLoggedIn)

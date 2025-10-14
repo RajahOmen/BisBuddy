@@ -224,11 +224,11 @@ namespace BisBuddy.Items
                 foreach (var newChildNode in newPrerequisiteNode.PrerequisiteTree)
                 {
                     // add nodes that exist in new tree to old tree
-                    var existsInOldNode = oldPrerequisiteNode
-                        .PrerequisiteTree
-                        .Any(node =>
-                            node.ItemId == newChildNode.ItemId
-                            && node.GetType() == newChildNode.GetType()
+                    var existsInOldNode = ((PrerequisiteOrNode)oldPrerequisiteNode)
+                        .CompletePrerequisiteTree
+                        .Any(entry =>
+                            entry.Node.ItemId == newChildNode.ItemId
+                            && entry.Node.GetType() == newChildNode.GetType()
                         );
 
                     if (!existsInOldNode)
@@ -278,7 +278,7 @@ namespace BisBuddy.Items
                 return group;
 
             // build list of prerequisites from supplementals data
-            IPrerequisiteNode supplementalTree = new PrerequisiteOrNode(itemId, itemName, [], PrerequisiteNodeSourceType.Loot);
+            IPrerequisiteNode supplementalTree;
             var supplementalPrereqs = ItemsCoffers[itemId];
             var hasSupplementalPrereqs = supplementalPrereqs.Any();
 
@@ -289,13 +289,24 @@ namespace BisBuddy.Items
             }
             else if (supplementalPrereqs.Count() > 1)
             {
-                supplementalTree.PrerequisiteTree = ItemsCoffers[itemId]
+                var prereqs = ItemsCoffers[itemId]
                     .Select(id => buildPrerequisites(id, isCollected, isManuallyCollected, depth - 1))
                     .ToList();
+
+                supplementalTree = new PrerequisiteOrNode(
+                    itemId,
+                    itemName,
+                    prereqs,
+                    PrerequisiteNodeSourceType.Loot
+                    );
+            }
+            else
+            {
+                supplementalTree = new PrerequisiteOrNode(itemId, itemName, [], PrerequisiteNodeSourceType.Loot);
             }
 
             // build list of prerequisites from shops/exchanges data
-            IPrerequisiteNode exchangesTree = new PrerequisiteOrNode(itemId, itemName, [], PrerequisiteNodeSourceType.Shop);
+            IPrerequisiteNode exchangesTree;
             var exchangesPrereqs = ItemsPrerequisites[itemId];
             var hasExchangesPrereqs = exchangesPrereqs.Any();
 
@@ -328,7 +339,7 @@ namespace BisBuddy.Items
             else if (exchangesPrereqs.Count() > 1) // exchangable at more than 1 shop listing
             {
                 // build OR list of ANDs. Ex: OR(AND(A, B, C), AND(D, E), ATOM())
-                exchangesTree.PrerequisiteTree = exchangesPrereqs
+                var prereqs = exchangesPrereqs
                     .Select(shopCostIds =>
                     {
                         // shop costs one items
@@ -347,6 +358,17 @@ namespace BisBuddy.Items
                             PrerequisiteNodeSourceType.Shop
                             );
                     }).ToList();
+
+                exchangesTree = new PrerequisiteOrNode(
+                    itemId,
+                    itemName,
+                    prereqs,
+                    PrerequisiteNodeSourceType.Shop
+                    );
+            }
+            else
+            {
+                exchangesTree = new PrerequisiteOrNode(itemId, itemName, [], PrerequisiteNodeSourceType.Shop);
             }
 
             // build resulting group

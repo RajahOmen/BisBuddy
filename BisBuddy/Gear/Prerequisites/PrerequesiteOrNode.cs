@@ -1,4 +1,4 @@
-using FFXIVClientStructs.FFXIV.Common.Lua;
+using Lumina.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +8,8 @@ namespace BisBuddy.Gear.Prerequisites
     [Serializable]
     public class PrerequisiteOrNode : IPrerequisiteNode
     {
-        private List<IPrerequisiteNode> prerequisiteTree;
+        private readonly List<(IPrerequisiteNode Node, bool IsActive)> completePrerequisiteTree;
+        private List<IPrerequisiteNode> activePrerequisiteTree;
 
         public string NodeId { get; init; }
         public uint ItemId { get; set; }
@@ -16,25 +17,19 @@ namespace BisBuddy.Gear.Prerequisites
         public PrerequisiteNodeSourceType SourceType { get; set; }
         public IReadOnlyList<IPrerequisiteNode> PrerequisiteTree
         {
-            get => prerequisiteTree;
-            set
-            {
-                foreach (var node in prerequisiteTree)
-                    node.OnPrerequisiteChange -= OnPrerequisiteChange;
-
-                foreach (var node in value)
-                    node.OnPrerequisiteChange += OnPrerequisiteChange;
-
-                prerequisiteTree = value.ToList();
-            }
+            get => activePrerequisiteTree;
         }
+        public IReadOnlyList<(IPrerequisiteNode Node, bool IsActive)> CompletePrerequisiteTree
+        {
+            get => completePrerequisiteTree;
+        }   
 
         public bool IsCollected
         {
             get => PrerequisiteTree.Any(p => p.IsCollected);
             set
             {
-                foreach (var prereq in prerequisiteTree)
+                foreach (var prereq in activePrerequisiteTree)
                     if (!prereq.CollectLock)
                         prereq.IsCollected = value;
             }
@@ -44,13 +39,13 @@ namespace BisBuddy.Gear.Prerequisites
             get => PrerequisiteTree.All(p => p.CollectLock);
             set
             {
-                foreach (var prereq in prerequisiteTree)
+                foreach (var prereq in activePrerequisiteTree)
                     prereq.CollectLock = value;
             }
         }
         public void SetIsCollectedLocked(bool toCollect)
         {
-            foreach (var prereq in prerequisiteTree)
+            foreach (var prereq in activePrerequisiteTree)
                 prereq.SetIsCollectedLocked(toCollect);
         }
         public HashSet<string> ChildNodeIds => [.. PrerequisiteTree.Select(p => p.NodeId), .. PrerequisiteTree.SelectMany(p => p.ChildNodeIds)];
@@ -80,17 +75,51 @@ namespace BisBuddy.Gear.Prerequisites
             string itemName,
             List<IPrerequisiteNode>? prerequisiteTree,
             PrerequisiteNodeSourceType sourceType,
-            string? nodeId = null
+            string? nodeId = null,
+            bool isActive = true,
+            List<int>? disabledPrereqs = null
             )
         {
             NodeId = nodeId ?? Guid.NewGuid().ToString();
             ItemId = itemId;
             ItemName = itemName;
             SourceType = sourceType;
-            this.prerequisiteTree = prerequisiteTree ?? [];
 
-            foreach (var prereq in PrerequisiteTree)
+            var newTree = prerequisiteTree ?? [];
+            var newDisabled = disabledPrereqs ?? [];
+            this.completePrerequisiteTree = newTree
+                .Select((node, idx) => (node, !newDisabled.Contains(idx)))
+                .ToList();
+            this.activePrerequisiteTree = completePrerequisiteTree
+                .Where(entry => entry.IsActive)
+                .Select(entry => entry.Node)
+                .ToList();
+
+            foreach (var (prereq, _) in this.completePrerequisiteTree)
                 prereq.OnPrerequisiteChange += handlePrereqChange;
+        }
+
+        public void SetPrerequisiteActiveStatus(IPrerequisiteNode prereq, bool isActive)
+        {
+            var matches = completePrerequisiteTree.Index().Where(entry => entry.Item.Node == prereq);
+            if (!matches.Any())
+                throw new ArgumentException("Prerequisite node not found in this OR group", prereq.ItemName);
+
+            if (matches.Count() > 1)
+                throw new InvalidOperationException($"Multiple matching prerequisite nodes found in this OR group (\"{prereq.ItemName}\")");
+
+            var (idx, completeNode) = matches.First();
+            var oldIsActive = completeNode.IsActive;
+            if (isActive == oldIsActive)
+                return;
+
+            completePrerequisiteTree[idx] = (completeNode.Node, isActive);
+            activePrerequisiteTree = completePrerequisiteTree
+                .Where(entry => entry.IsActive)
+                .Select(entry => entry.Node)
+                .ToList();
+
+            OnPrerequisiteChange?.Invoke();
         }
 
         public event PrerequisiteChangeHandler? OnPrerequisiteChange;
@@ -106,7 +135,17 @@ namespace BisBuddy.Gear.Prerequisites
             ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(index, PrerequisiteTree.Count);
 
             var oldNode = PrerequisiteTree[index];
-            prerequisiteTree[index] = newNode;
+
+            var matches = completePrerequisiteTree.Where((entry, idx) => entry.Node == oldNode).Index();
+            if (!matches.Any() || matches.Count() > 1)
+                throw new InvalidOperationException($"Invalid match count {matches.Count()} for replacing node");
+
+            var (completeIdx, completeNode) = matches.First();
+
+            activePrerequisiteTree[index] = newNode;
+
+            completePrerequisiteTree.Add((newNode, completeNode.IsActive));
+            completePrerequisiteTree.Remove((oldNode, completeNode.IsActive));
 
             oldNode.OnPrerequisiteChange -= handlePrereqChange;
             newNode.OnPrerequisiteChange += handlePrereqChange;
@@ -116,7 +155,8 @@ namespace BisBuddy.Gear.Prerequisites
         {
             ArgumentOutOfRangeException.ThrowIfGreaterThan(index, PrerequisiteTree.Count);
 
-            prerequisiteTree.Insert(index, node);
+            activePrerequisiteTree.Insert(index, node);
+            completePrerequisiteTree.Add((node, true));
             node.OnPrerequisiteChange += handlePrereqChange;
         }
 

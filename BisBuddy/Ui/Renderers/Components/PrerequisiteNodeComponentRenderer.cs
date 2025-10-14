@@ -8,17 +8,24 @@ using BisBuddy.Resources;
 using System.Numerics;
 using BisBuddy.Services.Configuration;
 using BisBuddy.Gear;
+using System.Collections.Generic;
+using System.Linq;
+using Lumina.Extensions;
 
 namespace BisBuddy.Ui.Renderers.Components;
 
 public class PrerequisiteNodeComponentRenderer(
     ITypedLogger<PrerequisiteNodeComponentRenderer> logger,
-    IConfigurationService configurationService
+    IConfigurationService configurationService,
+    IRendererFactory rendererFactory
     ) : ComponentRendererBase<IPrerequisiteNode>
 {
     private readonly ITypedLogger<PrerequisiteNodeComponentRenderer> logger = logger;
     private readonly IConfigurationService configurationService = configurationService;
+    private readonly IRendererFactory rendererFactory = rendererFactory;
     private IPrerequisiteNode? prerequisiteNode;
+
+    private HashSet<PrerequisiteOrNode> prereqsDrawn = [];
 
     private UiTheme uiTheme =>
         configurationService.UiTheme;
@@ -34,58 +41,99 @@ public class PrerequisiteNodeComponentRenderer(
             return;
         }
 
-        drawPrerequisiteTree(prerequisiteNode);
+        var actions = new List<Action>();
+        drawPrerequisiteTree(prerequisiteNode, actions);
+        foreach (var action in actions)
+            action();
     }
 
-    private void drawPrerequisiteTree(IPrerequisiteNode prerequisiteNode, int parentCount = 1)
+    private void drawPrerequisiteTree(IPrerequisiteNode prerequisiteNode, List<Action> actions, int parentCount = 1)
     {
         var nodeType = prerequisiteNode.GetType();
         if (nodeType == typeof(PrerequisiteOrNode))
-            drawOrNode((PrerequisiteOrNode)prerequisiteNode, parentCount);
+            drawOrNode((PrerequisiteOrNode)prerequisiteNode, actions, parentCount);
         else if (nodeType == typeof(PrerequisiteAndNode))
-            drawAndNode((PrerequisiteAndNode)prerequisiteNode, parentCount);
+            drawAndNode((PrerequisiteAndNode)prerequisiteNode, actions, parentCount);
         else if (nodeType == typeof(PrerequisiteAtomNode))
-            drawAtomNode((PrerequisiteAtomNode)prerequisiteNode, parentCount);
+            drawAtomNode((PrerequisiteAtomNode)prerequisiteNode, actions, parentCount);
         else
             logger.Error($"Cannot render {nameof(IPrerequisiteNode)} type \"{prerequisiteNode.GetType()}\"");
     }
 
-    private void drawOrNode(PrerequisiteOrNode node, int parentCount = 1)
+    private void drawOrNode(PrerequisiteOrNode node, List<Action> actions, int parentCount = 1)
     {
         using var tabBar = ImRaii.TabBar($"###or_item_prerequisites_{node.GetHashCode()}");
-        if (tabBar)
+        if (!tabBar)
+            return;
+
+
+        int? tabIdxDefaultActive = null;
+        if (!prereqsDrawn.Contains(node))
         {
-            for (var i = 0; i < node.PrerequisiteTree.Count; i++)
+            //logger.Verbose($"no value, finding...");
+            tabIdxDefaultActive = node.CompletePrerequisiteTree
+                .Index()
+                .FirstOrNull(entry => entry.Item.IsActive)?.Index ?? -1;
+        }
+
+        prereqsDrawn.Add(node);
+
+        for (var i = 0; i < node.CompletePrerequisiteTree.Count; i++)
+        {
+            var (prereqNode, prereqIsActive) = node.CompletePrerequisiteTree[i];
+
+            var (textColor, gameIcon) = uiTheme.GetCollectionStatusTheme(prereqNode.CollectionStatus);
+
+            var tabSelected = i == tabIdxDefaultActive;
+            var flags = tabSelected
+                ? ImGuiTabItemFlags.SetSelected
+                : ImGuiTabItemFlags.None;
+
+            using (ImRaii.PushId(i))
+            using (ImRaii.PushColor(ImGuiCol.Text, textColor))
+            using (ImRaii.Disabled(!prereqIsActive))
+            using (var tabItem = ImRaii.TabItem($"Source {i + 1} ({prereqNode.SourceType})##or_node_tab_item_{i}", flags))
             {
-                var prereq = node.PrerequisiteTree[i];
-                var prereqLabelColorblind = prereq.IsCollected
-                    ? ""
-                    : prereq.CollectionStatus == CollectionStatusType.Obtainable
-                    ? "**"
-                    : "*";
-
-                var (textColor, gameIcon) = uiTheme.GetCollectionStatusTheme(node.CollectionStatus);
-
-                using (ImRaii.PushId(i))
-                using (ImRaii.PushColor(ImGuiCol.Text, textColor))
-                using (var tabItem = ImRaii.TabItem($"Source {i + 1} ({prereq.SourceType}){prereqLabelColorblind}###or_node_tab_item_{i}"))
+                if (!tabItem)
+                    continue;
+                try
                 {
-                    if (!tabItem)
-                        return;
-                    try
+                    drawPrerequisiteTree(prereqNode, actions, parentCount);
+                }
+                catch (Exception ex)
+                {
+                    logger.Error(ex, "Error drawing nested prereq");
+                }
+            }
+        }
+
+        var toggleTabFlags = tabIdxDefaultActive == -1
+            ? ImGuiTabItemFlags.SetSelected
+            : ImGuiTabItemFlags.None;
+        using (var tabItem = ImRaii.TabItem($"Settings##or_node_tab_item", toggleTabFlags))
+        {
+            if (!tabItem)
+                return;
+            try
+            {
+                foreach (var (idx, (prereqNode, prereqIsActive)) in node.CompletePrerequisiteTree.Index())
+                {
+                    var active = prereqIsActive;
+                    if (ImGui.Checkbox($"Include Source {idx + 1} ({prereqNode.SourceType})##or_node_toggle_option_{idx}", ref active))
                     {
-                        drawPrerequisiteTree(prereq, parentCount);
-                    }
-                    catch (Exception ex)
-                    {
-                        logger.Error(ex, "Error drawing nested prereq");
+                        actions.Add(() => node.SetPrerequisiteActiveStatus(prereqNode, !prereqIsActive));
                     }
                 }
+                //drawPrerequisiteTree(prereq, actions, parentCount);
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, "Error drawing nested prereq");
             }
         }
     }
 
-    private void drawAndNode(PrerequisiteAndNode node, int parentCount = 1)
+    private void drawAndNode(PrerequisiteAndNode node, List<Action> actions, int parentCount = 1)
     {
         var groupedPrereqs = node.Groups();
 
@@ -93,18 +141,12 @@ public class PrerequisiteNodeComponentRenderer(
         {
             using var _ = ImRaii.PushId(i);
             var prereq = groupedPrereqs[i];
-            drawPrerequisiteTree(prereq.Node, prereq.Count * parentCount);
+            drawPrerequisiteTree(prereq.Node, actions, prereq.Count * parentCount);
         }
     }
 
-    private void drawAtomNode(PrerequisiteAtomNode node, int parentCount = 1)
+    private void drawAtomNode(PrerequisiteAtomNode node, List<Action> actions, int parentCount = 1)
     {
-        var prereqLabelColorblind = node.IsCollected
-        ? ""
-        : node.CollectionStatus == CollectionStatusType.Obtainable
-        ? "**"
-        : "*";
-
         var countLabel = parentCount == 1
             ? ""
             : $"{parentCount}x ";
@@ -112,27 +154,12 @@ public class PrerequisiteNodeComponentRenderer(
         var (textColor, gameIcon) = uiTheme.GetCollectionStatusTheme(node.CollectionStatus);
 
         using (ImRaii.PushColor(ImGuiCol.Text, textColor))
+        using (ImRaii.PushColor(ImGuiCol.CheckMark, textColor))
         {
-            if (node.CollectLock)
+            var collected = node.IsCollected;
+            if (ImGui.Checkbox($"{countLabel}{node.ItemName}##collect_prereq_button", ref collected))
             {
-                using (ImRaii.PushFont(UiBuilder.IconFont))
-                    ImGui.Text(FontAwesomeIcon.Check.ToIconString());
-
-                if (ImGui.IsItemHovered())
-                    using (ImRaii.PushColor(ImGuiCol.Text, new Vector4(1, 1, 1, 1)))
-                        ImGui.SetTooltip(Resource.ManuallyCollectedTooltip);
-
-                ImGui.SameLine();
-            }
-
-            //using (ImRaii.Disabled(parentGearpiece.IsCollected))
-            //{
-            //
-            //}
-            if (ImGui.Button($"{countLabel}{node.ItemName}{prereqLabelColorblind}##collect_prereq_button"))
-            {
-                node.SetIsCollectedLocked(!node.IsCollected);
-                //logger.Debug($"Set gearpiece \"{parentGearpiece.ItemName}\" prereq \"{node.ItemName}\" to {(node.IsCollected ? "collected" : "not collected")}");
+                actions.Add(() => node.SetIsCollectedLocked(!node.IsCollected));
             }
             if (ImGui.IsItemHovered())
             {
@@ -142,8 +169,7 @@ public class PrerequisiteNodeComponentRenderer(
                     ImGui.SetTooltip(string.Format(Resource.PrerequisiteTooltipBase, Resource.UncollectedTooltip));
                 ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
             }
-            //if (ImGui.IsItemClicked(ImGuiMouseButton.Right))
-            //    searchItemById(node.ItemId);
+            rendererFactory.GetRenderer(node, RendererType.ContextMenu).Draw();
         }
 
         if (node.PrerequisiteTree.Count > 1)
@@ -160,7 +186,7 @@ public class PrerequisiteNodeComponentRenderer(
             drawList.AddLine(curLoc + new Vector2(10, halfButtonHeight), curLoc + new Vector2(20, halfButtonHeight), col, 2);
 
             using (ImRaii.PushIndent(25.0f, scaled: false))
-                drawPrerequisiteTree(node.PrerequisiteTree[0], parentCount);
+                drawPrerequisiteTree(node.PrerequisiteTree[0], actions, parentCount);
         }
     }
 }

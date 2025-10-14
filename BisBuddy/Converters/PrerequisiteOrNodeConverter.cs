@@ -2,6 +2,7 @@ using BisBuddy.Gear.Prerequisites;
 using BisBuddy.Items;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -9,6 +10,7 @@ namespace BisBuddy.Converters
 {
     internal class PrerequisiteOrNodeConverter(IItemDataService itemData) : JsonConverter<PrerequisiteOrNode>
     {
+        private const string DisabledPrereqsPropName = "DisabledPrereqs";
         public const string TypeDescriminatorValue = "or";
         private readonly IItemDataService itemData = itemData;
 
@@ -21,6 +23,7 @@ namespace BisBuddy.Converters
             string? itemName = null;
             string? nodeId = null;
             List<IPrerequisiteNode>? prerequisiteTree = null;
+            List<int>? disabledPrereqIdxs = null;
             PrerequisiteNodeSourceType? sourceType = null;
 
             while (reader.Read())
@@ -46,6 +49,9 @@ namespace BisBuddy.Converters
                     case nameof(IPrerequisiteNode.PrerequisiteTree):
                         prerequisiteTree = JsonSerializer.Deserialize<List<IPrerequisiteNode>>(ref reader, options);
                         break;
+                    case DisabledPrereqsPropName:
+                        disabledPrereqIdxs = JsonSerializer.Deserialize<List<int>>(ref reader, options);
+                        break;
                     default:
                         reader.TrySkip();
                         break;
@@ -57,7 +63,8 @@ namespace BisBuddy.Converters
                 itemName ?? throw new JsonException("No itemName found for PrerequisiteOrNode"),
                 prerequisiteTree,
                 sourceType ?? throw new JsonException("No sourceType found for PrerequisiteOrNode"),
-                nodeId ?? throw new JsonException("No nodeId found for PrerequisiteOrNode")
+                nodeId ?? throw new JsonException("No nodeId found for PrerequisiteOrNode"),
+                disabledPrereqs: disabledPrereqIdxs
                 );
         }
 
@@ -72,9 +79,24 @@ namespace BisBuddy.Converters
 
             writer.WritePropertyName(nameof(IPrerequisiteNode.PrerequisiteTree));
             writer.WriteStartArray();
-            foreach (var prerequisiteNode in value.PrerequisiteTree)
-                JsonSerializer.Serialize(writer, prerequisiteNode, options);
+            foreach (var (node, isActive) in value.CompletePrerequisiteTree)
+                if (isActive)
+                    JsonSerializer.Serialize(writer, node, options);
             writer.WriteEndArray();
+
+            var disabledPrereqs = value.CompletePrerequisiteTree
+                .Index()
+                .Where(indexedEntry => !indexedEntry.Item.IsActive)
+                .Select(indexedEntry => indexedEntry.Index);
+
+            if (disabledPrereqs.Any())
+            {
+                writer.WritePropertyName(DisabledPrereqsPropName);
+                writer.WriteStartArray();
+                foreach (var idx in disabledPrereqs)
+                    JsonSerializer.Serialize(writer, idx, options);
+                writer.WriteEndArray();
+            }
 
             writer.WriteEndObject();
         }
