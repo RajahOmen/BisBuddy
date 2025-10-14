@@ -322,8 +322,9 @@ Use alpha channel to adjust highlight intensity on items/icons
 List menu highlights are not affected</value>
   </data>
   <data name="MateriaTooltip" xml:space="preserve">
-    <value>Left click to {0} {1}
-Right click to search for in inventory</value>
+    <value>{1}
+Lock gearpiece to {0}</value>
+    <comment>When the materia is attached to a locked gearpiece</comment>
   </data>
   <data name="SearchInventoryForItemTooltip" xml:space="preserve">
     <value>Search inventory for {0}</value>
@@ -642,5 +643,9 @@ or to have a unique color to highlight items in</value>
   </data>
   <data name="GearpieceNoSubItemsTooltip" xml:space="preserve">
     <value>No Materia/Prerequisites</value>
+  </data>
+  <data name="MateriaMeldTooltip" xml:space="preserve">
+    <value>{0} {1}</value>
+    <comment>{meld/unmeld} {materianame}</comment>
   </data>
 </root>

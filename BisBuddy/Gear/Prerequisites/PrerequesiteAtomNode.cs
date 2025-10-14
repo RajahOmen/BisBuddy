@@ -64,7 +64,7 @@ namespace BisBuddy.Gear.Prerequisites
 
         public void SetIsCollectedLocked(bool toCollect)
         {
-            if (IsCollected == toCollect)
+            if (IsCollected == toCollect && CollectLock)
                 return;
 
             if (!CollectLock)

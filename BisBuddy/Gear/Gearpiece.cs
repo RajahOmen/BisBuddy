@@ -43,6 +43,8 @@ namespace BisBuddy.Gear
 
                 logger.Info($"{(value ? "locking" : "unlocking")} gearpiece \"{ItemName}\"");
                 collectLock = value;
+                foreach (var materia in ItemMateria)
+                    materia.CollectLock = value;
                 triggerGearpieceChange();
             }
         }

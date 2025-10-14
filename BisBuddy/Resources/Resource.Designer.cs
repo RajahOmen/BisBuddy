@@ -1184,8 +1184,17 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Left click to {0} {1}
-        ///Right click to search for in inventory.
+        ///   Looks up a localized string similar to {0} {1}.
+        /// </summary>
+        public static string MateriaMeldTooltip {
+            get {
+                return ResourceManager.GetString("MateriaMeldTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {1}
+        ///Lock gearpiece to {0}.
         /// </summary>
         public static string MateriaTooltip {
             get {

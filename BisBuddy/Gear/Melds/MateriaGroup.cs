@@ -104,15 +104,23 @@ namespace BisBuddy.Gear.Melds
             return remainingList.Count == 0;
         }
 
-        public void MeldSingleMateria(uint materiaId)
+        public void MeldSingleMateria(uint materiaId, bool respectCollectLock = true)
         {
-            for (var i = 0; i < materiaList.Count; i++)
+            foreach (var materia in materiaList)
             {
-                var materia = materiaList[i];
                 if (materia.ItemId == materiaId && !materia.IsCollected)
                 {
-                    materia.IsCollected = true;
-                    materiaList[i] = materia;
+                    if (materia.CollectLock)
+                    {
+                        if (respectCollectLock)
+                            continue;
+
+                        materia.SetIsCollectedLocked(true);
+                    }
+                    else
+                    {
+                        materia.IsCollected = true;
+                    }
                     break;
                 }
             }
@@ -140,7 +148,7 @@ namespace BisBuddy.Gear.Melds
                     if (candidateItemId == materiaSlot.ItemId)
                     {
                         // materia slot was previously not melded
-                        if (!materiaSlot.IsCollected)
+                        if (!materiaSlot.IsCollected && !materiaSlot.CollectLock)
                         {
                             // meld candidate piece into slot
                             materiaSlot.IsCollected = true;
@@ -167,13 +175,22 @@ namespace BisBuddy.Gear.Melds
             return slottedCount;
         }
 
-        public void UnmeldSingleMateria(uint materiaId)
+        public void UnmeldSingleMateria(uint materiaId, bool respectCollectLock = true)
         {
             foreach (var materia in materiaList)
             {
                 if (materia.ItemId == materiaId && materia.IsCollected)
                 {
-                    materia.IsCollected = false;
+                    if (materia.CollectLock)
+                    {
+                        if (respectCollectLock)
+                            continue;
+
+                        materia.SetIsCollectedLocked(false);
+                    } else
+                    {
+                        materia.IsCollected = false;
+                    }
                     break;
                 }
             }
@@ -182,7 +199,10 @@ namespace BisBuddy.Gear.Melds
         public void UnmeldAllMateria()
         {
             foreach (var materia in materiaList)
-                materia.IsCollected = false;
+            {
+                if (!materia.CollectLock)
+                    materia.IsCollected = false;
+            }
         }
 
         public List<Materia> GetMatchingMateria(IEnumerable<Materia> materiaToCompare)

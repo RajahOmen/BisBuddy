@@ -64,15 +64,17 @@ namespace BisBuddy.Gear.Melds
 
         public void SetIsCollectedLocked(bool toCollect)
         {
-            if (IsCollected == toCollect)
+            if (IsCollected == toCollect && CollectLock)
                 return;
 
             if (!CollectLock)
-                CollectLock = toCollect;
+                CollectLock = true;
 
             logger.Info($"Materia \"{ItemName}\" locked as {(toCollect ? "collected" : "uncollected")}");
 
             isCollected = toCollect;
+
+            OnMateriaChange?.Invoke();
         }
 
         public event MateriaChangeHandler? OnMateriaChange;
@@ -90,7 +92,7 @@ namespace BisBuddy.Gear.Melds
             var statAbbreviation = attributeService
                 .GetEnumAttribute<DisplayAttribute>(statType)!
                 .GetShortName()!;
-            return $"+{statStrength} {statAbbreviation}";
+            return $"{statAbbreviation} +{statStrength}";
         }
     }
 }
