@@ -12,14 +12,14 @@ namespace BisBuddy.Ui.Renderers.Components
     public class MateriaGroupComponentRenderer(
         ITypedLogger<MateriaGroupComponentRenderer> logger,
         IConfigurationService configurationService,
-        IAttributeService attributeService
+        IRendererFactory rendererFactory
         ) : ComponentRendererBase<MateriaGroup>
     {
         private static readonly Vector4 ButtonFillColorMult = new(0.6f, 0.6f, 0.6f, 0.45f);
 
         private readonly ITypedLogger<MateriaGroupComponentRenderer> logger = logger;
         private readonly IConfigurationService configurationService = configurationService;
-        private readonly IAttributeService attributeService = attributeService;
+        private readonly IRendererFactory rendererFactory = rendererFactory;
         private MateriaGroup? materiaGroup;
 
         private UiTheme uiTheme =>
@@ -55,33 +55,38 @@ namespace BisBuddy.Ui.Renderers.Components
 
                 var fillColor = textColor * ButtonFillColorMult;
                 var materiaButtonText = $"x{materiaStatusGroup.Count} {materia.StatStrength}";
-                var borderThickness = UiComponents.MateriaSlotBorderThickness * ImGuiHelpers.GlobalScale;
-                var borderColor = textColor * new Vector4(1, 1, 1, 0.3f);
                 using (ImRaii.PushColor(ImGuiCol.Text, textColor))
                 using (ImRaii.PushColor(ImGuiCol.Button, fillColor))
-                //using (ImRaii.PushColor(ImGuiCol.Border, borderColor))
-                //using (ImRaii.PushStyle(ImGuiStyleVar.FrameBorderSize, borderThickness))
+                using (ImRaii.PushStyle(ImGuiStyleVar.DisabledAlpha, 1.0f))
+                using (ImRaii.Disabled(disabled: !materia.CollectLock))
                 {
                     if (ImGui.Button($"{materiaButtonText}##materia_meld_button"))
                     {
                         if (materia.IsCollected)
                         {
                             logger.Verbose($"Unmelding materia \"{materia.ItemId}\"");
-                            materiaGroup.UnmeldSingleMateria(materia.ItemId);
+                            materiaGroup.UnmeldSingleMateria(materia.ItemId, respectCollectLock: false);
                         }
                         else
                         {
                             logger.Verbose($"Melding materia \"{materia.ItemId}\"");
-                            materiaGroup.MeldSingleMateria(materia.ItemId);
+                            materiaGroup.MeldSingleMateria(materia.ItemId, respectCollectLock: false);
                         }
                     }
                 }
-                if (ImGui.IsItemHovered())
-                    UiComponents.SetTooltipSolid(string.Format(Resource.MateriaTooltip, meldVerb, materia.ItemName));
-                if (ImGui.IsItemHovered())
-                    ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-                //if (ImGui.IsItemClicked(ImGuiMouseButton.Right))
-                //    searchItemById(materiaStatusGroup.Type.ItemId);
+                if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+                {
+                    var tooltip = Resource.MateriaTooltip;
+                    if (materia.CollectLock)
+                    {
+                        ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+                        tooltip = Resource.MateriaMeldTooltip;
+                    }
+                        
+                    UiComponents.SetTooltipSolid(string.Format(tooltip, meldVerb, materia.ItemName));
+                }
+                rendererFactory.GetRenderer(materia, RendererType.ContextMenu).Draw();
+
                 ImGui.SameLine();
             }
         }

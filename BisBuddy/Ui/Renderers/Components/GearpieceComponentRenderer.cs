@@ -195,9 +195,13 @@ namespace BisBuddy.Ui.Renderers.Components
                             Resource.GearpieceNoSubItemsTooltip
                             );
                 }
-                rendererFactory
-                    .GetRenderer(gearpiece, RendererType.ContextMenu)
-                    .Draw();
+                using (ImRaii.Enabled())
+                {
+                    rendererFactory
+                        .GetRenderer(gearpiece, RendererType.ContextMenu)
+                        .Draw();
+                }
+
 
                 var nextPos = ImGui.GetCursorPos();
 
@@ -428,6 +432,7 @@ namespace BisBuddy.Ui.Renderers.Components
                             prereqExpanded = !prereqExpanded;
                     if (prereqExpanded)
                     {
+                        ImGui.Spacing();
                         var cellPaddingX = ImGui.GetStyle().CellPadding.X;
                         using (ImRaii.PushStyle(ImGuiStyleVar.CellPadding, new Vector2(cellPaddingX, 0)))
                         {
@@ -442,7 +447,7 @@ namespace BisBuddy.Ui.Renderers.Components
                             rendererFactory
                                 .GetRenderer(node, RendererType.Component)
                                 .Draw();
-                            //ImGui.Spacing();
+                            ImGui.Spacing();
                         }
 
                     }

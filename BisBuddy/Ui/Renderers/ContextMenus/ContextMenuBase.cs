@@ -13,13 +13,15 @@ namespace BisBuddy.Ui.Renderers.ContextMenus
     public abstract class ContextMenuBase<T, TSelf>(
         ITypedLogger<TSelf> logger,
         IContextMenuEntryFactory menuEntryFactory,
-        ImGuiMouseButton activationButton = ImGuiMouseButton.Right
+        ImGuiMouseButton activationButton = ImGuiMouseButton.Right,
+        ImGuiHoveredFlags hoveredFlags = ImGuiHoveredFlags.AllowWhenDisabled
         ) : ITypedRenderer<T> where TSelf : ContextMenuBase<T, TSelf>
     {
         public static RendererType RendererType => RendererType.ContextMenu;
 
         protected readonly IContextMenuEntryFactory factory = menuEntryFactory;
         protected readonly ImGuiMouseButton activationButton = activationButton;
+        protected readonly ImGuiHoveredFlags hoveredFlags = hoveredFlags;
         protected readonly ITypedLogger<TSelf> logger = logger;
         protected T? renderableComponent;
         protected List<ContextMenuEntry> menuEntries = [];
@@ -37,7 +39,7 @@ namespace BisBuddy.Ui.Renderers.ContextMenus
             // ensure unique id for this context menu
             using var menuId = ImRaii.PushId($"{GetHashCode()}|{(int)activationButton}");
 
-            if (ImGui.IsItemHovered() && ImGui.IsMouseClicked(activationButton))
+            if (ImGui.IsItemHovered(hoveredFlags) && ImGui.IsMouseClicked(activationButton))
             {
                 logger.Debug($"Opening {menuEntries.Count} option context menu for {renderableComponent.GetType().Name}");
                 ImGui.OpenPopup("Context Menu");
