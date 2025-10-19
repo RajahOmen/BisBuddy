@@ -4,19 +4,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Dalamud.Interface.Windowing;
 using static Dalamud.Interface.Windowing.Window;
 
-namespace BisBuddy.Ui.Main.Tabs
+namespace BisBuddy.Ui.Renderers.Tabs.Main
 {
-    public class ItemTrackerTab : TabRenderer
+    public class ItemPlannerTab : TabRenderer<MainWindowTab>
     {
         public WindowSizeConstraints? TabSizeConstraints => null;
+
+        public bool ShouldDraw => true;
 
         public void PreDraw() { }
 
         public void Draw()
         {
-            ImGui.Text("Item tracker coming soon...");
+            ImGui.Text("Item Planner coming soon...");
         }
 
         public void SetTabState(TabState state)

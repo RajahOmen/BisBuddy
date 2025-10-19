@@ -5,9 +5,7 @@ using BisBuddy.Resources;
 using BisBuddy.Services;
 using BisBuddy.Services.Configuration;
 using BisBuddy.Services.Gearsets;
-using BisBuddy.Ui.Main.Tabs;
 using BisBuddy.Util;
-using BisBuddy.Ui.Config;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;
@@ -19,11 +17,11 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Numerics;
-using BisBuddy.Extensions;
-using BisBuddy.Ui.Renderers;
 using System.Reflection;
+using BisBuddy.Ui.Renderers.Tabs;
+using BisBuddy.Ui.Renderers.Tabs.Main;
 
-namespace BisBuddy.Ui;
+namespace BisBuddy.Ui.Windows;
 
 public class MainWindow : Window, IDisposable
 {
@@ -34,59 +32,38 @@ public class MainWindow : Window, IDisposable
     };
     private static readonly Vector2 DefaultSize = new(630, 500);
 
-    private readonly ITypedLogger<MainWindow> logger;
-    private readonly IClientState clientState;
-    private readonly ConfigWindow configWindow;
-    private readonly ImportGearsetWindow importGearsetWindow;
-    private readonly IGearsetsService gearsetsService;
-    private readonly IInventoryUpdateDisplayService inventoryUpdateService;
-    private readonly IConfigurationService configurationService;
-    private readonly IIndex<MainWindowTab, TabRenderer> tabRendererIndex;
+    private readonly IIndex<MainWindowTab, TabRenderer<MainWindowTab>> tabRendererIndex;
+    //private readonly List<(MainWindowTab Type, TabRenderer Renderer)> renderersToDraw;
     private readonly IAttributeService attributeService;
-    private readonly IItemFinderService itemFinderService;
 
     // what tab to currently render
     private MainWindowTab? activeTab = null;
     private MainWindowTab? nextActiveTab = MainWindowTab.UserGearsets;
 
+    private bool isFirstPreDraw = true;
     // order using the value of the enum as a sort key
-    private readonly IEnumerable<MainWindowTab> tabTypes = Enum.GetValues<MainWindowTab>().OrderBy(t => (int) t);
+    private List<MainWindowTab> tabTypes;
 
     private static readonly string PluginVersion =
         $" v{Assembly.GetExecutingAssembly().GetName().Version}";
 
     public MainWindow(
-        ITypedLogger<MainWindow> logger,
-        IClientState clientState,
-        ConfigWindow configWindow,
-        ImportGearsetWindow importGearsetWindow,
-        IGearsetsService gearsetsService,
-        IInventoryUpdateDisplayService inventoryUpdateService,
-        IConfigurationService configurationService,
-        IIndex<MainWindowTab, TabRenderer> tabRendererIndex,
-        IAttributeService attributeService,
-        IItemFinderService itemFinderService
+        IIndex<MainWindowTab, TabRenderer<MainWindowTab>> tabRendererIndex,
+        IAttributeService attributeService
         )
         : base($"{Constants.PluginName}{PluginVersion}##bisbuddymainwindow")
     {
-        this.logger = logger;
-        this.clientState = clientState;
-        this.configWindow = configWindow;
-        this.importGearsetWindow = importGearsetWindow;
-        this.gearsetsService = gearsetsService;
-        this.inventoryUpdateService = inventoryUpdateService;
-        this.configurationService = configurationService;
         this.tabRendererIndex = tabRendererIndex;
         this.attributeService = attributeService;
-        this.itemFinderService = itemFinderService;
         SizeConstraints = MainSizeConstraints;
         Size = DefaultSize;
         SizeCondition = ImGuiCond.Appearing;
+        tabTypes = Enum.GetValues<MainWindowTab>().OrderBy(t => (int)t).ToList();
     }
 
     public void Dispose() { }
 
-    public void OpenToTab(MainWindowTab tabTypeToOpen, TabState? tabState = null)
+    public void SetNextActiveTab(MainWindowTab tabTypeToOpen, TabState? tabState)
     {
         if (tabRendererIndex.TryGetValue(tabTypeToOpen, out var tabRenderer))
         {
@@ -100,14 +77,25 @@ public class MainWindow : Window, IDisposable
     {
         base.PreDraw();
 
-        // perform predraw step for tab that is about to be rendered
+        if (isFirstPreDraw)
+        {
+            tabTypes = tabTypes
+                .Where(t => tabRendererIndex.TryGetValue(t, out var _))
+                .ToList();
+
+            isFirstPreDraw = false;
+        }
+
         var nextTab = nextActiveTab ?? activeTab;
 
-        if (
-            nextTab is MainWindowTab tab
-            && tabRendererIndex.TryGetValue(tab, out var nextTabRenderer)
-            )
-            nextTabRenderer.PreDraw();
+        if (nextTab is not MainWindowTab tab)
+            return;
+
+        if (!tabRendererIndex.TryGetValue(tab, out var nextTabRenderer))
+            return;
+
+        // perform predraw step for tab that is about to be rendered
+        nextTabRenderer.PreDraw();
     }
 
     public override void Draw()
@@ -120,6 +108,12 @@ public class MainWindow : Window, IDisposable
 
         foreach (var tabType in tabTypes)
         {
+            if (!tabRendererIndex.TryGetValue(tabType, out var tabRenderer))
+                continue;
+
+            if (!tabRenderer.ShouldDraw)
+                continue;
+
             var tabTitle = attributeService
                 .GetEnumAttribute<DisplayAttribute>(tabType)!
                 .GetName()!;
@@ -129,13 +123,14 @@ public class MainWindow : Window, IDisposable
 
             using var tabItem = ImRaii.TabItem(tabTitle, isActiveFlag);
 
-            if (tabItem)
-                if (tabRendererIndex.TryGetValue(tabType, out var tabRenderer))
-                {
-                    setSizeConstraints(tabRenderer.TabSizeConstraints);
-                    tabRenderer.Draw();
-                    activeTab = tabType;
-                }
+            if (!tabItem)
+                continue;
+
+            if (activeTab != tabType)
+                setSizeConstraints(tabRenderer.TabSizeConstraints);
+
+            tabRenderer.Draw();
+            activeTab = tabType;
         }
 
         nextActiveTab = null;

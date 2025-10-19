@@ -23,7 +23,7 @@ namespace BisBuddy.Services.Gearsets
         {
             { GearsetSortType.Name,       getProp(nameof(Gearset.Name)) },
             { GearsetSortType.Job,        getProp(nameof(Gearset.ClassJobAbbreviation)) },
-            { GearsetSortType.Priority,   getProp(nameof(Gearset.Priority)) },
+            //{ GearsetSortType.Priority,   getProp(nameof(Gearset.Priority)) },
             { GearsetSortType.ImportDate, getProp(nameof(Gearset.ImportDate)) },
             { GearsetSortType.Active,     getProp(nameof(Gearset.IsActive)) },
         };
@@ -36,7 +36,7 @@ namespace BisBuddy.Services.Gearsets
         private static readonly List<(PropertyInfo property, bool descending)> SupplementalPropertiesSortOrder =
         [
             ( getProp(nameof(Gearset.IsActive)),             descending: true ),
-            ( getProp(nameof(Gearset.Priority)),             descending: true ),
+            //( getProp(nameof(Gearset.Priority)),             descending: true ),
             ( getProp(nameof(Gearset.Name)),                 descending: false ),
             ( getProp(nameof(Gearset.ClassJobAbbreviation)), descending: false ),
             ( getProp(nameof(Gearset.ImportDate)),           descending: false ),

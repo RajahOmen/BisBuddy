@@ -6,12 +6,12 @@ using System.Text;
 using System.Threading.Tasks;
 using static Dalamud.Interface.Windowing.Window;
 
-namespace BisBuddy.Ui.Main.Tabs
+namespace BisBuddy.Ui.Renderers.Tabs
 {
     /// <summary>
     /// Handles drawing of a particular tab type
     /// </summary>
-    public interface TabRenderer
+    public interface TabRenderer<T> where T : Enum
     {
         /// <summary>
         /// If set, further restrict window tab constraints to that of the tab.
@@ -19,6 +19,12 @@ namespace BisBuddy.Ui.Main.Tabs
         /// the window level.
         /// </summary>
         public WindowSizeConstraints? TabSizeConstraints { get; }
+
+
+        /// <summary>
+        /// Returns if this tab should be drawn now. Used for tabs with dynamic visibility.
+        /// </summary>
+        public bool ShouldDraw { get; }
 
         /// <summary>
         /// Do any tasks needed before drawing

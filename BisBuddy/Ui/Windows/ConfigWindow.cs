@@ -1,0 +1,56 @@
+using BisBuddy.Resources;
+using BisBuddy.Util;
+using Dalamud.Interface.Windowing;
+using Dalamud.Bindings.ImGui;
+using System;
+using System.Numerics;
+using BisBuddy.Ui.Renderers.Tabs.Main;
+using BisBuddy.Ui.Renderers.Tabs;
+using Autofac.Features.AttributeFilters;
+using Dalamud.Interface.Utility.Raii;
+using Autofac.Features.OwnedInstances;
+
+namespace BisBuddy.Ui.Windows;
+
+public class ConfigWindow : Window, IDisposable
+{
+    private readonly TabRenderer<MainWindowTab> configTabRenderer;
+    private readonly ConfigTabState tabState = new()
+    {
+        ExternalWindow = true
+    };
+    private bool firstDraw = true;
+
+    public ConfigWindow(
+        [KeyFilter(MainWindowTab.PluginConfig)] TabRenderer<MainWindowTab> configTabRenderer
+        ) : base($"{string.Format(Resource.ConfigWindowTitle, Constants.PluginName)}###bisbuddyconfiguration22")
+    {
+        Flags = ImGuiWindowFlags.NoScrollbar
+                | ImGuiWindowFlags.NoScrollWithMouse;
+
+        SizeCondition = ImGuiCond.Once;
+        SizeConstraints = configTabRenderer.TabSizeConstraints;
+
+        this.configTabRenderer = configTabRenderer;
+    }
+
+    public void Dispose() { }
+
+    public override void PreDraw()
+    {
+        base.PreDraw();
+
+        if (firstDraw)
+        {
+            firstDraw = false;
+            configTabRenderer.SetTabState(tabState);
+        }
+
+        configTabRenderer.PreDraw();
+    }
+
+    public override void Draw()
+    {
+        configTabRenderer.Draw();
+    }
+}

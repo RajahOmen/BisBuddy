@@ -320,7 +320,7 @@ When OFF: Gearset 1 completed, Gearset 2 completed</value>
 Use alpha channel to adjust highlight intensity on items/icons
 List menu highlights are not affected</value>
   </data>
-  <data name="MateriaTooltip" xml:space="preserve">
+  <data name="GearpieceLockedDisabledTooltip" xml:space="preserve">
     <value>Left click to {0} {1}
 Right click to search for in inventory</value>
   </data>
@@ -460,60 +460,5 @@ or to have a unique color to highlight items in</value>
   </data>
   <data name="PluginDisplayName" xml:space="preserve">
     <value>BISBuddy</value>
-  </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="ConfigUiThemeSectionHeader" type="System.Resources.ResXNullRef, System.Windows.Forms">
-    <value />
-  </data>
-  <data name="ResetUiThemeButton" type="System.Resources.ResXNullRef, System.Windows.Forms">
-    <value />
-  </data>
-  <data name="ResetUiThemeHelp" type="System.Resources.ResXNullRef, System.Windows.Forms">
-    <value />
-  </data>
-  <data name="MateriaAbbrevDirectHitRate" type="System.Resources.ResXNullRef, System.Windows.Forms">
-    <value />
-  </data>
-  <data name="MateriaAbbrevCriticalHit" type="System.Resources.ResXNullRef, System.Windows.Forms">
-    <value />
-  </data>
-  <data name="MateriaAbbrevDetermination" type="System.Resources.ResXNullRef, System.Windows.Forms">
-    <value />
-  </data>
-  <data name="MateriaAbbrevPiety" type="System.Resources.ResXNullRef, System.Windows.Forms">
-    <value />
-  </data>
-  <data name="MateriaAbbrevTenacity" type="System.Resources.ResXNullRef, System.Windows.Forms">
-    <value />
-  </data>
-  <data name="MateriaAbbrevSkillSpeed" type="System.Resources.ResXNullRef, System.Windows.Forms">
-    <value />
-  </data>
-  <data name="MateriaAbbrevSpellSpeed" type="System.Resources.ResXNullRef, System.Windows.Forms">
-    <value />
-  </data>
-  <data name="MateriaAbbrevGathering" type="System.Resources.ResXNullRef, System.Windows.Forms">
-    <value />
-  </data>
-  <data name="MateriaAbbrevPerception" type="System.Resources.ResXNullRef, System.Windows.Forms">
-    <value />
-  </data>
-  <data name="MateriaAbbrevGatheringPoints" type="System.Resources.ResXNullRef, System.Windows.Forms">
-    <value />
-  </data>
-  <data name="MateriaAbbrevCraftsmanship" type="System.Resources.ResXNullRef, System.Windows.Forms">
-    <value />
-  </data>
-  <data name="MateriaAbbrevCraftingPoints" type="System.Resources.ResXNullRef, System.Windows.Forms">
-    <value />
-  </data>
-  <data name="MateriaAbbrevControl" type="System.Resources.ResXNullRef, System.Windows.Forms">
-    <value />
-  </data>
-  <data name="UserGearsetsTabNoGearsetsTextNavigation" type="System.Resources.ResXNullRef, System.Windows.Forms">
-    <value />
-  </data>
-  <data name="CommandDescriptionAddGearset" type="System.Resources.ResXNullRef, System.Windows.Forms">
-    <value />
   </data>
 </root>

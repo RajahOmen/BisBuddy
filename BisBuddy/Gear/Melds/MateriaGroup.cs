@@ -196,11 +196,13 @@ namespace BisBuddy.Gear.Melds
             }
         }
 
-        public void UnmeldAllMateria()
+        public void UnmeldAllMateria(bool respectCollectLock = true)
         {
             foreach (var materia in materiaList)
             {
-                if (!materia.CollectLock)
+                if (!respectCollectLock && materia.CollectLock)
+                    materia.SetIsCollectedLocked(false);
+                else if (!materia.CollectLock)
                     materia.IsCollected = false;
             }
         }

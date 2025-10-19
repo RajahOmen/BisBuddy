@@ -151,6 +151,13 @@ namespace BisBuddy.Items
         public ItemUICategory GetItemUICategory(uint itemId);
 
         /// <summary>
+        /// Returns the icon id for the given item id
+        /// </summary>
+        /// <param name="itemId">The item id to search for</param>
+        /// <returns>The corresponding icon id</returns>
+        public ushort GetItemIconId(uint itemId);
+
+        /// <summary>
         /// Returns the number of normal (non-advanced) materia slots an item has
         /// </summary>
         /// <param name="itemId">The item id to check</param>

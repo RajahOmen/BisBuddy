@@ -17,7 +17,7 @@ using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 
-namespace BisBuddy.Ui;
+namespace BisBuddy.Ui.Windows;
 
 public class ImportGearsetWindow : Window, IDisposable
 {

@@ -124,11 +124,29 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to [Locked] {0}.
+        /// </summary>
+        public static string CollectionStatusLockedTooltipPrefix {
+            get {
+                return ResourceManager.GetString("CollectionStatusLockedTooltipPrefix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Collection status locked.
         /// </summary>
         public static string CollectionStatusLockTooltip {
             get {
                 return ResourceManager.GetString("CollectionStatusLockTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Collect.
+        /// </summary>
+        public static string CollectVerb {
+            get {
+                return ResourceManager.GetString("CollectVerb", resourceCulture);
             }
         }
         
@@ -147,6 +165,15 @@ namespace BisBuddy.Resources {
         public static string CommandDescriptionOpenConfig {
             get {
                 return ResourceManager.GetString("CommandDescriptionOpenConfig", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Debugging.
+        /// </summary>
+        public static string ConfigDebugSectionHeader {
+            get {
+                return ResourceManager.GetString("ConfigDebugSectionHeader", resourceCulture);
             }
         }
         
@@ -259,6 +286,15 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Debug.
+        /// </summary>
+        public static string DebugTabName {
+            get {
+                return ResourceManager.GetString("DebugTabName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to New Gearset.
         /// </summary>
         public static string DefaultNewGearsetName {
@@ -340,11 +376,30 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} disabled, configure in toggles.
+        /// </summary>
+        public static string DisabledPrerequisiteTooltip {
+            get {
+                return ResourceManager.GetString("DisabledPrerequisiteTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Disable Gearset.
         /// </summary>
         public static string EnabledGearsetTooltip {
             get {
                 return ResourceManager.GetString("EnabledGearsetTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}
+        ///Lock gearpiece to change status.
+        /// </summary>
+        public static string GearpieceLockedDisabledTooltip {
+            get {
+                return ResourceManager.GetString("GearpieceLockedDisabledTooltip", resourceCulture);
             }
         }
         
@@ -1193,16 +1248,6 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {1}
-        ///Lock gearpiece to {0}.
-        /// </summary>
-        public static string MateriaTooltip {
-            get {
-                return ResourceManager.GetString("MateriaTooltip", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Meld.
         /// </summary>
         public static string MeldVerb {
@@ -1302,6 +1347,15 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Popout Configuration.
+        /// </summary>
+        public static string OpenExternalConfigWindowTooltip {
+            get {
+                return ResourceManager.GetString("OpenExternalConfigWindowTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to BISBuddy.
         /// </summary>
         public static string PluginDisplayName {
@@ -1316,6 +1370,24 @@ namespace BisBuddy.Resources {
         public static string PrerequisiteGearpieceHeader {
             get {
                 return ResourceManager.GetString("PrerequisiteGearpieceHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Toggles.
+        /// </summary>
+        public static string PrerequisiteOrNodeSettingsTabName {
+            get {
+                return ResourceManager.GetString("PrerequisiteOrNodeSettingsTabName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Whether to include or ignore this method of obtaining the parent item.
+        /// </summary>
+        public static string PrerequisiteOrNodeToggleTooltip {
+            get {
+                return ResourceManager.GetString("PrerequisiteOrNodeToggleTooltip", resourceCulture);
             }
         }
         
@@ -1413,6 +1485,15 @@ namespace BisBuddy.Resources {
         public static string UncollectedTooltip {
             get {
                 return ResourceManager.GetString("UncollectedTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Uncollect.
+        /// </summary>
+        public static string UncollectVerb {
+            get {
+                return ResourceManager.GetString("UncollectVerb", resourceCulture);
             }
         }
         

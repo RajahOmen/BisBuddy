@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Numerics;
 using Dalamud.Plugin.Services;
 using BisBuddy.Resources;
-using BisBuddy.Ui.Renderers;
 using static Dalamud.Interface.Windowing.Window;
 using Dalamud.Interface;
 using Dalamud.Interface.Utility;
@@ -18,10 +17,11 @@ using System.Linq;
 using Dalamud.Utility;
 using BisBuddy.Mediators;
 using BisBuddy.Ui.Renderers.Components;
+using BisBuddy.Ui.Windows;
 
-namespace BisBuddy.Ui.Main.Tabs
+namespace BisBuddy.Ui.Renderers.Tabs.Main
 {
-    public class UserGearsetsTab : TabRenderer, IDisposable
+    public class UserGearsetsTab : TabRenderer<MainWindowTab>, IDisposable
     {
         private readonly ITypedLogger<UserGearsetsTab> logger;
         private readonly IClientState clientState;
@@ -36,7 +36,7 @@ namespace BisBuddy.Ui.Main.Tabs
         private Gearset? activeGearset = null;
         private Gearpiece? nextActiveGearpiece = null;
         private Gearset? gearsetToDelete = null;
-        private GearsetSortType activeSortType = GearsetSortType.Priority;
+        private GearsetSortType activeSortType = GearsetSortType.ImportDate;
         private bool sortDescending = false;
         private bool firstLoggedInDrawCall = true;
         private UiTheme uiTheme => configurationService.UiTheme;
@@ -46,6 +46,8 @@ namespace BisBuddy.Ui.Main.Tabs
             MinimumSize = new(500, 150),
             MaximumSize = new(0, 0)
         };
+
+        public bool ShouldDraw => true;
 
         public UserGearsetsTab(
             ITypedLogger<UserGearsetsTab> logger,
@@ -100,12 +102,10 @@ namespace BisBuddy.Ui.Main.Tabs
                     firstLoggedInDrawCall = false;
                 }
 
-                var tableFlags = (
+                var tableFlags =
                     ImGuiTableFlags.BordersInnerV
                     | ImGuiTableFlags.BordersOuter
-                    //| ImGuiTableFlags.BordersOuterV
-                    //| ImGuiTableFlags.Resizable
-                    );
+                    ;
 
                 ImGui.PushStyleVar(ImGuiStyleVar.CellPadding, new Vector2(0f, 0f));
                 using var table = ImRaii.Table("gearset_table", 2, tableFlags);
@@ -118,12 +118,30 @@ namespace BisBuddy.Ui.Main.Tabs
                 ImGui.TableNextRow();
                 ImGui.TableNextColumn();
 
-                DrawGearsetsNavigationPanel();
+
+                UiComponents.PushTableClipRect();
+                try
+                {
+                    DrawGearsetsNavigationPanel();
+                }
+                finally
+                {
+                    ImGui.PopClipRect();
+                }
 
                 ImGui.TableNextColumn();
-                
-                DrawGearsetPanel();
-            } else
+
+                UiComponents.PushTableClipRect();
+                try
+                {
+                    DrawGearsetPanel();
+                }
+                finally
+                {
+                    ImGui.PopClipRect();
+                }
+            }
+            else
             {
                 DrawLoggedOut();
             }
@@ -234,8 +252,14 @@ namespace BisBuddy.Ui.Main.Tabs
                             var botRight = cursorScreenPos + new Vector2(availRegion.X, panelSelectableSize.Y);
                             botRight.X -= rightEdgePadding;
                             ImGui.PushClipRect(cursorScreenPos, botRight, true);
-                            ImGui.Text(gearsetLabel);
-                            ImGui.PopClipRect();
+                            try
+                            {
+                                ImGui.Text(gearsetLabel);
+                            }
+                            finally
+                            {
+                                ImGui.PopClipRect();
+                            }
                         }
 
                         ImGui.SetCursorPos(new(cursorPos.X + iconXOffset, cursorPos.Y + iconYOffset));
@@ -274,7 +298,7 @@ namespace BisBuddy.Ui.Main.Tabs
                     // ADD GEARSET
                     using (ImRaii.PushFont(UiBuilder.IconFont))
                         if (UiComponents.SelectableCentered(FontAwesomeIcon.Plus.ToIconString(), size: buttonSize, labelPosOffsetScaled: new(1.5f, -1)))
-                            windowService.SetWindowState(WindowType.ImportGearset, open: true);
+                            windowService.SetWindowOpenState(WindowType.ImportGearset, open: true);
                     if (ImGui.IsItemHovered())
                         ImGui.SetTooltip(Resource.NewGearsetTooltip);
 

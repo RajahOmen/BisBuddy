@@ -31,6 +31,9 @@ namespace BisBuddy.Gear
 
                 isCollected = value;
 
+                if (PrerequisiteTree is not null)
+                    PrerequisiteTree.IsCollected = value;
+
                 handleIsCollectedChange();
             }
         }
@@ -38,13 +41,18 @@ namespace BisBuddy.Gear
             get => collectLock;
             set
             {
-                if (collectLock == value)
+                foreach (var materia in ItemMateria)
+                    materia.CollectLock = value;
+
+                if (PrerequisiteTree is not null)
+                    PrerequisiteTree.CollectLock = value;
+
+                if (value == collectLock)
                     return;
 
                 logger.Info($"{(value ? "locking" : "unlocking")} gearpiece \"{ItemName}\"");
                 collectLock = value;
-                foreach (var materia in ItemMateria)
-                    materia.CollectLock = value;
+
                 triggerGearpieceChange();
             }
         }
@@ -72,8 +80,21 @@ namespace BisBuddy.Gear
 
             if (PrerequisiteTree is IPrerequisiteNode node)
                 node.OnPrerequisiteChange += triggerGearpieceChange;
-
+                
             ItemMateria.OnMateriaGroupChange += triggerGearpieceChange;
+
+            if (CollectLock)
+            {
+                if (!isCollected)
+                    ItemMateria.UnmeldAllMateria(respectCollectLock: false);
+                else
+                    PrerequisiteTree?.SetIsCollectedLocked(true);
+            }
+            else
+            {
+                if (isCollected && PrerequisiteTree is not null)
+                    PrerequisiteTree.IsCollected = true;
+            }
         }
 
         public CollectionStatusType CollectionStatus
@@ -150,6 +171,11 @@ namespace BisBuddy.Gear
 
         public void SetIsCollectedLocked(bool toCollect)
         {
+            PrerequisiteTree?.SetIsCollectedLocked(toCollect);
+
+            if (!toCollect)
+                ItemMateria.UnmeldAllMateria(respectCollectLock: false);
+
             if (toCollect == IsCollected && CollectLock)
                 return;
 
@@ -159,6 +185,8 @@ namespace BisBuddy.Gear
             logger.Info($"Gearpiece \"{ItemName}\" locked as {(toCollect ? "collected" : "uncollected")}");
 
             isCollected = toCollect;
+
+            triggerGearpieceChange();
         }
 
         public List<uint> CollectLockItemIds()

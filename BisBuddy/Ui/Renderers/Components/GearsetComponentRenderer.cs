@@ -66,29 +66,38 @@ namespace BisBuddy.Ui.Renderers.Components
                 }
                 ImGui.Separator();
                 ImGui.SetCursorPosY(ImGui.GetCursorPosY() - oldSpacing.Y);
-                var topLeft = ImGui.GetCursorPos();
-                using (ImRaii.Child("gearset_view_panel_tabs", new Vector2(0, 0), border: false, ImGuiWindowFlags.AlwaysUseWindowPadding))
+                UiComponents.PushTableClipRect();
+                try
                 {
-                    using var gearsetTabBar = ImRaii.TabBar("###gearset_tab");
-                    if (!gearsetTabBar)
-                        return;
-
-                    using (var gearpieceTab = ImRaii.TabItem(Resource.GearsetGearpiecesTabName))
+                    using (ImRaii.Child("gearset_view_panel_tabs", new Vector2(0, 0), border: false, ImGuiWindowFlags.AlwaysUseWindowPadding))
                     {
-                        ImGui.Spacing();
-                        if (gearpieceTab)
-                            DrawGearpiecesTab(gearset);
-                    }
+                        using var gearsetTabBar = ImRaii.TabBar("###gearset_tab");
+                        if (!gearsetTabBar)
+                            return;
 
-                    using (var propertiesTab = ImRaii.TabItem(Resource.GearsetPropertiesTabName))
-                    {
-                        ImGui.Spacing();
-                        if (propertiesTab)
-                            DrawPropertiesTab(gearset);
+                        using (var gearpieceTab = ImRaii.TabItem(Resource.GearsetGearpiecesTabName))
+                        {
+                            ImGui.Spacing();
+                            if (gearpieceTab)
+                                DrawGearpiecesTab(gearset);
+                        }
+
+                        using (var propertiesTab = ImRaii.TabItem(Resource.GearsetPropertiesTabName))
+                        {
+                            ImGui.Spacing();
+                            if (propertiesTab)
+                                DrawPropertiesTab(gearset);
+                        }
                     }
                 }
+                finally
+                {
+                    ImGui.PopClipRect();
+                }
+
+
                 var botRight = ImGui.GetCursorPos();
-                botRight.X += +ImGui.GetContentRegionAvail().X;
+                botRight.X += ImGui.GetContentRegionAvail().X;
             }
         }
 
@@ -137,34 +146,48 @@ namespace BisBuddy.Ui.Renderers.Components
                 ImGui.SetCursorScreenPos(cursorPos);
                 ImGui.Image(texture.Handle, iconSize);
                 if (ImGui.IsItemHovered())
-                    UiComponents.SetTooltipSolid(classJobInfo.Name);
+                    UiComponents.SetSolidTooltip(classJobInfo.Name);
                 ImGui.SetCursorScreenPos(prevCursorPos);
             }
         }
 
         private void DrawGearsetHeader(Gearset gearset)
         {
-            var spacing = ImGui.GetStyle().ItemSpacing.X * 2;
-            using var indent = ImRaii.PushIndent(spacing);
             // gearset enabled checkbox
-            var textHeight = ImGui.GetTextLineHeightWithSpacing();
-            var yOffset = (ImGui.GetContentRegionAvail().Y - textHeight) / 2;
-            ImGui.SetCursorPos(ImGui.GetCursorPos() + new Vector2(0, yOffset));
+            var buttonPaddingSize = new Vector2(6f) * ImGuiHelpers.GlobalScale;
+            var paddingSize = ImGui.GetStyle().FramePadding;
+            var textHeight = ImGui.GetTextLineHeight();
+            var textHeightSpacing = ImGui.GetTextLineHeightWithSpacing();
+            var extraSpace = ImGui.GetContentRegionAvail().Y - (textHeight + buttonPaddingSize.Y * 2);
+
+            var spacing = ImGui.GetStyle().ItemSpacing.X * ImGuiHelpers.GlobalScale;
+            using var indent = ImRaii.PushIndent(extraSpace / 2, scaled: false);
+            using var itemSpacing = ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(extraSpace / 2));
+
+            var textYOffset = (ImGui.GetContentRegionAvail().Y - (textHeight + paddingSize.Y * 2)) / 2;
+            var checkboxYOffset = extraSpace / 2;
+
+            var prevYPos = ImGui.GetCursorPosY();
+            ImGui.SetCursorPosY(prevYPos + checkboxYOffset);
             var enabled = gearset.IsActive;
 
-            using (ImRaii.PushColor(ImGuiCol.CheckMark, KnownColor.LimeGreen.Vector(), enabled))
+            var enabledColor = uiTheme.GetCollectionStatusTheme(CollectionStatusType.ObtainedComplete).TextColor;
+
+            using (ImRaii.PushStyle(ImGuiStyleVar.FramePadding, buttonPaddingSize))
+            using (ImRaii.PushColor(ImGuiCol.CheckMark, enabledColor, enabled))
                 if (ImGui.Checkbox("###gearset_enable_checkbox", ref enabled))
                 {
-                    logger.Debug($"{(enabled ? "Enabling" : "Disabling")} gearset \"{gearset.Name}\"");
+                    logger.Info($"{(enabled ? "Enabling" : "Disabling")} gearset \"{gearset.Name}\"");
                     gearset.IsActive = enabled;
                 }
             if (ImGui.IsItemHovered())
-                UiComponents.SetTooltipSolid(enabled
+                UiComponents.SetSolidTooltip(enabled
                     ? Resource.EnabledGearsetTooltip
                     : Resource.DisabledGearsetTooltip
                     );
 
             ImGui.SameLine();
+            ImGui.SetCursorPosY(prevYPos + textYOffset);
 
             // gearset name input
             var gearsetName = gearset.Name;
@@ -175,12 +198,8 @@ namespace BisBuddy.Ui.Renderers.Components
                 gearset.Name = gearsetName;
             }
             if (ImGui.IsItemHovered())
-                UiComponents.SetTooltipSolid(Resource.RenameGearsetTooltip);
+                UiComponents.SetSolidTooltip(Resource.RenameGearsetTooltip);
             ImGui.SetCursorPos(ImGui.GetCursorPos() + new Vector2(0, spacing));
-
-
-
-            //ImGui.PopClipRect();
         }
 
         private void DrawPropertiesTab(Gearset gearset)

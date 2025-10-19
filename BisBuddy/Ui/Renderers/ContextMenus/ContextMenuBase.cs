@@ -46,6 +46,7 @@ namespace BisBuddy.Ui.Renderers.ContextMenus
             }
 
             using (ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, new Vector2(8, 8)))
+            using (ImRaii.PushStyle(ImGuiStyleVar.PopupRounding, 5.0f))
             using (ImRaii.PushStyle(ImGuiStyleVar.Alpha, 1))
             using (var popup = ImRaii.Popup("Context Menu"))
             {

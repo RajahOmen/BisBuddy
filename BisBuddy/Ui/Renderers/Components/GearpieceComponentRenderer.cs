@@ -30,7 +30,6 @@ namespace BisBuddy.Ui.Renderers.Components
         ) : ComponentRendererBase<Gearpiece>
     {
         private static readonly Vector4 ExpandedBackgroundColor = new(0.13f, 0.13f, 0.13f, 1.0f);
-        private static readonly Vector4 GearpieceButtonColor = new(0.2f, 0.2f, 0.2f, 1.0f);
         private static float CornerRound => 5.0f;
 
         private readonly ITypedLogger<GearpieceComponentRenderer> logger = logger;
@@ -140,7 +139,7 @@ namespace BisBuddy.Ui.Renderers.Components
                 botRightPos.X -= thickOffset;
                 topLeftPos += outerThicknessOffset;
                 splitter.SetCurrentChannel(windowDrawList, 0);
-                var col = ImGui.GetColorU32(GearpieceButtonColor);
+                var col = ImGui.GetColorU32(uiTheme.ButtonColor);
                 windowDrawList.AddRect(topLeftPos, botRightPos, col, CornerRound, ImDrawFlags.Closed, outlineThickness);
             }
 
@@ -158,9 +157,9 @@ namespace BisBuddy.Ui.Renderers.Components
             var hasSubItems = gearpiece.ItemMateria.Count > 0 || gearpiece.PrerequisiteTree != null;
             using (ImRaii.PushStyle(ImGuiStyleVar.DisabledAlpha, 1.0f))
             using (ImRaii.Disabled(!hasSubItems))
-            using (ImRaii.PushColor(ImGuiCol.Button, GearpieceButtonColor))
-            using (ImRaii.PushColor(ImGuiCol.ButtonHovered, new Vector4(0.35f, 0.35f, 0.35f, 1)))
-            using (ImRaii.PushColor(ImGuiCol.ButtonActive, new Vector4(0.5f, 0.5f, 0.5f, 1)))
+            using (ImRaii.PushColor(ImGuiCol.Button, uiTheme.ButtonColor))
+            using (ImRaii.PushColor(ImGuiCol.ButtonHovered, uiTheme.ButtonHovered))
+            using (ImRaii.PushColor(ImGuiCol.ButtonActive, uiTheme.ButtonActive))
             using (ImRaii.PushStyle(ImGuiStyleVar.ButtonTextAlign, new Vector2(0, 0.5f)))
             using (ImRaii.PushStyle(ImGuiStyleVar.FramePadding, Vector2.One * 5))
             using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(0.0f, ImGui.GetStyle().ItemSpacing.Y)))
@@ -183,7 +182,10 @@ namespace BisBuddy.Ui.Renderers.Components
                     if (ImGui.Button($"###{gearpiece.ItemId}gearpiece_expand_button", buttonSize))
                     {
                         nextIsExpanded = !isExpanded;
-                        prereqExpanded = defaultPrereqExpandedState(gearpiece);
+                        if (nextIsExpanded is true)
+                        {
+                            prereqExpanded = defaultPrereqExpandedState(gearpiece);
+                        }
                     }
                 var mainButtonHovered = ImGui.IsItemHovered();
                 if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
@@ -191,7 +193,7 @@ namespace BisBuddy.Ui.Renderers.Components
                     if (gearpiece.ItemMateria.Count > 0 || gearpiece.PrerequisiteTree is not null)
                         ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
                     else
-                        UiComponents.SetTooltipSolid(
+                        UiComponents.SetSolidTooltip(
                             Resource.GearpieceNoSubItemsTooltip
                             );
                 }
@@ -205,15 +207,22 @@ namespace BisBuddy.Ui.Renderers.Components
 
                 var nextPos = ImGui.GetCursorPos();
 
-                ImGui.PushClipRect(buttonScreenPos, buttonScreenPos + new Vector2(buttonSize.X - (materiaXOffset + materiaSpacing * 1), buttonSize.Y), true);
                 var textOffset = new Vector2(
                     x: collectionStatusButtonSize.X * 2 + 2 * ImGuiHelpers.GlobalScale,
                     y: (buttonSize.Y - ImGui.GetTextLineHeight()) / 2
                     );
                 var textPos = buttonPos + textOffset;
+                var botRightClipRect = buttonScreenPos + new Vector2(buttonSize.X - (materiaXOffset + materiaSpacing * 1), buttonSize.Y);
                 ImGui.SetCursorPos(textPos);
-                ImGui.Text(buttonText);
-                ImGui.PopClipRect();
+                ImGui.PushClipRect(buttonScreenPos, botRightClipRect, true);
+                try
+                {
+                    ImGui.Text(buttonText);
+                }
+                finally
+                {
+                    ImGui.PopClipRect();
+                }
 
                 ImGui.SetCursorPos(buttonPos);
 
@@ -229,11 +238,15 @@ namespace BisBuddy.Ui.Renderers.Components
                     if (ImGui.IsItemHovered())
                     {
                         ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-                        UiComponents.SetTooltipSolid(
-                            attributeService
-                                .GetEnumAttribute<DisplayAttribute>(gearpiece.CollectionStatus)!
-                                .GetDescription()
-                                );
+                        var collectionStatusDesc = attributeService
+                            .GetEnumAttribute<DisplayAttribute>(gearpiece.CollectionStatus)!
+                            .GetDescription();
+
+                        var tooltip = gearpiece.CollectLock
+                            ? string.Format(Resource.CollectionStatusLockedTooltipPrefix, collectionStatusDesc)
+                            : collectionStatusDesc;
+
+                        UiComponents.SetSolidTooltip(tooltip);
                     }
                 }
 
@@ -279,10 +292,10 @@ namespace BisBuddy.Ui.Renderers.Components
                         ImGui.Image(uiCategoryTexture.Handle, collectionStatusButtonIconSize);
                     }
                     if (ImGui.IsItemHovered())
-                        using (ImRaii.PushColor(ImGuiCol.Text, StyleModelV1.DalamudStandard.BuiltInColors?.DalamudWhite ?? new Vector4(1, 1, 1, 1)))
+                        using (ImRaii.PushColor(ImGuiCol.Text, Vector4.One))
                         {
                             // TODO: FIX THIS
-                            UiComponents.SetTooltipSolid(uiCategory.Name.ExtractText());
+                            UiComponents.SetSolidTooltip(uiCategory.Name.ExtractText());
                         }
                 }
 
@@ -315,35 +328,6 @@ namespace BisBuddy.Ui.Renderers.Components
                 }
 
                 ImGui.SetCursorPos(nextPos);
-
-                //using (var contextMenu = ImRaii.ContextPopup("##gearpiece_context_menu"))
-                //{
-                //    if (!contextMenu)
-                //        return;
-
-                //    if (!gearpiece.IsCollected || !gearpiece.IsManuallyCollected)
-                //        if (ImGui.Selectable($"Lock as Collected"))
-                //        {
-                //            gearpiece.SetCollected(true, true);
-                //            logger.Debug($"Set gearpiece \"{gearpiece.ItemName}\" to locked collected");
-                //        }
-
-                //    //ImGui.Selectable($"Lock as Collected, missing Materia");
-                //    //ImGui.Selectable($"Lock as Obtainable with prerequisites");
-                //    if (gearpiece.IsCollected || !gearpiece.IsManuallyCollected)
-                //        if (ImGui.Selectable($"Lock as Uncollected"))
-                //        {
-                //            gearpiece.SetCollected(false, true);
-                //            logger.Debug($"Set gearpiece \"{gearpiece.ItemName}\" to locked uncollected");
-                //        }
-
-                //    if (gearpiece.IsManuallyCollected)
-                //        if (ImGui.Selectable($"Unlock"))
-                //        {
-                //            gearpiece.SetCollected(false, true);
-                //            logger.Debug($"Set gearpiece \"{gearpiece.ItemName}\" to unlocked");
-                //        }
-                //}
             }
         }
 
@@ -371,7 +355,7 @@ namespace BisBuddy.Ui.Renderers.Components
                 ? ImGui.GetStyle().ScrollbarSize - childPadding : 0;
 
             var totalChildHeight = childHeight + childPadding * 2 + extraScrollbarHeight;
-            using (ImRaii.PushColor(ImGuiCol.ChildBg, GearpieceButtonColor))
+            using (ImRaii.PushColor(ImGuiCol.ChildBg, uiTheme.ButtonColor))
             using (ImRaii.PushStyle(ImGuiStyleVar.ChildRounding, CornerRound))
             using (
                 ImRaii.Child(
@@ -413,7 +397,11 @@ namespace BisBuddy.Ui.Renderers.Components
         {
             if (gearpiece?.PrerequisiteTree is IPrerequisiteNode node)
             {
-                var prerequisiteColorTheme = uiTheme.GetCollectionStatusTheme(node.CollectionStatus);
+                Vector4 prereqButtonTextColor;
+                if (gearpiece.IsCollected)
+                    prereqButtonTextColor = uiTheme.GetCollectionStatusTheme(CollectionStatusType.ObtainedComplete).TextColor;
+                else
+                    prereqButtonTextColor = uiTheme.GetCollectionStatusTheme(node.CollectionStatus).TextColor;
 
                 var buttonSize = new Vector2(
                     x: ImGui.GetContentRegionAvail().X / ImGuiHelpers.GlobalScale, 0
@@ -426,15 +414,23 @@ namespace BisBuddy.Ui.Renderers.Components
                 using (ImRaii.PushStyle(ImGuiStyleVar.FrameRounding, CornerRound))
                 using (ImRaii.PushStyle(ImGuiStyleVar.TabRounding, CornerRound))
                 {
-                    using (ImRaii.PushColor(ImGuiCol.Text, prerequisiteColorTheme.TextColor))
-                    using (ImRaii.PushColor(ImGuiCol.Button, GearpieceButtonColor))
+                    using (ImRaii.PushColor(ImGuiCol.Text, prereqButtonTextColor))
+                    using (ImRaii.PushColor(ImGuiCol.Button, uiTheme.ButtonColor))
+                    using (ImRaii.PushColor(ImGuiCol.ButtonHovered, uiTheme.ButtonHovered))
+                    using (ImRaii.PushColor(ImGuiCol.ButtonActive, uiTheme.ButtonActive))
                         if (ImGuiComponents.IconButtonWithText(icon, Resource.PrerequisiteGearpieceHeader, buttonSize))
                             prereqExpanded = !prereqExpanded;
                     if (prereqExpanded)
                     {
                         ImGui.Spacing();
+
+                        var isCollected = gearpiece?.IsCollected ?? false;
+                        var disabledAlpha = isCollected
+                            ? 0.5f : 1.0f;
                         var cellPaddingX = ImGui.GetStyle().CellPadding.X;
                         using (ImRaii.PushStyle(ImGuiStyleVar.CellPadding, new Vector2(cellPaddingX, 0)))
+                        using (ImRaii.PushStyle(ImGuiStyleVar.DisabledAlpha, disabledAlpha))
+                        using (ImRaii.Disabled(isCollected))
                         {
                             // table for adding left and right padding
                             using var table = ImRaii.Table("###gearpiece_prerequisite_tabledd", 1, ImGuiTableFlags.PadOuterX);

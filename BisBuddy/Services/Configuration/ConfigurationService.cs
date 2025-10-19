@@ -169,6 +169,12 @@ namespace BisBuddy.Services.Configuration
             set => updateConfigProperty(cfg => cfg.BrightListItemHighlighting, value, affectsAssignments: false);
         }
 
+        public bool EnableDebugging
+        {
+            get => configuration.EnableDebugging;
+            set => updateConfigProperty(cfg => cfg.EnableDebugging, value, affectsAssignments: false);
+        }
+
         public HighlightColor DefaultHighlightColor
         {
             get => configuration.DefaultHighlightColor;

@@ -56,7 +56,7 @@ namespace BisBuddy.Services.Gearsets
 
         private List<Gearset> currentGearsets = [];
         private Dictionary<uint, List<ItemRequirementOwned>> currentItemRequirements = [];
-        private GearsetSortType currentGearsetsSortType = GearsetSortType.Priority;
+        private GearsetSortType currentGearsetsSortType = GearsetSortType.ImportDate;
         private bool currentGearsetsSortDescending = false;
 
         public IReadOnlyList<Gearset> CurrentGearsets

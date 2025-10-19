@@ -1,6 +1,7 @@
 using BisBuddy.Factories;
 using BisBuddy.Gear;
 using BisBuddy.Gear.Melds;
+using BisBuddy.Gear.Prerequisites;
 using BisBuddy.Items;
 using BisBuddy.Services;
 using BisBuddy.Util;
@@ -224,8 +225,18 @@ namespace BisBuddy.ItemAssignment
         {
             foreach (var gearset in assignableGearsets)
                 foreach (var gearpiece in gearset.Gearpieces)
-                    if (!(gearpiece.PrerequisiteTree?.CollectLock ?? true))
-                        gearpiece.PrerequisiteTree.IsCollected = false;
+                {
+                    if (gearpiece.IsCollected)
+                        continue;
+
+                    if (gearpiece.PrerequisiteTree is not IPrerequisiteNode node)
+                        continue;
+
+                    if (node.CollectLock)
+                        continue;
+
+                    node.IsCollected = false;
+                }
         }
 
         private int[] solveAndAssignPrerequisites(bool assignPrerequisiteMateria)

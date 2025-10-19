@@ -35,16 +35,14 @@ namespace BisBuddy.Gear.Prerequisites
         {
             get => isCollected;
             set {
-                if (value == isCollected)
-                    return;
+                foreach (var prereq in PrerequisiteTree)
+                    if (!prereq.CollectLock)
+                        prereq.IsCollected = value;
 
                 if (CollectLock)
                     throw new InvalidOperationException($"Cannot {(value ? "collect" : "uncollect")} atom prereq {ItemId}, is locked.");
 
                 isCollected = value;
-                foreach (var prereq in PrerequisiteTree)
-                    if (!prereq.CollectLock)
-                        prereq.IsCollected = value;
 
                 triggerPrerequisiteChange();
             }
@@ -54,6 +52,9 @@ namespace BisBuddy.Gear.Prerequisites
             get => collectLock;
             set
             {
+                foreach (var prereq in PrerequisiteTree)
+                    prereq.CollectLock = value;
+
                 if (value == collectLock)
                     return;
 

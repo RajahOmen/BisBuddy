@@ -321,9 +321,9 @@ When OFF: Gearset 1 completed, Gearset 2 completed</value>
 Use alpha channel to adjust highlight intensity on items/icons
 List menu highlights are not affected</value>
   </data>
-  <data name="MateriaTooltip" xml:space="preserve">
-    <value>{1}
-Lock gearpiece to {0}</value>
+  <data name="GearpieceLockedDisabledTooltip" xml:space="preserve">
+    <value>{0}
+Lock gearpiece to change status</value>
     <comment>When the materia is attached to a locked gearpiece</comment>
   </data>
   <data name="SearchInventoryForItemTooltip" xml:space="preserve">
@@ -647,5 +647,35 @@ or to have a unique color to highlight items in</value>
   <data name="MateriaMeldTooltip" xml:space="preserve">
     <value>{0} {1}</value>
     <comment>{meld/unmeld} {materianame}</comment>
+  </data>
+  <data name="CollectVerb" xml:space="preserve">
+    <value>Collect</value>
+  </data>
+  <data name="UncollectVerb" xml:space="preserve">
+    <value>Uncollect</value>
+  </data>
+  <data name="DisabledPrerequisiteTooltip" xml:space="preserve">
+    <value>{0} disabled, configure in toggles</value>
+    <comment>Tooltip displayed when hovering a disabled OR tab option when viewing a prerequisite. {0} is source name</comment>
+  </data>
+  <data name="PrerequisiteOrNodeSettingsTabName" xml:space="preserve">
+    <value>Toggles</value>
+  </data>
+  <data name="PrerequisiteOrNodeToggleTooltip" xml:space="preserve">
+    <value>Whether to include or ignore this method of obtaining the parent item</value>
+    <comment>Tooltip on OR node option activity checkbox that communicates how the toggle works.</comment>
+  </data>
+  <data name="CollectionStatusLockedTooltipPrefix" xml:space="preserve">
+    <value>[Locked] {0}</value>
+    <comment>Appears before CollectionStatus tooltips. {0} - the collection status tooltip</comment>
+  </data>
+  <data name="ConfigDebugSectionHeader" xml:space="preserve">
+    <value>Debugging</value>
+  </data>
+  <data name="OpenExternalConfigWindowTooltip" xml:space="preserve">
+    <value>Popout Configuration</value>
+  </data>
+  <data name="DebugTabName" xml:space="preserve">
+    <value>Debug</value>
   </data>
 </root>

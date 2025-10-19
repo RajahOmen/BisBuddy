@@ -14,7 +14,7 @@ using System;
 using System.Numerics;
 using Dalamud.Game.NativeWrapper;
 
-namespace BisBuddy.Ui;
+namespace BisBuddy.Ui.Windows;
 
 public unsafe class MeldPlanSelectorWindow : Window, IDisposable
 {

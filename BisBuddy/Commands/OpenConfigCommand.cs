@@ -1,7 +1,9 @@
 using BisBuddy.Resources;
 using BisBuddy.Services;
-using BisBuddy.Ui;
+using BisBuddy.Ui.Renderers.Tabs.Main;
+using BisBuddy.Ui.Windows;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace BisBuddy.Commands
 {
@@ -19,7 +21,19 @@ namespace BisBuddy.Commands
 
         public void Invoke(string args)
         {
-            windowService.ToggleWindow(WindowType.Config);
+            if (args.Split(" ").Any(arg => arg == "popout"))
+            {
+                windowService.ToggleWindow(WindowType.Config);
+            }
+            else
+            {
+                windowService.SetMainWindowTab(MainWindowTab.PluginConfig);
+
+                if (windowService.IsWindowOpen(WindowType.Main))
+                    windowService.SetWindowOpenState(WindowType.Config, false);
+
+                windowService.ToggleWindow(WindowType.Main);
+            }
         }
     }
 }

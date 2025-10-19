@@ -1,5 +1,6 @@
 using BisBuddy.Gear.Prerequisites;
 using BisBuddy.Items;
+using BisBuddy.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -80,8 +81,7 @@ namespace BisBuddy.Converters
             writer.WritePropertyName(nameof(IPrerequisiteNode.PrerequisiteTree));
             writer.WriteStartArray();
             foreach (var (node, isActive) in value.CompletePrerequisiteTree)
-                if (isActive)
-                    JsonSerializer.Serialize(writer, node, options);
+                JsonSerializer.Serialize(writer, node, options);
             writer.WriteEndArray();
 
             var disabledPrereqs = value.CompletePrerequisiteTree

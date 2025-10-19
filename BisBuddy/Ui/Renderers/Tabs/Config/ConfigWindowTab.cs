@@ -1,9 +1,9 @@
 using BisBuddy.Resources;
 using System.ComponentModel.DataAnnotations;
 
-namespace BisBuddy.Ui.Config
+namespace BisBuddy.Ui.Renderers.Tabs.Config
 {
-    public enum ConfigMenuGroup
+    public enum ConfigWindowTab
     {
         [Display(ResourceType = typeof(Resource), Name = nameof(Resource.ConfigGeneralSectionHeader))]
         General,
@@ -16,5 +16,8 @@ namespace BisBuddy.Ui.Config
 
         [Display(ResourceType = typeof(Resource), Name = nameof(Resource.ConfigUiThemeSectionHeader))]
         UiTheme,
+
+        [Display(ResourceType = typeof(Resource), Name = nameof(Resource.ConfigDebugSectionHeader))]
+        Debug,
     }
 }

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BisBuddy.Ui.Main.Tabs
+namespace BisBuddy.Ui.Renderers.Tabs
 {
     /// <summary>
     /// Describes abstract tab state, used to switch to a specific part of the tab

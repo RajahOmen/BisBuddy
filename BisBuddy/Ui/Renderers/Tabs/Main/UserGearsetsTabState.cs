@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BisBuddy.Ui.Main.Tabs
+namespace BisBuddy.Ui.Renderers.Tabs.Main
 {
     public struct UserGearsetsTabState : TabState
     {

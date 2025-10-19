@@ -228,16 +228,29 @@ namespace BisBuddy.Ui.Renderers.Components
             ImGui.Dummy(circleSize);
             using (ImRaii.PushColor(ImGuiCol.Text, materiaColor))
                 if (ImGui.IsItemHovered())
-                    SetTooltipSolid(tooltip);
+                    SetSolidTooltip(tooltip);
         }
 
-        public static void SetTooltipSolid(ImU8String text)
+        public static void SetSolidTooltip(ImU8String text)
         {
+            using (ImRaii.Enabled())
             using (ImRaii.PushStyle(ImGuiStyleVar.Alpha, 1.0f))
-            using (ImRaii.PushStyle(ImGuiStyleVar.DisabledAlpha, 1.0f))
             {
                 ImGui.SetTooltip(text);
             }
+        }
+
+        /// <summary>
+        /// Tables in ImGui have a quirk where when drawing with no padding, the contents can write on the border of the table.
+        /// This adds a clip rect that cuts off the content of the tables slightly to prevent that.
+        /// </summary>
+        public static void PushTableClipRect(int borderSize = 1)
+        {
+            var topLeft = ImGui.GetCursorScreenPos();
+            var bottomRight = topLeft + ImGui.GetContentRegionAvail();
+            topLeft.Y += borderSize;
+            bottomRight.Y -= borderSize;
+            ImGui.PushClipRect(topLeft, bottomRight, true);
         }
     }
 }

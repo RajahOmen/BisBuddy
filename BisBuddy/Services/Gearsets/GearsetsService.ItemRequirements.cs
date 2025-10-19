@@ -95,15 +95,15 @@ namespace BisBuddy.Services.Gearsets
                 switch (req.ItemRequirement.RequirementType)
                 {
                     case RequirementType.Gearpiece:
-                        if (includeCollected || reqStatus <= CollectionStatusType.NotObtainable)
+                        if (includeCollected || reqStatus < CollectionStatusType.ObtainedPartial)
                             yield return req;
                         break;
                     case RequirementType.Materia:
-                        if (includeMateria && (includeCollected || reqStatus <= CollectionStatusType.NotObtainable))
+                        if (includeMateria && (includeCollected || reqStatus < CollectionStatusType.ObtainedPartial))
                             yield return req;
                         break;
                     case RequirementType.Prerequisite:
-                        if (includePrereqs && (includeCollectedPrereqs || reqStatus <= CollectionStatusType.NotObtainable))
+                        if (includePrereqs && (includeCollectedPrereqs || reqStatus < CollectionStatusType.ObtainedPartial))
                             yield return req;
                         break;
                 }

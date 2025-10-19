@@ -13,9 +13,6 @@ using BisBuddy.Services.Addon.ShopExchange;
 using BisBuddy.Services.Configuration;
 using BisBuddy.Services.Gearsets;
 using BisBuddy.Services.ImportGearset;
-using BisBuddy.Ui;
-using BisBuddy.Ui.Config;
-using BisBuddy.Ui.Main.Tabs;
 using Dalamud.Interface;
 using Dalamud.Interface.Windowing;
 using Dalamud.Networking.Http;
@@ -41,6 +38,11 @@ using Lumina.Data.Parsing.Layer;
 using System.Linq;
 using System.Reflection;
 using BisBuddy.Ui.Renderers.ContextMenus;
+using BisBuddy.Ui.Renderers.Tabs;
+using BisBuddy.Ui.Windows;
+using BisBuddy.Ui.Renderers.Tabs.Main;
+using BisBuddy.Ui.Renderers.Tabs.Config;
+using Autofac.Features.AttributeFilters;
 
 namespace BisBuddy;
 
@@ -102,6 +104,9 @@ public sealed partial class Plugin : IDalamudPlugin
 
                 // kamitoolkit
                 builder.RegisterType<NativeController>().AsSelf().SingleInstance();
+
+                // memory cache
+                builder.RegisterType<MemoryCache>().As<IMemoryCache>().SingleInstance();
 
                 // importing gearsets
                 builder.RegisterType<HappyEyeballsCallback>().AsSelf().SingleInstance();
@@ -166,22 +171,41 @@ public sealed partial class Plugin : IDalamudPlugin
                 builder.RegisterType<GearsetConverter>().As<JsonConverter>().As<JsonConverter<Gearset>>().SingleInstance();
 
                 // windows
-                builder.RegisterType<MainWindow>().Keyed<Window>(WindowType.Main).As<Window>().AsSelf().SingleInstance();
-                builder.RegisterType<ConfigWindow>().Keyed<Window>(WindowType.Config).As<Window>().AsSelf().SingleInstance();
-                builder.RegisterType<ImportGearsetWindow>().Keyed<Window>(WindowType.ImportGearset).As<Window>().AsSelf().SingleInstance();
-                builder.RegisterType<MeldPlanSelectorWindow>().Keyed<Window>(WindowType.MeldPlanSelector).As<Window>().AsSelf().SingleInstance();
+                builder.RegisterType<WindowSystem>().AsSelf().SingleInstance();
+
+                var windowScopeTag = "WindowScope";
+
+                builder.RegisterType<MainWindow>().AsSelf().InstancePerMatchingLifetimeScope(windowScopeTag);
+                builder.RegisterType<ConfigWindow>().AsSelf().InstancePerMatchingLifetimeScope(windowScopeTag).WithAttributeFiltering();
+                builder.RegisterType<ImportGearsetWindow>().AsSelf().InstancePerMatchingLifetimeScope(windowScopeTag);
+                builder.RegisterType<MeldPlanSelectorWindow>().AsSelf().InstancePerMatchingLifetimeScope(windowScopeTag);
+
+                builder.Register(resolveWithScopeTagged<MainWindow>(windowScopeTag)).Keyed<Func<Window>>(WindowType.Main).SingleInstance();
+                builder.Register(resolveWithScopeTagged<ConfigWindow>(windowScopeTag)).Keyed<Func<Window>>(WindowType.Config).SingleInstance();
+                builder.Register(resolveWithScopeTagged<ImportGearsetWindow>(windowScopeTag)).Keyed<Func<Window>>(WindowType.ImportGearset).SingleInstance();
+                builder.Register(resolveWithScopeTagged<MeldPlanSelectorWindow>(windowScopeTag)).Keyed<Func<Window>>(WindowType.MeldPlanSelector).SingleInstance();
+
+                // main window tabs
+                builder.RegisterType<UserGearsetsTab>().Keyed<TabRenderer<MainWindowTab>>(MainWindowTab.UserGearsets).InstancePerMatchingLifetimeScope(windowScopeTag);
+                //builder.RegisterType<ItemPlannerTab>().Keyed<TabRenderer>(MainWindowTab.ItemPlanner).InstancePerMatchingLifetimeScope(windowScopeTag);
+                //builder.RegisterType<ItemExchangesTab>().Keyed<TabRenderer>(MainWindowTab.ItemExchanges).InstancePerMatchingLifetimeScope(windowScopeTag);
+                //builder.RegisterType<ItemTrackerTab>().Keyed<TabRenderer>(MainWindowTab.ItemTracker).InstancePerMatchingLifetimeScope(windowScopeTag);
+                builder.RegisterType<ConfigTab>().Keyed<TabRenderer<MainWindowTab>>(MainWindowTab.PluginConfig).InstancePerMatchingLifetimeScope(windowScopeTag);
+                builder.RegisterType<DebugTab>().Keyed<TabRenderer<MainWindowTab>>(MainWindowTab.PluginDebug).InstancePerMatchingLifetimeScope(windowScopeTag);
+
+
+                // config window tabs
+                builder.RegisterType<GeneralSettingsTab>().Keyed<TabRenderer<ConfigWindowTab>>(ConfigWindowTab.General).InstancePerMatchingLifetimeScope(windowScopeTag);
+                builder.RegisterType<HighlightingSettingsTab>().Keyed<TabRenderer<ConfigWindowTab>>(ConfigWindowTab.Highlighting).InstancePerMatchingLifetimeScope(windowScopeTag);
+                builder.RegisterType<InventorySettingsTab>().Keyed<TabRenderer<ConfigWindowTab>>(ConfigWindowTab.Inventory).InstancePerMatchingLifetimeScope(windowScopeTag);
+                builder.RegisterType<UiThemeSettingsTab>().Keyed<TabRenderer<ConfigWindowTab>>(ConfigWindowTab.UiTheme).InstancePerMatchingLifetimeScope(windowScopeTag);
+                //builder.RegisterType<DebugSettingsTab>().Keyed<TabRenderer<ConfigWindowTab>>(ConfigWindowTab.Debug).InstancePerMatchingLifetimeScope(windowScopeTag);
 
                 // other ui elements
                 builder.RegisterType<UiComponents>().AsSelf().SingleInstance();
-                builder.RegisterType<UserGearsetsTab>().Keyed<TabRenderer>(MainWindowTab.UserGearsets).SingleInstance();
-                builder.RegisterType<ItemPlannerTab>().Keyed<TabRenderer>(MainWindowTab.ItemPlanner).SingleInstance();
-                builder.RegisterType<ItemExchangesTab>().Keyed<TabRenderer>(MainWindowTab.ItemExchanges).SingleInstance();
-                builder.RegisterType<ItemTrackerTab>().Keyed<TabRenderer>(MainWindowTab.ItemTracker).SingleInstance();
-                builder.RegisterType<ConfigTab>().Keyed<TabRenderer>(MainWindowTab.PluginConfig).AsSelf().SingleInstance();
 
                 // renderer factory
-                builder.RegisterType<CachingRendererFactory>().As<IRendererFactory>().SingleInstance();
-
+                builder.RegisterType<CachingRendererFactory>().As<IRendererFactory>().InstancePerMatchingLifetimeScope(windowScopeTag);
 
                 List<Type> renderers = [
                     typeof(GearsetComponentRenderer),
@@ -276,9 +300,6 @@ public sealed partial class Plugin : IDalamudPlugin
                     foreach (var converter in serviceProvider.GetServices<JsonConverter>())
                         opts.Converters.Add(converter);
                 });
-
-                // add memory cache for attribute caching, etc.
-                services.AddMemoryCache();
             })
             .Build();
 
@@ -292,13 +313,26 @@ public sealed partial class Plugin : IDalamudPlugin
 
 #if DEBUG
             var commandService = host.Services.GetRequiredService<ICommandService>();
-            commandService.ExecuteCommand("/bis", "");
+            commandService.ExecuteCommand("/bis", "c");
 #endif
         }
         catch (Exception ex) {
             logger.Fatal(ex, $"Failed to start");
             Dispose();
         }
+    }
+
+    private static Func<IComponentContext, Func<T>> resolveWithScopeTagged<T>(object scopeTag) where T : notnull
+    {
+        return (IComponentContext context) =>
+        {
+            var lifetime = context.Resolve<ILifetimeScope>();
+            return () =>
+            {
+                var scope = lifetime.BeginLifetimeScope(scopeTag);
+                return scope.Resolve<T>();
+            };
+        };
     }
 
     public void Dispose()

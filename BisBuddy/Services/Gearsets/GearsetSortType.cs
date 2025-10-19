@@ -17,9 +17,9 @@ namespace BisBuddy.Services.Gearsets
         [Display(ResourceType = typeof(Resource), Name = nameof(Resource.GearsetSortImportDate))]
         ImportDate,
 
-        // Priority number given by user
-        [Display(ResourceType = typeof(Resource), Name = nameof(Resource.GearsetSortPriority))]
-        Priority,
+        //// Priority number given by user
+        //[Display(ResourceType = typeof(Resource), Name = nameof(Resource.GearsetSortPriority))]
+        //Priority,
 
         // If a gearset is enabled
         [Display(ResourceType = typeof(Resource), Name = nameof(Resource.GearsetSortActive))]

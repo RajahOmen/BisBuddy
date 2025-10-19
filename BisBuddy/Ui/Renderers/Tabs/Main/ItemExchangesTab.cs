@@ -6,11 +6,13 @@ using System.Text;
 using System.Threading.Tasks;
 using static Dalamud.Interface.Windowing.Window;
 
-namespace BisBuddy.Ui.Main.Tabs
+namespace BisBuddy.Ui.Renderers.Tabs.Main
 {
-    public class ItemExchangesTab : TabRenderer
+    public class ItemExchangesTab : TabRenderer<MainWindowTab>
     {
         public WindowSizeConstraints? TabSizeConstraints => null;
+
+        public bool ShouldDraw => true;
 
         public void PreDraw() { }
 

@@ -1,7 +1,7 @@
 using BisBuddy.Resources;
 using System.ComponentModel.DataAnnotations;
 
-namespace BisBuddy.Ui.Main.Tabs
+namespace BisBuddy.Ui.Renderers.Tabs.Main
 {
     public enum MainWindowTab
     {
@@ -24,5 +24,9 @@ namespace BisBuddy.Ui.Main.Tabs
         // open configuration as a tab in the main window
         [Display(ResourceType = typeof(Resource), Name = nameof(Resource.ConfigTabName))]
         PluginConfig = 4,
+
+        // open debugging tab
+        [Display(ResourceType = typeof(Resource), Name = nameof(Resource.DebugTabName))]
+        PluginDebug = 5,
     }
-} 
+}

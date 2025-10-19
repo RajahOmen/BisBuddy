@@ -161,6 +161,14 @@ namespace BisBuddy.Items
             return itemRow.ItemUICategory.Value;
         }
 
+        public ushort GetItemIconId(uint itemId)
+        {
+            if (!tryGetItemRowById(itemId, out var itemRow))
+                throw new ArgumentException($"Invalid itemId {itemId}");
+
+            return itemRow.Icon;
+        }
+
         public int GetItemMateriaSlotCount(uint itemId)
         {
             if (!tryGetItemRowById(itemId, out var itemRow))
@@ -209,7 +217,7 @@ namespace BisBuddy.Items
                         && sameItemRequirements(node.Item, oldPrerequisiteNode)
                     ).Index;
 
-                logger.Verbose($"New alternative found for \"{itemId}\", added as new {nameof(PrerequisiteOrNode)} layer (idx: {oldNodeIndex})");
+                logger.Debug($"New alternative found for \"{itemId}\", added as new {nameof(PrerequisiteOrNode)} layer (idx: {oldNodeIndex})");
 
                 // add to new node. If no index found, insert at start
                 if (oldNodeIndex >= 0)
@@ -223,17 +231,19 @@ namespace BisBuddy.Items
             {
                 foreach (var newChildNode in newPrerequisiteNode.PrerequisiteTree)
                 {
+                    var newChildNodeItemIds = newChildNode.ItemRequirements.Select(req => req.ItemId);
+
                     // add nodes that exist in new tree to old tree
                     var existsInOldNode = ((PrerequisiteOrNode)oldPrerequisiteNode)
                         .CompletePrerequisiteTree
                         .Any(entry =>
-                            entry.Node.ItemId == newChildNode.ItemId
+                            entry.Node.ItemRequirements.Select(req => req.ItemId).SequenceEqual(newChildNodeItemIds)
                             && entry.Node.GetType() == newChildNode.GetType()
                         );
 
                     if (!existsInOldNode)
                     {
-                        logger.Verbose($"New alternative found for \"{itemId}\", added to existing {nameof(PrerequisiteOrNode)} layer");
+                        logger.Debug($"New alternative found for \"{itemId}\", added to existing {nameof(PrerequisiteOrNode)} layer");
                         oldPrerequisiteNode.AddNode(newChildNode);
                     }
 
@@ -394,6 +404,8 @@ namespace BisBuddy.Items
             }
             else if (hasExchangesPrereqs)
             {
+                var exchangeNames = exchangesPrereqs.SelectMany(prereqs => prereqs).Select(GetItemNameById);
+                var prereqNames = exchangesTree.PrerequisiteTree.SelectMany(prereq => prereq.PrerequisiteTree).Select(p => p.ItemName);
                 // only from shops/exchanges
                 group.PrerequisiteTree = [exchangesTree];
             }

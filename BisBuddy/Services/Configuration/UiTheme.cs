@@ -123,4 +123,25 @@ public class UiTheme
             CollectionStatusType.NotObtainable => (UnobtainedTextColor, UnobtainedIcon),
             _ => throw new ArgumentOutOfRangeException(nameof(status), status, null)
         };
+
+    public Vector4 ButtonColor { get; set; } = new(
+        x: 0.2f,
+        y: 0.2f,
+        z: 0.2f,
+        w: 1.0f
+        );
+
+    public Vector4 ButtonHovered { get; set; } = new(
+        x: 0.3f,
+        y: 0.3f,
+        z: 0.3f,
+        w: 1.0f
+        );
+
+    public Vector4 ButtonActive { get; set; } = new(
+        x: 0.4f,
+        y: 0.4f,
+        z: 0.4f,
+        w: 1.0f
+        );
 }

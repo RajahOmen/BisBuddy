@@ -1,5 +1,5 @@
 using BisBuddy.Services;
-using BisBuddy.Ui;
+using BisBuddy.Ui.Windows;
 using System;
 using System.Collections.Generic;
 using System.Linq;

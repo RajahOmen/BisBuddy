@@ -29,7 +29,7 @@ namespace BisBuddy.Gear.Prerequisites
             get => PrerequisiteTree.Any(p => p.IsCollected);
             set
             {
-                foreach (var prereq in activePrerequisiteTree)
+                foreach (var (prereq, _) in completePrerequisiteTree)
                     if (!prereq.CollectLock)
                         prereq.IsCollected = value;
             }
@@ -39,13 +39,13 @@ namespace BisBuddy.Gear.Prerequisites
             get => PrerequisiteTree.All(p => p.CollectLock);
             set
             {
-                foreach (var prereq in activePrerequisiteTree)
+                foreach (var (prereq, _) in completePrerequisiteTree)
                     prereq.CollectLock = value;
             }
         }
         public void SetIsCollectedLocked(bool toCollect)
         {
-            foreach (var prereq in activePrerequisiteTree)
+            foreach (var (prereq, _) in completePrerequisiteTree)
                 prereq.SetIsCollectedLocked(toCollect);
         }
         public HashSet<string> ChildNodeIds => [.. PrerequisiteTree.Select(p => p.NodeId), .. PrerequisiteTree.SelectMany(p => p.ChildNodeIds)];
@@ -136,7 +136,7 @@ namespace BisBuddy.Gear.Prerequisites
 
             var oldNode = PrerequisiteTree[index];
 
-            var matches = completePrerequisiteTree.Where((entry, idx) => entry.Node == oldNode).Index();
+            var matches = completePrerequisiteTree.Index().Where(entry => entry.Item.Node == oldNode);
             if (!matches.Any() || matches.Count() > 1)
                 throw new InvalidOperationException($"Invalid match count {matches.Count()} for replacing node");
 
@@ -155,8 +155,25 @@ namespace BisBuddy.Gear.Prerequisites
         {
             ArgumentOutOfRangeException.ThrowIfGreaterThan(index, PrerequisiteTree.Count);
 
+            int completeIdx;
+            if (index < PrerequisiteTree.Count)
+            {
+                var prevNodeAtIdx = activePrerequisiteTree[index];
+                completeIdx = completePrerequisiteTree
+                    .Index()
+                    .Where(entry => entry.Item.Node == prevNodeAtIdx)
+                    .Select(entry => entry.Index)
+                    .First();
+            }
+            else
+            {
+                completeIdx = completePrerequisiteTree.Count;
+            }
+
+
             activePrerequisiteTree.Insert(index, node);
-            completePrerequisiteTree.Add((node, true));
+            completePrerequisiteTree.Insert(completeIdx, (node, true));
+
             node.OnPrerequisiteChange += handlePrereqChange;
         }
 

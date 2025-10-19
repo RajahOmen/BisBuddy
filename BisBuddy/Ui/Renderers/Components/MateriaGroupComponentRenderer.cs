@@ -15,7 +15,7 @@ namespace BisBuddy.Ui.Renderers.Components
         IRendererFactory rendererFactory
         ) : ComponentRendererBase<MateriaGroup>
     {
-        private static readonly Vector4 ButtonFillColorMult = new(0.6f, 0.6f, 0.6f, 0.45f);
+        private static readonly Vector4 ButtonFillColorMult = new(0.5f, 0.5f, 0.5f, 0.6f);
 
         private readonly ITypedLogger<MateriaGroupComponentRenderer> logger = logger;
         private readonly IConfigurationService configurationService = configurationService;
@@ -54,9 +54,13 @@ namespace BisBuddy.Ui.Renderers.Components
                     : Resource.MeldVerb;
 
                 var fillColor = textColor * ButtonFillColorMult;
+                var hoverColor = fillColor * 1.2f;
+                var activeColor = fillColor * 1.5f;
                 var materiaButtonText = $"x{materiaStatusGroup.Count} {materia.StatStrength}";
                 using (ImRaii.PushColor(ImGuiCol.Text, textColor))
                 using (ImRaii.PushColor(ImGuiCol.Button, fillColor))
+                using (ImRaii.PushColor(ImGuiCol.ButtonHovered, hoverColor))
+                using (ImRaii.PushColor(ImGuiCol.ButtonActive, activeColor))
                 using (ImRaii.PushStyle(ImGuiStyleVar.DisabledAlpha, 1.0f))
                 using (ImRaii.Disabled(disabled: !materia.CollectLock))
                 {
@@ -76,14 +80,18 @@ namespace BisBuddy.Ui.Renderers.Components
                 }
                 if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
                 {
-                    var tooltip = Resource.MateriaTooltip;
+                    string tooltip;
                     if (materia.CollectLock)
                     {
                         ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-                        tooltip = Resource.MateriaMeldTooltip;
+                        tooltip = string.Format(Resource.MateriaMeldTooltip, meldVerb, materia.ItemName);
+                    }
+                    else
+                    {
+                        tooltip = string.Format(Resource.GearpieceLockedDisabledTooltip, materia.ItemName);
                     }
                         
-                    UiComponents.SetTooltipSolid(string.Format(tooltip, meldVerb, materia.ItemName));
+                    UiComponents.SetSolidTooltip(string.Format(tooltip, meldVerb, materia.ItemName));
                 }
                 rendererFactory.GetRenderer(materia, RendererType.ContextMenu).Draw();
 
