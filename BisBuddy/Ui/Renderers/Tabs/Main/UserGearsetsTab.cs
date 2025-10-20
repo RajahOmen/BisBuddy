@@ -94,56 +94,53 @@ namespace BisBuddy.Ui.Renderers.Tabs.Main
 
         public void Draw()
         {
-            if (clientState.IsLoggedIn)
-            {
-                if (firstLoggedInDrawCall && gearsetsService.CurrentGearsets.Count > 0)
-                {
-                    activeGearset ??= gearsetsService.CurrentGearsets[0];
-                    firstLoggedInDrawCall = false;
-                }
-
-                var tableFlags =
-                    ImGuiTableFlags.BordersInnerV
-                    | ImGuiTableFlags.BordersOuter
-                    ;
-
-                ImGui.PushStyleVar(ImGuiStyleVar.CellPadding, new Vector2(0f, 0f));
-                using var table = ImRaii.Table("gearset_table", 2, tableFlags);
-                ImGui.PopStyleVar();
-                if (!table)
-                    return;
-
-                ImGui.TableSetupColumn("###navigation", ImGuiTableColumnFlags.WidthFixed);
-                ImGui.TableSetupColumn("###gearset_details", ImGuiTableColumnFlags.WidthStretch);
-                ImGui.TableNextRow();
-                ImGui.TableNextColumn();
-
-
-                UiComponents.PushTableClipRect();
-                try
-                {
-                    DrawGearsetsNavigationPanel();
-                }
-                finally
-                {
-                    ImGui.PopClipRect();
-                }
-
-                ImGui.TableNextColumn();
-
-                UiComponents.PushTableClipRect();
-                try
-                {
-                    DrawGearsetPanel();
-                }
-                finally
-                {
-                    ImGui.PopClipRect();
-                }
-            }
-            else
+            if (!clientState.IsLoggedIn)
             {
                 DrawLoggedOut();
+                return;
+            }
+
+            if (firstLoggedInDrawCall && gearsetsService.CurrentGearsets.Count > 0)
+            {
+                activeGearset ??= gearsetsService.CurrentGearsets[0];
+                firstLoggedInDrawCall = false;
+            }
+
+            var tableFlags =
+                ImGuiTableFlags.BordersInnerV
+                | ImGuiTableFlags.BordersOuter;
+
+            ImGui.PushStyleVar(ImGuiStyleVar.CellPadding, new Vector2(0f, 0f));
+            using var table = ImRaii.Table("gearset_table", 2, tableFlags);
+            ImGui.PopStyleVar();
+            if (!table)
+                return;
+
+            ImGui.TableSetupColumn("###navigation", ImGuiTableColumnFlags.WidthFixed);
+            ImGui.TableSetupColumn("###gearset_details", ImGuiTableColumnFlags.WidthStretch);
+            ImGui.TableNextRow();
+            ImGui.TableNextColumn();
+
+            UiComponents.PushTableClipRect();
+            try
+            {
+                DrawGearsetsNavigationPanel();
+            }
+            finally
+            {
+                ImGui.PopClipRect();
+            }
+
+            ImGui.TableNextColumn();
+
+            UiComponents.PushTableClipRect();
+            try
+            {
+                DrawGearsetPanel();
+            }
+            finally
+            {
+                ImGui.PopClipRect();
             }
         }
 
@@ -194,12 +191,6 @@ namespace BisBuddy.Ui.Renderers.Tabs.Main
                         ImGui.SetCursorPosY(ImGui.GetCursorPosY() + verticalOffset);
                         ImGuiHelpers.CenteredText(Resource.UserGearsetsTabNoGearsetsTextNavigation);
                     }
-                    //var gearsetIdx = 0;
-                    //while (gearsetIdx < gearsetsService.CurrentGearsets.Count)
-                    //{
-                    //    var gearset = gearsetsService.CurrentGearsets[gearsetIdx];
-                    //    gearsetIdx++;
-                    //}
 
                     var gearsetsToDraw = gearsetsService.CurrentGearsets.ToList();
                     foreach (var gearset in gearsetsToDraw)
@@ -389,8 +380,11 @@ namespace BisBuddy.Ui.Renderers.Tabs.Main
         /// </summary>
         private void DrawLoggedOut()
         {
-            ImGui.NewLine();
-            ImGuiHelpers.CenteredText(Resource.GearsetsTabLoggedOutText);
+            using (ImRaii.Child("logged_out_gearsets_panel", ImGui.GetContentRegionAvail(), border: true))
+            {
+                ImGui.NewLine();
+                ImGuiHelpers.CenteredText(Resource.GearsetsTabLoggedOutText);
+            }
         }
 
         private void handleLogin() =>
