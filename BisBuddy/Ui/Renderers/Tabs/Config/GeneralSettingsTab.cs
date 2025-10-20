@@ -17,49 +17,52 @@ namespace BisBuddy.Ui.Renderers.Tabs.Config
         public bool ShouldDraw => true;
         public void Draw()
         {
-            using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(3.0f, 4.0f)))
+            ImGui.Text(Resource.GeneralConfigurationHighlightAppearanceCategory);
+            ImGui.Spacing();
+
+            using (ImRaii.PushIndent(10f))
             {
-                ImGui.Text(Resource.GeneralConfigurationHighlightAppearanceCategory);
-                ImGui.Spacing();
-
-                // COLOR PICKER
-                var existingColor = configurationService.DefaultHighlightColor.BaseColor;
-                if (ImGui.ColorButton($"{Resource.HighlightColorButtonTooltip}###ColorPickerButton", existingColor))
+                using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(3.0f, 4.0f)))
                 {
-                    ImGui.OpenPopup($"###ColorPickerPopup");
-                }
-
-                using (var popup = ImRaii.Popup($"###ColorPickerPopup"))
-                {
-                    if (popup)
+                    // COLOR PICKER
+                    var existingColor = configurationService.DefaultHighlightColor.BaseColor;
+                    if (ImGui.ColorButton($"{Resource.HighlightColorButtonTooltip}###ColorPickerButton", existingColor))
                     {
-                        if (ImGui.ColorPicker4(
-                            $"###ColorPicker",
-                            ref existingColor,
-                            ImGuiColorEditFlags.NoPicker
-                            | ImGuiColorEditFlags.AlphaBar
-                            | ImGuiColorEditFlags.NoSidePreview
-                            | ImGuiColorEditFlags.DisplayRgb
-                        | ImGuiColorEditFlags.NoBorder
-                            ))
+                        ImGui.OpenPopup($"###ColorPickerPopup");
+                    }
+
+                    using (var popup = ImRaii.Popup($"###ColorPickerPopup"))
+                    {
+                        if (popup)
                         {
-                            if (existingColor != configurationService.DefaultHighlightColor.BaseColor)
-                                configurationService.DefaultHighlightColor.UpdateColor(existingColor);
+                            if (ImGui.ColorPicker4(
+                                $"###ColorPicker",
+                                ref existingColor,
+                                ImGuiColorEditFlags.NoPicker
+                                | ImGuiColorEditFlags.AlphaBar
+                                | ImGuiColorEditFlags.NoSidePreview
+                                | ImGuiColorEditFlags.DisplayRgb
+                            | ImGuiColorEditFlags.NoBorder
+                                ))
+                            {
+                                if (existingColor != configurationService.DefaultHighlightColor.BaseColor)
+                                    configurationService.DefaultHighlightColor.UpdateColor(existingColor);
+                            }
                         }
                     }
+                    ImGui.SameLine();
+                    ImGui.TextUnformatted(Resource.HighlightColorButtonLabel);
                 }
-                ImGui.SameLine();
-                ImGui.TextUnformatted(Resource.HighlightColorButtonLabel);
-            }
-            if (ImGui.IsItemHovered())
-                ImGui.SetTooltip(Resource.HighlightColorHelp);
+                if (ImGui.IsItemHovered())
+                    ImGui.SetTooltip(Resource.HighlightColorHelp);
 
-            // BRIGHT CUSTOM NODE HIGHLIGHTING
-            var brightListItemHighlighting = configurationService.BrightListItemHighlighting;
-            if (ImGui.Checkbox(Resource.BrightListItemHighlightingCheckbox, ref brightListItemHighlighting))
-                configurationService.BrightListItemHighlighting = brightListItemHighlighting;
-            if (ImGui.IsItemHovered())
-                ImGui.SetTooltip(Resource.BrightListItemHighlightingHelp);
+                // BRIGHT CUSTOM NODE HIGHLIGHTING
+                var brightListItemHighlighting = configurationService.BrightListItemHighlighting;
+                if (ImGui.Checkbox(Resource.BrightListItemHighlightingCheckbox, ref brightListItemHighlighting))
+                    configurationService.BrightListItemHighlighting = brightListItemHighlighting;
+                if (ImGui.IsItemHovered())
+                    ImGui.SetTooltip(Resource.BrightListItemHighlightingHelp);
+            }
 
             ImGui.Spacing();
             ImGui.Separator();
@@ -68,19 +71,22 @@ namespace BisBuddy.Ui.Renderers.Tabs.Config
             ImGui.Text(Resource.GeneralConfigurationMiscellaneousCategory);
             ImGui.Spacing();
 
-            //UNCOLLECTED MATERIA HIGHLIGHTING
-            var highlightUncollectedItemMateria = configurationService.HighlightUncollectedItemMateria;
-            if (ImGui.Checkbox(Resource.HighlightUncollectedItemMateriaCheckbox, ref highlightUncollectedItemMateria))
-                configurationService.HighlightUncollectedItemMateria = highlightUncollectedItemMateria;
-            if (ImGui.IsItemHovered())
-                ImGui.SetTooltip(Resource.HighlightUncollectedItemMateriaHelp);
+            using (ImRaii.PushIndent(10f))
+            {
+                //UNCOLLECTED MATERIA HIGHLIGHTING
+                var highlightUncollectedItemMateria = configurationService.HighlightUncollectedItemMateria;
+                if (ImGui.Checkbox(Resource.HighlightUncollectedItemMateriaCheckbox, ref highlightUncollectedItemMateria))
+                    configurationService.HighlightUncollectedItemMateria = highlightUncollectedItemMateria;
+                if (ImGui.IsItemHovered())
+                    ImGui.SetTooltip(Resource.HighlightUncollectedItemMateriaHelp);
 
-            // ASSIGNMENT GROUPING
-            var strictMateriaMatching = configurationService.StrictMateriaMatching;
-            if (ImGui.Checkbox(Resource.StrictMateriaMatchingCheckbox, ref strictMateriaMatching))
-                configurationService.StrictMateriaMatching = strictMateriaMatching;
-            if (ImGui.IsItemHovered())
-                ImGui.SetTooltip(Resource.StrictMateriaMatchingHelp);
+                // ASSIGNMENT GROUPING
+                var strictMateriaMatching = configurationService.StrictMateriaMatching;
+                if (ImGui.Checkbox(Resource.StrictMateriaMatchingCheckbox, ref strictMateriaMatching))
+                    configurationService.StrictMateriaMatching = strictMateriaMatching;
+                if (ImGui.IsItemHovered())
+                    ImGui.SetTooltip(Resource.StrictMateriaMatchingHelp);
+            }
         }
 
         public void PreDraw() { }

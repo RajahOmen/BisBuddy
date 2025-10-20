@@ -526,10 +526,10 @@ or to have a unique color to highlight items in</value>
     <value>Plugin Styles</value>
   </data>
   <data name="ResetUiThemeButton" xml:space="preserve">
-    <value>Default</value>
+    <value>Reset Colors &amp; Styles</value>
   </data>
-  <data name="ResetUiThemeHelp" xml:space="preserve">
-    <value>Reset plugin styles to default</value>
+  <data name="ResetUiThemeTooltip" xml:space="preserve">
+    <value>Reset plugin styles/colors to default</value>
   </data>
   <data name="MateriaAbbrevDirectHitRate" xml:space="preserve">
     <value>DHT</value>
@@ -677,5 +677,20 @@ or to have a unique color to highlight items in</value>
   </data>
   <data name="DebugTabName" xml:space="preserve">
     <value>Debug</value>
+  </data>
+  <data name="UiThemeConfigColorsSectionHeader" xml:space="preserve">
+    <value>Colors</value>
+  </data>
+  <data name="UiThemeConfigStylesSectionHeader" xml:space="preserve">
+    <value>Styles</value>
+  </data>
+  <data name="ShowGearsetColorAccentFlagLabel" xml:space="preserve">
+    <value>Display Gearset Color Accent</value>
+  </data>
+  <data name="ShowGearsetColorAccentFlagTooltip" xml:space="preserve">
+    <value>Whether to display a gradient of the gearset highlight color on the gearset's header</value>
+  </data>
+  <data name="UiThemeConfigResetsSectionHeader" xml:space="preserve">
+    <value>Defaults</value>
   </data>
 </root>

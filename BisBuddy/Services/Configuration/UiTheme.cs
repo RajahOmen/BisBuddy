@@ -124,6 +124,31 @@ public class UiTheme
             _ => throw new ArgumentOutOfRangeException(nameof(status), status, null)
         };
 
+    public void SetCollectionStatusTheme(CollectionStatusType status, Vector4 textColor, GameIcon icon)
+    {
+        switch (status)
+        {
+            case CollectionStatusType.ObtainedComplete:
+                ObtainedCompleteTextColor = textColor;
+                ObtainedCompleteIcon = icon;
+                break;
+            case CollectionStatusType.ObtainedPartial:
+                ObtainedPartialTextColor = textColor;
+                ObtainedPartialIcon = icon;
+                break;
+            case CollectionStatusType.Obtainable:
+                ObtainableTextColor = textColor;
+                ObtainableIcon = icon;
+                break;
+            case CollectionStatusType.NotObtainable:
+                UnobtainedTextColor = textColor;
+                UnobtainedIcon = icon;
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(status), status, null);
+        }
+    }
+
     public Vector4 ButtonColor { get; set; } = new(
         x: 0.2f,
         y: 0.2f,

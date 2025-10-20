@@ -315,14 +315,12 @@ namespace BisBuddy.Ui.Renderers.Components
                     {
                         ImGui.SetCursorPosX(materiaStartPos.X + idx * (materiaSize + materiaSpacing));
                         ImGui.SetCursorPosY(materiaStartPos.Y);
-                        var materiaTheme = uiTheme.GetCollectionStatusTheme(materia.CollectionStatus);
                         var isAdvancedMelding = idx >= materiaSlotCount;
                         uiComponents.MateriaSlot(
                             materiaSize,
                             isAdvancedMelding,
-                            materia.StatStrength,
                             materia.CollectionStatus,
-                            materiaTheme.TextColor
+                            materia.StatStrength
                             );
                     }
                 }

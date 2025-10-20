@@ -1411,7 +1411,7 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Default.
+        ///   Looks up a localized string similar to Reset Colors &amp; Styles.
         /// </summary>
         public static string ResetUiThemeButton {
             get {
@@ -1420,11 +1420,11 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Reset plugin styles to default.
+        ///   Looks up a localized string similar to Reset plugin styles/colors to default.
         /// </summary>
-        public static string ResetUiThemeHelp {
+        public static string ResetUiThemeTooltip {
             get {
-                return ResourceManager.GetString("ResetUiThemeHelp", resourceCulture);
+                return ResourceManager.GetString("ResetUiThemeTooltip", resourceCulture);
             }
         }
         
@@ -1434,6 +1434,24 @@ namespace BisBuddy.Resources {
         public static string SearchInventoryForItemTooltip {
             get {
                 return ResourceManager.GetString("SearchInventoryForItemTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Display Gearset Color Accent.
+        /// </summary>
+        public static string ShowGearsetColorAccentFlagLabel {
+            get {
+                return ResourceManager.GetString("ShowGearsetColorAccentFlagLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Whether to display a gradient of the gearset highlight color on the gearset&apos;s header.
+        /// </summary>
+        public static string ShowGearsetColorAccentFlagTooltip {
+            get {
+                return ResourceManager.GetString("ShowGearsetColorAccentFlagTooltip", resourceCulture);
             }
         }
         
@@ -1476,6 +1494,33 @@ namespace BisBuddy.Resources {
         public static string SyncInventoryTooltip {
             get {
                 return ResourceManager.GetString("SyncInventoryTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Colors.
+        /// </summary>
+        public static string UiThemeConfigColorsSectionHeader {
+            get {
+                return ResourceManager.GetString("UiThemeConfigColorsSectionHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Defaults.
+        /// </summary>
+        public static string UiThemeConfigResetsSectionHeader {
+            get {
+                return ResourceManager.GetString("UiThemeConfigResetsSectionHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Styles.
+        /// </summary>
+        public static string UiThemeConfigStylesSectionHeader {
+            get {
+                return ResourceManager.GetString("UiThemeConfigStylesSectionHeader", resourceCulture);
             }
         }
         

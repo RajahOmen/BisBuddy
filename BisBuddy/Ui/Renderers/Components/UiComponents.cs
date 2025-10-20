@@ -199,9 +199,8 @@ namespace BisBuddy.Ui.Renderers.Components
         public void MateriaSlot(
             float diameter,
             bool isAdvanced,
-            string materiaTooltip,
             CollectionStatusType collectionStatus,
-            Vector4 materiaColor
+            string? materiaTooltip = null
             )
         {
             var drawList = ImGui.GetWindowDrawList();
@@ -209,6 +208,8 @@ namespace BisBuddy.Ui.Renderers.Components
             var edgeCol = isAdvanced
                 ? ImGui.GetColorU32(uiTheme.MateriaSlotAdvancedColor)
                 : ImGui.GetColorU32(uiTheme.MateriaSlotNormalColor);
+
+            var (materiaColor, _) = uiTheme.GetCollectionStatusTheme(collectionStatus);
 
             var radius = diameter / 2;
             var circleSize = new Vector2(diameter, diameter);
@@ -221,11 +222,14 @@ namespace BisBuddy.Ui.Renderers.Components
             }
 
             drawList.AddCircle(circlePos, radius, edgeCol, MateriaSlotBorderThickness * ImGuiHelpers.GlobalScale);
+            ImGui.Dummy(circleSize);
+
+            if (materiaTooltip is not string tooltipString)
+                return;
 
             var tooltip = isAdvanced
-                ? $"{Resource.AdvancedMateriaMeldTooltip}{materiaTooltip}"
-                : materiaTooltip;
-            ImGui.Dummy(circleSize);
+                ? $"{Resource.AdvancedMateriaMeldTooltip}{tooltipString}"
+                : tooltipString;
             using (ImRaii.PushColor(ImGuiCol.Text, materiaColor))
                 if (ImGui.IsItemHovered())
                     SetSolidTooltip(tooltip);
