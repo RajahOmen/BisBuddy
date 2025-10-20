@@ -93,13 +93,15 @@ public class ConfigTab(
         var selectableSize = new Vector2(0, lineHeight);
         var itemSpacing = ImGui.GetStyle().ItemSpacing.X;
         var rightOffset = 5f * ImGuiHelpers.GlobalScale;
+        var navSize = new Vector2(145, 0) * ImGuiHelpers.GlobalScale;
+        navSize.X += 10;
 
         UiComponents.PushTableClipRect();
         try
         {
             using (ImRaii.PushStyle(ImGuiStyleVar.SelectableTextAlign, new Vector2(0, 0.5f)))
             using (ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, new Vector2(2, 5)))
-            using (ImRaii.Child("submenu_options_nav", new Vector2(150, 0), false, ImGuiWindowFlags.AlwaysUseWindowPadding))
+            using (ImRaii.Child("submenu_options_nav", navSize, false, ImGuiWindowFlags.AlwaysUseWindowPadding))
             {
                 foreach (var tab in configTabsToDraw)
                 {
@@ -136,7 +138,7 @@ public class ConfigTab(
                 using (ImRaii.PushFont(UiBuilder.IconFont))
                 {
                     var openConfigWindowButton = FontAwesomeIcon.ArrowUpRightFromSquare.ToIconString();
-                    var buttonSize = ImGui.CalcTextSize(openConfigWindowButton) + ImGui.GetStyle().FramePadding * 2;
+                    var buttonSize = ImGui.CalcTextSize(openConfigWindowButton) + (ImGui.GetStyle().FramePadding * 2 * ImGuiHelpers.GlobalScale);
 
                     var maxPos = ImGui.GetContentRegionMax();
                     ImGui.SetCursorPos(maxPos - buttonSize);
