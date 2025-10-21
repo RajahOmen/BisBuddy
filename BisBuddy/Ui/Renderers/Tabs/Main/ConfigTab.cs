@@ -31,7 +31,6 @@ public class ConfigTab(
     private static readonly WindowSizeConstraints? SizeConstraints = new()
     {
         MinimumSize = new(350, 100),
-        MaximumSize = new(1000, 1000),
     };
 
     private List<ConfigWindowTab> configTabsToDraw = Enum
@@ -119,7 +118,11 @@ public class ConfigTab(
 
         ImGui.TableNextColumn();
 
+        var tabPos = ImGui.GetCursorPos();
+        var tabContentMax = tabPos + ImGui.GetContentRegionAvail();
         var tabContentsSize = ImGui.GetContentRegionAvail();
+        var botRight = ImGui.GetCursorScreenPos() + tabContentsSize;
+
         UiComponents.PushTableClipRect();
         try
         {
@@ -133,22 +136,27 @@ public class ConfigTab(
 
                 if (!showPopoutToggle || windowService.IsWindowOpen(WindowType.Config))
                     return;
+            }
 
-                using (ImRaii.PushStyle(ImGuiStyleVar.FramePadding, new Vector2(6)))
-                using (ImRaii.PushFont(UiBuilder.IconFont))
+            var expandButtonHovered = false;
+            using (ImRaii.PushStyle(ImGuiStyleVar.FramePadding, new Vector2(6)))
+            using (ImRaii.PushFont(UiBuilder.IconFont))
+            {
+                var openConfigWindowButton = FontAwesomeIcon.ArrowUpRightFromSquare.ToIconString();
+                var buttonSize = ImGui.CalcTextSize(openConfigWindowButton) + (ImGui.GetStyle().FramePadding * 2 * ImGuiHelpers.GlobalScale);
+
+                ImGui.SetCursorScreenPos(botRight - buttonSize * 1.5f);
+                using (ImRaii.Child("open_external_config_window", Vector2.Zero, false))
                 {
-                    var openConfigWindowButton = FontAwesomeIcon.ArrowUpRightFromSquare.ToIconString();
-                    var buttonSize = ImGui.CalcTextSize(openConfigWindowButton) + (ImGui.GetStyle().FramePadding * 2 * ImGuiHelpers.GlobalScale);
-
-                    var maxPos = ImGui.GetContentRegionMax();
-                    ImGui.SetCursorPos(maxPos - buttonSize);
-
                     if (ImGui.Button(openConfigWindowButton))
                         windowService.ToggleWindow(WindowType.Config);
+                    if (ImGui.IsItemHovered())
+                        expandButtonHovered = true;
                 }
-                if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip(Resource.OpenExternalConfigWindowTooltip);
             }
+
+            if (expandButtonHovered)
+                ImGui.SetTooltip(Resource.OpenExternalConfigWindowTooltip);
         }
         finally
         {

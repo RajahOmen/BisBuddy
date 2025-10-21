@@ -38,11 +38,16 @@ namespace BisBuddy.Ui.Renderers.Tabs.Config
 
         public void Draw()
         {
-            var imageSize = new Vector2(ImGui.GetTextLineHeightWithSpacing());
+            var buttonHeight = ImGui.GetTextLineHeightWithSpacing() * 1.3f;
+            var imageSize = new Vector2(buttonHeight * 0.75f);
 
             ImGui.Text(Resource.UiThemeConfigColorsSectionHeader);
+
+            ImGui.Spacing();
             using (ImRaii.PushIndent(10f))
             {
+                var lockSpacing = 5 * ImGuiHelpers.GlobalScale;
+
                 foreach (var type in Enum.GetValues<CollectionStatusType>().OrderByDescending(t => (int) t))
                 {
                     var (textColor, gameIcon) = uiTheme.GetCollectionStatusTheme(type);
@@ -51,43 +56,51 @@ namespace BisBuddy.Ui.Renderers.Tabs.Config
 
                     if (textureProvider.GetFromGameIcon((int)gameIcon).TryGetWrap(out var texture, out var exception))
                     {
-                        var drawImage = () =>
+                        void drawImage()
                         {
+                            var oldPos = ImGui.GetCursorPos();
                             ImGui.Image(texture.Handle, size: imageSize, tintCol: textColor);
-                            ImGui.SameLine();
-                            ImGui.SetCursorPosY(ImGui.GetCursorPosY() - 2);
+                            ImGui.SetCursorPos(oldPos + new Vector2(imageSize.X + lockSpacing, 0));
                             using (ImRaii.PushFont(UiBuilder.IconFont))
-                            using (ImRaii.PushColor(ImGuiCol.Text, textColor))
                                 ImGui.Text(FontAwesomeIcon.Lock.ToIconString());
-                        };
-                        if (DrawColorPicker(typeDescription, textColor, out var newColor, prefixTextLabel: drawImage))
+                        }
+                        if (DrawColorPicker(typeDescription, textColor, out var newColor, iconDraw: drawImage))
                             uiTheme.SetCollectionStatusTheme(type, newColor, gameIcon);
                     }
                 }
 
                 ImGui.Spacing();
 
-                var offset = imageSize.Y * 0.15f;
-                var materiaDiameter = imageSize.Y - offset;
+                var materiaDiameter = 16 * ImGuiHelpers.GlobalScale;
+                var materiaSpacing = 6 * ImGuiHelpers.GlobalScale;
 
                 Action drawMateriaFunc(bool advanced)
                 {
                     return () =>
                     {
-                        var yPos = ImGui.GetCursorPosY() + offset;
-                        ImGui.SetCursorPosY(yPos);
+                        var oldPos = ImGui.GetCursorPos();
                         uiComponents.MateriaSlot(materiaDiameter, advanced, CollectionStatusType.NotObtainable, materiaTooltip: Resource.UnmeldVerb);
-                        ImGui.SameLine();
-                        ImGui.SetCursorPosY(yPos);
+                        ImGui.SetCursorPos(oldPos + new Vector2(materiaDiameter + materiaSpacing, 0));
                         uiComponents.MateriaSlot(materiaDiameter, advanced, CollectionStatusType.ObtainedComplete, materiaTooltip: Resource.MeldVerb);
                     };
                 }
 
-                if (DrawColorPicker("Materia Slot (Normal)", uiTheme.MateriaSlotNormalColor, out var materiaSlotNormal, prefixTextLabel: drawMateriaFunc(false)))
+                if (DrawColorPicker(Resource.UiThemeColorMateriaSlotNormalLabel, uiTheme.MateriaSlotNormalColor, out var materiaSlotNormal, iconDraw: drawMateriaFunc(false)))
                     uiTheme.MateriaSlotNormalColor = materiaSlotNormal;
 
-                if (DrawColorPicker("Materia Slot (Advanced)", uiTheme.MateriaSlotAdvancedColor, out var materiaSlotAdvanced, prefixTextLabel: drawMateriaFunc(true)))
+                if (DrawColorPicker(Resource.UiThemeColorMateriaSlotAdvancedLabel, uiTheme.MateriaSlotAdvancedColor, out var materiaSlotAdvanced, iconDraw: drawMateriaFunc(true)))
                     uiTheme.MateriaSlotAdvancedColor = materiaSlotAdvanced;
+
+                ImGui.Spacing();
+
+                if (DrawColorPicker(Resource.UiThemeColorGearpieceButton, uiTheme.ButtonColor, out var buttonColor, setTextColor: false))
+                    uiTheme.ButtonColor = buttonColor;
+
+                if (DrawColorPicker(Resource.UiThemeColorGearpieceButtonHovered, uiTheme.ButtonHovered, out var buttonHovered, setTextColor: false))
+                    uiTheme.ButtonHovered = buttonHovered;
+
+                if (DrawColorPicker(Resource.UiThemeColorGearpieceButtonActive, uiTheme.ButtonActive, out var buttonActive, setTextColor: false))
+                    uiTheme.ButtonActive = buttonActive;
             }
 
             ImGui.Spacing();
@@ -129,27 +142,57 @@ namespace BisBuddy.Ui.Renderers.Tabs.Config
             throw new NotImplementedException();
         }
 
-        private bool DrawColorPicker(string label, Vector4 color, out Vector4 newColor, Action? prefixTextLabel = null)
+        private bool DrawColorPicker(string label, Vector4 color, out Vector4 newColor, Action? iconDraw = null, bool setTextColor = true)
         {
             using var _ = ImRaii.PushId(label);
+            var buttonHeight = ImGui.GetTextLineHeightWithSpacing() * 1.3f;
+            var textYOffset = (buttonHeight - ImGui.GetTextLineHeight()) / 2;
 
             using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(3.0f, 4.0f)))
             {
-                if (ImGui.ColorButton(label, color))
+                if (ImGui.ColorButton(label, color, size: new(buttonHeight)))
                     ImGui.OpenPopup("###color_button_popup");
 
-                ImGui.SameLine();
-                if (prefixTextLabel is Action action)
+                using (ImRaii.PushColor(ImGuiCol.Text, color, setTextColor))
                 {
-                    ImGui.Dummy(new(3, 0));
                     ImGui.SameLine();
-                    action();
-                    ImGui.SameLine();
-                    ImGui.Dummy(new(3, 0));
-                    ImGui.SameLine();
+
+                    var buttonSize = new Vector2(ImGui.GetContentRegionAvail().X, buttonHeight);
+                    var iconPos = ImGui.GetCursorPos();
+                    var screenPos = ImGui.GetCursorScreenPos();
+
+                    iconPos.X += 5f * ImGuiHelpers.GlobalScale;
+                    iconPos.Y += textYOffset;
+                    var textPos = iconPos;
+
+                    using (ImRaii.PushColor(ImGuiCol.Button, uiTheme.ButtonColor))
+                    using (ImRaii.PushColor(ImGuiCol.ButtonActive, uiTheme.ButtonActive))
+                    using (ImRaii.PushColor(ImGuiCol.ButtonHovered, uiTheme.ButtonHovered))
+                        ImGui.Button("###mock_colors_button", buttonSize);
+
+                    var nextPos = ImGui.GetCursorPos();
+
+                    ImGui.PushClipRect(screenPos, screenPos + buttonSize, true);
+                    try
+                    {
+                        if (iconDraw is Action iconDrawAction)
+                        {
+                            textPos.X += 50f * ImGuiHelpers.GlobalScale;
+                            ImGui.SetCursorPos(iconPos);
+                            iconDrawAction();
+                        }
+
+                        ImGui.SetCursorPos(textPos);
+
+                        ImGui.Text(label);
+
+                        ImGui.SetCursorPos(nextPos);
+                    }
+                    finally
+                    {
+                        ImGui.PopClipRect();
+                    }
                 }
-                using (ImRaii.PushColor(ImGuiCol.Text, color))
-                    ImGui.Text(label);
             }
 
 

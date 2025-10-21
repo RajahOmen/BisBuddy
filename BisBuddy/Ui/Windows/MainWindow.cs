@@ -30,7 +30,7 @@ public class MainWindow : Window, IDisposable
         MinimumSize = new Vector2(405, 100),
         MaximumSize = new Vector2(float.MaxValue, float.MaxValue)
     };
-    private static readonly Vector2 DefaultSize = new(630, 500);
+    private static readonly Vector2 DefaultSize = new(630, 510);
 
     private readonly IIndex<MainWindowTab, TabRenderer<MainWindowTab>> tabRendererIndex;
     //private readonly List<(MainWindowTab Type, TabRenderer Renderer)> renderersToDraw;
@@ -57,7 +57,7 @@ public class MainWindow : Window, IDisposable
         this.attributeService = attributeService;
         SizeConstraints = MainSizeConstraints;
         Size = DefaultSize;
-        SizeCondition = ImGuiCond.Appearing;
+        SizeCondition = ImGuiCond.Once;
         tabTypes = Enum.GetValues<MainWindowTab>().OrderBy(t => (int)t).ToList();
     }
 

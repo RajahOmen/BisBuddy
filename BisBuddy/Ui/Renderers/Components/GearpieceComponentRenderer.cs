@@ -29,7 +29,8 @@ namespace BisBuddy.Ui.Renderers.Components
         UiComponents uiComponents
         ) : ComponentRendererBase<Gearpiece>
     {
-        private static readonly Vector4 ExpandedBackgroundColor = new(0.13f, 0.13f, 0.13f, 1.0f);
+        private static readonly Vector4 ExpandedBackgroundColorMult = new(0.6f, 0.6f, 0.6f, 1.0f);
+        private Vector4 ExpandedBackgroundColor => uiTheme.ButtonColor * ExpandedBackgroundColorMult;
         private static float CornerRound => 5.0f;
 
         private readonly ITypedLogger<GearpieceComponentRenderer> logger = logger;
@@ -411,11 +412,11 @@ namespace BisBuddy.Ui.Renderers.Components
                 using (ImRaii.PushStyle(ImGuiStyleVar.ButtonTextAlign, new Vector2(0, 0.5f)))
                 using (ImRaii.PushStyle(ImGuiStyleVar.FrameRounding, CornerRound))
                 using (ImRaii.PushStyle(ImGuiStyleVar.TabRounding, CornerRound))
+                using (ImRaii.PushColor(ImGuiCol.ButtonHovered, uiTheme.ButtonHovered))
+                using (ImRaii.PushColor(ImGuiCol.ButtonActive, uiTheme.ButtonActive))
                 {
                     using (ImRaii.PushColor(ImGuiCol.Text, prereqButtonTextColor))
                     using (ImRaii.PushColor(ImGuiCol.Button, uiTheme.ButtonColor))
-                    using (ImRaii.PushColor(ImGuiCol.ButtonHovered, uiTheme.ButtonHovered))
-                    using (ImRaii.PushColor(ImGuiCol.ButtonActive, uiTheme.ButtonActive))
                         if (ImGuiComponents.IconButtonWithText(icon, Resource.PrerequisiteGearpieceHeader, buttonSize))
                             prereqExpanded = !prereqExpanded;
                     if (prereqExpanded)
@@ -457,11 +458,7 @@ namespace BisBuddy.Ui.Renderers.Components
                     drawList.AddRectFilled(topLeft, botRight, ImGui.GetColorU32(ExpandedBackgroundColor), CornerRound);
                     splitter.SetCurrentChannel(drawList, 2);
                     ImGui.SetCursorPosY(pos.Y + ImGui.GetStyle().ItemSpacing.Y);
-                    //ImGui.Spacing();
                 }
-
-                //ImGui.Spacing();
-
             }
         }
     }

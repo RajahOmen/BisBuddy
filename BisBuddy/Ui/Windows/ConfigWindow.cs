@@ -28,7 +28,8 @@ public class ConfigWindow : Window, IDisposable
         Flags = ImGuiWindowFlags.NoScrollbar
                 | ImGuiWindowFlags.NoScrollWithMouse;
 
-        SizeCondition = ImGuiCond.Once;
+        Size = new Vector2(526, 482);
+        SizeCondition = ImGuiCond.Appearing;
         SizeConstraints = configTabRenderer.TabSizeConstraints;
 
         this.configTabRenderer = configTabRenderer;

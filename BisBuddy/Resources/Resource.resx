@@ -679,10 +679,10 @@ or to have a unique color to highlight items in</value>
     <value>Debug</value>
   </data>
   <data name="UiThemeConfigColorsSectionHeader" xml:space="preserve">
-    <value>Colors</value>
+    <value>Gearset Colors</value>
   </data>
   <data name="UiThemeConfigStylesSectionHeader" xml:space="preserve">
-    <value>Styles</value>
+    <value>Gearset Styles</value>
   </data>
   <data name="ShowGearsetColorAccentFlagLabel" xml:space="preserve">
     <value>Display Gearset Color Accent</value>
@@ -692,5 +692,20 @@ or to have a unique color to highlight items in</value>
   </data>
   <data name="UiThemeConfigResetsSectionHeader" xml:space="preserve">
     <value>Defaults</value>
+  </data>
+  <data name="UiThemeColorMateriaSlotNormalLabel" xml:space="preserve">
+    <value>Materia Slot (Normal)</value>
+  </data>
+  <data name="UiThemeColorMateriaSlotAdvancedLabel" xml:space="preserve">
+    <value>Materia Slot (Advanced)</value>
+  </data>
+  <data name="UiThemeColorGearpieceButton" xml:space="preserve">
+    <value>Gearpiece Buttons</value>
+  </data>
+  <data name="UiThemeColorGearpieceButtonHovered" xml:space="preserve">
+    <value>Gearpiece Buttons (Hovered)</value>
+  </data>
+  <data name="UiThemeColorGearpieceButtonActive" xml:space="preserve">
+    <value>Gearpiece Buttons (Clicked)</value>
   </data>
 </root>

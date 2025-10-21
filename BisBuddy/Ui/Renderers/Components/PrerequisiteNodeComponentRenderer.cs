@@ -228,9 +228,10 @@ public class PrerequisiteNodeComponentRenderer(
     {
         var collectionStatusTheme = uiTheme.GetCollectionStatusTheme(node.CollectionStatus);
 
-        using (ImRaii.PushColor(ImGuiCol.Button, collectionStatusTheme.TextColor * new Vector4(1, 1, 1, 0.15f)))
-        using (ImRaii.PushColor(ImGuiCol.ButtonHovered, new Vector4(0.3f, 0.3f, 0.3f, 1)))
-        using (ImRaii.PushColor(ImGuiCol.ButtonActive, new Vector4(0.4f, 0.4f, 0.4f, 1)))
+        var x = 0.35f;
+        using (ImRaii.PushColor(ImGuiCol.Button, collectionStatusTheme.TextColor * new Vector4(x, x, x, 0.65f)))
+        //using (ImRaii.PushColor(ImGuiCol.ButtonHovered, new Vector4(0.3f, 0.3f, 0.3f, 1)))
+        //using (ImRaii.PushColor(ImGuiCol.ButtonActive, new Vector4(0.4f, 0.4f, 0.4f, 1)))
         using (ImRaii.PushStyle(ImGuiStyleVar.ButtonTextAlign, new Vector2(0, 0.5f)))
         using (ImRaii.PushStyle(ImGuiStyleVar.FramePadding, Vector2.One * 5))
         using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(0.0f, ImGui.GetStyle().ItemSpacing.Y)))
@@ -251,12 +252,9 @@ public class PrerequisiteNodeComponentRenderer(
             var mainButtonHoveredActive = ImGui.IsItemHovered();
 
             using (ImRaii.Enabled())
-            {
                 rendererFactory
                     .GetRenderer(node, RendererType.ContextMenu)
                     .Draw();
-            }
-
 
             var nextPos = ImGui.GetCursorPos();
 

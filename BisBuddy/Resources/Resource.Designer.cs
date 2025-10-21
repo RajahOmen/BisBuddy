@@ -1498,7 +1498,52 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Colors.
+        ///   Looks up a localized string similar to Gearpiece Buttons.
+        /// </summary>
+        public static string UiThemeColorGearpieceButton {
+            get {
+                return ResourceManager.GetString("UiThemeColorGearpieceButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Gearpiece Buttons (Clicked).
+        /// </summary>
+        public static string UiThemeColorGearpieceButtonActive {
+            get {
+                return ResourceManager.GetString("UiThemeColorGearpieceButtonActive", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Gearpiece Buttons (Hovered).
+        /// </summary>
+        public static string UiThemeColorGearpieceButtonHovered {
+            get {
+                return ResourceManager.GetString("UiThemeColorGearpieceButtonHovered", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Materia Slot (Advanced).
+        /// </summary>
+        public static string UiThemeColorMateriaSlotAdvancedLabel {
+            get {
+                return ResourceManager.GetString("UiThemeColorMateriaSlotAdvancedLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Materia Slot (Normal).
+        /// </summary>
+        public static string UiThemeColorMateriaSlotNormalLabel {
+            get {
+                return ResourceManager.GetString("UiThemeColorMateriaSlotNormalLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Gearset Colors.
         /// </summary>
         public static string UiThemeConfigColorsSectionHeader {
             get {
@@ -1516,7 +1561,7 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Styles.
+        ///   Looks up a localized string similar to Gearset Styles.
         /// </summary>
         public static string UiThemeConfigStylesSectionHeader {
             get {

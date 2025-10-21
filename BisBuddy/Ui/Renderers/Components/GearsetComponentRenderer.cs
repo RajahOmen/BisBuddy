@@ -46,6 +46,8 @@ namespace BisBuddy.Ui.Renderers.Components
             }
 
             var oldWindowPadding = ImGui.GetStyle().WindowPadding;
+            var windowYPadding = oldWindowPadding.Y;
+            oldWindowPadding.Y = 0;
             var oldSpacing = ImGui.GetStyle().ItemSpacing;
             var noScroll = ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse;
 
@@ -67,6 +69,7 @@ namespace BisBuddy.Ui.Renderers.Components
                 ImGui.Separator();
                 ImGui.SetCursorPosY(ImGui.GetCursorPosY() - oldSpacing.Y);
                 UiComponents.PushTableClipRect();
+                ImGui.SetCursorPosY(ImGui.GetCursorPosY() + windowYPadding);
                 try
                 {
                     using (ImRaii.Child("gearset_view_panel_tabs", new Vector2(0, 0), border: false, ImGuiWindowFlags.AlwaysUseWindowPadding))
@@ -79,7 +82,9 @@ namespace BisBuddy.Ui.Renderers.Components
                         {
                             ImGui.Spacing();
                             if (gearpieceTab)
+                            {
                                 DrawGearpiecesTab(gearset);
+                            }
                         }
 
                         using (var propertiesTab = ImRaii.TabItem(Resource.GearsetPropertiesTabName))
