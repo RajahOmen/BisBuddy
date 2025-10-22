@@ -603,7 +603,7 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Text.
+        ///   Looks up a localized string similar to Teamcraft.
         /// </summary>
         public static string GearsetStringButton {
             get {

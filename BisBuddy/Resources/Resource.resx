@@ -373,7 +373,7 @@ ex:
     <value>Import a new gearset</value>
   </data>
   <data name="GearsetStringButton" xml:space="preserve">
-    <value>Text</value>
+    <value>Teamcraft</value>
   </data>
   <data name="GearsetStringTooltip" xml:space="preserve">
     <value>Copy {0} text to clipboard</value>

@@ -67,7 +67,7 @@ namespace BisBuddy.Ui.Renderers.Components
                 selected: selected,
                 flags: selectableFlags,
                 size: buttonSize,
-                labelPosOffset: new(5, 0),
+                labelPosOffsetScaled: new(5, 0),
                 centerX: false
                 ))
             {

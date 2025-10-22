@@ -305,34 +305,39 @@ namespace BisBuddy.Ui.Renderers.Components
                 ImGui.TableNextRow();
                 ImGui.TableNextColumn();
 
-                if (gearset.SourceUrl is not null)
+                if (gearset.SourceType is not null)
                 {
                     var sourceUrlTypeName = attributeService
-                        .GetEnumAttribute<DisplayAttribute>(gearset.SourceType ?? Import.ImportGearsetSourceType.Xivgear)!
+                        .GetEnumAttribute<DisplayAttribute>(gearset.SourceType)!
                         .GetName()!;
 
-                    ImGui.Selectable(Resource.GearsetPropertiesSourceTypeRowLabel, size: size);
-                    ImGui.TableNextColumn();
-                    if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.Copy, $"{sourceUrlTypeName}##copy_gearset_url"))
-                        ImGui.SetClipboardText(gearset.SourceUrl);
-                    if (ImGui.IsItemHovered())
-                        UiComponents.SetSolidTooltip(string.Format(Resource.GearsetUrlTooltip, gearset.SourceType));
-                    ImGui.TableNextRow();
-                }
-                // don't support simultaneous source urls and strings for now
-                else if (gearset.SourceString is not null)
-                {
-                    ImGui.Selectable(Resource.GearsetPropertiesSourceTypeRowLabel, size: size);
-                    ImGui.TableNextColumn();
+                    if (gearset.SourceUrl is not null)
+                    {
 
-                    if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.Copy, $"{Resource.GearsetStringButton}##copy_gearset_string"))
-                        ImGui.SetClipboardText(gearset.SourceString);
-                    if (ImGui.IsItemHovered())
-                        UiComponents.SetSolidTooltip(string.Format(Resource.GearsetStringTooltip, gearset.SourceType));
-                    ImGui.TableNextRow();
+                        ImGui.Selectable(Resource.GearsetPropertiesSourceTypeRowLabel, size: size);
+                        ImGui.TableNextColumn();
+                        if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.Copy, $"{sourceUrlTypeName}##copy_gearset_url"))
+                            ImGui.SetClipboardText(gearset.SourceUrl);
+                        if (ImGui.IsItemHovered())
+                            UiComponents.SetSolidTooltip(string.Format(Resource.GearsetUrlTooltip, gearset.SourceType));
+                        ImGui.TableNextRow();
+                    }
+                    // don't support simultaneous source urls and strings for now
+                    else if (gearset.SourceString is not null)
+                    {
+                        ImGui.Selectable(Resource.GearsetPropertiesSourceTypeRowLabel, size: size);
+                        ImGui.TableNextColumn();
+
+                        if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.Copy, $"{sourceUrlTypeName}##copy_gearset_string"))
+                            ImGui.SetClipboardText(gearset.SourceString);
+                        if (ImGui.IsItemHovered())
+                            UiComponents.SetSolidTooltip(string.Format(Resource.GearsetStringTooltip, sourceUrlTypeName));
+                        ImGui.TableNextRow();
+                    }
+
+                    ImGui.TableNextColumn();
                 }
 
-                ImGui.TableNextColumn();
                 ImGui.Selectable(Resource.GearsetPropertiesImportDateRowLabel, size: size);
                 ImGui.TableNextColumn();
                 ImGui.Selectable(gearset.ImportDate.ToLocalTime().ToString("g"), size: size);
@@ -345,7 +350,6 @@ namespace BisBuddy.Ui.Renderers.Components
                     ImGui.SetClipboardText(JsonSerializer.Serialize(gearset, jsonSerializerOptions));
                 if (ImGui.IsItemHovered())
                     UiComponents.SetSolidTooltip(Resource.GearsetJsonTooltip);
-
             }
         }
 
