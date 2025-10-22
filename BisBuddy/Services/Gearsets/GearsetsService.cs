@@ -161,7 +161,7 @@ namespace BisBuddy.Services.Gearsets
         private void scheduleSaveCurrentGearsets()
         {
             logger.Verbose($"Enqueuing save of current gearsets for \"{currentLocalContentId}\"");
-            queueService.Enqueue(saveCurrentGearsets);
+            queueService.Enqueue(saveCurrentGearsets, $"GEARSETS_SAVE_{currentLocalContentId}");
         }
 
         private void saveCurrentGearsets()

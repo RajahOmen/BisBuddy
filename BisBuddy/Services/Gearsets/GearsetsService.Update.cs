@@ -264,7 +264,7 @@ namespace BisBuddy.Services.Gearsets
                     inventoryUpdateDisplayService.UpdateIsQueued = false;
                     gearsetsChangeLocked = false;
                 }
-            });
+            }, "ASSIGNMENTS_UPDATE");
             if (!queuedUpdate)
             {
                 logger.Warning($"QueueService not open when requesting inventory update");

@@ -11,7 +11,7 @@ namespace BisBuddy.Services
         private readonly ITypedLogger<QueueService> logger = logger;
 
         private readonly CancellationTokenSource tokenSource = new();
-        private readonly ConcurrentQueue<Action> taskQueue = new();
+        private readonly ConcurrentQueue<(Action task, string taskName)> taskQueue = new();
         private readonly SemaphoreSlim signal = new(0);
         private volatile bool queueOpen = true;
         private Task? workerLoop;
@@ -25,23 +25,24 @@ namespace BisBuddy.Services
                 if (!queueOpen && taskQueue.IsEmpty)
                     break;
 
-                if (taskQueue.TryDequeue(out var task))
+                if (taskQueue.TryDequeue(out var entry))
                 {
-                    logger.Verbose($"Executing queue task {task}");
+                    var (task, taskName) = entry;
+                    logger.Verbose($"Executing queue task {taskName}");
                     task(); // Execute the task
-                    logger.Verbose($"Queue task complete");
+                    logger.Verbose($"Task {taskName} complete");
                 }
             }
         }
 
-        public bool Enqueue(Action task)
+        public bool Enqueue(Action task, string taskName)
         {
             if (!queueOpen)
                 return false;
 
-            logger.Verbose($"Enqueuing queue task");
+            logger.Verbose($"Enqueuing queue task {taskName}");
 
-            taskQueue.Enqueue(task);
+            taskQueue.Enqueue((task, taskName));
             signal.Release();
 
             return true;
@@ -72,6 +73,6 @@ namespace BisBuddy.Services
 
     public interface IQueueService : IHostedService
     {
-        public bool Enqueue(Action task);
+        public bool Enqueue(Action task, string taskName);
     }
 }
