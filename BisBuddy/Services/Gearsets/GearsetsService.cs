@@ -6,7 +6,6 @@ using BisBuddy.Mediators;
 using BisBuddy.Services.Configuration;
 using BisBuddy.Services.ImportGearset;
 using Dalamud.Plugin.Services;
-using Dalamud.Utility;
 using Microsoft.Extensions.Hosting;
 using System.Collections.Generic;
 using System.IO;

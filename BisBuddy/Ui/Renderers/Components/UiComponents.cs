@@ -1,15 +1,15 @@
+using BisBuddy.Gear;
+using BisBuddy.Resources;
 using BisBuddy.Services;
+using BisBuddy.Services.Configuration;
 using BisBuddy.Util;
+using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
-using Dalamud.Bindings.ImGui;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Numerics;
-using BisBuddy.Resources;
-using BisBuddy.Gear;
-using BisBuddy.Services.Configuration;
 
 namespace BisBuddy.Ui.Renderers.Components
 {

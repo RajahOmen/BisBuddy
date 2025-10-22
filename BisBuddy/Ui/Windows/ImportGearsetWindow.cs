@@ -1,15 +1,14 @@
-using BisBuddy.Extensions;
 using BisBuddy.Import;
 using BisBuddy.Resources;
 using BisBuddy.Services;
 using BisBuddy.Services.Gearsets;
 using BisBuddy.Services.ImportGearset;
+using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;
 using Dalamud.Utility;
-using Dalamud.Bindings.ImGui;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;

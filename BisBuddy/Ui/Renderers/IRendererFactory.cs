@@ -1,10 +1,3 @@
-using BisBuddy.Ui.Renderers.Components;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace BisBuddy.Ui.Renderers
 {
     public interface IRendererFactory

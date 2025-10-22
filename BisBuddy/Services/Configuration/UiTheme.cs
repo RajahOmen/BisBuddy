@@ -1,6 +1,5 @@
 using BisBuddy.Gear;
 using BisBuddy.Ui;
-using Dalamud.Interface;
 using System;
 using System.Numerics;
 

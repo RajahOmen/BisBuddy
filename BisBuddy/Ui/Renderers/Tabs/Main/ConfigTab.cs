@@ -1,24 +1,19 @@
-using Autofac.Util;
-using BisBuddy.Extensions;
+using Autofac.Features.Indexed;
 using BisBuddy.Resources;
 using BisBuddy.Services;
-using BisBuddy.Services.Configuration;
-using BisBuddy.Util;
+using BisBuddy.Ui.Renderers.Components;
+using BisBuddy.Ui.Renderers.Tabs.Config;
+using BisBuddy.Ui.Windows;
+using Dalamud.Bindings.ImGui;
+using Dalamud.Interface;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
-using Dalamud.Interface.Windowing;
-using Dalamud.Bindings.ImGui;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Numerics;
 using static Dalamud.Interface.Windowing.Window;
-using BisBuddy.Ui.Renderers.Components;
-using System.Collections.Generic;
-using BisBuddy.Ui.Renderers.Tabs.Config;
-using Autofac.Features.Indexed;
-using Dalamud.Interface;
-using BisBuddy.Ui.Windows;
 
 namespace BisBuddy.Ui.Renderers.Tabs.Main;
 

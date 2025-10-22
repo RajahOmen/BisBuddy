@@ -1,6 +1,5 @@
 using BisBuddy.Gear;
 using BisBuddy.Gear.Melds;
-using System.Collections.Generic;
 
 namespace BisBuddy.ItemAssignment
 {

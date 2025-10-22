@@ -1,6 +1,5 @@
 using BisBuddy.Gear.Prerequisites;
 using BisBuddy.Items;
-using BisBuddy.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;

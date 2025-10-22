@@ -1,9 +1,7 @@
 using BisBuddy.Factories;
-using BisBuddy.Gear;
 using BisBuddy.Gear.Melds;
 using BisBuddy.Resources;
 using BisBuddy.Services;
-using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using System.Collections.Generic;
 

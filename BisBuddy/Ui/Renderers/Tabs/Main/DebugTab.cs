@@ -1,10 +1,6 @@
 using BisBuddy.Services.Configuration;
 using Dalamud.Bindings.ImGui;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using static Dalamud.Interface.Windowing.Window;
 
 namespace BisBuddy.Ui.Renderers.Tabs.Main

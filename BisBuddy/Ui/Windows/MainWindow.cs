@@ -1,25 +1,17 @@
 using Autofac.Features.Indexed;
-using BisBuddy.Gear;
-using BisBuddy.Mediators;
-using BisBuddy.Resources;
 using BisBuddy.Services;
-using BisBuddy.Services.Configuration;
-using BisBuddy.Services.Gearsets;
+using BisBuddy.Ui.Renderers.Tabs;
+using BisBuddy.Ui.Renderers.Tabs.Main;
 using BisBuddy.Util;
+using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
-using Dalamud.Plugin.Services;
-using Dalamud.Utility;
-using FFXIVClientStructs.FFXIV.Client.UI.Misc;
-using Dalamud.Bindings.ImGui;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
-using BisBuddy.Ui.Renderers.Tabs;
-using BisBuddy.Ui.Renderers.Tabs.Main;
 
 namespace BisBuddy.Ui.Windows;
 

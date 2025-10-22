@@ -2,9 +2,8 @@ using BisBuddy.Gear.Melds;
 using BisBuddy.Resources;
 using BisBuddy.Services;
 using BisBuddy.Services.Configuration;
-using Dalamud.Interface.Utility.Raii;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Utility;
+using Dalamud.Interface.Utility.Raii;
 using System.Numerics;
 
 namespace BisBuddy.Ui.Renderers.Components

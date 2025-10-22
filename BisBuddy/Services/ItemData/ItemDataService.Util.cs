@@ -1,13 +1,11 @@
 using BisBuddy.Gear;
 using BisBuddy.Gear.Melds;
 using BisBuddy.Gear.Prerequisites;
-using BisBuddy.Mappers;
 using BisBuddy.Resources;
 using BisBuddy.Util;
 using Dalamud.Game;
 using Dalamud.Game.Inventory;
 using Dalamud.Utility;
-using Lumina.Data;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
 using Lumina.Text.ReadOnly;
@@ -16,8 +14,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using System.Xml.Linq;
-using GearMateria = BisBuddy.Gear.Melds.Materia;
 using SheetMateria = Lumina.Excel.Sheets.Materia;
 
 namespace BisBuddy.Items

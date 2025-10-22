@@ -6,15 +6,8 @@ using BisBuddy.Services.Configuration;
 using BisBuddy.Services.Gearsets;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Colors;
-using Dalamud.Interface.Utility.Raii;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace BisBuddy.Ui.Renderers.ContextMenus
 {

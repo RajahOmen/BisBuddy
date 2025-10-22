@@ -1,8 +1,6 @@
 using BisBuddy.Resources;
 using BisBuddy.Services;
 using BisBuddy.Ui.Windows;
-using Dalamud.Utility;
-using System;
 using System.Collections.Generic;
 
 namespace BisBuddy.Commands

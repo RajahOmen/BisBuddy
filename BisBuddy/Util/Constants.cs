@@ -1,4 +1,3 @@
-using BisBuddy.Resources;
 using Dalamud.Game.Inventory;
 using System.Collections.Generic;
 using System.Numerics;

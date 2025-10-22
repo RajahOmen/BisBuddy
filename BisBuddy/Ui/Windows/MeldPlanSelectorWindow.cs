@@ -2,17 +2,16 @@ using BisBuddy.Mediators;
 using BisBuddy.Resources;
 using BisBuddy.Services;
 using BisBuddy.Services.Configuration;
-using BisBuddy.Services.Gearsets;
 using BisBuddy.Ui.Renderers;
+using Dalamud.Bindings.ImGui;
+using Dalamud.Game.NativeWrapper;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;
-using Dalamud.Bindings.ImGui;
 using System;
 using System.Numerics;
-using Dalamud.Game.NativeWrapper;
 
 namespace BisBuddy.Ui.Windows;
 

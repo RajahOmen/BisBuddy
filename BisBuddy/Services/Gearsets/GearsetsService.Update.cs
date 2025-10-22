@@ -1,14 +1,14 @@
+using BisBuddy.Extensions;
 using BisBuddy.Gear;
 using BisBuddy.Import;
 using BisBuddy.Util;
 using Dalamud.Game.Inventory;
 using Dalamud.Plugin.Services;
-using BisBuddy.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace BisBuddy.Services.Gearsets
 {

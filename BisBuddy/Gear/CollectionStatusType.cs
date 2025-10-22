@@ -1,5 +1,4 @@
 using BisBuddy.Resources;
-using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace BisBuddy.Gear

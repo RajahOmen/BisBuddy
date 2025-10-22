@@ -1,6 +1,4 @@
-using Autofac;
 using Autofac.Features.Indexed;
-using Autofac.Features.OwnedInstances;
 using BisBuddy.Ui.Renderers.Tabs;
 using BisBuddy.Ui.Renderers.Tabs.Main;
 using BisBuddy.Ui.Windows;

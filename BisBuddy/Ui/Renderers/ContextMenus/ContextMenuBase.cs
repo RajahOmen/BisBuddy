@@ -1,6 +1,5 @@
 using BisBuddy.Factories;
 using BisBuddy.Services;
-using BisBuddy.Ui.Renderers;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility.Raii;
 using System;

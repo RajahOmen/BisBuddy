@@ -1,21 +1,20 @@
 using BisBuddy.Gear;
-using Dalamud.Interface.Utility.Raii;
-using Dalamud.Interface;
-using Dalamud.Bindings.ImGui;
-using System.Linq;
-using System.Numerics;
+using BisBuddy.Gear.Melds;
+using BisBuddy.Gear.Prerequisites;
+using BisBuddy.Items;
+using BisBuddy.Resources;
 using BisBuddy.Services;
 using BisBuddy.Services.Configuration;
-using BisBuddy.Gear.Prerequisites;
-using Dalamud.Plugin.Services;
-using Dalamud.Interface.Utility;
-using System.ComponentModel.DataAnnotations;
-using BisBuddy.Items;
-using BisBuddy.Gear.Melds;
-using BisBuddy.Resources;
+using Dalamud.Bindings.ImGui;
+using Dalamud.Interface;
 using Dalamud.Interface.Components;
-using Dalamud.Interface.Style;
+using Dalamud.Interface.Utility;
+using Dalamud.Interface.Utility.Raii;
+using Dalamud.Plugin.Services;
 using System;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Numerics;
 
 namespace BisBuddy.Ui.Renderers.Components
 {

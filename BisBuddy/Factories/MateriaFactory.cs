@@ -1,12 +1,6 @@
 using BisBuddy.Gear.Melds;
 using BisBuddy.Items;
-using BisBuddy.Mappers;
 using BisBuddy.Services;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BisBuddy.Factories
 {

@@ -1,5 +1,4 @@
 using BisBuddy.Gear;
-using Dalamud.Utility;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Linq.Expressions;

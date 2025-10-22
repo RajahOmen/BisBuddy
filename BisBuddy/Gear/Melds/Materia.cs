@@ -1,5 +1,4 @@
 using BisBuddy.Services;
-using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace BisBuddy.Gear.Melds

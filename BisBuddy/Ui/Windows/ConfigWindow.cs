@@ -1,14 +1,12 @@
+using Autofac.Features.AttributeFilters;
 using BisBuddy.Resources;
+using BisBuddy.Ui.Renderers.Tabs;
+using BisBuddy.Ui.Renderers.Tabs.Main;
 using BisBuddy.Util;
-using Dalamud.Interface.Windowing;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface.Windowing;
 using System;
 using System.Numerics;
-using BisBuddy.Ui.Renderers.Tabs.Main;
-using BisBuddy.Ui.Renderers.Tabs;
-using Autofac.Features.AttributeFilters;
-using Dalamud.Interface.Utility.Raii;
-using Autofac.Features.OwnedInstances;
 
 namespace BisBuddy.Ui.Windows;
 

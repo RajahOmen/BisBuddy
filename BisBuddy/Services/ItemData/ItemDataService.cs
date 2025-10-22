@@ -1,4 +1,3 @@
-using BisBuddy.Factories;
 using BisBuddy.Gear;
 using BisBuddy.Gear.Melds;
 using BisBuddy.Gear.Prerequisites;
@@ -14,7 +13,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using GearMateria = BisBuddy.Gear.Melds.Materia;
 using SheetMateria = Lumina.Excel.Sheets.Materia;
 
 namespace BisBuddy.Items
