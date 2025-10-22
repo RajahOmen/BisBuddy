@@ -180,9 +180,12 @@ namespace BisBuddy.Ui.Renderers.Tabs.Main
                 var itemSpacing = new Vector2(10, 0) * ImGuiHelpers.GlobalScale;
                 var padding = new Vector2(4f, 3f);
                 var iconXOffset = iconYOffset - padding.X / 2;
+                var gradientSize = new Vector2(panelSelectableSize.X * (2f / 3f), panelSelectableSize.Y);
+
+                var gradScrenPosX = ImGui.GetCursorScreenPos().X;
 
                 using (ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, padding))
-                using (ImRaii.Child("gearsets_selector_paneldd", new Vector2(0, availHeight - buttonSize.Y), border: false, ImGuiWindowFlags.AlwaysUseWindowPadding))
+                using (ImRaii.Child("gearsets_selector_panel", new Vector2(0, availHeight - buttonSize.Y), border: false, ImGuiWindowFlags.AlwaysUseWindowPadding))
                 using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, itemSpacing))
                 {
                     if (gearsetsService.CurrentGearsets.Count == 0)
@@ -200,6 +203,7 @@ namespace BisBuddy.Ui.Renderers.Tabs.Main
                         var cursorScreenPos = ImGui.GetCursorScreenPos();
 
                         var gearsetSelected = gearset == activeGearset;
+                        var mainSelectableHovered = false;
 
                         using (ImRaii.PushStyle(ImGuiStyleVar.Alpha, 0.6f, !gearset.IsActive))
                         {
@@ -228,10 +232,24 @@ namespace BisBuddy.Ui.Renderers.Tabs.Main
                                 activeGearset = activeGearset != gearset
                                     ? gearset
                                     : null;
+                            mainSelectableHovered = ImGui.IsItemHovered();
                             // right click context menu
                             rendererFactory
                                 .GetRenderer(gearset, RendererType.ContextMenu)
                                 .Draw();
+
+                            if (uiTheme.ShowGearsetColorAccentFlag && gearset.IsActive)
+                            {
+                                var gradientPosTopLeft = new Vector2(gradScrenPosX, cursorScreenPos.Y);
+                                var gradientPosBotRight = gradientPosTopLeft + gradientSize;
+                                var drawList = ImGui.GetWindowDrawList();
+                                var highlightColor = gearset.HighlightColor ?? configurationService.DefaultHighlightColor;
+                                var col = ImGui.GetColorU32(highlightColor.BaseColor);
+                                var colNone = ImGui.GetColorU32(Vector4.Zero);
+                                drawList.AddRectFilledMultiColor(
+                                    gradientPosTopLeft, gradientPosBotRight, col, 0, 0, col
+                                    );
+                            }
 
                             var textPosOffset = new Vector2(
                                 x: iconSize.X + iconXOffset + 5f * ImGuiHelpers.GlobalScale,
@@ -259,7 +277,7 @@ namespace BisBuddy.Ui.Renderers.Tabs.Main
                         using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(0, panelSelectableSize.Y - iconSize.Y)))
                             if (textureProvider.GetFromGameIcon(classJobInfo.IconIdFramed).TryGetWrap(out var texture, out var exception))
                             {
-                                using (ImRaii.PushStyle(ImGuiStyleVar.Alpha, 0.8f, gearsetSelected))
+                                using (ImRaii.PushStyle(ImGuiStyleVar.Alpha, 0.8f, gearsetSelected || mainSelectableHovered))
                                 using (ImRaii.PushStyle(ImGuiStyleVar.Alpha, 0.6f, !gearset.IsActive))
                                     ImGui.Image(texture.Handle, iconSize);
                                 if (ImGui.IsItemHovered())

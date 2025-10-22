@@ -376,6 +376,15 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Disabled.
+        /// </summary>
+        public static string DisabledGearsetVerb {
+            get {
+                return ResourceManager.GetString("DisabledGearsetVerb", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} disabled, configure in toggles.
         /// </summary>
         public static string DisabledPrerequisiteTooltip {
@@ -390,6 +399,15 @@ namespace BisBuddy.Resources {
         public static string EnabledGearsetTooltip {
             get {
                 return ResourceManager.GetString("EnabledGearsetTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enabled.
+        /// </summary>
+        public static string EnabledGearsetVerb {
+            get {
+                return ResourceManager.GetString("EnabledGearsetVerb", resourceCulture);
             }
         }
         
@@ -413,7 +431,7 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Use Default Color.
+        ///   Looks up a localized string similar to Use Default.
         /// </summary>
         public static string GearsetDefaultColorCheckbox {
             get {
@@ -450,7 +468,7 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Gearset Highlight Color.
+        ///   Looks up a localized string similar to Choose Color.
         /// </summary>
         public static string GearsetHighlightColorLabel {
             get {
@@ -477,6 +495,51 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Highlight Color.
+        /// </summary>
+        public static string GearsetPropertiesColorRowLabel {
+            get {
+                return ResourceManager.GetString("GearsetPropertiesColorRowLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Data Export.
+        /// </summary>
+        public static string GearsetPropertiesDataRowLabel {
+            get {
+                return ResourceManager.GetString("GearsetPropertiesDataRowLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Import Date.
+        /// </summary>
+        public static string GearsetPropertiesImportDateRowLabel {
+            get {
+                return ResourceManager.GetString("GearsetPropertiesImportDateRowLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Import Source.
+        /// </summary>
+        public static string GearsetPropertiesSourceTypeRowLabel {
+            get {
+                return ResourceManager.GetString("GearsetPropertiesSourceTypeRowLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Gearset Status.
+        /// </summary>
+        public static string GearsetPropertiesStatusRowLabel {
+            get {
+                return ResourceManager.GetString("GearsetPropertiesStatusRowLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Properties.
         /// </summary>
         public static string GearsetPropertiesTabName {
@@ -495,7 +558,7 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Added.
+        ///   Looks up a localized string similar to Date.
         /// </summary>
         public static string GearsetSortImportDate {
             get {
@@ -1447,7 +1510,7 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Whether to display a gradient of the gearset highlight color on the gearset&apos;s header.
+        ///   Looks up a localized string similar to Whether to display a gradient of the gearset highlight color on the gearset tab and header.
         /// </summary>
         public static string ShowGearsetColorAccentFlagTooltip {
             get {

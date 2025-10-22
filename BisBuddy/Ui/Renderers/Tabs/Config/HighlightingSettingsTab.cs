@@ -1,5 +1,6 @@
 using BisBuddy.Resources;
 using BisBuddy.Services.Configuration;
+using BisBuddy.Ui.Renderers.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility.Raii;
 using System;
@@ -82,12 +83,7 @@ namespace BisBuddy.Ui.Renderers.Tabs.Config
 
             using (ImRaii.Disabled(!highlightInventories))
             {
-                var drawList = ImGui.GetWindowDrawList();
-                var curLoc = ImGui.GetCursorScreenPos();
-                var col = ImGui.GetColorU32(Vector4.One);
-                var halfButtonHeight = ImGui.GetTextLineHeight() / 2 + ImGui.GetStyle().FramePadding.Y;
-                drawList.AddLine(curLoc + new Vector2(10, 0), curLoc + new Vector2(10, halfButtonHeight), col, 2);
-                drawList.AddLine(curLoc + new Vector2(10, halfButtonHeight), curLoc + new Vector2(20, halfButtonHeight), col, 2);
+                UiComponents.DrawChildLConnector();
                 using (ImRaii.PushIndent(25.0f, scaled: false))
                 {
                     var highlightCollectedInInventory = configurationService.HighlightCollectedInInventory;

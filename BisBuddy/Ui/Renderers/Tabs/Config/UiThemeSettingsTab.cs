@@ -150,7 +150,7 @@ namespace BisBuddy.Ui.Renderers.Tabs.Config
 
             using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(3.0f, 4.0f)))
             {
-                if (ImGui.ColorButton(label, color, size: new(buttonHeight)))
+                if (ImGui.ColorButton(label, color, size: new(buttonHeight), flags: ImGuiColorEditFlags.NoDragDrop))
                     ImGui.OpenPopup("###color_button_popup");
 
                 using (ImRaii.PushColor(ImGuiCol.Text, color, setTextColor))
@@ -200,7 +200,15 @@ namespace BisBuddy.Ui.Renderers.Tabs.Config
             {
                 if (popup)
                 {
-                    if (ImGui.ColorPicker4("##picker", ref color))
+                    if (ImGui.ColorPicker4(
+                        "##picker",
+                        ref color,
+                        ImGuiColorEditFlags.NoPicker
+                        | ImGuiColorEditFlags.AlphaBar
+                        | ImGuiColorEditFlags.NoSidePreview
+                        | ImGuiColorEditFlags.DisplayRgb
+                        | ImGuiColorEditFlags.NoBorder
+                        ))
                     {
                         newColor = color;
                         return true;

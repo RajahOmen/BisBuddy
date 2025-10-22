@@ -26,9 +26,6 @@ namespace BisBuddy.Ui.Renderers.ContextMenus
         JsonSerializerOptions jsonSerializerOptions
         ) : ContextMenuBase<Gearset, GearsetContextMenu>(logger, factory)
     {
-        private static readonly Vector4 HoveredAlpha = new(1, 1, 1, 0.8f);
-        private static readonly Vector4 SelectedAlpha = new(1, 1, 1, 0.4f);
-
         private readonly IGearsetsService gearsetsService = gearsetsService;
         private readonly IConfigurationService configurationService = configurationService;
         private readonly JsonSerializerOptions jsonSerializerOptions = jsonSerializerOptions;

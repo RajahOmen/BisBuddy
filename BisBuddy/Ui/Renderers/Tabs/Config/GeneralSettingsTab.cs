@@ -26,7 +26,11 @@ namespace BisBuddy.Ui.Renderers.Tabs.Config
                 {
                     // COLOR PICKER
                     var existingColor = configurationService.DefaultHighlightColor.BaseColor;
-                    if (ImGui.ColorButton($"{Resource.HighlightColorButtonTooltip}###ColorPickerButton", existingColor))
+                    if (ImGui.ColorButton(
+                        $"{Resource.HighlightColorButtonTooltip}###ColorPickerButton",
+                        existingColor,
+                        ImGuiColorEditFlags.NoDragDrop
+                        ))
                     {
                         ImGui.OpenPopup($"###ColorPickerPopup");
                     }
@@ -42,7 +46,7 @@ namespace BisBuddy.Ui.Renderers.Tabs.Config
                                 | ImGuiColorEditFlags.AlphaBar
                                 | ImGuiColorEditFlags.NoSidePreview
                                 | ImGuiColorEditFlags.DisplayRgb
-                            | ImGuiColorEditFlags.NoBorder
+                                | ImGuiColorEditFlags.NoBorder
                                 ))
                             {
                                 if (existingColor != configurationService.DefaultHighlightColor.BaseColor)

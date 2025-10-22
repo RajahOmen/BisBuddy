@@ -431,13 +431,13 @@ When OFF: If a gearpiece isn't collected, its materia will not be highlighted an
     <value>Locks list item highlight opacity to max to increase contrast. Disabling may fix issues with some custom UIs</value>
   </data>
   <data name="GearsetHighlightColorLabel" xml:space="preserve">
-    <value>Gearset Highlight Color</value>
+    <value>Choose Color</value>
   </data>
   <data name="GearsetHighlightColorButtonTooltip" xml:space="preserve">
     <value>Color needed items for this gearset are highlighted in</value>
   </data>
   <data name="GearsetDefaultColorCheckbox" xml:space="preserve">
-    <value>Use Default Color</value>
+    <value>Use Default</value>
   </data>
   <data name="GearsetDefaultColorTooltip" xml:space="preserve">
     <value>Whether to use the default highlight color (as set in configuration),
@@ -484,7 +484,7 @@ or to have a unique color to highlight items in</value>
     <value>Job</value>
   </data>
   <data name="GearsetSortImportDate" xml:space="preserve">
-    <value>Added</value>
+    <value>Date</value>
   </data>
   <data name="GearsetSortPriority" xml:space="preserve">
     <value>Priority</value>
@@ -688,7 +688,7 @@ or to have a unique color to highlight items in</value>
     <value>Display Gearset Color Accent</value>
   </data>
   <data name="ShowGearsetColorAccentFlagTooltip" xml:space="preserve">
-    <value>Whether to display a gradient of the gearset highlight color on the gearset's header</value>
+    <value>Whether to display a gradient of the gearset highlight color on the gearset tab and header</value>
   </data>
   <data name="UiThemeConfigResetsSectionHeader" xml:space="preserve">
     <value>Defaults</value>
@@ -707,5 +707,26 @@ or to have a unique color to highlight items in</value>
   </data>
   <data name="UiThemeColorGearpieceButtonActive" xml:space="preserve">
     <value>Gearpiece Buttons (Clicked)</value>
+  </data>
+  <data name="EnabledGearsetVerb" xml:space="preserve">
+    <value>Enabled</value>
+  </data>
+  <data name="DisabledGearsetVerb" xml:space="preserve">
+    <value>Disabled</value>
+  </data>
+  <data name="GearsetPropertiesStatusRowLabel" xml:space="preserve">
+    <value>Gearset Status</value>
+  </data>
+  <data name="GearsetPropertiesColorRowLabel" xml:space="preserve">
+    <value>Highlight Color</value>
+  </data>
+  <data name="GearsetPropertiesSourceTypeRowLabel" xml:space="preserve">
+    <value>Import Source</value>
+  </data>
+  <data name="GearsetPropertiesImportDateRowLabel" xml:space="preserve">
+    <value>Import Date</value>
+  </data>
+  <data name="GearsetPropertiesDataRowLabel" xml:space="preserve">
+    <value>Data Export</value>
   </data>
 </root>

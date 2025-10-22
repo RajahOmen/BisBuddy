@@ -67,7 +67,7 @@ namespace BisBuddy.Ui.Renderers.Components
                 selected: selected,
                 flags: selectableFlags,
                 size: buttonSize,
-                labelPosOffset: new(3, 0),
+                labelPosOffset: new(5, 0),
                 centerX: false
                 ))
             {
@@ -255,6 +255,16 @@ namespace BisBuddy.Ui.Renderers.Components
             topLeft.Y += borderSize;
             bottomRight.Y -= borderSize;
             ImGui.PushClipRect(topLeft, bottomRight, true);
+        }
+
+        public static void DrawChildLConnector()
+        {
+            var drawList = ImGui.GetWindowDrawList();
+            var curLoc = ImGui.GetCursorScreenPos();
+            var col = ImGui.GetColorU32(Vector4.One);
+            var halfButtonHeight = ImGui.GetTextLineHeight() / 2 + ImGui.GetStyle().FramePadding.Y;
+            drawList.AddLine(curLoc + new Vector2(10, 0), curLoc + new Vector2(10, halfButtonHeight), col, 2);
+            drawList.AddLine(curLoc + new Vector2(10, halfButtonHeight), curLoc + new Vector2(20, halfButtonHeight), col, 2);
         }
     }
 }

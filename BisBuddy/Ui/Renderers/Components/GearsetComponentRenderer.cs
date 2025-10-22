@@ -12,6 +12,8 @@ using BisBuddy.Services;
 using Dalamud.Plugin.Services;
 using System.Drawing;
 using KamiToolKit.System;
+using System.Text.Json;
+using System.ComponentModel.DataAnnotations;
 
 namespace BisBuddy.Ui.Renderers.Components
 {
@@ -19,13 +21,17 @@ namespace BisBuddy.Ui.Renderers.Components
         ITypedLogger<GearsetComponentRenderer> logger,
         ITextureProvider textureProvider,
         IRendererFactory rendererFactory,
-        IConfigurationService configurationService
+        IConfigurationService configurationService,
+        IAttributeService attributeService,
+        JsonSerializerOptions jsonSerializerOptions
         ) : ComponentRendererBase<Gearset>
     {
         private readonly ITypedLogger<GearsetComponentRenderer> logger = logger;
         private readonly ITextureProvider textureProvider = textureProvider;
         private readonly IRendererFactory rendererFactory = rendererFactory;
         private readonly IConfigurationService configurationService = configurationService;
+        private readonly IAttributeService attributeService = attributeService;
+        private readonly JsonSerializerOptions jsonSerializerOptions = jsonSerializerOptions;
         private Gearset? gearset;
 
         private UiTheme uiTheme =>
@@ -46,19 +52,20 @@ namespace BisBuddy.Ui.Renderers.Components
             }
 
             var oldWindowPadding = ImGui.GetStyle().WindowPadding;
-            var windowYPadding = oldWindowPadding.Y;
-            oldWindowPadding.Y = 0;
+            var windowPadding = oldWindowPadding;
+            windowPadding.Y = 0;
             var oldSpacing = ImGui.GetStyle().ItemSpacing;
             var noScroll = ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse;
 
             using (ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, Vector2.Zero))
-            using (ImRaii.PushStyle(ImGuiStyleVar.Alpha, 0.7f, !gearset.IsActive))
+            //using (ImRaii.PushStyle(ImGuiStyleVar.Alpha, 0.7f, !gearset.IsActive))
             using (ImRaii.Child("gearset_view_panel", new Vector2(0, 0), border: false, noScroll))
-            using (ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, oldWindowPadding))
+            using (ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, windowPadding))
             {
                 var headerHeight = ImGui.GetTextLineHeightWithSpacing() * 2.5f;
                 using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, Vector2.Zero))
                 using (ImRaii.Child("gearset_view_panel_header", new Vector2(0, headerHeight), border: false, noScroll))
+                using (ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, oldWindowPadding))
                 using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, oldSpacing))
                 {
                     if (uiTheme.ShowGearsetColorAccentFlag)
@@ -69,30 +76,24 @@ namespace BisBuddy.Ui.Renderers.Components
                 ImGui.Separator();
                 ImGui.SetCursorPosY(ImGui.GetCursorPosY() - oldSpacing.Y);
                 UiComponents.PushTableClipRect();
-                ImGui.SetCursorPosY(ImGui.GetCursorPosY() + windowYPadding);
+                ImGui.SetCursorPosY(ImGui.GetCursorPosY() + oldWindowPadding.Y);
                 try
                 {
+                    using (ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, windowPadding))
                     using (ImRaii.Child("gearset_view_panel_tabs", new Vector2(0, 0), border: false, ImGuiWindowFlags.AlwaysUseWindowPadding))
+                    using (ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, oldWindowPadding))
                     {
                         using var gearsetTabBar = ImRaii.TabBar("###gearset_tab");
                         if (!gearsetTabBar)
                             return;
 
                         using (var gearpieceTab = ImRaii.TabItem(Resource.GearsetGearpiecesTabName))
-                        {
-                            ImGui.Spacing();
                             if (gearpieceTab)
-                            {
                                 DrawGearpiecesTab(gearset);
-                            }
-                        }
 
                         using (var propertiesTab = ImRaii.TabItem(Resource.GearsetPropertiesTabName))
-                        {
-                            ImGui.Spacing();
                             if (propertiesTab)
                                 DrawPropertiesTab(gearset);
-                        }
                     }
                 }
                 finally
@@ -176,15 +177,22 @@ namespace BisBuddy.Ui.Renderers.Components
             ImGui.SetCursorPosY(prevYPos + checkboxYOffset);
             var enabled = gearset.IsActive;
 
-            var enabledColor = uiTheme.GetCollectionStatusTheme(CollectionStatusType.ObtainedComplete).TextColor;
+            var activityStatus = enabled
+                ? CollectionStatusType.ObtainedComplete
+                : CollectionStatusType.NotObtainable;
+            var checkboxColor = uiTheme.GetCollectionStatusTheme(activityStatus).TextColor * new Vector4(0.6f, 0.6f, 0.6f, 1f);
 
             using (ImRaii.PushStyle(ImGuiStyleVar.FramePadding, buttonPaddingSize))
-            using (ImRaii.PushColor(ImGuiCol.CheckMark, enabledColor, enabled))
+            using (ImRaii.PushColor(ImGuiCol.FrameBg, checkboxColor))
+            {
                 if (ImGui.Checkbox("###gearset_enable_checkbox", ref enabled))
                 {
                     logger.Info($"{(enabled ? "Enabling" : "Disabling")} gearset \"{gearset.Name}\"");
                     gearset.IsActive = enabled;
                 }
+
+            }
+
             if (ImGui.IsItemHovered())
                 UiComponents.SetSolidTooltip(enabled
                     ? Resource.EnabledGearsetTooltip
@@ -209,92 +217,141 @@ namespace BisBuddy.Ui.Renderers.Components
 
         private void DrawPropertiesTab(Gearset gearset)
         {
-            //if (gearset.SourceUrl != null)
-            //{
-            //    //ImGui.SameLine();
-            //    if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.Copy, $"{Resource.GearsetUrlButton}##copy_gearset_url"))
-            //    {
-            //        ImGui.SetClipboardText(gearset.SourceUrl);
-            //    }
-            //    if (ImGui.IsItemHovered())
-            //    {
-            //        UiComponents.SetTooltipSolid(string.Format(Resource.GearsetUrlTooltip, gearset.SourceType));
-            //    }
-            //}
-            //// don't support simultaneous source urls and strings for now
-            //else if (gearset.SourceString != null)
-            //{
-            //    ImGui.SameLine();
-            //    if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.Copy, $"{Resource.GearsetStringButton}##copy_gearset_string"))
-            //    {
-            //        ImGui.SetClipboardText(gearset.SourceString);
-            //    }
-            //    if (ImGui.IsItemHovered())
-            //    {
-            //        UiComponents.SetTooltipSolid(string.Format(Resource.GearsetStringTooltip, gearset.SourceType));
-            //    }
-            //}
+            ImGui.Spacing();
 
-            //ImGui.SameLine();
+            var size = new Vector2(0, ImGui.GetTextLineHeight() + ImGui.GetStyle().FramePadding.Y * 2);
+            using (ImRaii.PushStyle(ImGuiStyleVar.CellPadding, new Vector2(10, 10)))
+            using (var table = ImRaii.Table("###properties_table", 2, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.RowBg | ImGuiTableFlags.PadOuterX | ImGuiTableFlags.BordersH))
+            using (ImRaii.PushStyle(ImGuiStyleVar.SelectableTextAlign, new Vector2(0, 0.5f)))
+            using (ImRaii.PushColor(ImGuiCol.HeaderActive, Vector4.Zero))
+            using (ImRaii.PushColor(ImGuiCol.HeaderHovered, Vector4.Zero))
+            {
+                if (!table)
+                    return;
 
-            //if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.FileExport, $"{Resource.GearsetJsonButton}##export_gearset_json"))
-            //{
-            //    //ImGui.SetClipboardText(gearsetsService.ExportGearsetToJsonStr(gearset));
-            //}
-            //if (ImGui.IsItemHovered())
-            //{
-            //    UiComponents.SetTooltipSolid(Resource.GearsetJsonTooltip);
-            //}
+                ImGui.TableNextColumn();
 
-            //ImGui.SameLine();
+                ImGui.Selectable(Resource.GearsetPropertiesStatusRowLabel, size: size);
+                ImGui.TableNextColumn();
+                var isActive = gearset.IsActive;
+                var label = isActive
+                    ? Resource.EnabledGearsetVerb
+                    : Resource.DisabledGearsetVerb;
+                var tooltip = isActive
+                    ? Resource.EnabledGearsetTooltip
+                    : Resource.DisabledGearsetTooltip;
+                if (ImGui.Checkbox(label, ref isActive))
+                    gearset.IsActive = isActive;
+                if (ImGui.IsItemHovered())
+                    UiComponents.SetSolidTooltip(tooltip);
 
-            //// DEFAULT COLOR CHECKBOX
-            //var useDefaultColor = gearset.HighlightColor is null;
-            //if (ImGui.Checkbox(Resource.GearsetDefaultColorCheckbox, ref useDefaultColor))
-            //{
-            //    if (useDefaultColor)
-            //        gearset.HighlightColor = null;
-            //    else
-            //    {
-            //        var newColor = new HighlightColor(configurationService.DefaultHighlightColor.BaseColor);
-            //        gearset.HighlightColor = newColor;
-            //    }
-            //}
-            //if (ImGui.IsItemHovered())
-            //    UiComponents.SetTooltipSolid(Resource.GearsetDefaultColorTooltip);
+                ImGui.TableNextRow();
+                ImGui.TableNextColumn();
 
-            //ImGui.SameLine();
+                ImGui.Selectable(Resource.GearsetPropertiesColorRowLabel, size: size);
+                ImGui.TableNextColumn();
+                // DEFAULT COLOR CHECKBOX
+                var useDefaultColor = gearset.HighlightColor is null;
+                if (ImGui.Checkbox(Resource.GearsetDefaultColorCheckbox, ref useDefaultColor))
+                {
+                    if (useDefaultColor)
+                        gearset.HighlightColor = null;
+                    else
+                    {
+                        var newColor = new HighlightColor(configurationService.DefaultHighlightColor.BaseColor);
+                        gearset.HighlightColor = newColor;
+                    }
+                }
+                if (ImGui.IsItemHovered())
+                    UiComponents.SetSolidTooltip(Resource.GearsetDefaultColorTooltip);
 
-            // COLOR PICKER
-            //using (ImRaii.Disabled(useDefaultColor))
-            //using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(3.0f, 4.0f)))
-            //{
-            //    var existingColor = gearset.HighlightColor?.BaseColor ?? configurationService.DefaultHighlightColor.BaseColor;
-            //    if (ImGui.ColorButton($"{Resource.GearsetHighlightColorButtonTooltip}###ColorPickerButton", existingColor))
-            //        ImGui.OpenPopup($"###ColorPickerPopup");
+                // COLOR PICKER
+                using (ImRaii.Disabled(useDefaultColor))
+                {
+                    UiComponents.DrawChildLConnector();
+                    using (ImRaii.PushIndent(25.0f, scaled: false))
+                    using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(3.0f, 4.0f)))
+                    {
+                        var existingColor = gearset.HighlightColor?.BaseColor ?? configurationService.DefaultHighlightColor.BaseColor;
+                        if (ImGui.ColorButton(
+                            $"{Resource.GearsetHighlightColorButtonTooltip}###ColorPickerButton",
+                            existingColor,
+                            ImGuiColorEditFlags.NoDragDrop
+                            ))
+                        {
+                            ImGui.OpenPopup($"###ColorPickerPopup");
+                        }
+                        
+                        using (var popup = ImRaii.Popup($"###ColorPickerPopup"))
+                        {
+                            if (popup)
+                                if (ImGui.ColorPicker4(
+                                    $"###ColorPicker",
+                                    ref existingColor,
+                                    ImGuiColorEditFlags.NoPicker
+                                    | ImGuiColorEditFlags.AlphaBar
+                                    | ImGuiColorEditFlags.NoSidePreview
+                                    | ImGuiColorEditFlags.DisplayRgb
+                                    | ImGuiColorEditFlags.NoBorder
+                                    | ImGuiColorEditFlags.NoDragDrop
+                                    ))
+                                    gearset.HighlightColor?.UpdateColor(existingColor);
+                        }
+                        ImGui.SameLine();
+                        ImGui.Text(Resource.GearsetHighlightColorLabel);
+                    }
+                }
 
-            //    using (var popup = ImRaii.Popup($"###ColorPickerPopup"))
-            //    {
-            //        if (popup)
-            //            if (ImGui.ColorPicker4(
-            //                $"###ColorPicker",
-            //                ref existingColor,
-            //                (
-            //                    ImGuiColorEditFlags.NoPicker
-            //                    | ImGuiColorEditFlags.AlphaBar
-            //                    | ImGuiColorEditFlags.NoSidePreview
-            //                    | ImGuiColorEditFlags.DisplayRGB
-            //                    | ImGuiColorEditFlags.NoBorder
-            //                )))
-            //                gearset.HighlightColor?.UpdateColor(existingColor);
-            //    }
-            //    ImGui.SameLine();
-            //    ImGui.Text(Resource.GearsetHighlightColorLabel);
-            //}
+                ImGui.TableNextRow();
+                ImGui.TableNextColumn();
+
+                if (gearset.SourceUrl is not null)
+                {
+                    var sourceUrlTypeName = attributeService
+                        .GetEnumAttribute<DisplayAttribute>(gearset.SourceType ?? Import.ImportGearsetSourceType.Xivgear)!
+                        .GetName()!;
+
+                    ImGui.Selectable(Resource.GearsetPropertiesSourceTypeRowLabel, size: size);
+                    ImGui.TableNextColumn();
+                    if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.Copy, $"{sourceUrlTypeName}##copy_gearset_url"))
+                        ImGui.SetClipboardText(gearset.SourceUrl);
+                    if (ImGui.IsItemHovered())
+                        UiComponents.SetSolidTooltip(string.Format(Resource.GearsetUrlTooltip, gearset.SourceType));
+                    ImGui.TableNextRow();
+                }
+                // don't support simultaneous source urls and strings for now
+                else if (gearset.SourceString is not null)
+                {
+                    ImGui.Selectable(Resource.GearsetPropertiesSourceTypeRowLabel, size: size);
+                    ImGui.TableNextColumn();
+
+                    if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.Copy, $"{Resource.GearsetStringButton}##copy_gearset_string"))
+                        ImGui.SetClipboardText(gearset.SourceString);
+                    if (ImGui.IsItemHovered())
+                        UiComponents.SetSolidTooltip(string.Format(Resource.GearsetStringTooltip, gearset.SourceType));
+                    ImGui.TableNextRow();
+                }
+
+                ImGui.TableNextColumn();
+                ImGui.Selectable(Resource.GearsetPropertiesImportDateRowLabel, size: size);
+                ImGui.TableNextColumn();
+                ImGui.Selectable(gearset.ImportDate.ToLocalTime().ToString("g"), size: size);
+
+                ImGui.TableNextRow();
+                ImGui.TableNextColumn();
+                ImGui.Selectable(Resource.GearsetPropertiesDataRowLabel, size: size);
+                ImGui.TableNextColumn();
+                if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.FileExport, $"{Resource.GearsetJsonButton}##export_gearset_json"))
+                    ImGui.SetClipboardText(JsonSerializer.Serialize(gearset, jsonSerializerOptions));
+                if (ImGui.IsItemHovered())
+                    UiComponents.SetSolidTooltip(Resource.GearsetJsonTooltip);
+
+            }
         }
 
         private void DrawGearpiecesTab(Gearset gearset)
         {
+            ImGui.Spacing();
             if (gearset.Gearpieces.Count > 0)
             {
                 var drawingLeftSide = (gearset.Gearpieces[0].GearpieceType & GearpieceType.LeftSide) != 0;
