@@ -244,7 +244,10 @@ namespace BisBuddy.Ui.Renderers.Tabs.Main
                                 var gradientPosBotRight = gradientPosTopLeft + gradientSize;
                                 var drawList = ImGui.GetWindowDrawList();
                                 var highlightColor = gearset.HighlightColor ?? configurationService.DefaultHighlightColor;
-                                var col = ImGui.GetColorU32(highlightColor.BaseColor);
+                                var color = highlightColor.BaseColor;
+                                if (gearsetSelected)
+                                    color.W *= 0.5f;
+                                var col = ImGui.GetColorU32(color);
                                 var colNone = ImGui.GetColorU32(Vector4.Zero);
                                 drawList.AddRectFilledMultiColor(
                                     gradientPosTopLeft, gradientPosBotRight, col, 0, 0, col
