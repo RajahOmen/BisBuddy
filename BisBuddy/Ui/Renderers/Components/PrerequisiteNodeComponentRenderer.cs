@@ -310,7 +310,7 @@ public class PrerequisiteNodeComponentRenderer(
             ImGui.SetCursorPos(buttonPos + new Vector2(iconXOffset, iconYOffset));
 
             //if (textureProvider.GetFromGameIcon((int)collectionStatusTheme.Icon).TryGetWrap(out var texture, out var exception))
-                //ImGui.Image(texture.Handle, collectionStatusButtonIconSize, collectionStatusTheme.TextColor);
+            //ImGui.Image(texture.Handle, collectionStatusButtonIconSize, collectionStatusTheme.TextColor);
             // draw lock icon
             if (node.CollectLock)
             {
@@ -341,7 +341,7 @@ public class PrerequisiteNodeComponentRenderer(
             var iconId = itemDataService.GetItemIconId(node.ItemId);
             var iconHovered = false;
             if (textureProvider
-                .GetFromGameIcon((uint) iconId)
+                .GetFromGameIcon((uint)iconId)
                 .TryGetWrap(out var iconTexture, out var iconException)
                 )
             {

@@ -70,7 +70,7 @@ namespace BisBuddy.Services.Gearsets
             gearsetsDirty = true;
             assignmentsDirty |= updateAssignments;
         }
-            
+
 
         /// <summary>
         /// Coalesce gearset change event calls into one per framework

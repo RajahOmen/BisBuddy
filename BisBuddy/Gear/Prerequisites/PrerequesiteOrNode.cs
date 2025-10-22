@@ -21,7 +21,7 @@ namespace BisBuddy.Gear.Prerequisites
         public IReadOnlyList<(IPrerequisiteNode Node, bool IsActive)> CompletePrerequisiteTree
         {
             get => completePrerequisiteTree;
-        }   
+        }
 
         public bool IsCollected
         {
@@ -222,7 +222,7 @@ namespace BisBuddy.Gear.Prerequisites
                 .SelectMany(p => p.MeldableItemNames())
                 .ToHashSet();
         }
-            
+
 
         public string GroupKey()
         {

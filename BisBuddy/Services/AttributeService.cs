@@ -23,7 +23,7 @@ namespace BisBuddy.Services
             var cacheKey = (enumValue, typeof(T));
 
             if (memoryCache.TryGetValue(cacheKey, out var cacheValue))
-                return (T?) cacheValue;
+                return (T?)cacheValue;
 
             var newCacheValue = EnumExtensions.GetAttribute<T>(enumValue)
                 ?? throw new ArgumentException($"Enum value {Enum.GetName(enumValue.GetType(), enumValue)} has no {typeof(T).Name}");

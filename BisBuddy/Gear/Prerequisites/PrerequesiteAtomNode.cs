@@ -34,7 +34,8 @@ namespace BisBuddy.Gear.Prerequisites
         public bool IsCollected
         {
             get => isCollected;
-            set {
+            set
+            {
                 foreach (var prereq in PrerequisiteTree)
                     if (!prereq.CollectLock)
                         prereq.IsCollected = value;

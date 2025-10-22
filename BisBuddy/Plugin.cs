@@ -232,7 +232,7 @@ public sealed partial class Plugin : IDalamudPlugin
 
                     builder.RegisterType(renderer).Keyed(rendererType, interfaceType).InstancePerLifetimeScope();
                 }
-                
+
                 // display update count on inventory window
                 builder.RegisterType<InventoryUpdateDisplayMediator>().As<IInventoryUpdateDisplayService>().SingleInstance();
 
@@ -315,7 +315,8 @@ public sealed partial class Plugin : IDalamudPlugin
             commandService.ExecuteCommand("/bis", "c");
 #endif
         }
-        catch (Exception ex) {
+        catch (Exception ex)
+        {
             logger.Fatal(ex, $"Failed to start");
             Dispose();
         }

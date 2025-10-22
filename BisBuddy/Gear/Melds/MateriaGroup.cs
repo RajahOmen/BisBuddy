@@ -187,7 +187,8 @@ namespace BisBuddy.Gear.Melds
                             continue;
 
                         materia.SetIsCollectedLocked(false);
-                    } else
+                    }
+                    else
                     {
                         materia.IsCollected = false;
                     }

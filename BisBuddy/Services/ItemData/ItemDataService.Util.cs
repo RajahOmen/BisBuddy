@@ -38,7 +38,7 @@ namespace BisBuddy.Items
             return input.ExtractText().Replace("\u00AD", string.Empty);
         }
 
-        public string GetItemNameById(uint id)  
+        public string GetItemNameById(uint id)
         {
             // check if item is HQ, change Id to NQ if it is
             var modifiedId = id;
@@ -440,7 +440,7 @@ namespace BisBuddy.Items
                 throw new InvalidOperationException($"Materia {materiaName} not found in materia sheet");
 
             var statName = SeStringToString(materiaRowValue.BaseParam.Value.Name);
-            var statType = (MateriaStatType) materiaRowValue.RowId;
+            var statType = (MateriaStatType)materiaRowValue.RowId;
             var statQuantity = materiaRowValue.Value[materiaCol];
 
             var materiaDetails = new MateriaDetails()

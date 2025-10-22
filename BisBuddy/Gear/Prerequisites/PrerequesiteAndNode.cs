@@ -29,7 +29,8 @@ namespace BisBuddy.Gear.Prerequisites
         public bool IsCollected
         {
             get => PrerequisiteTree.All(p => p.IsCollected);
-            set {
+            set
+            {
                 foreach (var prereq in PrerequisiteTree)
                     if (!prereq.CollectLock)
                         prereq.IsCollected = value;
@@ -57,7 +58,8 @@ namespace BisBuddy.Gear.Prerequisites
             }
         }
 
-        public bool CollectLock {
+        public bool CollectLock
+        {
             get => PrerequisiteTree.Any(p => p.CollectLock);
             set
             {

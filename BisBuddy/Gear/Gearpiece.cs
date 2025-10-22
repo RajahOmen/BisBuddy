@@ -19,9 +19,11 @@ namespace BisBuddy.Gear
         public string ItemName { get; set; }
         public GearpieceType GearpieceType { get; set; }
         public IPrerequisiteNode? PrerequisiteTree { get; set; }
-        public bool IsCollected {
+        public bool IsCollected
+        {
             get => isCollected;
-            set {
+            set
+            {
                 if (CollectLock)
                 {
                     logger.Warning($"Attempted to {(value ? "collect" : "uncollect")} locked gearpiece \"{ItemName}\"");
@@ -36,7 +38,8 @@ namespace BisBuddy.Gear
                 handleIsCollectedChange();
             }
         }
-        public bool CollectLock {
+        public bool CollectLock
+        {
             get => collectLock;
             set
             {
@@ -79,7 +82,7 @@ namespace BisBuddy.Gear
 
             if (PrerequisiteTree is IPrerequisiteNode node)
                 node.OnPrerequisiteChange += triggerGearpieceChange;
-                
+
             ItemMateria.OnMateriaGroupChange += triggerGearpieceChange;
 
             if (CollectLock)
@@ -126,7 +129,7 @@ namespace BisBuddy.Gear
 
         private void triggerGearpieceChange() =>
             OnGearpieceChange?.Invoke();
-            
+
         public IEnumerable<ItemRequirementOwned> ItemRequirements(Gearset parentGearset, bool includeUncollectedItemMateria)
         {
             yield return new ItemRequirementOwned(

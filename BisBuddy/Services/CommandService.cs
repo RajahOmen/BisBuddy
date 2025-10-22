@@ -86,7 +86,7 @@ namespace BisBuddy.Services
 
             return handlers;
         }
-        
+
         private string buildCommandDescriptions()
         {
             var commandSpacer = "\n        ";

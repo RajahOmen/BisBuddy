@@ -89,7 +89,7 @@ namespace BisBuddy.Ui.Renderers.Components
                     {
                         tooltip = string.Format(Resource.GearpieceLockedDisabledTooltip, materia.ItemName);
                     }
-                        
+
                     UiComponents.SetSolidTooltip(string.Format(tooltip, meldVerb, materia.ItemName));
                 }
                 rendererFactory.GetRenderer(materia, RendererType.ContextMenu).Draw();

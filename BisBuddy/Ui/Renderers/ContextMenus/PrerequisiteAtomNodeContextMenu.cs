@@ -15,17 +15,17 @@ namespace BisBuddy.Ui.Renderers.ContextMenus
     {
         private readonly IItemFinderService itemFinderService = itemFinderService;
 
-    protected override List<ContextMenuEntry> buildMenuEntries(PrerequisiteAtomNode newComponent)
-    {
-        if (newComponent is not PrerequisiteAtomNode materia)
-            return [];
+        protected override List<ContextMenuEntry> buildMenuEntries(PrerequisiteAtomNode newComponent)
+        {
+            if (newComponent is not PrerequisiteAtomNode materia)
+                return [];
 
-        return [
-            factory.Create(
+            return [
+                factory.Create(
                     entryName: Resource.ContextMenuSearchInventory,
                     icon: FontAwesomeIcon.Search,
                     onClick: () => itemFinderService.SearchForItem(materia.ItemId)),
                 ];
+        }
     }
-}
 }

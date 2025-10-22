@@ -278,7 +278,7 @@ namespace BisBuddy.Ui.Renderers.Components
                         {
                             ImGui.OpenPopup($"###ColorPickerPopup");
                         }
-                        
+
                         using (var popup = ImRaii.Popup($"###ColorPickerPopup"))
                         {
                             if (popup)

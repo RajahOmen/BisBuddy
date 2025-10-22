@@ -32,7 +32,8 @@ namespace BisBuddy.Gear
                 triggerGearsetChange(effectsAssignments: false);
             }
         }
-        public bool IsActive {
+        public bool IsActive
+        {
             get => isActive;
             set
             {
@@ -43,7 +44,8 @@ namespace BisBuddy.Gear
                 triggerGearsetChange(effectsAssignments: true);
             }
         }
-        public string Name {
+        public string Name
+        {
             get => name;
             set
             {

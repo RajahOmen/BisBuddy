@@ -46,7 +46,7 @@ namespace BisBuddy.Ui.Renderers.Tabs.Config
             {
                 var lockSpacing = 5 * ImGuiHelpers.GlobalScale;
 
-                foreach (var type in Enum.GetValues<CollectionStatusType>().OrderByDescending(t => (int) t))
+                foreach (var type in Enum.GetValues<CollectionStatusType>().OrderByDescending(t => (int)t))
                 {
                     var (textColor, gameIcon) = uiTheme.GetCollectionStatusTheme(type);
                     var typeDescription = attributeService

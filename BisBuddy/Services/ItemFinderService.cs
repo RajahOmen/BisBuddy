@@ -13,7 +13,8 @@ namespace BisBuddy.Services
             {
                 logger.Info($"Searching for item \"{itemId}\"");
                 ItemFinderModule.Instance()->SearchForItem(itemId, includeHQAndCollectibles);
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 logger.Error(ex, $"Error searching for \"{itemId}\"");
             }
