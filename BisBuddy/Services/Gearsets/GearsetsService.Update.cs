@@ -250,7 +250,7 @@ namespace BisBuddy.Services.Gearsets
 
                     logger.Debug($"Updated {updatedGearpieces?.Count ?? 0} gearpieces from inventories");
 
-                    triggerGearsetsChange(saveToFile: true);
+                    triggerGearsetsChange(saveToFile: saveChanges);
 
                     inventoryUpdateDisplayService.GearpieceUpdateCount = updatedGearpieces?.Count ?? 0;
                 }
