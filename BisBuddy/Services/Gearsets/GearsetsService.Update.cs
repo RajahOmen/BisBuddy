@@ -228,7 +228,7 @@ namespace BisBuddy.Services.Gearsets
             inventoryUpdateDisplayService.IsManualUpdate = manualUpdate;
 
             // don't block main thread, queue for execution instead
-            var queuedUpdate = queueService.Enqueue(() =>
+            var queuedUpdate = queueService.Enqueue($"ASSIGNMENTS_UPDATE_{currentLocalContentId}", () =>
             {
                 // returns number of gearpiece status changes after update
                 try
@@ -264,7 +264,7 @@ namespace BisBuddy.Services.Gearsets
                     inventoryUpdateDisplayService.UpdateIsQueued = false;
                     gearsetsChangeLocked = false;
                 }
-            }, "ASSIGNMENTS_UPDATE");
+            });
             if (!queuedUpdate)
             {
                 logger.Warning($"QueueService not open when requesting inventory update");

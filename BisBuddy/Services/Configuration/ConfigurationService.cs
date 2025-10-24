@@ -214,7 +214,7 @@ namespace BisBuddy.Services.Configuration
         public void scheduleSave()
         {
             logger.Verbose($"Enqueuing save of configuration file");
-            queueService.Enqueue(saveConfig, "CONFIG_SAVE");
+            queueService.Enqueue("CONFIG_SAVE", saveConfig);
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
