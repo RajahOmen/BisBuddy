@@ -148,15 +148,6 @@ namespace BisBuddy.Services
 
                 var changedArgs = (InventoryItemChangedArgs)args;
 
-                var oldMateria = changedArgs.OldItemState.MateriaEntries.ToArray();
-                var newMateria = changedArgs.Item.MateriaEntries.ToArray();
-                if (changedArgs.OldItemState.ItemId == changedArgs.Item.ItemId
-                    && newMateria.SequenceEqual(oldMateria))
-                {
-                    logger.Verbose($"Item changed, but no relevant changes detected, ignoring");
-                    return;
-                }
-
                 // not changed in a inventory type we track, ignore
                 if (!Constants.InventorySources.Contains(changedArgs.Inventory))
                     return;
@@ -169,6 +160,16 @@ namespace BisBuddy.Services
                         includeCollectedPrereqs: true
                     ))
                     return;
+
+                var oldMateria = changedArgs.OldItemState.MateriaEntries.ToArray();
+                var newMateria = changedArgs.Item.MateriaEntries.ToArray();
+                if (changedArgs.OldItemState.ItemId == changedArgs.Item.ItemId
+                    && newMateria.SequenceEqual(oldMateria))
+                {
+                    logger.Verbose($"Item changed, but no relevant changes detected, ignoring");
+                    return;
+                }
+
                 logger.Verbose($"item changed, scehduling gearset update");
                 // changed in a type we track, update gearsets
                 gearsetsService.ScheduleUpdateFromInventory();
