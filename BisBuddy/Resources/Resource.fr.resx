@@ -225,8 +225,8 @@
   <data name="NoGearsetsText" xml:space="preserve">
     <value>No gearsets found. Add one or more gearsets to get started</value>
   </data>
-  <data name="LoggedOutText" xml:space="preserve">
-    <value>Please log in to view/add gearsets</value>
+  <data name="GearsetsTabLoggedOutText" xml:space="preserve">
+    <value>Log in to view/add gearsets</value>
   </data>
   <data name="ManuallyCollectedTooltip" xml:space="preserve">
     <value>Collection status locked. Inventory syncs will not uncollect</value>
@@ -247,7 +247,8 @@
     <value>Delete this Gearset. Click to quick delete</value>
   </data>
   <data name="DeleteGearsetTooltip" xml:space="preserve">
-    <value>Delete this Gearset. Shift+Click to quick delete</value>
+    <value>Delete {0}</value>
+    <comment>{0} - Gearset name</comment>
   </data>
   <data name="DeleteGearsetPopupTitle" xml:space="preserve">
     <value>Delete Gearset?</value>
@@ -320,9 +321,10 @@ When OFF: Gearset 1 completed, Gearset 2 completed</value>
 Use alpha channel to adjust highlight intensity on items/icons
 List menu highlights are not affected</value>
   </data>
-  <data name="MateriaTooltip" xml:space="preserve">
-    <value>Left click to {0} {1}
-Right click to search for in inventory</value>
+  <data name="GearpieceLockedDisabledTooltip" xml:space="preserve">
+    <value>{0}
+Lock gearpiece to change status</value>
+    <comment>When the materia is attached to a locked gearpiece</comment>
   </data>
   <data name="SearchInventoryForItemTooltip" xml:space="preserve">
     <value>Search inventory for {0}</value>
@@ -371,7 +373,7 @@ ex:
     <value>Import a new gearset</value>
   </data>
   <data name="GearsetStringButton" xml:space="preserve">
-    <value>Text</value>
+    <value>Teamcraft</value>
   </data>
   <data name="GearsetStringTooltip" xml:space="preserve">
     <value>Copy {0} text to clipboard</value>
@@ -429,13 +431,13 @@ When OFF: If a gearpiece isn't collected, its materia will not be highlighted an
     <value>Locks list item highlight opacity to max to increase contrast. Disabling may fix issues with some custom UIs</value>
   </data>
   <data name="GearsetHighlightColorLabel" xml:space="preserve">
-    <value>Gearset Highlight Color</value>
+    <value>Choose Color</value>
   </data>
   <data name="GearsetHighlightColorButtonTooltip" xml:space="preserve">
     <value>Color needed items for this gearset are highlighted in</value>
   </data>
   <data name="GearsetDefaultColorCheckbox" xml:space="preserve">
-    <value>Use Default Color</value>
+    <value>Use Default</value>
   </data>
   <data name="GearsetDefaultColorTooltip" xml:space="preserve">
     <value>Whether to use the default highlight color (as set in configuration),
@@ -450,16 +452,9 @@ or to have a unique color to highlight items in</value>
   <data name="GeneralConfigurationMiscellaneousCategory" xml:space="preserve">
     <value>Miscellaneous</value>
   </data>
-  <data name="MainChatCommandName" xml:space="preserve">
-    <value>/bisbuddy</value>
-  </data>
-  <data name="AliasChatCommandName" xml:space="preserve">
-    <value>/bis</value>
-  </data>
   <data name="MainChatCommandHelpMessage" xml:space="preserve">
-    <value>View existing or add new gearsets
-      [config/c] - Open {0} configuration
-      [new/n] - Add a new gearset</value>
+    <value>Open main plugin window{0}</value>
+    <comment>{0} is the descriptions of the sub-commands</comment>
   </data>
   <data name="AliasChatCommandHelpMessage" xml:space="preserve">
     <value>Alias for {0}</value>
@@ -467,10 +462,280 @@ or to have a unique color to highlight items in</value>
   <data name="PluginDisplayName" xml:space="preserve">
     <value>BISBuddy</value>
   </data>
+  <data name="UserGearsetsTabName" xml:space="preserve">
+    <value>Gearsets</value>
+  </data>
+  <data name="ItemPlannerTabName" xml:space="preserve">
+    <value>Weekly Planner</value>
+  </data>
+  <data name="ItemExchangesTabName" xml:space="preserve">
+    <value>Inventory</value>
+  </data>
+  <data name="ItemTrackerTabName" xml:space="preserve">
+    <value>Item Tracker</value>
+  </data>
+  <data name="ConfigTabName" xml:space="preserve">
+    <value>Config</value>
+  </data>
+  <data name="GearsetSortName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="GearsetSortJob" xml:space="preserve">
+    <value>Job</value>
+  </data>
+  <data name="GearsetSortImportDate" xml:space="preserve">
+    <value>Date</value>
+  </data>
+  <data name="GearsetSortPriority" xml:space="preserve">
+    <value>Priority</value>
+  </data>
+  <data name="GearsetSortActive" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="ImportXivgearName" xml:space="preserve">
+    <value>Xivgear.app</value>
+  </data>
+  <data name="ImportEtroName" xml:space="preserve">
+    <value>Etro.gg</value>
+  </data>
+  <data name="ImportJsonName" xml:space="preserve">
+    <value>JSON</value>
+  </data>
+  <data name="ImportTeamcraftName" xml:space="preserve">
+    <value>Teamcraft</value>
+  </data>
+  <data name="ImportFailNoResponse" xml:space="preserve">
+    <value>{0} No response from server</value>
+  </data>
+  <data name="ImportFailNotLoggedIn" xml:space="preserve">
+    <value>{0} Must be logged in to import gearsets</value>
+  </data>
+  <data name="ImportGearsetLoggedOut" xml:space="preserve">
+    <value>Log in to import gearsets</value>
+  </data>
+  <data name="UnknownClassJobName" xml:space="preserve">
+    <value>Unknown Class/Job</value>
+  </data>
+  <data name="UnknownClassJobAbbreviation" xml:space="preserve">
+    <value>???</value>
+  </data>
+  <data name="DefaultNewGearsetName" xml:space="preserve">
+    <value>New Gearset</value>
+  </data>
+  <data name="ConfigUiThemeSectionHeader" xml:space="preserve">
+    <value>Plugin Styles</value>
+  </data>
+  <data name="ResetUiThemeButton" xml:space="preserve">
+    <value>Reset Colors &amp; Styles</value>
+  </data>
+  <data name="ResetUiThemeTooltip" xml:space="preserve">
+    <value>Reset plugin styles/colors to default</value>
+  </data>
+  <data name="MateriaAbbrevDirectHitRate" xml:space="preserve">
+    <value>DHT</value>
+  </data>
+  <data name="MateriaAbbrevCriticalHit" xml:space="preserve">
+    <value>CRT</value>
+  </data>
+  <data name="MateriaAbbrevDetermination" xml:space="preserve">
+    <value>DET</value>
+  </data>
+  <data name="MateriaAbbrevPiety" xml:space="preserve">
+    <value>PIE</value>
+  </data>
+  <data name="MateriaAbbrevTenacity" xml:space="preserve">
+    <value>TNC</value>
+  </data>
+  <data name="MateriaAbbrevSkillSpeed" xml:space="preserve">
+    <value>SKS</value>
+  </data>
+  <data name="MateriaAbbrevSpellSpeed" xml:space="preserve">
+    <value>SPS</value>
+  </data>
+  <data name="MateriaAbbrevGathering" xml:space="preserve">
+    <value>GATH</value>
+  </data>
+  <data name="MateriaAbbrevPerception" xml:space="preserve">
+    <value>PERC</value>
+  </data>
+  <data name="MateriaAbbrevGatheringPoints" xml:space="preserve">
+    <value>GP</value>
+  </data>
+  <data name="MateriaAbbrevCraftsmanship" xml:space="preserve">
+    <value>CRFT</value>
+  </data>
+  <data name="MateriaAbbrevCraftingPoints" xml:space="preserve">
+    <value>CP</value>
+  </data>
+  <data name="MateriaAbbrevControl" xml:space="preserve">
+    <value>CNTL</value>
+  </data>
+  <data name="UserGearsetsTabNoGearsetsTextNavigation" xml:space="preserve">
+    <value>Add a gearset</value>
+  </data>
+  <data name="CommandDescriptionAddGearset" xml:space="preserve">
+    <value>Add a new gearset</value>
+  </data>
+  <data name="CommandDescriptionOpenConfig" xml:space="preserve">
+    <value>Open plugin configuration</value>
+  </data>
+  <data name="UserGearsetsTabNoGearsetsTextPanel" xml:space="preserve">
+    <value>Gearset details appear here</value>
+  </data>
   <data name="HighlightCollectedInInventoryHelp" xml:space="preserve">
     <value>Whether to highlight items in player inventories (inventory, retainer, saddlebag) that are marked as collected.</value>
   </data>
   <data name="HighlightCollectedInInventoryCheckbox" xml:space="preserve">
     <value>Include Collected</value>
+  </data>
+  <data name="ObtainedCompleteHelp" xml:space="preserve">
+    <value>Item collected</value>
+  </data>
+  <data name="ObtainedPartialHelp" xml:space="preserve">
+    <value>Item collected, missing materia</value>
+  </data>
+  <data name="ObtainableHelp" xml:space="preserve">
+    <value>Item obtainable using prerequisites</value>
+  </data>
+  <data name="NotObtainableHelp" xml:space="preserve">
+    <value>Item not collected</value>
+  </data>
+  <data name="CollectionStatusLockTooltip" xml:space="preserve">
+    <value>Collection status locked</value>
+  </data>
+  <data name="AdvancedMateriaMeldTooltip" xml:space="preserve">
+    <value>[Advanced] </value>
+  </data>
+  <data name="PrerequisiteGearpieceHeader" xml:space="preserve">
+    <value>Prerequisites</value>
+  </data>
+  <data name="DeleteGearsetDisabledTooltip" xml:space="preserve">
+    <value>Shift+Click to delete {0}</value>
+    <comment>{0} - Active gearset</comment>
+  </data>
+  <data name="DeleteGearsetTooltipGearsetNameDummy" xml:space="preserve">
+    <value>selected gearset</value>
+    <comment>Replaces gearset name in tooltip when no gearset selected</comment>
+  </data>
+  <data name="GearsetGearpiecesTabName" xml:space="preserve">
+    <value>Gearpieces</value>
+  </data>
+  <data name="GearsetPropertiesTabName" xml:space="preserve">
+    <value>Properties</value>
+  </data>
+  <data name="ContextMenuCopyJson" xml:space="preserve">
+    <value>Copy JSON</value>
+  </data>
+  <data name="ContextMenuDeleteGearset" xml:space="preserve">
+    <value>Delete Gearset</value>
+  </data>
+  <data name="ContextMenuLockUncollected" xml:space="preserve">
+    <value>Lock as Uncollected</value>
+  </data>
+  <data name="ContextMenuLockCollected" xml:space="preserve">
+    <value>Lock as Collected</value>
+  </data>
+  <data name="ContextMenuUnlock" xml:space="preserve">
+    <value>Unlock</value>
+  </data>
+  <data name="ContextMenuSearchInventory" xml:space="preserve">
+    <value>Search in Inventory</value>
+  </data>
+  <data name="GearpieceNoSubItemsTooltip" xml:space="preserve">
+    <value>No Materia/Prerequisites</value>
+  </data>
+  <data name="MateriaMeldTooltip" xml:space="preserve">
+    <value>{0} {1}</value>
+    <comment>{meld/unmeld} {materianame}</comment>
+  </data>
+  <data name="CollectVerb" xml:space="preserve">
+    <value>Collect</value>
+  </data>
+  <data name="UncollectVerb" xml:space="preserve">
+    <value>Uncollect</value>
+  </data>
+  <data name="DisabledPrerequisiteTooltip" xml:space="preserve">
+    <value>{0} disabled, configure in toggles</value>
+    <comment>Tooltip displayed when hovering a disabled OR tab option when viewing a prerequisite. {0} is source name</comment>
+  </data>
+  <data name="PrerequisiteOrNodeSettingsTabName" xml:space="preserve">
+    <value>Toggles</value>
+  </data>
+  <data name="PrerequisiteOrNodeToggleTooltip" xml:space="preserve">
+    <value>Whether to include or ignore this method of obtaining the parent item</value>
+    <comment>Tooltip on OR node option activity checkbox that communicates how the toggle works.</comment>
+  </data>
+  <data name="CollectionStatusLockedTooltipPrefix" xml:space="preserve">
+    <value>[Locked] {0}</value>
+    <comment>Appears before CollectionStatus tooltips. {0} - the collection status tooltip</comment>
+  </data>
+  <data name="ConfigDebugSectionHeader" xml:space="preserve">
+    <value>Debugging</value>
+  </data>
+  <data name="OpenExternalConfigWindowTooltip" xml:space="preserve">
+    <value>Popout Configuration</value>
+  </data>
+  <data name="DebugTabName" xml:space="preserve">
+    <value>Debug</value>
+  </data>
+  <data name="UiThemeConfigColorsSectionHeader" xml:space="preserve">
+    <value>Gearset Colors</value>
+  </data>
+  <data name="UiThemeConfigStylesSectionHeader" xml:space="preserve">
+    <value>Gearset Styles</value>
+  </data>
+  <data name="ShowGearsetColorAccentFlagLabel" xml:space="preserve">
+    <value>Display Gearset Color Accent</value>
+  </data>
+  <data name="ShowGearsetColorAccentFlagTooltip" xml:space="preserve">
+    <value>Whether to display a gradient of the gearset highlight color on the gearset tab and header</value>
+  </data>
+  <data name="UiThemeConfigResetsSectionHeader" xml:space="preserve">
+    <value>Defaults</value>
+  </data>
+  <data name="UiThemeColorMateriaSlotNormalLabel" xml:space="preserve">
+    <value>Materia Slot (Normal)</value>
+  </data>
+  <data name="UiThemeColorMateriaSlotAdvancedLabel" xml:space="preserve">
+    <value>Materia Slot (Advanced)</value>
+  </data>
+  <data name="UiThemeColorGearpieceButton" xml:space="preserve">
+    <value>Gearpiece Buttons</value>
+  </data>
+  <data name="UiThemeColorGearpieceButtonHovered" xml:space="preserve">
+    <value>Gearpiece Buttons (Hovered)</value>
+  </data>
+  <data name="UiThemeColorGearpieceButtonActive" xml:space="preserve">
+    <value>Gearpiece Buttons (Clicked)</value>
+  </data>
+  <data name="EnabledGearsetVerb" xml:space="preserve">
+    <value>Enabled</value>
+  </data>
+  <data name="DisabledGearsetVerb" xml:space="preserve">
+    <value>Disabled</value>
+  </data>
+  <data name="GearsetPropertiesStatusRowLabel" xml:space="preserve">
+    <value>Gearset Status</value>
+  </data>
+  <data name="GearsetPropertiesColorRowLabel" xml:space="preserve">
+    <value>Highlight Color</value>
+  </data>
+  <data name="GearsetPropertiesSourceTypeRowLabel" xml:space="preserve">
+    <value>Import Source</value>
+  </data>
+  <data name="GearsetPropertiesImportDateRowLabel" xml:space="preserve">
+    <value>Import Date</value>
+  </data>
+  <data name="GearsetPropertiesDataRowLabel" xml:space="preserve">
+    <value>Data Export</value>
+  </data>
+  <data name="ContextMenuLockAllUncollected" xml:space="preserve">
+    <value>Lock all as Uncollected</value>
+  </data>
+  <data name="ContextMenuLockAllCollected" xml:space="preserve">
+    <value>Lock all as Collected</value>
+  </data>
+  <data name="ContextMenuUnlockAll" xml:space="preserve">
+    <value>Unlock all</value>
   </data>
 </root>
