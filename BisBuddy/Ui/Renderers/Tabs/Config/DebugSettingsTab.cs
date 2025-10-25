@@ -1,5 +1,6 @@
 using BisBuddy.Services.Configuration;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface.Utility.Raii;
 using System;
 using static Dalamud.Interface.Windowing.Window;
 
@@ -19,8 +20,7 @@ namespace BisBuddy.Ui.Renderers.Tabs.Config
             if (ImGui.Checkbox("Enable Debugging", ref debuggingEnabled))
                 configurationService.EnableDebugging = debuggingEnabled;
 
-            if (!debuggingEnabled)
-                return;
+            using var _ = ImRaii.Disabled(!debuggingEnabled);
 
             ImGui.Spacing();
             ImGui.Separator();
