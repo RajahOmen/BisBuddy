@@ -1,3 +1,4 @@
+using BisBuddy.Gear.Melds;
 using BisBuddy.Gear.Prerequisites;
 using BisBuddy.Services;
 using System;
@@ -9,18 +10,55 @@ namespace BisBuddy.Gear
     public delegate void GearpieceChangeHandler();
 
     [Serializable]
-    public class Gearpiece
+    public class Gearpiece : ICollectableItem
     {
+        private bool isCollected;
+        private bool collectLock;
         private readonly ITypedLogger<Gearpiece> logger;
         public uint ItemId { get; set; }
         public string ItemName { get; set; }
         public GearpieceType GearpieceType { get; set; }
         public IPrerequisiteNode? PrerequisiteTree { get; set; }
-        public bool IsCollected { get; private set; }
-        public bool IsManuallyCollected { get; private set; }
-        public bool IsObtainable => PrerequisiteTree?.IsObtainable ?? false; // If no prerequisites known, assume not obtainable
-        public List<Materia> ItemMateria { get; init; }
-        private List<(Materia Materia, int Count)>? itemMateriaGrouped = null;
+        public bool IsCollected
+        {
+            get => isCollected;
+            set
+            {
+                if (CollectLock)
+                {
+                    logger.Warning($"Attempted to {(value ? "collect" : "uncollect")} locked gearpiece \"{ItemName}\"");
+                    return;
+                }
+
+                isCollected = value;
+
+                if (PrerequisiteTree is not null)
+                    PrerequisiteTree.IsCollected = value;
+
+                handleIsCollectedChange();
+            }
+        }
+        public bool CollectLock
+        {
+            get => collectLock;
+            set
+            {
+                foreach (var materia in ItemMateria)
+                    materia.CollectLock = value;
+
+                if (PrerequisiteTree is not null)
+                    PrerequisiteTree.CollectLock = value;
+
+                if (value == collectLock)
+                    return;
+
+                logger.Info($"{(value ? "locking" : "unlocking")} gearpiece \"{ItemName}\"");
+                collectLock = value;
+
+                triggerGearpieceChange();
+            }
+        }
+        public MateriaGroup ItemMateria { get; init; }
 
         public Gearpiece(
             ITypedLogger<Gearpiece> logger,
@@ -28,9 +66,9 @@ namespace BisBuddy.Gear
             string itemName,
             GearpieceType gearpieceType,
             IPrerequisiteNode? prerequisiteTree,
-            List<Materia>? itemMateria,
+            MateriaGroup? itemMateria,
             bool isCollected = false,
-            bool isManuallyCollected = false
+            bool collectLock = false
         )
         {
             this.logger = logger;
@@ -38,32 +76,53 @@ namespace BisBuddy.Gear
             ItemName = itemName;
             GearpieceType = gearpieceType;
             PrerequisiteTree = prerequisiteTree;
-            IsCollected = isCollected;
-            IsManuallyCollected = isManuallyCollected;
+            this.isCollected = isCollected;
+            this.collectLock = collectLock;
             ItemMateria = itemMateria ?? [];
 
             if (PrerequisiteTree is IPrerequisiteNode node)
                 node.OnPrerequisiteChange += triggerGearpieceChange;
+
+            ItemMateria.OnMateriaGroupChange += triggerGearpieceChange;
+
+            if (CollectLock)
+            {
+                if (!isCollected)
+                    ItemMateria.UnmeldAllMateria(respectCollectLock: false);
+                else
+                    PrerequisiteTree?.SetIsCollectedLocked(true);
+            }
+            else
+            {
+                if (isCollected && PrerequisiteTree is not null)
+                    PrerequisiteTree.IsCollected = true;
+            }
         }
 
-        public List<(Materia Materia, int Count)>? ItemMateriaGrouped
+        public CollectionStatusType CollectionStatus
         {
             get
             {
-                itemMateriaGrouped ??= ItemMateria
-                    .GroupBy(m => new
-                    {
-                        m.IsMelded,
-                        m.ItemId,
-                    }).OrderBy(g => g.Key.IsMelded)
-                    .Select(g => (g.First(), g.Count()))
-                    .ToList();
-                return itemMateriaGrouped;
+                if (IsCollected)
+                    return ItemMateria.All(m => m.CollectionStatus == CollectionStatusType.ObtainedComplete)
+                        ? CollectionStatusType.ObtainedComplete
+                        : CollectionStatusType.ObtainedPartial;
+                if (PrerequisiteTree is IPrerequisiteNode tree
+                    && tree.CollectionStatus >= CollectionStatusType.Obtainable)
+                    return CollectionStatusType.Obtainable;
+                return CollectionStatusType.NotObtainable;
             }
-            set
-            {
-                itemMateriaGrouped = value;
-            }
+        }
+
+        private void handleIsCollectedChange()
+        {
+            if (!IsCollected)
+                ItemMateria.UnmeldAllMateria();
+
+            if (PrerequisiteTree != null)
+                PrerequisiteTree.IsCollected = IsCollected;
+
+            triggerGearpieceChange();
         }
 
         public event GearpieceChangeHandler? OnGearpieceChange;
@@ -76,8 +135,7 @@ namespace BisBuddy.Gear
             yield return new ItemRequirementOwned(
                 new(
                     ItemId,
-                    IsCollected || IsManuallyCollected,
-                    IsObtainable,
+                    CollectionStatus,
                     RequirementType.Gearpiece
                     ),
                 parentGearset,
@@ -85,15 +143,14 @@ namespace BisBuddy.Gear
                 );
 
             // ignore materia if uncollected item materia is not enabled
-            if (IsCollected || IsManuallyCollected || includeUncollectedItemMateria)
+            if (IsCollected || includeUncollectedItemMateria)
             {
                 foreach (var materia in ItemMateria)
                 {
                     yield return new ItemRequirementOwned(
                         new(
                             materia.ItemId,
-                            materia.IsMelded,
-                            false, // materia has no prerequisites
+                            materia.CollectionStatus,
                             RequirementType.Materia
                             ),
                         parentGearset,
@@ -114,137 +171,32 @@ namespace BisBuddy.Gear
             }
         }
 
-        public void SetCollected(bool collected, bool manualToggle)
+        public void SetIsCollectedLocked(bool toCollect)
         {
-            if (IsManuallyCollected && !collected && !manualToggle)
-            {
-                logger.Error($"Cannot automatically uncollect manually collected item: {ItemName}");
+            PrerequisiteTree?.SetIsCollectedLocked(toCollect);
+
+            if (!toCollect)
+                ItemMateria.UnmeldAllMateria(respectCollectLock: false);
+
+            if (toCollect == IsCollected && CollectLock)
                 return;
-            }
 
-            IsCollected = collected;
+            if (!CollectLock)
+                CollectLock = true;
 
-            // if toggled by user, set manually collected flag
-            if (manualToggle)
-                IsManuallyCollected = collected;
+            logger.Info($"Gearpiece \"{ItemName}\" locked as {(toCollect ? "collected" : "uncollected")}");
 
-            // if not manually collected, uncollecting item will unmeld all materia
-            if (!collected && !IsManuallyCollected)
-                ItemMateria.ForEach(m => m.IsMelded = false);
-
-            // if collected, mark all prerequisites as collected
-            if (collected && PrerequisiteTree != null)
-                PrerequisiteTree.SetCollected(collected, manualToggle);
-
-            // if clicked by user as uncollected, uncollect all prerequisites as well
-            if (!collected && manualToggle && PrerequisiteTree != null)
-                PrerequisiteTree.SetCollected(false, manualToggle);
+            isCollected = toCollect;
 
             triggerGearpieceChange();
         }
 
-        public List<uint> ManuallyCollectedItemIds()
+        public List<uint> CollectLockItemIds()
         {
-            if (IsManuallyCollected)
+            if (CollectLock)
                 return [ItemId];
 
-            if (PrerequisiteTree == null)
-                return [];
-
-            return PrerequisiteTree.ManuallyCollectedItemIds();
-        }
-
-        public void MeldSingleMateria(uint materiaId)
-        {
-            itemMateriaGrouped = null;
-            for (var i = 0; i < ItemMateria.Count; i++)
-            {
-                var materia = ItemMateria[i];
-                if (materia.ItemId == materiaId && !materia.IsMelded)
-                {
-                    materia.IsMelded = true;
-                    ItemMateria[i] = materia;
-                    triggerGearpieceChange();
-                    break;
-                }
-            }
-        }
-
-        public int MeldMultipleMateria(List<Materia> materiaList)
-        {
-            itemMateriaGrouped = null;
-
-            // copy, since this will be modified here
-            var materiaIdList = new List<uint>(materiaList.Select(m => m.ItemId).ToList());
-
-            var slottedCount = 0;
-
-            // iterate over gearpiece slots
-            for (var gearIdx = 0; gearIdx < ItemMateria.Count; gearIdx++)
-            {
-                var materiaSlot = ItemMateria[gearIdx];
-                var assignedIdx = -1;
-
-                // iterate over candidate materia list
-                for (var candidateIdx = 0; candidateIdx < materiaIdList.Count; candidateIdx++)
-                {
-                    var candidateItemId = materiaIdList[candidateIdx];
-
-                    // gearpiece slot requires this candidate materia id
-                    if (candidateItemId == materiaSlot.ItemId)
-                    {
-                        // materia slot was previously not melded
-                        if (!materiaSlot.IsMelded)
-                        {
-                            // meld candidate piece into slot
-                            materiaSlot.IsMelded = true;
-                            slottedCount++;
-                        }
-
-                        // this candidate is now "filling" this slot. Remove it from further slot assignments
-                        assignedIdx = candidateIdx;
-                        break;
-                    }
-                }
-
-                // remove candidate from list if it was assigned
-                if (assignedIdx > -1)
-                {
-                    materiaIdList.RemoveAt(assignedIdx);
-                }
-                else
-                {
-                    materiaSlot.IsMelded = false;
-                }
-            }
-
-            triggerGearpieceChange();
-            return slottedCount;
-        }
-
-        public void UnmeldSingleMateria(uint materiaId)
-        {
-            itemMateriaGrouped = null;
-            for (var i = 0; i < ItemMateria.Count; i++)
-            {
-                var materia = ItemMateria[i];
-                if (materia.ItemId == materiaId && materia.IsMelded)
-                {
-                    materia.IsMelded = false;
-                    ItemMateria[i] = materia;
-                    triggerGearpieceChange();
-                    break;
-                }
-            }
-        }
-
-        public void UnmeldAllMateria()
-        {
-            itemMateriaGrouped = null;
-            foreach (var materia in ItemMateria)
-                materia.IsMelded = false;
-
-            triggerGearpieceChange();
+            return PrerequisiteTree?.CollectLockItemIds() ?? [];
         }
     }
 }

@@ -1,5 +1,6 @@
 using BisBuddy.Factories;
 using BisBuddy.Gear;
+using BisBuddy.Gear.Melds;
 using BisBuddy.Import;
 using BisBuddy.Items;
 using System;
@@ -15,7 +16,9 @@ namespace BisBuddy.Services.ImportGearset
         ITypedLogger<XivgearSource> logger,
         HttpClient httpClient,
         IItemDataService itemDataService,
-        IGearpieceFactory gearpieceFactory
+        IMateriaFactory materiaFactory,
+        IGearpieceFactory gearpieceFactory,
+        IGearsetFactory gearsetFactory
         ) : IImportGearsetSource
     {
         public ImportGearsetSourceType SourceType => ImportGearsetSourceType.Xivgear;
@@ -29,7 +32,9 @@ namespace BisBuddy.Services.ImportGearset
         private readonly ITypedLogger<XivgearSource> logger = logger;
         private readonly HttpClient httpClient = httpClient;
         private readonly IItemDataService itemDataService = itemDataService;
+        private readonly IMateriaFactory materiaFactory = materiaFactory;
         private readonly IGearpieceFactory gearpieceFactory = gearpieceFactory;
+        private readonly IGearsetFactory gearsetFactory = gearsetFactory;
 
         public async Task<List<Gearset>> ImportGearsets(string importString)
         {
@@ -133,20 +138,22 @@ namespace BisBuddy.Services.ImportGearset
                     if (onlyImportSetIdx >= 0 && setIdx != onlyImportSetIdx)
                         continue;
 
-                    string? job = null;
+                    uint? classJobId = null;
                     if (
                         rootElement.TryGetProperty("job", out var jobProp)
                         && jobProp.ValueKind == JsonValueKind.String
                         )
                     {
-                        job = jobProp.GetString();
+                        var classJobInfo = itemDataService.GetClassJobInfoByEnAbbreviation(jobProp.GetString() ?? "");
+                        if (classJobInfo.ClassJobId != 0)
+                            classJobId = classJobInfo.ClassJobId;
                     }
                     var setSourceUrl =
                         importString.Contains(XivgearSetIndexBase)
                         ? importString
                         : importString + XivgearSetIndexBase + setIdx;
 
-                    var gearset = parseGearset(setSourceUrl, setElement, job);
+                    var gearset = parseGearset(setSourceUrl, setElement, classJobId);
                     if (gearset != null)
                         gearsets.Add(gearset);
                 }
@@ -159,26 +166,26 @@ namespace BisBuddy.Services.ImportGearset
             return gearsets;
         }
 
-        private Gearset? parseGearset(string sourceUrl, JsonElement setElement, string? gearsetJobOverride)
+        private Gearset? parseGearset(string sourceUrl, JsonElement setElement, uint? gearsetJobOverride)
         {
             // set gearset name
-            var gearsetName = BisBuddy.Configuration.DefaultGearsetName;
+            string? gearsetName = null;
             if (
                 setElement.TryGetProperty("name", out var nameProp)
                 && nameProp.ValueKind == JsonValueKind.String
                 )
             {
-                gearsetName = nameProp.GetString() ?? BisBuddy.Configuration.DefaultGearsetName;
+                gearsetName = nameProp.GetString();
             }
 
-            var gearsetJob = gearsetJobOverride ?? "???";
+            var classJobId = gearsetJobOverride ?? 0;
             if (
                 gearsetJobOverride == null
                 && setElement.TryGetProperty("job", out var jobProp)
                 && jobProp.ValueKind == JsonValueKind.String
                 )
             {
-                gearsetJob = jobProp.GetString() ?? "???";
+                classJobId = itemDataService.GetClassJobInfoByEnAbbreviation(jobProp.GetString() ?? "").ClassJobId;
             }
 
             // get items from json
@@ -200,7 +207,7 @@ namespace BisBuddy.Services.ImportGearset
                 // xivgear only provides NQ items, convert to HQ
                 var gearpieceId = itemDataService.ConvertItemIdToHq(id.GetUInt32());
 
-                List<Materia> materiaList = [];
+                MateriaGroup gearpieceMateria = [];
 
                 if (slot.Value.TryGetProperty("materia", out var materiaArray))
                 {
@@ -212,15 +219,15 @@ namespace BisBuddy.Services.ImportGearset
                             && materiaId.GetInt32() > 0
                             )
                         {
-                            var newMateria = itemDataService.BuildMateria(materiaId.GetUInt32());
-                            materiaList.Add(newMateria);
+                            var newMateria = materiaFactory.Create(materiaId.GetUInt32());
+                            gearpieceMateria.Add(newMateria);
                         }
                     }
                 }
 
                 var gearpiece = gearpieceFactory.Create(
-                    gearpieceId,
-                    materiaList
+                    itemId: gearpieceId,
+                    itemMateria: gearpieceMateria
                     );
 
                 // add gearpiece to gearset
@@ -231,15 +238,13 @@ namespace BisBuddy.Services.ImportGearset
             if (gearpieces.Count == 0)
                 return null;
 
-            var gearset = new Gearset(
-                gearsetName,
-                gearpieces,
-                gearsetJob,
-                ImportGearsetSourceType.Xivgear,
+            return gearsetFactory.Create(
+                gearpieces: gearpieces,
+                name: gearsetName,
+                classJobId: classJobId,
+                sourceType: ImportGearsetSourceType.Xivgear,
                 sourceUrl: sourceUrl
                 );
-
-            return gearset;
         }
     }
 }

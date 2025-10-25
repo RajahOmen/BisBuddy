@@ -1,4 +1,5 @@
 using BisBuddy.Gear;
+using BisBuddy.Gear.Melds;
 using BisBuddy.Services.Gearsets;
 using System;
 using System.Collections.Generic;
@@ -11,10 +12,10 @@ namespace BisBuddy.Mediators
     {
         private readonly IGearsetsService gearsetsService = gearsetsService;
 
-        private IReadOnlyList<MeldPlan> currentMeldPlans = [];
+        private IReadOnlyList<(Gearset, MateriaGroup)> currentMeldPlans = [];
         private int currentMeldPlanIndex = 0;
         private uint? currentItemId;
-        public IReadOnlyList<MeldPlan> CurrentMeldPlans
+        public IReadOnlyList<(Gearset, MateriaGroup)> CurrentMeldPlans
         {
             get => currentMeldPlans;
             set
@@ -36,7 +37,7 @@ namespace BisBuddy.Mediators
                     );
             }
         }
-        public MeldPlan? CurrentMeldPlan =>
+        public (Gearset, MateriaGroup)? CurrentMeldPlan =>
             currentMeldPlans.Count > 0
             ? currentMeldPlans[currentMeldPlanIndex]
             : null;
@@ -57,8 +58,8 @@ namespace BisBuddy.Mediators
 
     public interface IMeldPlanService
     {
-        public MeldPlan? CurrentMeldPlan { get; }
-        public IReadOnlyList<MeldPlan> CurrentMeldPlans { get; }
+        public (Gearset Gearset, MateriaGroup MateriaGroup)? CurrentMeldPlan { get; }
+        public IReadOnlyList<(Gearset Gearset, MateriaGroup MateriaGroup)> CurrentMeldPlans { get; }
         public int CurrentMeldPlanIndex { get; set; }
         public void SetCurrentMeldPlanItemId(uint? newItemId);
     }

@@ -5,37 +5,100 @@ using System.Linq;
 
 namespace BisBuddy.Gear
 {
-    public delegate void GearsetChangeHandler();
+    public delegate void GearsetChangeHandler(bool effectsAssignments);
 
     [Serializable]
-    public partial class Gearset
+    public class Gearset
     {
-        public static readonly string DefaultName = "New Gearset";
-
         private readonly IReadOnlyList<Gearpiece> gearpieces = [];
-        private HighlightColor? highlightColor = null;
+
+        private string id;
+        private bool isActive;
+        private string name;
+        private int? priority;
+        private DateTime importDate;
+        private HighlightColor? highlightColor;
 
         // set to random uuid
-        public string Id { get; private set; } = Guid.NewGuid().ToString();
-        public bool IsActive { get; private set; } = true;
-        public string Name { get; private set; } = "New Gearset";
+        public string Id
+        {
+            get => id;
+            set
+            {
+                if (id == value)
+                    return;
+
+                id = value;
+                triggerGearsetChange(effectsAssignments: false);
+            }
+        }
+        public bool IsActive
+        {
+            get => isActive;
+            set
+            {
+                if (isActive == value)
+                    return;
+
+                isActive = value;
+                triggerGearsetChange(effectsAssignments: true);
+            }
+        }
+        public string Name
+        {
+            get => name;
+            set
+            {
+                if (name == value)
+                    return;
+
+                name = value ?? string.Empty;
+                triggerGearsetChange(effectsAssignments: false);
+            }
+        }
+        public int? Priority
+        {
+            get => priority;
+            set
+            {
+                if (priority == value)
+                    return;
+
+                priority = value;
+                triggerGearsetChange(effectsAssignments: true);
+            }
+        }
+        public DateTime ImportDate
+        {
+            get => importDate;
+            set
+            {
+                if (importDate == value)
+                    return;
+
+                importDate = value.ToUniversalTime();
+                triggerGearsetChange(effectsAssignments: false);
+            }
+        }
         public IReadOnlyList<Gearpiece> Gearpieces
         {
             get => gearpieces;
             init
             {
                 foreach (var gearpiece in value)
-                    gearpiece.OnGearpieceChange += triggerGearsetChange;
+                    gearpiece.OnGearpieceChange += handleChangeWithAssignments;
 
-                gearpieces = value ?? [];
+                gearpieces = value.OrderBy(g => g.GearpieceType).ToList() ?? [];
             }
         }
         // for links to externally sourced sites
-        public string? SourceUrl { get; init; } = null;
+        public string? SourceUrl { get; init; }
         // for local representations of the gearset that aren't native JSON (ex: teamcraft plaintext)
-        public string? SourceString { get; init; } = null;
+        public string? SourceString { get; init; }
         public ImportGearsetSourceType? SourceType { get; init; }
-        public string JobAbbrv { get; init; } = "???";
+        public ClassJobInfo ClassJobInfo { get; init; }
+        public string ClassJobAbbreviation => ClassJobInfo.Abbreviation;
+        public string ClassJobName => ClassJobInfo.Name;
         public HighlightColor? HighlightColor
         {
             get => highlightColor;
@@ -51,10 +114,10 @@ namespace BisBuddy.Gear
                         oldColor.UpdateColor(color.BaseColor);
                     else
                     {
-                        oldColor.OnColorChange -= triggerGearsetChange;
+                        oldColor.OnColorChange -= handleChangeWithoutAssignments;
                         highlightColor = null;
                         // changing to new binding (null), trigger update
-                        triggerGearsetChange();
+                        triggerGearsetChange(effectsAssignments: false);
                     }
                 // uses default highlight color
                 else
@@ -62,9 +125,9 @@ namespace BisBuddy.Gear
                     if (value is HighlightColor color)
                     {
                         highlightColor = color;
-                        highlightColor!.OnColorChange += triggerGearsetChange;
+                        highlightColor!.OnColorChange += handleChangeWithoutAssignments;
                         // changing to new binding, trigger update
-                        triggerGearsetChange();
+                        triggerGearsetChange(effectsAssignments: false);
                     }
                 }
             }
@@ -72,62 +135,48 @@ namespace BisBuddy.Gear
 
         public event GearsetChangeHandler? OnGearsetChange;
 
-        public Gearset(string name, string? sourceUrl, ImportGearsetSourceType? sourceType, bool isActive)
-        {
-            Name = name;
-            SourceUrl = sourceUrl;
-            SourceType = sourceType;
-            IsActive = isActive;
-        }
-
-        internal Gearset(
+        public Gearset(
+            string id,
+            bool isActive,
             string name,
-            List<Gearpiece> gearpieces,
-            string jobAbbrv,
+            IReadOnlyList<Gearpiece> gearpieces,
+            ClassJobInfo classJobInfo,
             ImportGearsetSourceType? sourceType,
-            string? sourceUrl = null,
-            string? sourceString = null
+            string? sourceUrl,
+            string? sourceString,
+            int priority,
+            DateTime importDate,
+            HighlightColor? highlightColor
             )
         {
-            Name = name;
+            this.id = id;
+            this.isActive = isActive;
+            this.name = name;
             SourceUrl = sourceUrl;
             SourceString = sourceString;
             SourceType = sourceType;
-            JobAbbrv = jobAbbrv;
-
-            // ensure ordering after adding
-            gearpieces.Sort((a, b) => a.GearpieceType.CompareTo(b.GearpieceType));
+            ClassJobInfo = classJobInfo;
             Gearpieces = gearpieces;
+            this.priority = priority;
+            this.importDate = importDate;
+            this.highlightColor = highlightColor;
         }
+
 
         ~Gearset()
         {
             foreach (var gearpiece in Gearpieces)
-                gearpiece.OnGearpieceChange -= triggerGearsetChange;
+                gearpiece.OnGearpieceChange -= handleChangeWithAssignments;
         }
 
-        private void triggerGearsetChange()
-        {
-            OnGearsetChange?.Invoke();
-        }
+        private void handleChangeWithAssignments() =>
+            triggerGearsetChange(effectsAssignments: true);
 
-        public void SetId(string newId)
-        {
-            Id = newId;
-            triggerGearsetChange();
-        }
+        private void handleChangeWithoutAssignments() =>
+            triggerGearsetChange(effectsAssignments: false);
 
-        public void SetActiveStatus(bool newActivityStatus)
-        {
-            IsActive = newActivityStatus;
-            triggerGearsetChange();
-        }
-
-        public void SetName(string newName)
-        {
-            Name = newName;
-            triggerGearsetChange();
-        }
+        private void triggerGearsetChange(bool effectsAssignments) =>
+            OnGearsetChange?.Invoke(effectsAssignments);
 
         public IEnumerable<ItemRequirementOwned> ItemRequirements(bool includeUncollectedItemMateria)
         {

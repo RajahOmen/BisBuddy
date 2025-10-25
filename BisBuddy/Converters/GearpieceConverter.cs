@@ -1,8 +1,8 @@
 using BisBuddy.Factories;
 using BisBuddy.Gear;
+using BisBuddy.Gear.Melds;
 using BisBuddy.Gear.Prerequisites;
 using System;
-using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -12,6 +12,7 @@ namespace BisBuddy.Converters
         IGearpieceFactory gearpieceFactory
         ) : JsonConverter<Gearpiece>
     {
+        private const string LegacyIsManuallyCollectedPropertyName = "IsManuallyCollected";
         private readonly IGearpieceFactory gearpieceFactory = gearpieceFactory;
 
         public override Gearpiece? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -21,9 +22,10 @@ namespace BisBuddy.Converters
 
             uint? itemId = null;
             IPrerequisiteNode? prerequisiteTree = null;
-            List<Materia>? itemMateria = null;
+            MateriaGroup? itemMateria = null;
             bool? isCollected = null;
             bool? isManuallyCollected = null;
+            bool? collectionStatusLocked = null;
 
             while (reader.Read())
             {
@@ -42,12 +44,15 @@ namespace BisBuddy.Converters
                         prerequisiteTree = JsonSerializer.Deserialize<IPrerequisiteNode>(ref reader, options);
                         break;
                     case nameof(Gearpiece.ItemMateria):
-                        itemMateria = JsonSerializer.Deserialize<List<Materia>>(ref reader, options);
+                        itemMateria = JsonSerializer.Deserialize<MateriaGroup>(ref reader, options);
                         break;
                     case nameof(Gearpiece.IsCollected):
                         isCollected = reader.GetBoolean();
                         break;
-                    case nameof(Gearpiece.IsManuallyCollected):
+                    case nameof(Gearpiece.CollectLock):
+                        isManuallyCollected = reader.GetBoolean();
+                        break;
+                    case LegacyIsManuallyCollectedPropertyName:
                         isManuallyCollected = reader.GetBoolean();
                         break;
                     default:
@@ -64,7 +69,7 @@ namespace BisBuddy.Converters
                 itemMateria,
                 prerequisiteTree,
                 isCollected ?? false,
-                isManuallyCollected ?? false
+                collectionStatusLocked ?? isManuallyCollected ?? false
                 );
         }
 
@@ -74,8 +79,7 @@ namespace BisBuddy.Converters
 
             writer.WriteNumber(nameof(Gearpiece.ItemId), value.ItemId);
             writer.WriteBoolean(nameof(Gearpiece.IsCollected), value.IsCollected);
-            writer.WriteBoolean(nameof(Gearpiece.IsManuallyCollected), value.IsManuallyCollected);
-            writer.WriteNumber(nameof(Gearpiece.GearpieceType), (int)value.GearpieceType);
+            writer.WriteBoolean(nameof(Gearpiece.CollectLock), value.CollectLock);
 
             writer.WritePropertyName(nameof(Gearpiece.ItemMateria));
             JsonSerializer.Serialize(writer, value.ItemMateria, options);

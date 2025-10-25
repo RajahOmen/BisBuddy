@@ -1,14 +1,19 @@
 using BisBuddy.Gear;
+using BisBuddy.Gear.Melds;
 using BisBuddy.Gear.Prerequisites;
+using BisBuddy.Resources;
 using BisBuddy.Util;
+using Dalamud.Game;
 using Dalamud.Game.Inventory;
+using Dalamud.Utility;
+using Lumina.Excel;
 using Lumina.Excel.Sheets;
 using Lumina.Text.ReadOnly;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using GearMateria = BisBuddy.Gear.Materia;
 using SheetMateria = Lumina.Excel.Sheets.Materia;
 
 namespace BisBuddy.Items
@@ -93,7 +98,7 @@ namespace BisBuddy.Items
                 // add item id of materia to list
                 try
                 {
-                    var materiaItemId = GetMateriaItemId(materiaId, materiaGrade);
+                    var materiaItemId = getMateriaItemId(materiaId, materiaGrade);
                     if (materiaItemId != 0) materiaList.Add(materiaItemId);
                 }
                 catch (Exception e)
@@ -118,22 +123,11 @@ namespace BisBuddy.Items
             logger.Fatal(str);
         }
 
-        public List<GearMateria> GetItemMateria(GameInventoryItem item)
-        {
-            var materiaIds = GetItemMateriaIds(item);
-            var materiaList = new List<GearMateria>();
-            foreach (var id in materiaIds)
-            {
-                materiaList.Add(BuildMateria(id));
-            }
-
-            return materiaList;
-        }
-
-        private uint GetMateriaItemId(ushort materiaId, byte materiaGrade)
+        private uint getMateriaItemId(ushort materiaId, byte materiaGrade)
         {
             // can fail for weird gear, like Eternal Ring//
-            if (!Materia.TryGetRow(materiaId, out var materiaRow)) return 0;
+            if (!Materia.TryGetRow(materiaId, out var materiaRow))
+                return 0;
 
             // row is materiaId (the type: crt, det, etc), column is materia grade (I, II, III, etc)
             var materiaItem = materiaRow.Item[materiaGrade];
@@ -152,6 +146,30 @@ namespace BisBuddy.Items
                 return false;
 
             return itemRow.MateriaSlotCount > 0;
+        }
+
+        public ItemUICategory GetItemUICategory(uint itemId)
+        {
+
+            if (!tryGetItemRowById(itemId, out var itemRow))
+                throw new ArgumentException($"Invalid itemId {itemId}");
+
+            return itemRow.ItemUICategory.Value;
+        }
+
+        public ushort GetItemIconId(uint itemId)
+        {
+            if (!tryGetItemRowById(itemId, out var itemRow))
+                throw new ArgumentException($"Invalid itemId {itemId}");
+
+            return itemRow.Icon;
+        }
+
+        public int GetItemMateriaSlotCount(uint itemId)
+        {
+            if (!tryGetItemRowById(itemId, out var itemRow))
+                throw new ArgumentException($"Invalid itemId {itemId}");
+            return itemRow.MateriaSlotCount;
         }
 
         /// <summary>   
@@ -195,7 +213,7 @@ namespace BisBuddy.Items
                         && sameItemRequirements(node.Item, oldPrerequisiteNode)
                     ).Index;
 
-                logger.Verbose($"New alternative found for \"{itemId}\", added as new {nameof(PrerequisiteOrNode)} layer (idx: {oldNodeIndex})");
+                logger.Debug($"New alternative found for \"{itemId}\", added as new {nameof(PrerequisiteOrNode)} layer (idx: {oldNodeIndex})");
 
                 // add to new node. If no index found, insert at start
                 if (oldNodeIndex >= 0)
@@ -209,17 +227,19 @@ namespace BisBuddy.Items
             {
                 foreach (var newChildNode in newPrerequisiteNode.PrerequisiteTree)
                 {
+                    var newChildNodeItemIds = newChildNode.ItemRequirements.Select(req => req.ItemId);
+
                     // add nodes that exist in new tree to old tree
-                    var existsInOldNode = oldPrerequisiteNode
-                        .PrerequisiteTree
-                        .Any(node =>
-                            node.ItemId == newChildNode.ItemId
-                            && node.GetType() == newChildNode.GetType()
+                    var existsInOldNode = ((PrerequisiteOrNode)oldPrerequisiteNode)
+                        .CompletePrerequisiteTree
+                        .Any(entry =>
+                            entry.Node.ItemRequirements.Select(req => req.ItemId).SequenceEqual(newChildNodeItemIds)
+                            && entry.Node.GetType() == newChildNode.GetType()
                         );
 
                     if (!existsInOldNode)
                     {
-                        logger.Verbose($"New alternative found for \"{itemId}\", added to existing {nameof(PrerequisiteOrNode)} layer");
+                        logger.Debug($"New alternative found for \"{itemId}\", added to existing {nameof(PrerequisiteOrNode)} layer");
                         oldPrerequisiteNode.AddNode(newChildNode);
                     }
 
@@ -264,7 +284,7 @@ namespace BisBuddy.Items
                 return group;
 
             // build list of prerequisites from supplementals data
-            IPrerequisiteNode supplementalTree = new PrerequisiteOrNode(itemId, itemName, [], PrerequisiteNodeSourceType.Loot);
+            IPrerequisiteNode supplementalTree;
             var supplementalPrereqs = ItemsCoffers[itemId];
             var hasSupplementalPrereqs = supplementalPrereqs.Any();
 
@@ -275,13 +295,24 @@ namespace BisBuddy.Items
             }
             else if (supplementalPrereqs.Count() > 1)
             {
-                supplementalTree.PrerequisiteTree = ItemsCoffers[itemId]
+                var prereqs = ItemsCoffers[itemId]
                     .Select(id => buildPrerequisites(id, isCollected, isManuallyCollected, depth - 1))
                     .ToList();
+
+                supplementalTree = new PrerequisiteOrNode(
+                    itemId,
+                    itemName,
+                    prereqs,
+                    PrerequisiteNodeSourceType.Loot
+                    );
+            }
+            else
+            {
+                supplementalTree = new PrerequisiteOrNode(itemId, itemName, [], PrerequisiteNodeSourceType.Loot);
             }
 
             // build list of prerequisites from shops/exchanges data
-            IPrerequisiteNode exchangesTree = new PrerequisiteOrNode(itemId, itemName, [], PrerequisiteNodeSourceType.Shop);
+            IPrerequisiteNode exchangesTree;
             var exchangesPrereqs = ItemsPrerequisites[itemId];
             var hasExchangesPrereqs = exchangesPrereqs.Any();
 
@@ -314,7 +345,7 @@ namespace BisBuddy.Items
             else if (exchangesPrereqs.Count() > 1) // exchangable at more than 1 shop listing
             {
                 // build OR list of ANDs. Ex: OR(AND(A, B, C), AND(D, E), ATOM())
-                exchangesTree.PrerequisiteTree = exchangesPrereqs
+                var prereqs = exchangesPrereqs
                     .Select(shopCostIds =>
                     {
                         // shop costs one items
@@ -333,6 +364,17 @@ namespace BisBuddy.Items
                             PrerequisiteNodeSourceType.Shop
                             );
                     }).ToList();
+
+                exchangesTree = new PrerequisiteOrNode(
+                    itemId,
+                    itemName,
+                    prereqs,
+                    PrerequisiteNodeSourceType.Shop
+                    );
+            }
+            else
+            {
+                exchangesTree = new PrerequisiteOrNode(itemId, itemName, [], PrerequisiteNodeSourceType.Shop);
             }
 
             // build resulting group
@@ -358,6 +400,8 @@ namespace BisBuddy.Items
             }
             else if (hasExchangesPrereqs)
             {
+                var exchangeNames = exchangesPrereqs.SelectMany(prereqs => prereqs).Select(GetItemNameById);
+                var prereqNames = exchangesTree.PrerequisiteTree.SelectMany(prereq => prereq.PrerequisiteTree).Select(p => p.ItemName);
                 // only from shops/exchanges
                 group.PrerequisiteTree = [exchangesTree];
             }
@@ -365,9 +409,12 @@ namespace BisBuddy.Items
             return group;
         }
 
-        private (uint statId, string statName, int statLevel, int statQuantity) getMateriaInfo(string materiaName)
+        public MateriaDetails GetMateriaInfo(uint materiaItemId)
         {
-            if (MateriaNameToStat.TryGetValue(materiaName, out var value)) return value;
+            if (MateriaDetailsCache.TryGetValue(materiaItemId, out var value))
+                return value;
+
+            var materiaName = GetItemNameById(materiaItemId);
 
             var maxMateriaRow = 40;
             SheetMateria? materiaRow = null;
@@ -389,29 +436,25 @@ namespace BisBuddy.Items
                 if (materiaCol > 0) break;
             }
 
-            if (materiaRow == null || materiaCol < 0)
+            if (materiaRow is not SheetMateria materiaRowValue || materiaCol < 0)
                 throw new InvalidOperationException($"Materia {materiaName} not found in materia sheet");
 
-            var statName = SeStringToString(materiaRow.Value.BaseParam.Value.Name);
-            var statQuantity = materiaRow.Value.Value[materiaCol];
+            var statName = SeStringToString(materiaRowValue.BaseParam.Value.Name);
+            var statType = (MateriaStatType)materiaRowValue.RowId;
+            var statQuantity = materiaRowValue.Value[materiaCol];
 
-            return (materiaRow.Value.RowId, statName, materiaCol, statQuantity);
-        }
-
-        public GearMateria BuildMateria(uint itemId, bool isMelded = false)
-        {
-            var materiaName = GetItemNameById(itemId);
-            var (statId, statName, statLevel, statQuantity) = getMateriaInfo(materiaName);
-
-            return new GearMateria(
-                itemId,
-                materiaName,
-                statLevel,
-                statId,
-                statName,
-                statQuantity,
-                isMelded
-                );
+            var materiaDetails = new MateriaDetails()
+            {
+                ItemId = materiaItemId,
+                MateriaId = materiaRowValue.RowId,
+                ItemName = materiaName,
+                StatName = statName,
+                StatType = statType,
+                Level = materiaCol,
+                Strength = statQuantity
+            };
+            MateriaDetailsCache.Add(materiaItemId, materiaDetails);
+            return materiaDetails;
         }
 
         public bool ItemIsShield(uint itemId)
@@ -475,7 +518,7 @@ namespace BisBuddy.Items
                     if (value != null && (sbyte)value == 1)
                     {
                         // return first gearpiece type match
-                        if (GearpieceTypeMapper.TryParse(property.Name, out var type))
+                        if (gearpieceTypeMapper.TryParse(property.Name, out var type))
                             return type;
                     }
                 }
@@ -483,6 +526,72 @@ namespace BisBuddy.Items
 
             // none found
             return GearpieceType.None;
+        }
+
+        public ClassJobInfo GetClassJobInfoByEnAbbreviation(string abbrevation, ClientLanguage language = ClientLanguage.English)
+        {
+            var sheet = language == ClientLanguage.English
+                ? ClassJobEn
+                : dataManager.GetExcelSheet<ClassJob>(language);
+
+            foreach (var row in sheet)
+            {
+                if (row.Abbreviation.ExtractText().Equals(abbrevation, StringComparison.InvariantCultureIgnoreCase))
+                    return new(
+                        classJobId: row.RowId,
+                        name: row.Name.ExtractText(),
+                        abbreviation: row.Abbreviation.ExtractText()
+                        );
+            }
+
+            return nullJobInfo;
+        }
+
+        public ClassJobInfo GetClassJobInfoById(uint jobId)
+        {
+            if (jobId == 0 || !ClassJobEn.TryGetRow(jobId, out var row))
+                return nullJobInfo;
+
+            var titleCaseName = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(row.Name.ExtractText().ToLower());
+
+            return new(
+                classJobId: row.RowId,
+                name: titleCaseName,
+                abbreviation: row.Abbreviation.ExtractText()
+                );
+        }
+
+        private int classJobCount =>
+            // +1 because "no job" is not included in the count
+            ClassJobEn.Count(c => !c.Name.ExtractText().IsNullOrEmpty()) + 1;
+
+        private ClassJobInfo nullJobInfo => new(
+            classJobId: 0,
+            name: Resource.UnknownClassJobName,
+            abbreviation: Resource.UnknownClassJobAbbreviation,
+            iconIdIndex: classJobCount + Constants.CompanionIconOffset
+            );
+
+        public IEnumerable<uint> FindClassJobIdUsers(IEnumerable<uint> itemIds)
+        {
+            var allClassJobIds = ClassJobEn
+                .Where(job => !job.Name.IsEmpty)
+                .Select(job => job.RowId);
+
+            var validJobs = itemIds.Aggregate(allClassJobIds, (validJobIds, nextItemId) =>
+            {
+                if (!tryGetItemRowById(nextItemId, out var item))
+                    return validJobIds;
+
+                var categoryRow = dataManager
+                    .GetExcelSheet<RawRow>(ClientLanguage.English, "ClassJobCategory")
+                    .GetRow(item.ClassJobCategory.RowId);
+
+                return validJobIds
+                    .Where(id => categoryRow.ReadBoolColumn((int)id + 1));
+            });
+
+            return validJobs;
         }
     }
 }

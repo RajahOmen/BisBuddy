@@ -1,11 +1,9 @@
-using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace BisBuddy.Gear.Prerequisites
 {
-    [Serializable]
     public class PrerequisiteAndNode : IPrerequisiteNode
     {
         private List<IPrerequisiteNode> prerequisiteTree;
@@ -28,9 +26,16 @@ namespace BisBuddy.Gear.Prerequisites
             }
         }
 
-        public bool IsCollected => PrerequisiteTree.All(p => p.IsCollected);
-        public bool IsManuallyCollected => PrerequisiteTree.All(p => p.IsManuallyCollected);
-        public bool IsObtainable => IsCollected || PrerequisiteTree.All(p => p.IsObtainable);
+        public bool IsCollected
+        {
+            get => PrerequisiteTree.All(p => p.IsCollected);
+            set
+            {
+                foreach (var prereq in PrerequisiteTree)
+                    if (!prereq.CollectLock)
+                        prereq.IsCollected = value;
+            }
+        }
         public HashSet<string> ChildNodeIds => [.. PrerequisiteTree.Select(p => p.NodeId), .. PrerequisiteTree.SelectMany(p => p.ChildNodeIds)];
         public IEnumerable<ItemRequirement> ItemRequirements
         {
@@ -41,15 +46,40 @@ namespace BisBuddy.Gear.Prerequisites
                         yield return requirement;
             }
         }
+        public CollectionStatusType CollectionStatus
+        {
+            get
+            {
+                if (IsCollected)
+                    return CollectionStatusType.ObtainedComplete;
+                if (PrerequisiteTree.All(p => p.CollectionStatus >= CollectionStatusType.Obtainable))
+                    return CollectionStatusType.Obtainable;
+                return CollectionStatusType.NotObtainable;
+            }
+        }
 
+        public bool CollectLock
+        {
+            get => PrerequisiteTree.Any(p => p.CollectLock);
+            set
+            {
+                foreach (var prereq in PrerequisiteTree)
+                    prereq.CollectLock = value;
+            }
+        }
+
+        public void SetIsCollectedLocked(bool toCollect)
+        {
+            foreach (var prereq in PrerequisiteTree)
+                prereq.SetIsCollectedLocked(toCollect);
+        }
 
         public List<(IPrerequisiteNode Node, int Count)> Groups()
         {
             return PrerequisiteTree
                 .GroupBy(p => p.GroupKey())
                 .Select(g => (g.First(), g.Count()))
-                .OrderBy(g => g.Item1.IsCollected)
-                .ThenBy(g => g.Item1.IsObtainable)
+                .OrderBy(g => g.Item1.CollectionStatus)
                 .ToList();
         }
 
@@ -96,12 +126,6 @@ namespace BisBuddy.Gear.Prerequisites
 
             prerequisiteTree.Insert(index, node);
             node.OnPrerequisiteChange += handlePrereqChange;
-        }
-
-        public void SetCollected(bool collected, bool manualToggle)
-        {
-            foreach (var p in PrerequisiteTree)
-                p.SetCollected(collected, manualToggle);
         }
 
         public int MinRemainingItems(uint? newItemId = null)
@@ -156,10 +180,10 @@ namespace BisBuddy.Gear.Prerequisites
             return null;
         }
 
-        public List<uint> ManuallyCollectedItemIds()
+        public List<uint> CollectLockItemIds()
         {
             return PrerequisiteTree
-                .SelectMany(p => p.ManuallyCollectedItemIds())
+                .SelectMany(p => p.CollectLockItemIds())
                 .ToList();
         }
 
@@ -173,7 +197,7 @@ namespace BisBuddy.Gear.Prerequisites
         public string GroupKey()
         {
             return $"""
-                AND {ItemId} {IsCollected} {IsManuallyCollected} {SourceType}
+                AND {ItemId} {IsCollected} {CollectLock} {SourceType}
                 {string.Join(" ", PrerequisiteTree.Select(p => p.GroupKey()))}
                 """;
         }

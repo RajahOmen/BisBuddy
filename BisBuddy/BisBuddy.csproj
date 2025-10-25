@@ -19,7 +19,8 @@
     <PackageReference Include="Lumina" Version="6.4.0" />
     <PackageReference Include="Lumina.Excel" Version="7.3.1" />
     <PackageReference Include="LuminaSupplemental.Excel" Version="3.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.8" />
+	<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.8" />
+	<PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.8" />
     <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="9.0.8" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.8" />
     <PackageReference Include="TestableIO.System.IO.Abstractions.Wrappers" Version="22.0.15" />
@@ -44,7 +45,7 @@
       <LastGenOutput>Resource.ja.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Update="Resources\Resource.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
+      <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resource.Designer.cs</LastGenOutput>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>

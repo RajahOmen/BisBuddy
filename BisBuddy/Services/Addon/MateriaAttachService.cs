@@ -5,7 +5,6 @@ using Dalamud.Game.Addon.Lifecycle;
 using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
 using Dalamud.Game.Text.SeStringHandling;
 using FFXIVClientStructs.FFXIV.Component.GUI;
-using KamiToolKit.Classes;
 using KamiToolKit.Nodes;
 using KamiToolKit.System;
 using System;
@@ -115,8 +114,8 @@ namespace BisBuddy.Services.Addon
             // update list of materia names that are needed
             var materiaNames = meldPlanService
                 .CurrentMeldPlan?
-                .Materia
-                .Where(m => !m.IsMelded)
+                .MateriaGroup
+                .Where(m => !m.IsCollected)
                 .Select(m => m.ItemName) ?? [];
 
             // limit to next materia to meld if configured

@@ -1,3 +1,4 @@
+using BisBuddy.Extensions;
 using BisBuddy.Gear;
 using BisBuddy.Import;
 using BisBuddy.Util;
@@ -6,6 +7,7 @@ using Dalamud.Plugin.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace BisBuddy.Services.Gearsets
@@ -14,20 +16,65 @@ namespace BisBuddy.Services.Gearsets
     {
         public event GearsetsChangeHandler? OnGearsetsChange;
 
+        /// <summary>
+        /// Relates different sort types to the property whos values gearsets should be sorted by.
+        /// </summary>
+        private static readonly Dictionary<GearsetSortType, PropertyInfo> SortTypePropertyMap = new()
+        {
+            { GearsetSortType.Name,       getProp(nameof(Gearset.Name)) },
+            { GearsetSortType.Job,        getProp(nameof(Gearset.ClassJobAbbreviation)) },
+            //{ GearsetSortType.Priority,   getProp(nameof(Gearset.Priority)) },
+            { GearsetSortType.ImportDate, getProp(nameof(Gearset.ImportDate)) },
+            { GearsetSortType.Active,     getProp(nameof(Gearset.IsActive)) },
+        };
+
+        /// <summary>
+        /// Describes secondary sorting rules that are applied after the primary sort property.
+        /// Change the order of these properties to change their priority in the sort order.
+        /// Change descending value to change the direction that property is sorted in
+        /// </summary>
+        private static readonly List<(PropertyInfo property, bool descending)> SupplementalPropertiesSortOrder =
+        [
+            ( getProp(nameof(Gearset.IsActive)),             descending: true ),
+            //( getProp(nameof(Gearset.Priority)),             descending: true ),
+            ( getProp(nameof(Gearset.Name)),                 descending: false ),
+            ( getProp(nameof(Gearset.ClassJobAbbreviation)), descending: false ),
+            ( getProp(nameof(Gearset.ImportDate)),           descending: false ),
+            ( getProp(nameof(Gearset.Id)),                   descending: false ),
+        ];
+
+        private static PropertyInfo getProp(string propertyName) =>
+            typeof(Gearset).GetProperty(propertyName)!;
+
         private void triggerGearsetsChange(bool saveToFile = true)
         {
             logger.Verbose($"OnGearsetsChange (saving: {saveToFile})");
             updateItemRequirements();
-            OnGearsetsChange?.Invoke();
-            if (saveToFile)
-                scheduleSaveCurrentGearsets();
+            sortGearsets(currentGearsetsSortType, currentGearsetsSortDescending);
+
+            framework.RunOnFrameworkThread(() =>
+            {
+                OnGearsetsChange?.Invoke();
+                if (saveToFile)
+                    scheduleSaveCurrentGearsets();
+            });
         }
 
-        private void handleGearsetChange() =>
-            scheduleGearsetsChange();
+        private void handleGearsetChange(bool effectsAssignments)
+        {
+            // ignore any changes that occur while gearsets are being updated
+            if (gearsetsChangeLocked)
+                return;
 
-        private void scheduleGearsetsChange() =>
+            scheduleGearsetsChange(effectsAssignments);
+        }
+
+        private void scheduleGearsetsChange(bool updateAssignments)
+        {
             gearsetsDirty = true;
+            assignmentsDirty |= updateAssignments;
+        }
+
 
         /// <summary>
         /// Coalesce gearset change event calls into one per framework
@@ -38,8 +85,18 @@ namespace BisBuddy.Services.Gearsets
             if (!gearsetsDirty)
                 return;
 
-            gearsetsDirty = false;
-            triggerGearsetsChange(saveToFile: true);
+            try
+            {
+                if (configurationService.PluginUpdateInventoryScan && assignmentsDirty)
+                    ScheduleUpdateFromInventory();
+                else
+                    triggerGearsetsChange(saveToFile: true);
+            }
+            finally
+            {
+                gearsetsDirty = false;
+                assignmentsDirty = false;
+            }
         }
 
         private void handleLogin()
@@ -96,10 +153,44 @@ namespace BisBuddy.Services.Gearsets
             }
 
             logger.Info($"Adding {gearsetsToAdd.Count()} gearsets to current gearsets");
-            if (configurationService.PluginUpdateInventoryScan)
-                ScheduleUpdateFromInventory();
-            else
-                scheduleGearsetsChange();
+            scheduleGearsetsChange(updateAssignments: true);
+        }
+
+        private void sortGearsets(GearsetSortType sortType, bool sortDescending)
+        {
+            if (!SortTypePropertyMap.TryGetValue(sortType, out var firstSortProperty))
+                throw new NotImplementedException($"Sorting by {Enum.GetName(sortType)} not supported");
+
+            logger.Debug($"Sorting current gearsets by {Enum.GetName(sortType)}, {(sortDescending ? "desc" : "asc")}");
+
+            IEnumerable<Gearset> gearsets = new List<Gearset>(currentGearsets);
+
+            // perform initial ordering based on primary sort property
+            var orderedGearsets
+                = gearsets.OrderByDirection(firstSortProperty.GetValue, sortDescending);
+
+
+            // sort via using any remaining tiebreaks
+            foreach (var sortProperty in SupplementalPropertiesSortOrder)
+            {
+                if (sortProperty.property == firstSortProperty)
+                    continue;
+                orderedGearsets = orderedGearsets.ThenByDirection(sortProperty.property.GetValue, sortProperty.descending);
+            }
+
+            currentGearsets = orderedGearsets.ToList();
+        }
+
+        public void ChangeGearsetSortOrder(GearsetSortType? newSortType = null, bool? sortDescending = null)
+        {
+            var sortType = newSortType ?? currentGearsetsSortType;
+            var descending = sortDescending ?? currentGearsetsSortDescending;
+            if (newSortType != currentGearsetsSortType || sortDescending != currentGearsetsSortDescending)
+            {
+                sortGearsets(sortType, descending);
+                currentGearsetsSortType = sortType;
+                currentGearsetsSortDescending = descending;
+            }
         }
 
         public void RemoveGearset(Gearset gearset)
@@ -110,14 +201,12 @@ namespace BisBuddy.Services.Gearsets
                 return;
             }
 
-            logger.Info($"Removing gearset \"{gearset.Id}\" from current gearsets");
+            logger.Info($"Deleting gearset {gearset.Id} ({gearset.Name})");
+
             gearset.OnGearsetChange -= handleGearsetChange;
             currentGearsets.Remove(gearset);
 
-            if (configurationService.PluginUpdateInventoryScan)
-                ScheduleUpdateFromInventory();
-            else
-                scheduleGearsetsChange();
+            scheduleGearsetsChange(updateAssignments: true);
         }
 
         public void ScheduleUpdateFromInventory(
@@ -143,20 +232,20 @@ namespace BisBuddy.Services.Gearsets
             inventoryUpdateDisplayService.IsManualUpdate = manualUpdate;
 
             // don't block main thread, queue for execution instead
-            var queuedUpdate = queueService.Enqueue(() =>
+            var queuedUpdate = queueService.Enqueue($"ASSIGNMENTS_UPDATE_{currentLocalContentId}", () =>
             {
                 // returns number of gearpiece status changes after update
                 try
                 {
                     logger.Verbose($"Updating current gearsets with new assignments");
+                    gearsetsChangeLocked = true;
                     if (!GearsetsLoaded)
                         return;
 
                     var itemsList = getGameInventoryItems();
-                    var gearpiecesToUpdate = Gearset.GetGearpiecesFromGearsets(gearsetsToUpdate);
 
                     var solver = itemAssignmentSolverFactory.Create(
-                        allGearsets: currentGearsets.Where(g => g.IsActive),
+                        allGearsets: currentGearsets,
                         assignableGearsets: gearsetsToUpdate,
                         inventoryItems: itemsList
                         );
@@ -165,7 +254,7 @@ namespace BisBuddy.Services.Gearsets
 
                     logger.Debug($"Updated {updatedGearpieces?.Count ?? 0} gearpieces from inventories");
 
-                    scheduleGearsetsChange();
+                    triggerGearsetsChange(saveToFile: saveChanges);
 
                     inventoryUpdateDisplayService.GearpieceUpdateCount = updatedGearpieces?.Count ?? 0;
                 }
@@ -177,6 +266,7 @@ namespace BisBuddy.Services.Gearsets
                 finally
                 {
                     inventoryUpdateDisplayService.UpdateIsQueued = false;
+                    gearsetsChangeLocked = false;
                 }
             });
             if (!queuedUpdate)

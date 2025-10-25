@@ -156,7 +156,8 @@ namespace BisBuddy.Services.Addon
                     nativeController.AttachNode(customNode, parentNode);
                 customNodes.Add((nint)parentNode, (customNode, color));
                 return customNode;
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 nativeController.DisposeNode(ref customNode);
                 logger.Error(ex, $"Failed to create custom node in \"{AddonName}\"");

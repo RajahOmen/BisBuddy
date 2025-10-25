@@ -1,11 +1,11 @@
 using BisBuddy.Factories;
 using BisBuddy.Gear;
+using BisBuddy.Gear.Melds;
 using BisBuddy.Import;
 using BisBuddy.Mediators;
 using BisBuddy.Services.Configuration;
 using BisBuddy.Services.ImportGearset;
 using Dalamud.Plugin.Services;
-using Dalamud.Utility;
 using Microsoft.Extensions.Hosting;
 using System.Collections.Generic;
 using System.IO;
@@ -48,11 +48,15 @@ namespace BisBuddy.Services.Gearsets
         private readonly IImportGearsetService importGearsetService = importGearsetService;
 
         private bool gearsetsDirty = false;
+        private bool assignmentsDirty = false;
+        private bool gearsetsChangeLocked = false;
 
         private ulong currentLocalContentId => clientState.LocalContentId;
 
         private List<Gearset> currentGearsets = [];
         private Dictionary<uint, List<ItemRequirementOwned>> currentItemRequirements = [];
+        private GearsetSortType currentGearsetsSortType = GearsetSortType.ImportDate;
+        private bool currentGearsetsSortDescending = false;
 
         public IReadOnlyList<Gearset> CurrentGearsets
         {
@@ -60,7 +64,7 @@ namespace BisBuddy.Services.Gearsets
             private set
             {
                 currentGearsets = value.ToList();
-                scheduleGearsetsChange();
+                scheduleGearsetsChange(updateAssignments: true);
             }
         }
 
@@ -150,12 +154,14 @@ namespace BisBuddy.Services.Gearsets
                 foreach (var gearset in currentGearsets)
                     gearset.OnGearsetChange += handleGearsetChange;
                 triggerGearsetsChange(saveToFile: false);
+                logger.Verbose($"finish triggerGearsetsChange");
             }
         }
 
         private void scheduleSaveCurrentGearsets()
         {
-            queueService.Enqueue(saveCurrentGearsets);
+            logger.Verbose($"Enqueuing save of current gearsets for \"{currentLocalContentId}\"");
+            queueService.Enqueue($"GEARSETS_SAVE_{currentLocalContentId}", saveCurrentGearsets);
         }
 
         private void saveCurrentGearsets()
@@ -212,6 +218,7 @@ namespace BisBuddy.Services.Gearsets
         public Task<ImportGearsetsResult> AddGearsetsFromSource(ImportGearsetSourceType sourceType, string sourceString);
         public void RemoveGearset(Gearset gearset);
         public string ExportGearsetToJsonStr(Gearset gearset);
+        public void ChangeGearsetSortOrder(GearsetSortType? newSortType = null, bool? sortDescending = null);
 
         /// <summary>
         /// Fires whenever a change to the current gearsets is made
@@ -245,7 +252,7 @@ namespace BisBuddy.Services.Gearsets
             bool includeObtainable = false,
             bool includeCollectedPrereqs = false
         );
-        public List<MeldPlan> GetNeededItemMeldPlans(uint itemId);
+        public List<(Gearset, MateriaGroup)> GetNeededItemMeldPlans(uint itemId);
         public Dictionary<string, HighlightColor> GetUnmeldedMateriaColors();
 
         /// <summary>

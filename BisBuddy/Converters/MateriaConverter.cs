@@ -1,14 +1,18 @@
-using BisBuddy.Gear;
-using BisBuddy.Items;
+using BisBuddy.Factories;
+using BisBuddy.Gear.Melds;
 using System;
+using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace BisBuddy.Converters
 {
-    internal class MateriaConverter(IItemDataService itemData) : JsonConverter<Materia>
+    internal class MateriaConverter(
+        IMateriaFactory materiaFactory
+        ) : JsonConverter<Materia>
     {
-        private readonly IItemDataService itemData = itemData;
+        private const string LegacyIsMeldedPropertyName = "IsMelded";
+        private readonly IMateriaFactory materiaFactory = materiaFactory;
 
         public override Materia? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
@@ -16,8 +20,11 @@ namespace BisBuddy.Converters
                 throw new JsonException("Expected StartObject for Materia");
 
             uint? itemId = null;
+            bool? isCollected = null;
             bool? isMelded = null;
+            bool collectLock = false;
 
+            var items = new List<string>();
             while (reader.Read())
             {
                 if (reader.TokenType == JsonTokenType.EndObject)
@@ -26,12 +33,19 @@ namespace BisBuddy.Converters
                 var propertyName = reader.GetString();
                 reader.Read();
 
+                items.Add(propertyName ?? "<null>");
                 switch (propertyName)
                 {
                     case nameof(Materia.ItemId):
                         itemId = reader.GetUInt32();
                         break;
-                    case nameof(Materia.IsMelded):
+                    case nameof(Materia.IsCollected):
+                        isCollected = reader.GetBoolean();
+                        break;
+                    case nameof(Materia.CollectLock):
+                        collectLock = reader.GetBoolean();
+                        break;
+                    case LegacyIsMeldedPropertyName:
                         isMelded = reader.GetBoolean();
                         break;
                     default:
@@ -40,9 +54,10 @@ namespace BisBuddy.Converters
                 }
             }
 
-            return itemData.BuildMateria(
+            return materiaFactory.Create(
                 itemId ?? throw new JsonException("No itemId found for Materia"),
-                isMelded ?? throw new JsonException("No isMelded found for Materia")
+                isCollected ?? isMelded ?? throw new JsonException($"No isCollected/isMelded found for Materia"),
+                collectLock
                 );
         }
 
@@ -51,7 +66,8 @@ namespace BisBuddy.Converters
             writer.WriteStartObject();
 
             writer.WriteNumber(nameof(Materia.ItemId), value.ItemId);
-            writer.WriteBoolean(nameof(Materia.IsMelded), value.IsMelded);
+            writer.WriteBoolean(nameof(Materia.IsCollected), value.IsCollected);
+            writer.WriteBoolean(nameof(Materia.CollectLock), value.CollectLock);
 
             writer.WriteEndObject();
         }

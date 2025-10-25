@@ -1,13 +1,15 @@
 using BisBuddy.Gear;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
+using FFXIVClientStructs.FFXIV.Client.Enums;
 using FFXIVClientStructs.FFXIV.Client.Graphics;
+using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using FFXIVClientStructs.FFXIV.Component.GUI;
-using KamiToolKit.Classes;
 using KamiToolKit.Extensions;
 using KamiToolKit.Nodes;
 using KamiToolKit.System;
 using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -56,6 +58,12 @@ namespace BisBuddy.Services.Addon
 
         // Doesn't really use a node color, use this as a standin
         private static readonly HighlightColor TextNodeColor = new(0.0f, 0.0f, 0.0f, 1.0f);
+        // What DetailKinds should be considered "internal" / owned by the player?
+        private static readonly FrozenSet<DetailKind> InternalDetailKinds = new HashSet<DetailKind>()
+        {
+            DetailKind.InventoryItem,
+            DetailKind.GearSet
+        }.ToFrozenSet();
 
         protected override float CustomNodeMaxY => float.MaxValue;
 
@@ -217,11 +225,20 @@ namespace BisBuddy.Services.Addon
 
         private bool updateNeededGearsetNames(uint itemId)
         {
+            // where is this tooltip?
+            var isInternalItem = false;
+            var agent = AgentItemDetail.Instance();
+            if (agent is not null)
+                isInternalItem = InternalDetailKinds.Contains(agent->DetailKind);
+            else
+                logger.Warning($"{AddonName} agent is null upon updating needing gearset names");
+
             // get the itemRequirements for this item
             var itemRequirements = gearsetsService.GetItemRequirements(
                 itemId,
                 includeObtainable: true,
-                includeCollectedPrereqs: true
+                includeCollected: isInternalItem && configurationService.HighlightCollectedInInventory,
+                includeCollectedPrereqs: isInternalItem
                 );
 
             var newNeededGearsets = itemRequirements

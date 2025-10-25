@@ -59,46 +59,46 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
-    <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
               </xsd:sequence>
-              <xsd:attribute name="name" use="required" type="xsd:string"/>
-              <xsd:attribute name="type" type="xsd:string"/>
-              <xsd:attribute name="mimetype" type="xsd:string"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="assembly">
             <xsd:complexType>
-              <xsd:attribute name="alias" type="xsd:string"/>
-              <xsd:attribute name="name" type="xsd:string"/>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
-                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
-              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
-              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
             </xsd:complexType>
           </xsd:element>
         </xsd:choice>
@@ -225,7 +225,7 @@
   <data name="NoGearsetsText" xml:space="preserve">
     <value>No gearsets found. Add one or more gearsets to get started</value>
   </data>
-  <data name="LoggedOutText" xml:space="preserve">
+  <data name="GearsetsTabLoggedOutText" xml:space="preserve">
     <value>Please log in to view/add gearsets</value>
   </data>
   <data name="ManuallyCollectedTooltip" xml:space="preserve">
@@ -320,7 +320,7 @@ When OFF: Gearset 1 completed, Gearset 2 completed</value>
 Use alpha channel to adjust highlight intensity on items/icons
 List menu highlights are not affected</value>
   </data>
-  <data name="MateriaTooltip" xml:space="preserve">
+  <data name="GearpieceLockedDisabledTooltip" xml:space="preserve">
     <value>Left click to {0} {1}
 Right click to search for in inventory</value>
   </data>
@@ -450,21 +450,25 @@ or to have a unique color to highlight items in</value>
   <data name="GeneralConfigurationMiscellaneousCategory" xml:space="preserve">
     <value>Miscellaneous</value>
   </data>
-    <data name="MainChatCommandName" xml:space="preserve">
-    <value>/bisbuddy</value>
-  </data>
-    <data name="AliasChatCommandName" xml:space="preserve">
-    <value>/bis</value>
-  </data>
-    <data name="MainChatCommandHelpMessage" xml:space="preserve">
+  <data name="MainChatCommandHelpMessage" xml:space="preserve">
     <value>View existing or add new gearsets
       [config/c] - Open {0} configuration
       [new/n] - Add a new gearset</value>
   </data>
-    <data name="AliasChatCommandHelpMessage" xml:space="preserve">
+  <data name="AliasChatCommandHelpMessage" xml:space="preserve">
     <value>Alias for {0}</value>
   </data>
-    <data name="PluginDisplayName" xml:space="preserve">
+  <data name="PluginDisplayName" xml:space="preserve">
     <value>BISBuddy</value>
+  </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="UiThemeColorMateriaSlotNormalLabel" type="System.Resources.ResXNullRef, System.Windows.Forms">
+    <value />
+  </data>
+  <data name="UiThemeColorMateriaSlotAdvancedLabel" type="System.Resources.ResXNullRef, System.Windows.Forms">
+    <value />
+  </data>
+  <data name="UiThemeColorGearpieceButton" type="System.Resources.ResXNullRef, System.Windows.Forms">
+    <value />
   </data>
 </root>

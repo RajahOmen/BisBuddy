@@ -1,4 +1,6 @@
+using BisBuddy.Factories;
 using BisBuddy.Gear;
+using BisBuddy.Gear.Melds;
 using BisBuddy.Gear.Prerequisites;
 using BisBuddy.Items;
 using BisBuddy.Services;
@@ -77,7 +79,12 @@ namespace BisBuddy.ItemAssignment
             return needed.Count > 0;
         }
 
-        public List<GameInventoryItem> AssignItem(GameInventoryItem item, IItemDataService itemData, bool assignPrerequisiteMateria)
+        public List<GameInventoryItem> AssignItem(
+            GameInventoryItem item,
+            IItemDataService itemData,
+            IMateriaFactory materiaFactory,
+            bool assignPrerequisiteMateria
+            )
         {
             if (Gearpieces.Count == 0)
                 return [];
@@ -94,16 +101,14 @@ namespace BisBuddy.ItemAssignment
                 if (nodeAssigned == null)
                     continue;
 
-                if (assignPrerequisiteMateria)
+                if (assignPrerequisiteMateria && itemData.ItemIsMeldable(item.ItemId))
                 {
-                    var itemMateria = itemData.ItemIsMeldable(item.ItemId)
-                        ? itemData.GetItemMateria(item)
-                        : [];
-
-                    if (itemMateria.Count > 0)
+                    var itemMateriaIds = itemData.GetItemMateriaIds(item);
+                    if (itemMateriaIds.Count > 0)
                     {
-                        gearpiece.UnmeldAllMateria();
-                        gearpiece.MeldMultipleMateria(itemMateria);
+                        var newItemMateria = itemMateriaIds.Select(id => materiaFactory.Create(id));
+                        gearpiece.ItemMateria.UnmeldAllMateria();
+                        gearpiece.ItemMateria.MeldMultipleMateria(newItemMateria);
                     }
                 }
 
@@ -145,7 +150,7 @@ namespace BisBuddy.ItemAssignment
             // strict materia matching is enabled & item materia don't match
             if (
                 StrictMateriaMatching
-                && !Materia.MateriaListCanSatisfy(MateriaList, gearpiece.ItemMateria)
+                && !gearpiece.ItemMateria.MateriaListCanSatisfy(MateriaList)
                 )
                 return false;
 
@@ -165,7 +170,7 @@ namespace BisBuddy.ItemAssignment
             return true;
         }
 
-        public int CandidateEdgeWeight(uint candidateId, List<Materia> candidateMateria)
+        public int CandidateEdgeWeight(uint candidateId, MateriaGroup candidateMateria)
         {
             if (!neededItemIds.TryGetValue(candidateId, out var neededData))
                 return ItemAssigmentSolver.NoEdgeWeightValue;

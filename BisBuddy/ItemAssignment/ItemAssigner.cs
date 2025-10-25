@@ -36,7 +36,7 @@ namespace BisBuddy.ItemAssignment
                         if (gearpiece.IsCollected)
                             updatedGearpieces.Add(gearpiece);
 
-                        gearpiece.SetCollected(false, false);
+                        gearpiece.IsCollected = false;
                         continue;
                     }
 
@@ -46,8 +46,8 @@ namespace BisBuddy.ItemAssignment
                         if (!gearpiece.IsCollected)
                             updatedGearpieces.Add(gearpiece);
 
-                        gearpiece.MeldMultipleMateria(assignment.MateriaList);
-                        gearpiece.SetCollected(true, false);
+                        gearpiece.ItemMateria.MeldMultipleMateria(assignment.ItemMateria);
+                        gearpiece.IsCollected = true;
                         continue;
                     }
                 }

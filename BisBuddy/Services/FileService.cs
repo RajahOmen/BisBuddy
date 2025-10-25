@@ -1,3 +1,4 @@
+using BisBuddy.Util;
 using Dalamud.Plugin;
 using System;
 using System.IO;
@@ -18,9 +19,7 @@ namespace BisBuddy.Services
         private readonly IFileSystem fileSystem = fileSystem;
         private readonly IFile file = fileSystem.File;
 
-        private readonly string gearsetsDirectoryName = "gearsets";
-
-        private string gearsetsDirectoryPath => Path.Combine(pluginInterface.ConfigDirectory.FullName, gearsetsDirectoryName);
+        private string gearsetsDirectoryPath => Path.Combine(pluginInterface.ConfigDirectory.FullName, Constants.GearsetsDirectoryName);
 
         /// <summary>
         /// Get the path of the file that stores the gearset data for the provided character contentId

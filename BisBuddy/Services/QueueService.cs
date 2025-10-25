@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Hosting;
 using System;
-using System.Collections.Concurrent;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 namespace BisBuddy.Services
@@ -11,38 +11,47 @@ namespace BisBuddy.Services
         private readonly ITypedLogger<QueueService> logger = logger;
 
         private readonly CancellationTokenSource tokenSource = new();
-        private readonly ConcurrentQueue<Action> taskQueue = new();
-        private readonly SemaphoreSlim signal = new(0);
-        private volatile bool queueOpen = true;
+        private readonly Channel<(string TaskName, Action Task)> taskChannel =
+            Channel.CreateBounded<(string TaskName, Action Task)>(new BoundedChannelOptions(20) {
+                FullMode = BoundedChannelFullMode.DropWrite,
+            });
         private Task? workerLoop;
 
-        private async Task doWorkerLoop()
+        private static async Task doWorkerLoop(
+            ChannelReader<(string TaskName, Action Task)> reader,
+            ITypedLogger<QueueService> logger,
+            CancellationToken token
+            )
         {
-            while (true)
+            try
             {
-                await signal.WaitAsync(tokenSource.Token); // Wait until a task is available
-
-                if (!queueOpen && taskQueue.IsEmpty)
-                    break;
-
-                if (taskQueue.TryDequeue(out var task))
+                while (await reader.WaitToReadAsync(token))
                 {
-                    logger.Verbose($"Executing queue task");
-                    task(); // Execute the task
-                    logger.Verbose($"Queue task complete");
+                    var (taskName, task) = await reader.ReadAsync(token);
+                    logger.Verbose($"[{taskName}] Executing task");
+                    task();
+                    logger.Verbose($"[{taskName}] Task complete");
                 }
+            }
+            catch (OperationCanceledException)
+            {
+                logger.Warning($"Worker loop cancelled");
             }
         }
 
-        public bool Enqueue(Action task)
+        public bool Enqueue(string taskName, Action task)
         {
-            if (!queueOpen)
+            var count = taskChannel.Reader.CanCount
+                ? $"{taskChannel.Reader.Count}"
+                : "?";
+
+            logger.Verbose($"[{taskName}] Enqueuing queue task ({count})");
+
+            if (!taskChannel.Writer.TryWrite((taskName, task)))
+            {
+                logger.Warning($"[{taskName}] Failed to enqueue task");
                 return false;
-
-            logger.Verbose($"Enqueuing queue task");
-
-            taskQueue.Enqueue(task);
-            signal.Release();
+            }
 
             return true;
         }
@@ -50,28 +59,47 @@ namespace BisBuddy.Services
         public Task StartAsync(CancellationToken cancellationToken)
         {
             cancellationToken.Register(tokenSource.Cancel);
-            queueOpen = true;
-            workerLoop = Task.Run(doWorkerLoop, CancellationToken.None);
+            workerLoop = Task.Run(
+                () => doWorkerLoop(taskChannel.Reader, logger, tokenSource.Token),
+                cancellationToken
+                );
 
             return Task.CompletedTask;
         }
 
         public async Task StopAsync(CancellationToken cancellationToken)
         {
-            cancellationToken.Register(tokenSource.Cancel);
+            if (!taskChannel.Writer.TryComplete())
+            {
+                logger.Warning($"Failed to complete task channel writer, force stopping");
+                tokenSource.Cancel();
+                return;
+            }
 
-            logger.Verbose($"Awaiting queue stop");
-            queueOpen = false;
-            signal.Release();
-            if (workerLoop is not null)
+            // set up a force stop in case the worker loop takes too long
+            var forceStopCancelToken = new CancellationTokenSource();
+            _ = Task.Delay(1000, forceStopCancelToken.Token).ContinueWith(_ =>
+            {
+                logger.Warning($"Cancelling queue worker loop");
+                tokenSource.Cancel();
+            }, forceStopCancelToken.Token);
+
+            // try waiting for the loop to complete all tasks
+            if (workerLoop != null)
+            {
+                logger.Verbose($"Awaiting worker loop completion");
                 await workerLoop;
+            }
 
-            logger.Verbose($"Queue stopped");
+            // worker loop exited gracefully, don't force stop
+            forceStopCancelToken.Cancel();
+
+            logger.Verbose($"Queue service complete");
         }
     }
 
     public interface IQueueService : IHostedService
     {
-        public bool Enqueue(Action task);
+        public bool Enqueue(string taskName, Action task);
     }
 }

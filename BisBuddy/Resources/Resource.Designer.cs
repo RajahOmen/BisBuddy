@@ -22,7 +22,7 @@ namespace BisBuddy.Resources {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Resource {
+    public class Resource {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -36,7 +36,7 @@ namespace BisBuddy.Resources {
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
+        public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("BisBuddy.Resources.Resource", typeof(Resource).Assembly);
@@ -51,7 +51,7 @@ namespace BisBuddy.Resources {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
+        public static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -61,27 +61,27 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to [Advanced] .
+        /// </summary>
+        public static string AdvancedMateriaMeldTooltip {
+            get {
+                return ResourceManager.GetString("AdvancedMateriaMeldTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Alias for {0}.
         /// </summary>
-        internal static string AliasChatCommandHelpMessage {
+        public static string AliasChatCommandHelpMessage {
             get {
                 return ResourceManager.GetString("AliasChatCommandHelpMessage", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to /bis.
-        /// </summary>
-        internal static string AliasChatCommandName {
-            get {
-                return ResourceManager.GetString("AliasChatCommandName", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Mark all as not Collected.
         /// </summary>
-        internal static string AllCollectedTooltip {
+        public static string AllCollectedTooltip {
             get {
                 return ResourceManager.GetString("AllCollectedTooltip", resourceCulture);
             }
@@ -90,7 +90,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Lock all as Collected.
         /// </summary>
-        internal static string AllUncollectedTooltip {
+        public static string AllUncollectedTooltip {
             get {
                 return ResourceManager.GetString("AllUncollectedTooltip", resourceCulture);
             }
@@ -99,7 +99,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Mark as not Collected.
         /// </summary>
-        internal static string AutomaticallyCollectedTooltip {
+        public static string AutomaticallyCollectedTooltip {
             get {
                 return ResourceManager.GetString("AutomaticallyCollectedTooltip", resourceCulture);
             }
@@ -108,7 +108,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Bright List Items.
         /// </summary>
-        internal static string BrightListItemHighlightingCheckbox {
+        public static string BrightListItemHighlightingCheckbox {
             get {
                 return ResourceManager.GetString("BrightListItemHighlightingCheckbox", resourceCulture);
             }
@@ -117,16 +117,70 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Locks list item highlight opacity to max to increase contrast. Disabling may fix issues with some custom UIs.
         /// </summary>
-        internal static string BrightListItemHighlightingHelp {
+        public static string BrightListItemHighlightingHelp {
             get {
                 return ResourceManager.GetString("BrightListItemHighlightingHelp", resourceCulture);
             }
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to [Locked] {0}.
+        /// </summary>
+        public static string CollectionStatusLockedTooltipPrefix {
+            get {
+                return ResourceManager.GetString("CollectionStatusLockedTooltipPrefix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Collection status locked.
+        /// </summary>
+        public static string CollectionStatusLockTooltip {
+            get {
+                return ResourceManager.GetString("CollectionStatusLockTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Collect.
+        /// </summary>
+        public static string CollectVerb {
+            get {
+                return ResourceManager.GetString("CollectVerb", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add a new gearset.
+        /// </summary>
+        public static string CommandDescriptionAddGearset {
+            get {
+                return ResourceManager.GetString("CommandDescriptionAddGearset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Open plugin configuration.
+        /// </summary>
+        public static string CommandDescriptionOpenConfig {
+            get {
+                return ResourceManager.GetString("CommandDescriptionOpenConfig", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Debugging.
+        /// </summary>
+        public static string ConfigDebugSectionHeader {
+            get {
+                return ResourceManager.GetString("ConfigDebugSectionHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to General Settings.
         /// </summary>
-        internal static string ConfigGeneralSectionHeader {
+        public static string ConfigGeneralSectionHeader {
             get {
                 return ResourceManager.GetString("ConfigGeneralSectionHeader", resourceCulture);
             }
@@ -135,7 +189,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Window Highlighting.
         /// </summary>
-        internal static string ConfigHighlightingSectionHeader {
+        public static string ConfigHighlightingSectionHeader {
             get {
                 return ResourceManager.GetString("ConfigHighlightingSectionHeader", resourceCulture);
             }
@@ -144,25 +198,142 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Inventory Updates.
         /// </summary>
-        internal static string ConfigInventorySectionHeader {
+        public static string ConfigInventorySectionHeader {
             get {
                 return ResourceManager.GetString("ConfigInventorySectionHeader", resourceCulture);
             }
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Config.
+        /// </summary>
+        public static string ConfigTabName {
+            get {
+                return ResourceManager.GetString("ConfigTabName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Plugin Styles.
+        /// </summary>
+        public static string ConfigUiThemeSectionHeader {
+            get {
+                return ResourceManager.GetString("ConfigUiThemeSectionHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} Config.
         /// </summary>
-        internal static string ConfigWindowTitle {
+        public static string ConfigWindowTitle {
             get {
                 return ResourceManager.GetString("ConfigWindowTitle", resourceCulture);
             }
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Copy JSON.
+        /// </summary>
+        public static string ContextMenuCopyJson {
+            get {
+                return ResourceManager.GetString("ContextMenuCopyJson", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Delete Gearset.
+        /// </summary>
+        public static string ContextMenuDeleteGearset {
+            get {
+                return ResourceManager.GetString("ContextMenuDeleteGearset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Lock all as Collected.
+        /// </summary>
+        public static string ContextMenuLockAllCollected {
+            get {
+                return ResourceManager.GetString("ContextMenuLockAllCollected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Lock all as Uncollected.
+        /// </summary>
+        public static string ContextMenuLockAllUncollected {
+            get {
+                return ResourceManager.GetString("ContextMenuLockAllUncollected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Lock as Collected.
+        /// </summary>
+        public static string ContextMenuLockCollected {
+            get {
+                return ResourceManager.GetString("ContextMenuLockCollected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Lock as Uncollected.
+        /// </summary>
+        public static string ContextMenuLockUncollected {
+            get {
+                return ResourceManager.GetString("ContextMenuLockUncollected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search in Inventory.
+        /// </summary>
+        public static string ContextMenuSearchInventory {
+            get {
+                return ResourceManager.GetString("ContextMenuSearchInventory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unlock.
+        /// </summary>
+        public static string ContextMenuUnlock {
+            get {
+                return ResourceManager.GetString("ContextMenuUnlock", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unlock all.
+        /// </summary>
+        public static string ContextMenuUnlockAll {
+            get {
+                return ResourceManager.GetString("ContextMenuUnlockAll", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Debug.
+        /// </summary>
+        public static string DebugTabName {
+            get {
+                return ResourceManager.GetString("DebugTabName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to New Gearset.
+        /// </summary>
+        public static string DefaultNewGearsetName {
+            get {
+                return ResourceManager.GetString("DefaultNewGearsetName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Yes, Delete.
         /// </summary>
-        internal static string DeleteGearsetConfirmButton {
+        public static string DeleteGearsetConfirmButton {
             get {
                 return ResourceManager.GetString("DeleteGearsetConfirmButton", resourceCulture);
             }
@@ -171,34 +342,52 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to This cannot be undone!.
         /// </summary>
-        internal static string DeleteGearsetConfirmTooltip {
+        public static string DeleteGearsetConfirmTooltip {
             get {
                 return ResourceManager.GetString("DeleteGearsetConfirmTooltip", resourceCulture);
             }
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Shift+Click to delete {0}.
+        /// </summary>
+        public static string DeleteGearsetDisabledTooltip {
+            get {
+                return ResourceManager.GetString("DeleteGearsetDisabledTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Delete Gearset?.
         /// </summary>
-        internal static string DeleteGearsetPopupTitle {
+        public static string DeleteGearsetPopupTitle {
             get {
                 return ResourceManager.GetString("DeleteGearsetPopupTitle", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Delete this Gearset. Shift+Click to quick delete.
+        ///   Looks up a localized string similar to Delete {0}.
         /// </summary>
-        internal static string DeleteGearsetTooltip {
+        public static string DeleteGearsetTooltip {
             get {
                 return ResourceManager.GetString("DeleteGearsetTooltip", resourceCulture);
             }
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to selected gearset.
+        /// </summary>
+        public static string DeleteGearsetTooltipGearsetNameDummy {
+            get {
+                return ResourceManager.GetString("DeleteGearsetTooltipGearsetNameDummy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Delete this Gearset. Click to quick delete.
         /// </summary>
-        internal static string DeleteGearsetTooltipQuick {
+        public static string DeleteGearsetTooltipQuick {
             get {
                 return ResourceManager.GetString("DeleteGearsetTooltipQuick", resourceCulture);
             }
@@ -207,25 +396,71 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Enable Gearset.
         /// </summary>
-        internal static string DisabledGearsetTooltip {
+        public static string DisabledGearsetTooltip {
             get {
                 return ResourceManager.GetString("DisabledGearsetTooltip", resourceCulture);
             }
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Disabled.
+        /// </summary>
+        public static string DisabledGearsetVerb {
+            get {
+                return ResourceManager.GetString("DisabledGearsetVerb", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} disabled, configure in toggles.
+        /// </summary>
+        public static string DisabledPrerequisiteTooltip {
+            get {
+                return ResourceManager.GetString("DisabledPrerequisiteTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Disable Gearset.
         /// </summary>
-        internal static string EnabledGearsetTooltip {
+        public static string EnabledGearsetTooltip {
             get {
                 return ResourceManager.GetString("EnabledGearsetTooltip", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Use Default Color.
+        ///   Looks up a localized string similar to Enabled.
         /// </summary>
-        internal static string GearsetDefaultColorCheckbox {
+        public static string EnabledGearsetVerb {
+            get {
+                return ResourceManager.GetString("EnabledGearsetVerb", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}
+        ///Lock gearpiece to change status.
+        /// </summary>
+        public static string GearpieceLockedDisabledTooltip {
+            get {
+                return ResourceManager.GetString("GearpieceLockedDisabledTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No Materia/Prerequisites.
+        /// </summary>
+        public static string GearpieceNoSubItemsTooltip {
+            get {
+                return ResourceManager.GetString("GearpieceNoSubItemsTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use Default.
+        /// </summary>
+        public static string GearsetDefaultColorCheckbox {
             get {
                 return ResourceManager.GetString("GearsetDefaultColorCheckbox", resourceCulture);
             }
@@ -235,25 +470,34 @@ namespace BisBuddy.Resources {
         ///   Looks up a localized string similar to Whether to use the default highlight color (as set in configuration),
         ///or to have a unique color to highlight items in.
         /// </summary>
-        internal static string GearsetDefaultColorTooltip {
+        public static string GearsetDefaultColorTooltip {
             get {
                 return ResourceManager.GetString("GearsetDefaultColorTooltip", resourceCulture);
             }
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Gearpieces.
+        /// </summary>
+        public static string GearsetGearpiecesTabName {
+            get {
+                return ResourceManager.GetString("GearsetGearpiecesTabName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Color needed items for this gearset are highlighted in.
         /// </summary>
-        internal static string GearsetHighlightColorButtonTooltip {
+        public static string GearsetHighlightColorButtonTooltip {
             get {
                 return ResourceManager.GetString("GearsetHighlightColorButtonTooltip", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Gearset Highlight Color.
+        ///   Looks up a localized string similar to Choose Color.
         /// </summary>
-        internal static string GearsetHighlightColorLabel {
+        public static string GearsetHighlightColorLabel {
             get {
                 return ResourceManager.GetString("GearsetHighlightColorLabel", resourceCulture);
             }
@@ -262,7 +506,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to JSON.
         /// </summary>
-        internal static string GearsetJsonButton {
+        public static string GearsetJsonButton {
             get {
                 return ResourceManager.GetString("GearsetJsonButton", resourceCulture);
             }
@@ -271,16 +515,124 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Copy gearset JSON to clipboard.
         /// </summary>
-        internal static string GearsetJsonTooltip {
+        public static string GearsetJsonTooltip {
             get {
                 return ResourceManager.GetString("GearsetJsonTooltip", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Text.
+        ///   Looks up a localized string similar to Highlight Color.
         /// </summary>
-        internal static string GearsetStringButton {
+        public static string GearsetPropertiesColorRowLabel {
+            get {
+                return ResourceManager.GetString("GearsetPropertiesColorRowLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Data Export.
+        /// </summary>
+        public static string GearsetPropertiesDataRowLabel {
+            get {
+                return ResourceManager.GetString("GearsetPropertiesDataRowLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Import Date.
+        /// </summary>
+        public static string GearsetPropertiesImportDateRowLabel {
+            get {
+                return ResourceManager.GetString("GearsetPropertiesImportDateRowLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Import Source.
+        /// </summary>
+        public static string GearsetPropertiesSourceTypeRowLabel {
+            get {
+                return ResourceManager.GetString("GearsetPropertiesSourceTypeRowLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Gearset Status.
+        /// </summary>
+        public static string GearsetPropertiesStatusRowLabel {
+            get {
+                return ResourceManager.GetString("GearsetPropertiesStatusRowLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Properties.
+        /// </summary>
+        public static string GearsetPropertiesTabName {
+            get {
+                return ResourceManager.GetString("GearsetPropertiesTabName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Active.
+        /// </summary>
+        public static string GearsetSortActive {
+            get {
+                return ResourceManager.GetString("GearsetSortActive", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Date.
+        /// </summary>
+        public static string GearsetSortImportDate {
+            get {
+                return ResourceManager.GetString("GearsetSortImportDate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Job.
+        /// </summary>
+        public static string GearsetSortJob {
+            get {
+                return ResourceManager.GetString("GearsetSortJob", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name.
+        /// </summary>
+        public static string GearsetSortName {
+            get {
+                return ResourceManager.GetString("GearsetSortName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Priority.
+        /// </summary>
+        public static string GearsetSortPriority {
+            get {
+                return ResourceManager.GetString("GearsetSortPriority", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Log in to view/add gearsets.
+        /// </summary>
+        public static string GearsetsTabLoggedOutText {
+            get {
+                return ResourceManager.GetString("GearsetsTabLoggedOutText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Teamcraft.
+        /// </summary>
+        public static string GearsetStringButton {
             get {
                 return ResourceManager.GetString("GearsetStringButton", resourceCulture);
             }
@@ -289,7 +641,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Copy {0} text to clipboard.
         /// </summary>
-        internal static string GearsetStringTooltip {
+        public static string GearsetStringTooltip {
             get {
                 return ResourceManager.GetString("GearsetStringTooltip", resourceCulture);
             }
@@ -298,7 +650,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Link.
         /// </summary>
-        internal static string GearsetUrlButton {
+        public static string GearsetUrlButton {
             get {
                 return ResourceManager.GetString("GearsetUrlButton", resourceCulture);
             }
@@ -307,7 +659,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Copy {0} link to clipboard.
         /// </summary>
-        internal static string GearsetUrlTooltip {
+        public static string GearsetUrlTooltip {
             get {
                 return ResourceManager.GetString("GearsetUrlTooltip", resourceCulture);
             }
@@ -316,7 +668,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Highlight Appearance.
         /// </summary>
-        internal static string GeneralConfigurationHighlightAppearanceCategory {
+        public static string GeneralConfigurationHighlightAppearanceCategory {
             get {
                 return ResourceManager.GetString("GeneralConfigurationHighlightAppearanceCategory", resourceCulture);
             }
@@ -325,7 +677,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Miscellaneous.
         /// </summary>
-        internal static string GeneralConfigurationMiscellaneousCategory {
+        public static string GeneralConfigurationMiscellaneousCategory {
             get {
                 return ResourceManager.GetString("GeneralConfigurationMiscellaneousCategory", resourceCulture);
             }
@@ -334,7 +686,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Include Collected.
         /// </summary>
-        internal static string HighlightCollectedInInventoryCheckbox {
+        public static string HighlightCollectedInInventoryCheckbox {
             get {
                 return ResourceManager.GetString("HighlightCollectedInInventoryCheckbox", resourceCulture);
             }
@@ -343,7 +695,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Whether to highlight items in player inventories (inventory, retainer, saddlebag) that are marked as collected..
         /// </summary>
-        internal static string HighlightCollectedInInventoryHelp {
+        public static string HighlightCollectedInInventoryHelp {
             get {
                 return ResourceManager.GetString("HighlightCollectedInInventoryHelp", resourceCulture);
             }
@@ -352,7 +704,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Collected Only.
         /// </summary>
-        internal static string HighlightCollectedItemMateriaCheckbox {
+        public static string HighlightCollectedItemMateriaCheckbox {
             get {
                 return ResourceManager.GetString("HighlightCollectedItemMateriaCheckbox", resourceCulture);
             }
@@ -361,7 +713,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Default Highlight Color.
         /// </summary>
-        internal static string HighlightColorButtonLabel {
+        public static string HighlightColorButtonLabel {
             get {
                 return ResourceManager.GetString("HighlightColorButtonLabel", resourceCulture);
             }
@@ -370,7 +722,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Color needed items are highlighted in by default or with color conflicts.
         /// </summary>
-        internal static string HighlightColorButtonTooltip {
+        public static string HighlightColorButtonTooltip {
             get {
                 return ResourceManager.GetString("HighlightColorButtonTooltip", resourceCulture);
             }
@@ -382,7 +734,7 @@ namespace BisBuddy.Resources {
         ///Use alpha channel to adjust highlight intensity on items/icons
         ///List menu highlights are not affected.
         /// </summary>
-        internal static string HighlightColorHelp {
+        public static string HighlightColorHelp {
             get {
                 return ResourceManager.GetString("HighlightColorHelp", resourceCulture);
             }
@@ -391,7 +743,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Inventories.
         /// </summary>
-        internal static string HighlightInventoriesCheckbox {
+        public static string HighlightInventoriesCheckbox {
             get {
                 return ResourceManager.GetString("HighlightInventoriesCheckbox", resourceCulture);
             }
@@ -400,7 +752,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Highlights items needed for gearsets in inventories (inventory, retainer, saddlebag).
         /// </summary>
-        internal static string HighlightInventoriesHelp {
+        public static string HighlightInventoriesHelp {
             get {
                 return ResourceManager.GetString("HighlightInventoriesHelp", resourceCulture);
             }
@@ -409,7 +761,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Item Tooltips.
         /// </summary>
-        internal static string HighlightItemTooltipsCheckbox {
+        public static string HighlightItemTooltipsCheckbox {
             get {
                 return ResourceManager.GetString("HighlightItemTooltipsCheckbox", resourceCulture);
             }
@@ -418,7 +770,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Lists what gearsets need the item being hovered over in the item tooltip.
         /// </summary>
-        internal static string HighlightItemTooltipsHelp {
+        public static string HighlightItemTooltipsHelp {
             get {
                 return ResourceManager.GetString("HighlightItemTooltipsHelp", resourceCulture);
             }
@@ -427,7 +779,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Marketboard.
         /// </summary>
-        internal static string HighlightMarketboardCheckbox {
+        public static string HighlightMarketboardCheckbox {
             get {
                 return ResourceManager.GetString("HighlightMarketboardCheckbox", resourceCulture);
             }
@@ -436,7 +788,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Highlights items needed for gearsets on the marketboard.
         /// </summary>
-        internal static string HighlightMarketboardHelp {
+        public static string HighlightMarketboardHelp {
             get {
                 return ResourceManager.GetString("HighlightMarketboardHelp", resourceCulture);
             }
@@ -445,7 +797,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Materia Melding.
         /// </summary>
-        internal static string HighlightMateriaMeldingCheckbox {
+        public static string HighlightMateriaMeldingCheckbox {
             get {
                 return ResourceManager.GetString("HighlightMateriaMeldingCheckbox", resourceCulture);
             }
@@ -454,7 +806,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Highlights gearpieces needing melds and the materia needed for those gearpieces in melding windows.
         /// </summary>
-        internal static string HighlightMateriaMeldingHelp {
+        public static string HighlightMateriaMeldingHelp {
             get {
                 return ResourceManager.GetString("HighlightMateriaMeldingHelp", resourceCulture);
             }
@@ -463,7 +815,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Need/Greed Windows.
         /// </summary>
-        internal static string HighlightNeedGreedCheckbox {
+        public static string HighlightNeedGreedCheckbox {
             get {
                 return ResourceManager.GetString("HighlightNeedGreedCheckbox", resourceCulture);
             }
@@ -472,7 +824,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Highlights items needed for gearsets in Need/Greed loot windows.
         /// </summary>
-        internal static string HighlightNeedGreedHelp {
+        public static string HighlightNeedGreedHelp {
             get {
                 return ResourceManager.GetString("HighlightNeedGreedHelp", resourceCulture);
             }
@@ -481,7 +833,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Next Materia Only.
         /// </summary>
-        internal static string HighlightNextMateriaCheckbox {
+        public static string HighlightNextMateriaCheckbox {
             get {
                 return ResourceManager.GetString("HighlightNextMateriaCheckbox", resourceCulture);
             }
@@ -500,7 +852,7 @@ namespace BisBuddy.Resources {
         ///When ON: +36 CRT is highlighted
         ///When OFF: +36 CRT and +36 DET are highlighted.
         /// </summary>
-        internal static string HighlightNextMateriaHelp {
+        public static string HighlightNextMateriaHelp {
             get {
                 return ResourceManager.GetString("HighlightNextMateriaHelp", resourceCulture);
             }
@@ -509,7 +861,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Meld Prerequisites.
         /// </summary>
-        internal static string HighlightPrerequisiteMateriaCheckbox {
+        public static string HighlightPrerequisiteMateriaCheckbox {
             get {
                 return ResourceManager.GetString("HighlightPrerequisiteMateriaCheckbox", resourceCulture);
             }
@@ -526,7 +878,7 @@ namespace BisBuddy.Resources {
         ///Gearpiece (unobtained): Augmented Historia Ring of Casting [+54 DET, +54 CRT]
         ///Prere [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static string HighlightPrerequisiteMateriaHelp {
+        public static string HighlightPrerequisiteMateriaHelp {
             get {
                 return ResourceManager.GetString("HighlightPrerequisiteMateriaHelp", resourceCulture);
             }
@@ -535,7 +887,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Shops/Exchanges.
         /// </summary>
-        internal static string HighlightShopExchangesCheckbox {
+        public static string HighlightShopExchangesCheckbox {
             get {
                 return ResourceManager.GetString("HighlightShopExchangesCheckbox", resourceCulture);
             }
@@ -544,7 +896,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Highlights items needed for gearsets in NPC shops/item exchanges.
         /// </summary>
-        internal static string HighlightShopExchangesHelp {
+        public static string HighlightShopExchangesHelp {
             get {
                 return ResourceManager.GetString("HighlightShopExchangesHelp", resourceCulture);
             }
@@ -553,7 +905,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Uncollected Item Materia.
         /// </summary>
-        internal static string HighlightUncollectedItemMateriaCheckbox {
+        public static string HighlightUncollectedItemMateriaCheckbox {
             get {
                 return ResourceManager.GetString("HighlightUncollectedItemMateriaCheckbox", resourceCulture);
             }
@@ -565,9 +917,18 @@ namespace BisBuddy.Resources {
         ///When ON: Materia needed for gearpieces will be highlighted regardless of collected status
         ///When OFF: If a gearpiece isn&apos;t collected, its materia will not be highlighted anywhere.
         /// </summary>
-        internal static string HighlightUncollectedItemMateriaHelp {
+        public static string HighlightUncollectedItemMateriaHelp {
             get {
                 return ResourceManager.GetString("HighlightUncollectedItemMateriaHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Etro.gg.
+        /// </summary>
+        public static string ImportEtroName {
+            get {
+                return ResourceManager.GetString("ImportEtroName", resourceCulture);
             }
         }
         
@@ -575,7 +936,7 @@ namespace BisBuddy.Resources {
         ///   Looks up a localized string similar to Gearset sheet link from Etro.gg
         ///ex: https://etro.gg/gearset/4b5f4ed3-4832-4fd5-b134-3429ea8caf37.
         /// </summary>
-        internal static string ImportEtroTooltip {
+        public static string ImportEtroTooltip {
             get {
                 return ResourceManager.GetString("ImportEtroTooltip", resourceCulture);
             }
@@ -584,7 +945,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Import Fail:.
         /// </summary>
-        internal static string ImportFailBase {
+        public static string ImportFailBase {
             get {
                 return ResourceManager.GetString("ImportFailBase", resourceCulture);
             }
@@ -593,7 +954,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to {0} Internal error.
         /// </summary>
-        internal static string ImportFailInternalError {
+        public static string ImportFailInternalError {
             get {
                 return ResourceManager.GetString("ImportFailInternalError", resourceCulture);
             }
@@ -602,7 +963,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to {0} Invalid input for {1}.
         /// </summary>
-        internal static string ImportFailInvalidInput {
+        public static string ImportFailInvalidInput {
             get {
                 return ResourceManager.GetString("ImportFailInvalidInput", resourceCulture);
             }
@@ -611,7 +972,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to {0} Invalid response received.
         /// </summary>
-        internal static string ImportFailInvalidResponse {
+        public static string ImportFailInvalidResponse {
             get {
                 return ResourceManager.GetString("ImportFailInvalidResponse", resourceCulture);
             }
@@ -620,16 +981,34 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to {0} No gearsets found/imported.
         /// </summary>
-        internal static string ImportFailNoGearsets {
+        public static string ImportFailNoGearsets {
             get {
                 return ResourceManager.GetString("ImportFailNoGearsets", resourceCulture);
             }
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} No response from server.
+        /// </summary>
+        public static string ImportFailNoResponse {
+            get {
+                return ResourceManager.GetString("ImportFailNoResponse", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} Must be logged in to import gearsets.
+        /// </summary>
+        public static string ImportFailNotLoggedIn {
+            get {
+                return ResourceManager.GetString("ImportFailNotLoggedIn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} Import would exceed gearset limit.
         /// </summary>
-        internal static string ImportFailTooManyGearsets {
+        public static string ImportFailTooManyGearsets {
             get {
                 return ResourceManager.GetString("ImportFailTooManyGearsets", resourceCulture);
             }
@@ -638,7 +1017,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Import from {0}.
         /// </summary>
-        internal static string ImportGearsetButton {
+        public static string ImportGearsetButton {
             get {
                 return ResourceManager.GetString("ImportGearsetButton", resourceCulture);
             }
@@ -647,16 +1026,25 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Loading....
         /// </summary>
-        internal static string ImportGearsetLoading {
+        public static string ImportGearsetLoading {
             get {
                 return ResourceManager.GetString("ImportGearsetLoading", resourceCulture);
             }
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Log in to import gearsets.
+        /// </summary>
+        public static string ImportGearsetLoggedOut {
+            get {
+                return ResourceManager.GetString("ImportGearsetLoggedOut", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Import a new gearset from {0}.
         /// </summary>
-        internal static string ImportGearsetTooltip {
+        public static string ImportGearsetTooltip {
             get {
                 return ResourceManager.GetString("ImportGearsetTooltip", resourceCulture);
             }
@@ -665,9 +1053,18 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Invalid URL.
         /// </summary>
-        internal static string ImportInvalidUrl {
+        public static string ImportInvalidUrl {
             get {
                 return ResourceManager.GetString("ImportInvalidUrl", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to JSON.
+        /// </summary>
+        public static string ImportJsonName {
+            get {
+                return ResourceManager.GetString("ImportJsonName", resourceCulture);
             }
         }
         
@@ -675,7 +1072,7 @@ namespace BisBuddy.Resources {
         ///   Looks up a localized string similar to Gearset JSON exported from existing plugin gearset
         ///ex: {&quot;Id&quot;:&quot;50399235-5794-4ccb-906f-ddd9....
         /// </summary>
-        internal static string ImportJsonTooltip {
+        public static string ImportJsonTooltip {
             get {
                 return ResourceManager.GetString("ImportJsonTooltip", resourceCulture);
             }
@@ -684,7 +1081,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to No Gearsets Found.
         /// </summary>
-        internal static string ImportNoGearsets {
+        public static string ImportNoGearsets {
             get {
                 return ResourceManager.GetString("ImportNoGearsets", resourceCulture);
             }
@@ -693,9 +1090,18 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Import Success: {2} gearset(s) imported.
         /// </summary>
-        internal static string ImportSuccess {
+        public static string ImportSuccess {
             get {
                 return ResourceManager.GetString("ImportSuccess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Teamcraft.
+        /// </summary>
+        public static string ImportTeamcraftName {
+            get {
+                return ResourceManager.GetString("ImportTeamcraftName", resourceCulture);
             }
         }
         
@@ -708,7 +1114,7 @@ namespace BisBuddy.Resources {
         ///
         ///**Everseeker&apos;s Coat of Gath....
         /// </summary>
-        internal static string ImportTeamcraftTooltip {
+        public static string ImportTeamcraftTooltip {
             get {
                 return ResourceManager.GetString("ImportTeamcraftTooltip", resourceCulture);
             }
@@ -717,9 +1123,18 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Add New Gearset.
         /// </summary>
-        internal static string ImportWindowTitle {
+        public static string ImportWindowTitle {
             get {
                 return ResourceManager.GetString("ImportWindowTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Xivgear.app.
+        /// </summary>
+        public static string ImportXivgearName {
+            get {
+                return ResourceManager.GetString("ImportXivgearName", resourceCulture);
             }
         }
         
@@ -727,7 +1142,7 @@ namespace BisBuddy.Resources {
         ///   Looks up a localized string similar to Gearset sheet link exported from Xivgear.app
         ///ex: https://xivgear.app/?page=sl%%7C9ee61d69-7daa-41bd-9c28-8a0f0055f90f.
         /// </summary>
-        internal static string ImportXivgearTooltip {
+        public static string ImportXivgearTooltip {
             get {
                 return ResourceManager.GetString("ImportXivgearTooltip", resourceCulture);
             }
@@ -736,7 +1151,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Loading....
         /// </summary>
-        internal static string InventoryScanLoading {
+        public static string InventoryScanLoading {
             get {
                 return ResourceManager.GetString("InventoryScanLoading", resourceCulture);
             }
@@ -745,64 +1160,187 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to {0} gearpieces updated.
         /// </summary>
-        internal static string InventoryScanUpdated {
+        public static string InventoryScanUpdated {
             get {
                 return ResourceManager.GetString("InventoryScanUpdated", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please log in to view/add gearsets.
+        ///   Looks up a localized string similar to Inventory.
         /// </summary>
-        internal static string LoggedOutText {
+        public static string ItemExchangesTabName {
             get {
-                return ResourceManager.GetString("LoggedOutText", resourceCulture);
+                return ResourceManager.GetString("ItemExchangesTabName", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to View existing or add new gearsets
-        ///      [config/c] - Open {0} configuration
-        ///      [new/n] - Add a new gearset.
+        ///   Looks up a localized string similar to Weekly Planner.
         /// </summary>
-        internal static string MainChatCommandHelpMessage {
+        public static string ItemPlannerTabName {
+            get {
+                return ResourceManager.GetString("ItemPlannerTabName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Item Tracker.
+        /// </summary>
+        public static string ItemTrackerTabName {
+            get {
+                return ResourceManager.GetString("ItemTrackerTabName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Open main plugin window{0}.
+        /// </summary>
+        public static string MainChatCommandHelpMessage {
             get {
                 return ResourceManager.GetString("MainChatCommandHelpMessage", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to /bisbuddy.
-        /// </summary>
-        internal static string MainChatCommandName {
-            get {
-                return ResourceManager.GetString("MainChatCommandName", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Collection status locked. Inventory syncs will not uncollect.
         /// </summary>
-        internal static string ManuallyCollectedTooltip {
+        public static string ManuallyCollectedTooltip {
             get {
                 return ResourceManager.GetString("ManuallyCollectedTooltip", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Left click to {0} {1}
-        ///Right click to search for in inventory.
+        ///   Looks up a localized string similar to CNTL.
         /// </summary>
-        internal static string MateriaTooltip {
+        public static string MateriaAbbrevControl {
             get {
-                return ResourceManager.GetString("MateriaTooltip", resourceCulture);
+                return ResourceManager.GetString("MateriaAbbrevControl", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to CP.
+        /// </summary>
+        public static string MateriaAbbrevCraftingPoints {
+            get {
+                return ResourceManager.GetString("MateriaAbbrevCraftingPoints", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to CRFT.
+        /// </summary>
+        public static string MateriaAbbrevCraftsmanship {
+            get {
+                return ResourceManager.GetString("MateriaAbbrevCraftsmanship", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to CRT.
+        /// </summary>
+        public static string MateriaAbbrevCriticalHit {
+            get {
+                return ResourceManager.GetString("MateriaAbbrevCriticalHit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to DET.
+        /// </summary>
+        public static string MateriaAbbrevDetermination {
+            get {
+                return ResourceManager.GetString("MateriaAbbrevDetermination", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to DHT.
+        /// </summary>
+        public static string MateriaAbbrevDirectHitRate {
+            get {
+                return ResourceManager.GetString("MateriaAbbrevDirectHitRate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to GATH.
+        /// </summary>
+        public static string MateriaAbbrevGathering {
+            get {
+                return ResourceManager.GetString("MateriaAbbrevGathering", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to GP.
+        /// </summary>
+        public static string MateriaAbbrevGatheringPoints {
+            get {
+                return ResourceManager.GetString("MateriaAbbrevGatheringPoints", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to PERC.
+        /// </summary>
+        public static string MateriaAbbrevPerception {
+            get {
+                return ResourceManager.GetString("MateriaAbbrevPerception", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to PIE.
+        /// </summary>
+        public static string MateriaAbbrevPiety {
+            get {
+                return ResourceManager.GetString("MateriaAbbrevPiety", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SKS.
+        /// </summary>
+        public static string MateriaAbbrevSkillSpeed {
+            get {
+                return ResourceManager.GetString("MateriaAbbrevSkillSpeed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SPS.
+        /// </summary>
+        public static string MateriaAbbrevSpellSpeed {
+            get {
+                return ResourceManager.GetString("MateriaAbbrevSpellSpeed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to TNC.
+        /// </summary>
+        public static string MateriaAbbrevTenacity {
+            get {
+                return ResourceManager.GetString("MateriaAbbrevTenacity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} {1}.
+        /// </summary>
+        public static string MateriaMeldTooltip {
+            get {
+                return ResourceManager.GetString("MateriaMeldTooltip", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Meld.
         /// </summary>
-        internal static string MeldVerb {
+        public static string MeldVerb {
             get {
                 return ResourceManager.GetString("MeldVerb", resourceCulture);
             }
@@ -811,7 +1349,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Select Materia Melds.
         /// </summary>
-        internal static string MeldWindowHeader {
+        public static string MeldWindowHeader {
             get {
                 return ResourceManager.GetString("MeldWindowHeader", resourceCulture);
             }
@@ -820,7 +1358,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to New Gearset.
         /// </summary>
-        internal static string NewGearsetButton {
+        public static string NewGearsetButton {
             get {
                 return ResourceManager.GetString("NewGearsetButton", resourceCulture);
             }
@@ -829,7 +1367,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Import a new gearset.
         /// </summary>
-        internal static string NewGearsetTooltip {
+        public static string NewGearsetTooltip {
             get {
                 return ResourceManager.GetString("NewGearsetTooltip", resourceCulture);
             }
@@ -838,7 +1376,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Maximum of {0} gearsets.
         /// </summary>
-        internal static string NewGearsetTooltipMaxGearsets {
+        public static string NewGearsetTooltipMaxGearsets {
             get {
                 return ResourceManager.GetString("NewGearsetTooltipMaxGearsets", resourceCulture);
             }
@@ -847,27 +1385,99 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to No gearsets found. Add one or more gearsets to get started.
         /// </summary>
-        internal static string NoGearsetsText {
+        public static string NoGearsetsText {
             get {
                 return ResourceManager.GetString("NoGearsetsText", resourceCulture);
             }
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Item not collected.
+        /// </summary>
+        public static string NotObtainableHelp {
+            get {
+                return ResourceManager.GetString("NotObtainableHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Item obtainable using prerequisites.
+        /// </summary>
+        public static string ObtainableHelp {
+            get {
+                return ResourceManager.GetString("ObtainableHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Item collected.
+        /// </summary>
+        public static string ObtainedCompleteHelp {
+            get {
+                return ResourceManager.GetString("ObtainedCompleteHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Item collected, missing materia.
+        /// </summary>
+        public static string ObtainedPartialHelp {
+            get {
+                return ResourceManager.GetString("ObtainedPartialHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Open config.
         /// </summary>
-        internal static string OpenConfigTooltip {
+        public static string OpenConfigTooltip {
             get {
                 return ResourceManager.GetString("OpenConfigTooltip", resourceCulture);
             }
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Popout Configuration.
+        /// </summary>
+        public static string OpenExternalConfigWindowTooltip {
+            get {
+                return ResourceManager.GetString("OpenExternalConfigWindowTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to BISBuddy.
         /// </summary>
-        internal static string PluginDisplayName {
+        public static string PluginDisplayName {
             get {
                 return ResourceManager.GetString("PluginDisplayName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Prerequisites.
+        /// </summary>
+        public static string PrerequisiteGearpieceHeader {
+            get {
+                return ResourceManager.GetString("PrerequisiteGearpieceHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Toggles.
+        /// </summary>
+        public static string PrerequisiteOrNodeSettingsTabName {
+            get {
+                return ResourceManager.GetString("PrerequisiteOrNodeSettingsTabName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Whether to include or ignore this method of obtaining the parent item.
+        /// </summary>
+        public static string PrerequisiteOrNodeToggleTooltip {
+            get {
+                return ResourceManager.GetString("PrerequisiteOrNodeToggleTooltip", resourceCulture);
             }
         }
         
@@ -875,7 +1485,7 @@ namespace BisBuddy.Resources {
         ///   Looks up a localized string similar to Left click to {0}
         ///Right click to search for in inventory.
         /// </summary>
-        internal static string PrerequisiteTooltipBase {
+        public static string PrerequisiteTooltipBase {
             get {
                 return ResourceManager.GetString("PrerequisiteTooltipBase", resourceCulture);
             }
@@ -884,25 +1494,61 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Rename Gearset.
         /// </summary>
-        internal static string RenameGearsetTooltip {
+        public static string RenameGearsetTooltip {
             get {
                 return ResourceManager.GetString("RenameGearsetTooltip", resourceCulture);
             }
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Reset Colors &amp; Styles.
+        /// </summary>
+        public static string ResetUiThemeButton {
+            get {
+                return ResourceManager.GetString("ResetUiThemeButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reset plugin styles/colors to default.
+        /// </summary>
+        public static string ResetUiThemeTooltip {
+            get {
+                return ResourceManager.GetString("ResetUiThemeTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Search inventory for {0}.
         /// </summary>
-        internal static string SearchInventoryForItemTooltip {
+        public static string SearchInventoryForItemTooltip {
             get {
                 return ResourceManager.GetString("SearchInventoryForItemTooltip", resourceCulture);
             }
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Display Gearset Color Accent.
+        /// </summary>
+        public static string ShowGearsetColorAccentFlagLabel {
+            get {
+                return ResourceManager.GetString("ShowGearsetColorAccentFlagLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Whether to display a gradient of the gearset highlight color on the gearset tab and header.
+        /// </summary>
+        public static string ShowGearsetColorAccentFlagTooltip {
+            get {
+                return ResourceManager.GetString("ShowGearsetColorAccentFlagTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Strict Materia Matching.
         /// </summary>
-        internal static string StrictMateriaMatchingCheckbox {
+        public static string StrictMateriaMatchingCheckbox {
             get {
                 return ResourceManager.GetString("StrictMateriaMatchingCheckbox", resourceCulture);
             }
@@ -917,7 +1563,7 @@ namespace BisBuddy.Resources {
         ///Example
         ///Inventory: 1 [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static string StrictMateriaMatchingHelp {
+        public static string StrictMateriaMatchingHelp {
             get {
                 return ResourceManager.GetString("StrictMateriaMatchingHelp", resourceCulture);
             }
@@ -926,7 +1572,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Sync Inventory.
         /// </summary>
-        internal static string SyncInventoryButton {
+        public static string SyncInventoryButton {
             get {
                 return ResourceManager.GetString("SyncInventoryButton", resourceCulture);
             }
@@ -935,25 +1581,124 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Update gearsets with items from your inventory.
         /// </summary>
-        internal static string SyncInventoryTooltip {
+        public static string SyncInventoryTooltip {
             get {
                 return ResourceManager.GetString("SyncInventoryTooltip", resourceCulture);
             }
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Gearpiece Buttons.
+        /// </summary>
+        public static string UiThemeColorGearpieceButton {
+            get {
+                return ResourceManager.GetString("UiThemeColorGearpieceButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Gearpiece Buttons (Clicked).
+        /// </summary>
+        public static string UiThemeColorGearpieceButtonActive {
+            get {
+                return ResourceManager.GetString("UiThemeColorGearpieceButtonActive", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Gearpiece Buttons (Hovered).
+        /// </summary>
+        public static string UiThemeColorGearpieceButtonHovered {
+            get {
+                return ResourceManager.GetString("UiThemeColorGearpieceButtonHovered", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Materia Slot (Advanced).
+        /// </summary>
+        public static string UiThemeColorMateriaSlotAdvancedLabel {
+            get {
+                return ResourceManager.GetString("UiThemeColorMateriaSlotAdvancedLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Materia Slot (Normal).
+        /// </summary>
+        public static string UiThemeColorMateriaSlotNormalLabel {
+            get {
+                return ResourceManager.GetString("UiThemeColorMateriaSlotNormalLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Gearset Colors.
+        /// </summary>
+        public static string UiThemeConfigColorsSectionHeader {
+            get {
+                return ResourceManager.GetString("UiThemeConfigColorsSectionHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Defaults.
+        /// </summary>
+        public static string UiThemeConfigResetsSectionHeader {
+            get {
+                return ResourceManager.GetString("UiThemeConfigResetsSectionHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Gearset Styles.
+        /// </summary>
+        public static string UiThemeConfigStylesSectionHeader {
+            get {
+                return ResourceManager.GetString("UiThemeConfigStylesSectionHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Lock as Collected.
         /// </summary>
-        internal static string UncollectedTooltip {
+        public static string UncollectedTooltip {
             get {
                 return ResourceManager.GetString("UncollectedTooltip", resourceCulture);
             }
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Uncollect.
+        /// </summary>
+        public static string UncollectVerb {
+            get {
+                return ResourceManager.GetString("UncollectVerb", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ???.
+        /// </summary>
+        public static string UnknownClassJobAbbreviation {
+            get {
+                return ResourceManager.GetString("UnknownClassJobAbbreviation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown Class/Job.
+        /// </summary>
+        public static string UnknownClassJobName {
+            get {
+                return ResourceManager.GetString("UnknownClassJobName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unmeld.
         /// </summary>
-        internal static string UnmeldVerb {
+        public static string UnmeldVerb {
             get {
                 return ResourceManager.GetString("UnmeldVerb", resourceCulture);
             }
@@ -962,7 +1707,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Item Changes.
         /// </summary>
-        internal static string UpdateOnItemChangeCheckbox {
+        public static string UpdateOnItemChangeCheckbox {
             get {
                 return ResourceManager.GetString("UpdateOnItemChangeCheckbox", resourceCulture);
             }
@@ -971,7 +1716,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to When a change is detected in character inventories, update gearsets with items in inventories (inventory, armoury chest, equipped).
         /// </summary>
-        internal static string UpdateOnItemChangeHelp {
+        public static string UpdateOnItemChangeHelp {
             get {
                 return ResourceManager.GetString("UpdateOnItemChangeHelp", resourceCulture);
             }
@@ -980,7 +1725,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Login/Load.
         /// </summary>
-        internal static string UpdateOnLoginLoadCheckbox {
+        public static string UpdateOnLoginLoadCheckbox {
             get {
                 return ResourceManager.GetString("UpdateOnLoginLoadCheckbox", resourceCulture);
             }
@@ -989,7 +1734,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to When logging in or loading {0}, update gearsets with items in inventories (inventory, armoury chest, equipped).
         /// </summary>
-        internal static string UpdateOnLoginLoadHelp {
+        public static string UpdateOnLoginLoadHelp {
             get {
                 return ResourceManager.GetString("UpdateOnLoginLoadHelp", resourceCulture);
             }
@@ -998,7 +1743,7 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Plugin Changes.
         /// </summary>
-        internal static string UpdateOnPluginChangesCheckbox {
+        public static string UpdateOnPluginChangesCheckbox {
             get {
                 return ResourceManager.GetString("UpdateOnPluginChangesCheckbox", resourceCulture);
             }
@@ -1007,9 +1752,36 @@ namespace BisBuddy.Resources {
         /// <summary>
         ///   Looks up a localized string similar to When updating {0} gearsets or settings, update gearsets with items in inventories (inventory, armoury chest, equipped).
         /// </summary>
-        internal static string UpdateOnPluginChangesHelp {
+        public static string UpdateOnPluginChangesHelp {
             get {
                 return ResourceManager.GetString("UpdateOnPluginChangesHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Gearsets.
+        /// </summary>
+        public static string UserGearsetsTabName {
+            get {
+                return ResourceManager.GetString("UserGearsetsTabName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add a gearset.
+        /// </summary>
+        public static string UserGearsetsTabNoGearsetsTextNavigation {
+            get {
+                return ResourceManager.GetString("UserGearsetsTabNoGearsetsTextNavigation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Gearset details appear here.
+        /// </summary>
+        public static string UserGearsetsTabNoGearsetsTextPanel {
+            get {
+                return ResourceManager.GetString("UserGearsetsTabNoGearsetsTextPanel", resourceCulture);
             }
         }
     }

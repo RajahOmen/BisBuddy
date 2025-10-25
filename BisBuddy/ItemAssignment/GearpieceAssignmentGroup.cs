@@ -1,4 +1,5 @@
 using BisBuddy.Gear;
+using BisBuddy.Gear.Melds;
 using BisBuddy.Services;
 using System;
 using System.Collections.Generic;
@@ -53,11 +54,11 @@ namespace BisBuddy.ItemAssignment
         {
             this.logger = logger;
             ItemId = gearpiece.ItemId;
-            MateriaList = new List<Materia>(gearpiece.ItemMateria);
+            MateriaList = gearpiece.ItemMateria.ToList();
             Gearpieces = [gearpiece];
             Gearsets = [gearset];
             minGearpieceIdx = gearpieceIdx;
-            IsManuallyCollected = gearpiece.IsManuallyCollected;
+            IsManuallyCollected = gearpiece.CollectLock;
         }
 
         /// <summary>
@@ -83,7 +84,7 @@ namespace BisBuddy.ItemAssignment
                 return false;
 
             // item materia don't match
-            if (!Materia.MateriaListCanSatisfy(MateriaList, gearpiece.ItemMateria))
+            if (!gearpiece.ItemMateria.MateriaListCanSatisfy(MateriaList))
                 return false;
 
             // gearset already added, return false
@@ -93,17 +94,17 @@ namespace BisBuddy.ItemAssignment
             // ids and materia match, add it to group and return true
             Gearpieces.Add(gearpiece);
             Gearsets.Add(gearset);
-            IsManuallyCollected |= gearpiece.IsManuallyCollected;
+            IsManuallyCollected |= gearpiece.CollectLock;
 
             // gearpiece has MORE Materia required than on current group, overwrite
             if (gearpiece.ItemMateria.Count > MateriaList.Count)
-                MateriaList = new List<Materia>(gearpiece.ItemMateria);
+                MateriaList = gearpiece.ItemMateria.ToList();
 
             return true;
         }
 
         // the edge score from candidate->gearpiece group. Values materia count first, then materia stat quantity
-        public int CandidateEdgeWeight(uint candidateId, List<Materia> candidateMateria)
+        public int CandidateEdgeWeight(uint candidateId, MateriaGroup candidateMateria)
         {
             // if group is dummy for this item id, ensure slightly prioritized over no-edge assignments
             if (ItemId == candidateId && isDummy)
@@ -114,7 +115,7 @@ namespace BisBuddy.ItemAssignment
                 return ItemAssigmentSolver.NoEdgeWeightValue;
 
             // assign itemCandidateMateria to group materia, 1-1, preserving duplicates
-            var materiaInCommon = Materia.GetMatchingMateria(MateriaList, candidateMateria.Select(m => m.ItemId).ToList());
+            var materiaInCommon = candidateMateria.GetMatchingMateria(MateriaList);
 
             // get the sub-scores from the common materia etc.
             var subScores = new Dictionary<string, int>()

@@ -1,5 +1,6 @@
 using BisBuddy.Factories;
 using BisBuddy.Gear;
+using BisBuddy.Gear.Melds;
 using BisBuddy.Import;
 using BisBuddy.Items;
 using System;
@@ -14,7 +15,9 @@ namespace BisBuddy.Services.ImportGearset
     public class EtroSource(
         HttpClient httpClient,
         IItemDataService itemDataService,
-        IGearpieceFactory gearpieceFactory
+        IMateriaFactory materiaFactory,
+        IGearpieceFactory gearpieceFactory,
+        IGearsetFactory gearsetFactory
         ) : IImportGearsetSource
     {
         public ImportGearsetSourceType SourceType => ImportGearsetSourceType.Etro;
@@ -39,7 +42,9 @@ namespace BisBuddy.Services.ImportGearset
 
         private readonly HttpClient httpClient = httpClient;
         private readonly IItemDataService itemDataService = itemDataService;
+        private readonly IMateriaFactory materiaFactory = materiaFactory;
         private readonly IGearpieceFactory gearpieceFactory = gearpieceFactory;
+        private readonly IGearsetFactory gearsetFactory = gearsetFactory;
 
         public async Task<List<Gearset>> ImportGearsets(string importString)
         {
@@ -92,22 +97,22 @@ namespace BisBuddy.Services.ImportGearset
         private async Task<Gearset?> parseGearset(JsonElement rootJsonElement, string importString)
         {
             // set gearset name
-            var gearsetName = BisBuddy.Configuration.DefaultGearsetName;
+            string? gearsetName = null;
             if (
                 rootJsonElement.TryGetProperty("name", out var nameProp)
                 && nameProp.ValueKind == JsonValueKind.String
                 )
             {
-                gearsetName = nameProp.GetString() ?? BisBuddy.Configuration.DefaultGearsetName;
+                gearsetName = nameProp.GetString();
             }
 
-            var job = "???";
+            uint classJobId = 0;
             if (
                 rootJsonElement.TryGetProperty("jobAbbrev", out var jobProp)
                 && jobProp.ValueKind == JsonValueKind.String
                 )
             {
-                job = jobProp.GetString() ?? "???";
+                classJobId = itemDataService.GetClassJobInfoByEnAbbreviation(jobProp.GetString() ?? "").ClassJobId;
             }
 
             JsonElement? materiaProp = null;
@@ -132,8 +137,8 @@ namespace BisBuddy.Services.ImportGearset
 
                     // etro only provides NQ items, convert to HQ
                     var gearpiece = gearpieceFactory.Create(
-                        hqGearpieceId,
-                        gearpieceMateria
+                        itemId: hqGearpieceId,
+                        itemMateria: gearpieceMateria
                         );
 
                     // add gearpiece to gearpieces
@@ -161,8 +166,8 @@ namespace BisBuddy.Services.ImportGearset
                     var relicMateria = parseMateria(materiaProp, relicItemId.ToString(), relic.Name);
 
                     var gearpiece = gearpieceFactory.Create(
-                        relicItemId,
-                        relicMateria
+                        itemId: relicItemId,
+                        itemMateria: relicMateria
                         );
 
                     // add gearpiece to gearpieces
@@ -173,18 +178,22 @@ namespace BisBuddy.Services.ImportGearset
             if (gearpieces.Count == 0)
                 return null;
 
-            var gearset = new Gearset(gearsetName, gearpieces, job, ImportGearsetSourceType.Etro, sourceUrl: importString);
-
-            return gearset;
+            return gearsetFactory.Create(
+                gearpieces: gearpieces,
+                name: gearsetName,
+                classJobId: classJobId,
+                sourceType: ImportGearsetSourceType.Etro,
+                sourceUrl: importString
+                );
         }
 
-        private List<Materia> parseMateria(
+        private MateriaGroup parseMateria(
             JsonElement? materiaElement,
             string gearpieceIdStr,
             string gearpieceTypeStr
             )
         {
-            var materiaList = new List<Materia>();
+            var materiaList = new MateriaGroup();
             if (materiaElement == null)
                 return materiaList;
             var materiaProp = materiaElement.Value;
@@ -195,21 +204,24 @@ namespace BisBuddy.Services.ImportGearset
                 // materia for a ring. only match with gearpieces of appropriate finger type
                 if (prop.Name.EndsWith('R') || prop.Name.EndsWith('L'))
                 {
-                    if (prop.Name.EndsWith('R') && !gearpieceTypeStr.EndsWith('R')) continue;
-                    if (prop.Name.EndsWith('L') && !gearpieceTypeStr.EndsWith('L')) continue;
+                    if (prop.Name.EndsWith('R') && !gearpieceTypeStr.EndsWith('R'))
+                        continue;
+                    if (prop.Name.EndsWith('L') && !gearpieceTypeStr.EndsWith('L'))
+                        continue;
 
                     // don't match the R/L at the end
                     propMatchString = prop.Name[..^1];
                 }
 
                 // not the materia for this gearpiece
-                if (propMatchString != gearpieceIdStr) continue;
+                if (propMatchString != gearpieceIdStr)
+                    continue;
 
                 // materia for this gearpiece, add to list
                 foreach (var materiaSlot in prop.Value.EnumerateObject())
                 {
                     var materiaSlotId = materiaSlot.Value.GetUInt32();
-                    var newMateria = itemDataService.BuildMateria(materiaSlotId);
+                    var newMateria = materiaFactory.Create(materiaSlotId);
                     materiaList.Add(newMateria);
                 }
             }
