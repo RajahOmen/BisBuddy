@@ -307,7 +307,7 @@ public sealed partial class Plugin : IDalamudPlugin
         logger.Info($"Initialization complete, starting...");
         try
         {
-            host.StartAsync().GetAwaiter().GetResult();
+            host.Start();
             logger.Info($"Started successfully");
 
 #if DEBUG
