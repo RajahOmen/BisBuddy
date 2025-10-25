@@ -93,6 +93,9 @@ public sealed partial class Plugin : IDalamudPlugin
                 // more rich logging information
                 builder.RegisterGeneric(typeof(TypedLogger<>)).As(typeof(ITypedLogger<>)).InstancePerDependency();
 
+                // debugging
+                builder.RegisterType<DebugService>().As<IDebugService>().SingleInstance();
+
                 // commands
                 builder.RegisterType<OpenMainCommand>().AsImplementedInterfaces().SingleInstance();
                 builder.RegisterType<OpenConfigCommand>().AsImplementedInterfaces().SingleInstance();
@@ -198,7 +201,7 @@ public sealed partial class Plugin : IDalamudPlugin
                 builder.RegisterType<HighlightingSettingsTab>().Keyed<TabRenderer<ConfigWindowTab>>(ConfigWindowTab.Highlighting).InstancePerMatchingLifetimeScope(windowScopeTag);
                 builder.RegisterType<InventorySettingsTab>().Keyed<TabRenderer<ConfigWindowTab>>(ConfigWindowTab.Inventory).InstancePerMatchingLifetimeScope(windowScopeTag);
                 builder.RegisterType<UiThemeSettingsTab>().Keyed<TabRenderer<ConfigWindowTab>>(ConfigWindowTab.UiTheme).InstancePerMatchingLifetimeScope(windowScopeTag);
-                //builder.RegisterType<DebugSettingsTab>().Keyed<TabRenderer<ConfigWindowTab>>(ConfigWindowTab.Debug).InstancePerMatchingLifetimeScope(windowScopeTag);
+                builder.RegisterType<DebugSettingsTab>().Keyed<TabRenderer<ConfigWindowTab>>(ConfigWindowTab.Debug).InstancePerMatchingLifetimeScope(windowScopeTag);
 
                 // other ui elements
                 builder.RegisterType<UiComponents>().AsSelf().SingleInstance();

@@ -1,5 +1,6 @@
 using BisBuddy.Services.Configuration;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface.Utility;
 using System;
 using static Dalamud.Interface.Windowing.Window;
 
@@ -15,7 +16,8 @@ namespace BisBuddy.Ui.Renderers.Tabs.Main
 
         public void Draw()
         {
-            ImGui.Text("Debugging coming soon...");
+            ImGui.NewLine();
+            ImGuiHelpers.CenteredText("Debugging tools coming soon...");
         }
 
         public void SetTabState(TabState state)

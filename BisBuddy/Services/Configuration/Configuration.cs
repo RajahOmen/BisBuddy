@@ -26,11 +26,14 @@ public class Configuration : IConfigurationProperties
     public bool AutoScanInventory { get; set; } = true;
     public bool PluginUpdateInventoryScan { get; set; } = true;
     public bool StrictMateriaMatching { get; set; } = true;
-    public bool EnableDebugging { get; set; } = false;
 
     public bool BrightListItemHighlighting { get; set; } = true;
     public HighlightColor DefaultHighlightColor { get; set; } = new(0.0f, 1.0f, 0.0f, 0.393f);
     public UiTheme UiTheme { get; set; } = new();
+
+    // DEBUGGING
+    public bool EnableDebugging { get; set; } = false;
+    public bool DebugFrameworkAsserts { get; set; } = false;
 
     public Dictionary<ulong, CharacterInfo> CharactersData { get; set; } = [];
 }
@@ -52,8 +55,11 @@ public interface IConfigurationProperties : IPluginConfiguration
     public bool PluginUpdateInventoryScan { get; set; }
     public bool StrictMateriaMatching { get; set; }
     public bool BrightListItemHighlighting { get; set; }
-    public bool EnableDebugging { get; set; }
     public HighlightColor DefaultHighlightColor { get; }
     public UiTheme UiTheme { get; set; }
+
+    // DEBUGGING
+    public bool EnableDebugging { get; set; }
+    public bool DebugFrameworkAsserts { get; set; }
 }
 

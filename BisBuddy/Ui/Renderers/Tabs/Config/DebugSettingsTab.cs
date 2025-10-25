@@ -15,11 +15,22 @@ namespace BisBuddy.Ui.Renderers.Tabs.Config
 
         public void Draw()
         {
-            ImGui.Text("DEBUG");
-
             var debuggingEnabled = configurationService.EnableDebugging;
             if (ImGui.Checkbox("Enable Debugging", ref debuggingEnabled))
                 configurationService.EnableDebugging = debuggingEnabled;
+
+            if (!debuggingEnabled)
+                return;
+
+            ImGui.Spacing();
+            ImGui.Separator();
+            ImGui.Spacing();
+
+            var frameworkAsserts = configurationService.DebugFrameworkAsserts;
+            if (ImGui.Checkbox("Enable Framework Asserts", ref frameworkAsserts))
+                configurationService.DebugFrameworkAsserts = frameworkAsserts;
+            if (ImGui.IsItemHovered())
+                ImGui.SetTooltip("Sends errors to log if internal logic is corrupted. May cause features to break");
         }
 
         public void PreDraw() { }
