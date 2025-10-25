@@ -7,6 +7,8 @@ using BisBuddy.Services.Gearsets;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
 using System.Text.Json;
 
 namespace BisBuddy.Ui.Renderers.ContextMenus
@@ -25,6 +27,9 @@ namespace BisBuddy.Ui.Renderers.ContextMenus
 
         private UiTheme uiTheme => configurationService.UiTheme;
 
+        private Vector4 textColorTheme(CollectionStatusType collectionStatusType) =>
+            configurationService.UiTheme.GetCollectionStatusTheme(collectionStatusType).TextColor * TextMult;
+
         protected override List<ContextMenuEntry> buildMenuEntries(Gearset newComponent)
         {
             if (newComponent is not Gearset gearset)
@@ -41,6 +46,32 @@ namespace BisBuddy.Ui.Renderers.ContextMenus
                     icon: FontAwesomeIcon.TimesCircle,
                     onClick: () => gearset.IsActive = false,
                     shouldDraw: () => gearset.IsActive),
+                factory.Create(
+                    entryName: Resource.ContextMenuLockAllCollected,
+                    icon: FontAwesomeIcon.Lock,
+                    textColor: () => textColorTheme(CollectionStatusType.ObtainedComplete),
+                    onClick: () => {
+                        foreach (var gearpiece in gearset.Gearpieces)
+                            gearpiece.SetIsCollectedLocked(true);
+                    },
+                    shouldDraw: () => gearset.Gearpieces.Any(g => !g.IsCollected || !g.CollectLock)),
+                factory.Create(
+                    entryName: Resource.ContextMenuLockAllUncollected,
+                    icon: FontAwesomeIcon.Lock,
+                    textColor: () => textColorTheme(CollectionStatusType.NotObtainable),
+                    onClick: () => {
+                        foreach (var gearpiece in gearset.Gearpieces)
+                            gearpiece.SetIsCollectedLocked(false);
+                    },
+                    shouldDraw: () => gearset.Gearpieces.Any(g => g.IsCollected || !g.CollectLock)),
+                factory.Create(
+                    entryName: Resource.ContextMenuUnlockAll,
+                    icon: FontAwesomeIcon.Unlock,
+                    onClick: () => {
+                        foreach (var gearpiece in gearset.Gearpieces)
+                            gearpiece.CollectLock = false;
+                    },
+                    shouldDraw: () => gearset.Gearpieces.Any(g => g.CollectLock)),
                 factory.Create(
                     entryName: Resource.ContextMenuCopyJson,
                     icon: FontAwesomeIcon.Copy,

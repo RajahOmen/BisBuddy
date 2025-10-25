@@ -18,6 +18,8 @@ namespace BisBuddy.Ui.Renderers.ContextMenus
     {
         public static RendererType RendererType => RendererType.ContextMenu;
 
+        protected static readonly Vector4 TextMult = new(0.8f, 0.8f, 0.8f, 1f);
+
         protected readonly IContextMenuEntryFactory factory = menuEntryFactory;
         protected readonly ImGuiMouseButton activationButton = activationButton;
         protected readonly ImGuiHoveredFlags hoveredFlags = hoveredFlags;

@@ -19,8 +19,6 @@ namespace BisBuddy.Ui.Renderers.ContextMenus
         private readonly IItemFinderService itemFinderService = itemFinderService;
         private readonly IConfigurationService configurationService = configurationService;
 
-        private static readonly Vector4 TextMult = new(0.8f, 0.8f, 0.8f, 1f);
-
         private Vector4 textColorTheme(CollectionStatusType collectionStatusType) =>
             configurationService.UiTheme.GetCollectionStatusTheme(collectionStatusType).TextColor * TextMult;
 

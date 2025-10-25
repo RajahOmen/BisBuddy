@@ -729,4 +729,13 @@ or to have a unique color to highlight items in</value>
   <data name="GearsetPropertiesDataRowLabel" xml:space="preserve">
     <value>Data Export</value>
   </data>
+  <data name="ContextMenuLockAllUncollected" xml:space="preserve">
+    <value>Lock all as Uncollected</value>
+  </data>
+  <data name="ContextMenuLockAllCollected" xml:space="preserve">
+    <value>Lock all as Collected</value>
+  </data>
+  <data name="ContextMenuUnlockAll" xml:space="preserve">
+    <value>Unlock all</value>
+  </data>
 </root>

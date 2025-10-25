@@ -250,6 +250,24 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Lock all as Collected.
+        /// </summary>
+        public static string ContextMenuLockAllCollected {
+            get {
+                return ResourceManager.GetString("ContextMenuLockAllCollected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Lock all as Uncollected.
+        /// </summary>
+        public static string ContextMenuLockAllUncollected {
+            get {
+                return ResourceManager.GetString("ContextMenuLockAllUncollected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Lock as Collected.
         /// </summary>
         public static string ContextMenuLockCollected {
@@ -282,6 +300,15 @@ namespace BisBuddy.Resources {
         public static string ContextMenuUnlock {
             get {
                 return ResourceManager.GetString("ContextMenuUnlock", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unlock all.
+        /// </summary>
+        public static string ContextMenuUnlockAll {
+            get {
+                return ResourceManager.GetString("ContextMenuUnlockAll", resourceCulture);
             }
         }
         
