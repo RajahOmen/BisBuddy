@@ -51,9 +51,13 @@ namespace BisBuddy.Services.Gearsets
             logger.Verbose($"OnGearsetsChange (saving: {saveToFile})");
             updateItemRequirements();
             sortGearsets(currentGearsetsSortType, currentGearsetsSortDescending);
-            OnGearsetsChange?.Invoke();
-            if (saveToFile)
-                scheduleSaveCurrentGearsets();
+
+            framework.RunOnFrameworkThread(() =>
+            {
+                OnGearsetsChange?.Invoke();
+                if (saveToFile)
+                    scheduleSaveCurrentGearsets();
+            });
         }
 
         private void handleGearsetChange(bool effectsAssignments)

@@ -1,4 +1,5 @@
 using BisBuddy.Gear;
+using Dalamud.Plugin.Services;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Linq.Expressions;
@@ -19,12 +20,14 @@ namespace BisBuddy.Services.Configuration
     public class ConfigurationService : IConfigurationService
     {
         private readonly ITypedLogger<ConfigurationService> logger;
+        private readonly IFramework framework;
         private readonly IQueueService queueService;
         private readonly IFileService fileService;
         private readonly JsonSerializerOptions jsonSerializerOptions;
 
         public ConfigurationService(
             ITypedLogger<ConfigurationService> logger,
+            IFramework framework,
             IConfigurationLoaderService loadConfigurationService,
             IQueueService queueService,
             IFileService fileService,
@@ -32,6 +35,7 @@ namespace BisBuddy.Services.Configuration
         )
         {
             this.logger = logger;
+            this.framework = framework;
             this.queueService = queueService;
             this.fileService = fileService;
             this.jsonSerializerOptions = jsonSerializerOptions;
@@ -46,7 +50,7 @@ namespace BisBuddy.Services.Configuration
         private void triggerConfigurationChange(bool affectsAssignments)
         {
             logger.Verbose($"OnConfigurationChange (affectsAssignments: {affectsAssignments})");
-            OnConfigurationChange?.Invoke(affectsAssignments);
+            framework.RunOnFrameworkThread(() => OnConfigurationChange?.Invoke(affectsAssignments));
         }
 
         private void updateConfigProperty<T>(
