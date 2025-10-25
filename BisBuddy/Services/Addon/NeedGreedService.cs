@@ -35,6 +35,8 @@ namespace BisBuddy.Services.Addon
 
         private unsafe void handlePreDraw(AddonEvent type, AddonArgs args)
         {
+            debugService.AssertMainThreadDebug();
+
             var addon = (AddonNeedGreed*)args.Addon.Address;
             try
             {
@@ -60,6 +62,8 @@ namespace BisBuddy.Services.Addon
 
         private unsafe void highlightItems(Dictionary<int, HighlightColor> indexColors, AddonNeedGreed* needGreed)
         {
+            debugService.AssertMainThreadDebug();
+
             var itemListComponent = (AtkComponentList*)needGreed
                 ->GetComponentByNodeId(AddonItemListNodeId);
 

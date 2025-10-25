@@ -65,6 +65,8 @@ namespace BisBuddy.Services.Addon.ShopExchange
 
         private unsafe void handlePreDraw(AddonEvent type, AddonArgs args)
         {
+            debugService.AssertMainThreadDebug();
+
             try
             {
                 var addon = (AtkUnitBase*)((AddonDrawArgs)args).Addon.Address;
@@ -237,6 +239,8 @@ namespace BisBuddy.Services.Addon.ShopExchange
 
         protected override unsafe NodeBase initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon, HighlightColor color)
         {
+            debugService.AssertMainThreadDebug();
+
             NineGridNode? customNode = null;
             try
             {

@@ -74,7 +74,6 @@ namespace BisBuddy.Items
             IDataManager dataManager,
             IGameInventory gameInventory,
             IMapper<string, GearpieceType> gearpieceTypeMapper
-
             )
         {
             this.logger = logger;

@@ -12,7 +12,8 @@ namespace BisBuddy.Services
 
         private readonly CancellationTokenSource tokenSource = new();
         private readonly Channel<(string TaskName, Action Task)> taskChannel =
-            Channel.CreateBounded<(string TaskName, Action Task)>(new BoundedChannelOptions(20) {
+            Channel.CreateBounded<(string TaskName, Action Task)>(new BoundedChannelOptions(20)
+            {
                 FullMode = BoundedChannelFullMode.DropWrite,
             });
         private Task? workerLoop;

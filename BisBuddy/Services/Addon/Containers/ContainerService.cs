@@ -69,6 +69,7 @@ namespace BisBuddy.Services.Addon.Containers
 
         private unsafe void updateHighlights()
         {
+            debugService.AssertMainThreadDebug();
             if (neededItemColors.Count == 0)
             {
                 unmarkNodes();
@@ -90,6 +91,8 @@ namespace BisBuddy.Services.Addon.Containers
 
         protected unsafe List<GameInventoryItem> GetItemsOrdered(ItemOrderModuleSorter* sorter, int tabIdx, int numPages, int outputPageSize)
         {
+            debugService.AssertMainThreadDebug();
+
             if (sorter == null) return [];
 
             var orderedItemPtrs = Enumerable.Repeat(nint.Zero, sorter->Items.Count).ToList();
@@ -144,6 +147,8 @@ namespace BisBuddy.Services.Addon.Containers
 
         protected unsafe void updateDragDropComponentNodes()
         {
+            debugService.AssertMainThreadDebug();
+
             dragDropComponentNodes.Clear();
 
             // find child addon containing the components
@@ -187,6 +192,8 @@ namespace BisBuddy.Services.Addon.Containers
 
         protected unsafe InventoryItem* GetInventoryItem(ItemOrderModuleSorter* sorter, long slotIndex)
         {
+            debugService.AssertMainThreadDebug();
+
             if (sorter == null)
                 return null;
 

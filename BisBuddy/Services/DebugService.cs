@@ -1,18 +1,17 @@
 using BisBuddy.Services.Configuration;
 using Dalamud.Utility;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BisBuddy.Services
 {
-    public class DebugService(IConfigurationService configurationService) : IDebugService
+    public class DebugService(
+        ITypedLogger<DebugService> logger,
+        IConfigurationService configurationService
+        ) : IDebugService
     {
+        private readonly ITypedLogger<DebugService> logger = logger;
         private readonly IConfigurationService configurationService = configurationService;
 
-        public void DebugAssertMainThread()
+        public void AssertMainThreadDebug()
         {
             if (!configurationService.DebugFrameworkAsserts)
                 return;
@@ -23,6 +22,6 @@ namespace BisBuddy.Services
 
     public interface IDebugService
     {
-        public void DebugAssertMainThread();
+        public void AssertMainThreadDebug();
     }
 }

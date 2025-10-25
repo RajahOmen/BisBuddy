@@ -10,7 +10,6 @@ using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;
-using Dalamud.Utility;
 using System;
 using System.Numerics;
 
@@ -27,6 +26,7 @@ public unsafe class MeldPlanSelectorWindow : Window, IDisposable
     private readonly IMeldPlanService meldPlanService;
     private readonly IConfigurationService configService;
     private readonly IRendererFactory rendererFactory;
+    private readonly IDebugService debugService;
 
     private AtkUnitBasePtr addonPtr = nint.Zero;
 
@@ -36,7 +36,8 @@ public unsafe class MeldPlanSelectorWindow : Window, IDisposable
         IGameGui gameGui,
         IMeldPlanService meldPlanService,
         IConfigurationService configService,
-        IRendererFactory rendererFactory
+        IRendererFactory rendererFactory,
+        IDebugService debugService
         )
         : base("Meld Plan###meld plan selector bisbuddy")
     {
@@ -51,12 +52,15 @@ public unsafe class MeldPlanSelectorWindow : Window, IDisposable
         this.meldPlanService = meldPlanService;
         this.configService = configService;
         this.rendererFactory = rendererFactory;
+        this.debugService = debugService;
     }
 
     public void Dispose() { }
 
     public override void PreOpenCheck()
     {
+        debugService.AssertMainThreadDebug();
+
         if (!configService.HighlightMateriaMeld)
             return;
 

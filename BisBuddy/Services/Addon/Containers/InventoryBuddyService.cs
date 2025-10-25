@@ -15,6 +15,8 @@ namespace BisBuddy.Services.Addon.Containers
         {
             get
             {
+                debugService.AssertMainThreadDebug();
+
                 // since buddy broken up by normal/premium, select sorter based on
                 // true tab index
                 var addon = (AddonInventoryBuddy*)gameGui.GetAddonByName(AddonName).Address;
@@ -33,6 +35,8 @@ namespace BisBuddy.Services.Addon.Containers
 
         protected override unsafe int getTabIndex()
         {
+            debugService.AssertMainThreadDebug();
+
             var addon = (AddonInventoryBuddy*)gameGui.GetAddonByName(AddonName).Address;
             if (addon == null || !addon->IsVisible) return -1;
 
@@ -42,6 +46,8 @@ namespace BisBuddy.Services.Addon.Containers
 
         protected override unsafe List<nint> getAddons()
         {
+            debugService.AssertMainThreadDebug();
+
             // inventory buddy has no child addons, stores everything in InventoryBuddy
             var addon = (AddonInventoryBuddy*)gameGui.GetAddonByName(AddonName).Address;
             if (addon == null) return [];
@@ -52,6 +58,8 @@ namespace BisBuddy.Services.Addon.Containers
 
         protected override unsafe List<nint> getDragDropComponents(nint gridAddon)
         {
+            debugService.AssertMainThreadDebug();
+
             var addon = (AddonInventoryBuddy*)gridAddon;
             var slots = addon->Slots.ToArray();
 

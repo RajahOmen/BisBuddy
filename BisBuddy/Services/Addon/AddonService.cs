@@ -22,12 +22,14 @@ namespace BisBuddy.Services.Addon
         ) : IAddonEventListener where T : class
     {
         protected readonly ITypedLogger<T> logger = dependencies.logger;
+        protected readonly IFramework framework = dependencies.framework;
         protected readonly IAddonLifecycle addonLifecycle = dependencies.AddonLifecycle;
         protected readonly IGameGui gameGui = dependencies.GameGui;
         protected readonly NativeController nativeController = dependencies.NativeController;
         protected readonly IGearsetsService gearsetsService = dependencies.GearsetsService;
         protected readonly IItemDataService itemDataService = dependencies.ItemDataService;
         protected readonly IConfigurationService configurationService = dependencies.ConfigurationService;
+        protected readonly IDebugService debugService = dependencies.DebugService;
 
         private static readonly HighlightColor NullColor = new(0.0f, 0.0f, 0.0f, 0.393f);
         private readonly Dictionary<nint, (NodeBase Node, HighlightColor Color)> customNodes = [];
@@ -116,6 +118,8 @@ namespace BisBuddy.Services.Addon
 
         private unsafe void handleUpdateHighlightColor()
         {
+            debugService.AssertMainThreadDebug();
+
             if (gameGui.GetAddonByName(AddonName).IsNull && highlightedNodes.Count > 0)
                 throw new Exception($"Addon \"{AddonName}\" is not loaded, cannot update \"{highlightedNodes.Count}\" node highlight colors");
 
@@ -140,6 +144,8 @@ namespace BisBuddy.Services.Addon
 
         protected unsafe NodeBase createCustomNode(AtkResNode* parentNode, AtkUnitBase* addon, HighlightColor color)
         {
+            debugService.AssertMainThreadDebug();
+
             logger.Verbose(
                 $"Creating custom node (parent node \"{parentNode->NodeId}\") " +
                 $"in \"{AddonName}\" with color {color.BaseColor}"
@@ -167,7 +173,9 @@ namespace BisBuddy.Services.Addon
 
         private unsafe bool setAddColor(AtkResNode* node, HighlightColor? color)
         {
-            if (gameGui.GetAddonByName(AddonName).IsNull)
+            debugService.AssertMainThreadDebug();
+
+            if (!gameGui.GetAddonByName(AddonName).IsReady)
                 throw new Exception($"Addon \"{AddonName}\" is not loaded, cannot set node highlight color");
 
             var nodeHighlighted = highlightedNodes.TryGetValue((nint)node, out var currentColor);
@@ -201,6 +209,8 @@ namespace BisBuddy.Services.Addon
 
         private unsafe bool setCustomNodeVisibility(AtkResNode* parentNode, HighlightColor? color)
         {
+            debugService.AssertMainThreadDebug();
+
             if (!customNodes.TryGetValue((nint)parentNode, out var customNodeData))
             {
                 // no need to create a node if it's not going to be enabled
@@ -258,6 +268,7 @@ namespace BisBuddy.Services.Addon
 
         protected unsafe void unmarkNodes(AtkResNode* parentNodeFilter = null)
         {
+            debugService.AssertMainThreadDebug();
             try
             {
                 var highlightedNodesCount = highlightedNodes.Count;
