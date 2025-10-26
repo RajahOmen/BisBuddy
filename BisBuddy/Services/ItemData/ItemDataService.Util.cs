@@ -4,7 +4,9 @@ using BisBuddy.Gear.Prerequisites;
 using BisBuddy.Resources;
 using BisBuddy.Util;
 using Dalamud.Game;
+using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.Inventory;
+using Dalamud.Plugin.Services;
 using Dalamud.Utility;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
@@ -79,6 +81,14 @@ namespace BisBuddy.Items
 
             NameToId[name] = id;
             return id;
+        }
+
+        public string GetShopNameById(uint shopId)
+        {
+            if (!ShopSheet.TryGetRow(shopId, out var shop))
+                return string.Empty;
+
+            return SeStringToString(shop.Name);
         }
 
         public List<uint> GetItemMateriaIds(GameInventoryItem item)
@@ -290,13 +300,13 @@ namespace BisBuddy.Items
 
             if (supplementalPrereqs.Count() == 1)
             {
-                supplementalTree = buildPrerequisites(supplementalPrereqs.First(), isCollected, isManuallyCollected, depth - 1);
+                supplementalTree = buildPrerequisites(supplementalPrereqs.First().ItemId, isCollected, isManuallyCollected, depth - 1);
                 supplementalTree.SourceType = PrerequisiteNodeSourceType.Loot;
             }
             else if (supplementalPrereqs.Count() > 1)
             {
                 var prereqs = ItemsCoffers[itemId]
-                    .Select(id => buildPrerequisites(id, isCollected, isManuallyCollected, depth - 1))
+                    .Select(entry => buildPrerequisites(entry.ItemId, isCollected, isManuallyCollected, depth - 1))
                     .ToList();
 
                 supplementalTree = new PrerequisiteOrNode(
@@ -319,7 +329,7 @@ namespace BisBuddy.Items
             // only exchangable at one shop listing
             if (exchangesPrereqs.Count() == 1)
             {
-                var shopCosts = exchangesPrereqs.First();
+                var shopCosts = exchangesPrereqs.First().ItemIds;
 
                 // shop only is requesting one item to exchange
                 if (shopCosts.Count == 1)
@@ -346,8 +356,9 @@ namespace BisBuddy.Items
             {
                 // build OR list of ANDs. Ex: OR(AND(A, B, C), AND(D, E), ATOM())
                 var prereqs = exchangesPrereqs
-                    .Select(shopCostIds =>
+                    .Select(entries =>
                     {
+                        var shopCostIds = entries.ItemIds;
                         // shop costs one items
                         if (shopCostIds.Count == 1)
                         {
@@ -400,7 +411,7 @@ namespace BisBuddy.Items
             }
             else if (hasExchangesPrereqs)
             {
-                var exchangeNames = exchangesPrereqs.SelectMany(prereqs => prereqs).Select(GetItemNameById);
+                var exchangeNames = exchangesPrereqs.SelectMany(prereqs => prereqs.ItemIds).Select(GetItemNameById);
                 var prereqNames = exchangesTree.PrerequisiteTree.SelectMany(prereq => prereq.PrerequisiteTree).Select(p => p.ItemName);
                 // only from shops/exchanges
                 group.PrerequisiteTree = [exchangesTree];

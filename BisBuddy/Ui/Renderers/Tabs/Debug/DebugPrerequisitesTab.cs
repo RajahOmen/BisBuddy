@@ -1,5 +1,6 @@
 using BisBuddy.Extensions;
 using BisBuddy.Items;
+using BisBuddy.Services.ItemData;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Components;
@@ -11,10 +12,9 @@ using System.Linq;
 using static Dalamud.Interface.Windowing.Window;
 using ItemRelation = (
     uint TargetItemId,
-    System.Collections.Generic.List<System.Collections.Generic.List<(
-        uint SourceItemId,
-        int SourceCount
-    )>> Sources
+    string SourceName,
+    string? SourceTooltip,
+    System.Collections.Generic.List<(uint SourceItemId, int SourceCount)> SourceItems
 );
 
 
@@ -24,19 +24,14 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
     {
         private readonly IItemDataService itemDataService = itemDataService;
 
-
         public WindowSizeConstraints? TabSizeConstraints => null;
 
         private bool firstDraw = true;
-        private bool groupByTarget = true;
         private string targetNameFilter = string.Empty;
         private string sourceNameFilter = string.Empty;
 
         private List<ItemRelation> itemsCoffers = [];
         private List<ItemRelation> itemsPrerequisites = [];
-
-        private List<ItemRelation> itemsCoffersGrouped = [];
-        private List<ItemRelation> itemsPrerequisitesGrouped = [];
 
         public bool ShouldDraw => true;
 
@@ -50,10 +45,14 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
             var newCoffers = itemDataService
                 .ItemsCoffers
                 .Where(entry => itemDataService.GetItemNameById(entry.Key).Contains(targetNameFilter))
-                .SelectMany(entry =>
-                    entry
-                        .Where(val => itemDataService.GetItemNameById(val).Contains(sourceNameFilter))
-                        .Select<uint, ItemRelation>(val => (entry.Key, [[(val, 1)]]))
+                .SelectMany(entry => entry
+                    .Where(val => itemDataService.GetItemNameById(val.ItemId).Contains(sourceNameFilter))
+                    .Select<(uint, CofferSourceType), ItemRelation>(val => (
+                        entry.Key,
+                        Enum.GetName(val.Item2)!,
+                        null,
+                        [(val.Item1, 1)]
+                    )).ToList()
                 ).OrderByDescending(entry => entry.TargetItemId);
 
             var newPrerequisites = itemDataService
@@ -61,36 +60,24 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
                 .Where(entry => itemDataService.GetItemNameById(entry.Key).Contains(targetNameFilter))
                 .SelectMany(entry =>
                     entry
-                        .Where(vals => vals.Any(val => itemDataService.GetItemNameById(val).Contains(sourceNameFilter)))
-                        .Select<List<uint>, ItemRelation>(vals => (
-                            entry.Key,
-                            [vals.GroupBy(val => val).Select(g => (g.Key, g.Count())).ToList()]
-                        ))
+                        .Where(vals => vals.ItemIds.Any(val => itemDataService.GetItemNameById(val).Contains(sourceNameFilter)))
+                        .Select<(List<uint>, uint), ItemRelation>(vals =>
+                        {
+                            var shopName = itemDataService.GetShopNameById(vals.Item2);
+                            return (
+                                entry.Key,
+                                $"{vals.Item2}",
+                                shopName == string.Empty ? "UNKNOWN" : shopName,
+                                vals.Item1
+                                    .GroupBy(val => val)
+                                    .Select(g => (g.Key, g.Count()))
+                                    .ToList()
+                            );
+                        })
                 ).OrderByDescending(entry => entry.TargetItemId);
-
-            var newCoffersGrouped = newCoffers
-                .GroupBy(relation => relation.TargetItemId)
-                .Select(g => (g.Key, g.SelectMany(entry => entry.Sources).ToList()));
-
-            var newPrerequisitesGrouped = newPrerequisites
-                .GroupBy(relation => relation.TargetItemId)
-                .Select(g => (g.Key, g.SelectMany(entry => entry.Sources).ToList()));
 
             itemsCoffers = newCoffers.ToList();
             itemsPrerequisites = newPrerequisites.ToList();
-            itemsCoffersGrouped = newCoffersGrouped.ToList();
-            itemsPrerequisitesGrouped = newPrerequisitesGrouped.ToList();
-        }
-
-        private (List<ItemRelation>, List<ItemRelation>) getItemRelations()
-        {
-            if (groupByTarget)
-            {
-                return (itemsCoffersGrouped, itemsPrerequisitesGrouped);
-            } else
-            {
-                return (itemsCoffers, itemsPrerequisites);
-            }
         }
 
         public void PreDraw() {
@@ -104,13 +91,8 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
 
         public void Draw()
         {
-
-
             if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.Sync, "Refresh"))
                 updateItemRelations();
-
-            ImGui.SameLine();
-            ImGui.Checkbox("Group by Target Item", ref groupByTarget);
 
             ImGui.SameLine();
             ImGui.Spacing();
@@ -144,18 +126,8 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
             if (!tabMenu)
                 return;
 
-            var (coffers, prerequisites) = getItemRelations();
-
-            if (groupByTarget)
-            {
-                itemsCoffersGrouped = drawItemRelationsTab("Coffers", itemsCoffersGrouped);
-                itemsPrerequisitesGrouped = drawItemRelationsTab("Prerequisites", itemsPrerequisitesGrouped);
-            }
-            else
-            {
-                itemsCoffers = drawItemRelationsTab("Coffers", itemsCoffers);
-                itemsPrerequisites = drawItemRelationsTab("Prerequisites", itemsPrerequisites);
-            }
+            itemsCoffers = drawItemRelationsTab("Coffers", itemsCoffers);
+            itemsPrerequisites = drawItemRelationsTab("Prerequisites", itemsPrerequisites);
         }
 
         private List<ItemRelation> drawItemRelationsTab(string relationsName, List<ItemRelation> relations)
@@ -174,14 +146,17 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
                 | ImGuiTableFlags.ScrollY
                 | ImGuiTableFlags.Sortable
                 | ImGuiTableFlags.SortMulti
+                | ImGuiTableFlags.BordersInnerV
+                | ImGuiTableFlags.PadOuterX
                 );
-            using var table = ImRaii.Table("##item_relations_table", 3, tableFlags);
+            using var table = ImRaii.Table("##item_relations_table", 4, tableFlags);
             if (!table)
                 return relations;
 
             ImGui.TableSetupColumn("Item Id", ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.DefaultSort | ImGuiTableColumnFlags.PreferSortDescending, 60f * ImGuiHelpers.GlobalScale);
-            ImGui.TableSetupColumn("Target Item Name", ImGuiTableColumnFlags.WidthFixed, 400f * ImGuiHelpers.GlobalScale);
-            ImGui.TableSetupColumn("Sources", ImGuiTableColumnFlags.NoSort);
+            ImGui.TableSetupColumn("Target Item Name");
+            ImGui.TableSetupColumn("Source Item Name");
+            ImGui.TableSetupColumn("Source Type");
 
             ImGui.TableSetupScrollFreeze(0, 1);
             ImGui.TableHeadersRow();
@@ -206,6 +181,22 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
                             specs.SortDirection == ImGuiSortDirection.Descending
                         ).ToList();
                 }
+                else if (specs.ColumnIndex == 2)
+                {
+                    relations = relations
+                        .OrderByDirection(
+                            r => string.Join("", r.SourceItems.Select(i => itemDataService.GetItemNameById(i.SourceItemId))),
+                            specs.SortDirection == ImGuiSortDirection.Descending
+                        ).ToList();
+                }
+                else if (specs.ColumnIndex == 3)
+                {
+                    relations = relations
+                        .OrderByDirection(
+                            r => r.SourceName,
+                            specs.SortDirection == ImGuiSortDirection.Descending
+                        ).ToList();
+                }
             }
 
             var clipper = ImGui.ImGuiListClipper();
@@ -215,7 +206,7 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
             {
                 for (var rowIdx = clipper.DisplayStart; rowIdx < clipper.DisplayEnd; rowIdx++)
                 {
-                    var (targetItemId, sources) = relations[rowIdx];
+                    var (targetItemId, sourceName, sourceTooltip, sourceItems) = relations[rowIdx];
                     ImGui.TableNextRow();
                     ImGui.TableNextColumn();
 
@@ -226,27 +217,27 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
 
                     ImGui.TableNextColumn();
 
-                    foreach (var source in sources)
-                    {
-                        var itemIdsText = string.Join(
-                            ", ",
-                            source.Select(g => g.SourceItemId)
-                            );
+                    var itemIdsText = string.Join(
+                        ",  ",
+                        sourceItems.Select(g => g.SourceItemId)
+                        );
 
-                        var text = string.Join(
-                            ", ",
-                            source.Select(
-                                itemGroup => {
-                                    var countText = itemGroup.SourceCount > 1 ? $" x{itemGroup.SourceCount}" : "";
-                                    return $"{itemDataService.GetItemNameById(itemGroup.SourceItemId)}{countText}";
-                                }
-                                )
-                            );
-                        ImGui.Text(text);
-                        if (ImGui.IsItemHovered())
-                            ImGui.SetTooltip(itemIdsText);
-                    }
+                    var text = string.Join(
+                        "\n",
+                        sourceItems.Select(
+                            itemGroup => {
+                                var countText = itemGroup.SourceCount > 1 ? $"  x {itemGroup.SourceCount}" : "";
+                                return $"{itemDataService.GetItemNameById(itemGroup.SourceItemId)}{countText}";
+                            })
+                        );
+                    ImGui.Text(text);
+                    if (ImGui.IsItemHovered())
+                        ImGui.SetTooltip(itemIdsText);
 
+                    ImGui.TableNextColumn();
+                    ImGui.Text(sourceName);
+                    if (sourceTooltip is not null && ImGui.IsItemHovered())
+                        ImGui.SetTooltip(sourceTooltip);
                 }
             }
             
