@@ -127,6 +127,21 @@ namespace BisBuddy.Items
 
     public interface IItemDataService
     {
+        /// <summary>
+        /// Mapping of which items can be obtained via opening what coffers
+        /// 
+        /// item inside coffer -> coffer
+        /// </summary>
+        public ILookup<uint, uint> ItemsCoffers { get; }
+
+        /// <summary>
+        /// Mapping of which items can be obtained by doing some manner of trade-in.
+        /// Since a trade-in may require more than one item, this mapping is 1-many
+        /// 
+        /// item obtained -> items required to complete trade in
+        /// </summary>
+        public ILookup<uint, List<uint>> ItemsPrerequisites { get; }
+
         public uint ConvertItemIdToHq(uint id);
         public string SeStringToString(ReadOnlySeString input);
         public string GetItemNameById(uint id);
