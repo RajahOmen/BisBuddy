@@ -14,7 +14,7 @@ namespace BisBuddy.ItemAssignment
         public List<GameInventoryItem> CandidateItems;
         public List<IAssignmentGroup> AssignmentGroups;
 
-        public void Deconstruct(
+        public readonly void Deconstruct(
             out int[] assignments,
             out int[,] edges,
             out List<GameInventoryItem> candidateItems,
