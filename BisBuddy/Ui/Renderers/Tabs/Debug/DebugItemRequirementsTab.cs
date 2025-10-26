@@ -208,6 +208,8 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
                 | ImGuiTableFlags.Sortable
                 | ImGuiTableFlags.SortMulti
                 | ImGuiTableFlags.ScrollY
+                | ImGuiTableFlags.PadOuterX
+                | ImGuiTableFlags.BordersInnerV
                 );
             using var table = ImRaii.Table("###item_requirements_table", columns.Count, tableFlags);
             if (!table)

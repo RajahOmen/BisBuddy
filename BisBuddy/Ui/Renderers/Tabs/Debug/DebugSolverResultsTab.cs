@@ -74,7 +74,12 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
 
             // 2 for idx, gearpiece
             var numColumns = 2 + candidateItems.Count;
-            var flags = ImGuiTableFlags.RowBg | ImGuiTableFlags.BordersInnerV | ImGuiTableFlags.SizingStretchProp;
+            var flags = (
+                ImGuiTableFlags.RowBg
+                | ImGuiTableFlags.BordersInnerV
+                | ImGuiTableFlags.SizingStretchProp
+                | ImGuiTableFlags.PadOuterX
+                );
             using var table = ImRaii.Table($"{resultTitle}##solve_result_table", numColumns, flags);
             if (!table)
                 return;
