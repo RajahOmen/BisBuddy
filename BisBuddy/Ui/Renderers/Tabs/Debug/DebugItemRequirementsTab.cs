@@ -177,7 +177,10 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
         public void Draw()
         {
             if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.Sync, "Refresh"))
+            {
+                itemNameFilter = string.Empty;
                 updateItemRequirements();
+            }
 
             ImGui.SameLine();
 
