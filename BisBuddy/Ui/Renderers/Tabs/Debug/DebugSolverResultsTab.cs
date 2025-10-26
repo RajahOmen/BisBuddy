@@ -45,7 +45,9 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
             ImGui.Separator();
             ImGui.Spacing();
 
-            if (gearpiecesResult is SolveResult gearResult)
+            if (gearpiecesResult is SolveResult gearResult
+                && gearResult.CandidateItems.Count > 0
+                && gearResult.AssignmentGroups.Count > 0)
                 drawSolveResult("Gearpiece Assignments", gearResult);
             else
                 ImGui.Text("No Gearpiece Assignments");
@@ -54,7 +56,9 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
             ImGui.Separator();
             ImGui.Spacing();
 
-            if (prerequisitesResult is SolveResult prereqResult)
+            if (prerequisitesResult is SolveResult prereqResult
+                && prereqResult.CandidateItems.Count > 0
+                && prereqResult.AssignmentGroups.Count > 0)
                 drawSolveResult("Prerequisite Assignments", prereqResult);
             else
                 ImGui.Text("No Prerequisite Assignments");
@@ -78,7 +82,7 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
             // HEADER SETUP
 
             ImGui.TableSetupColumn("Idx", ImGuiTableColumnFlags.WidthFixed, 25f);
-            ImGui.TableSetupColumn("Gearpiece");
+            ImGui.TableSetupColumn("Gearpiece", initWidthOrWeight: 2f);
             foreach (var item in candidateItems)
                 ImGui.TableSetupColumn(itemDataService.GetItemNameById(item.ItemId));
 
