@@ -36,6 +36,8 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
 
         private bool groupReqs = true;
 
+        private string itemNameFilter = string.Empty;
+
         private readonly ItemRequirementTableColumn groupedColumns;
         private readonly ItemRequirementTableColumn ungroupedColumns;
 
@@ -139,27 +141,26 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
             if (groupReqs)
             {
                 itemRequirements = gearsetsService
-                    .AllItemRequirements.SelectMany(entry => (
-                        entry
-                            .Value
-                            .GroupBy(req => (req.Gearset, entry.Key, req.ItemRequirement.RequirementType, req.ItemRequirement.CollectionStatus))
-                            .Select(g => (g.First(), g.Count()))
-                            .ToList()
-                        )
+                    .AllItemRequirements
+                    .Where(entry => itemDataService.GetItemNameById(entry.Key).Contains(itemNameFilter))
+                    .SelectMany(entry => entry
+                        .Value
+                        .GroupBy(req => (req.Gearset, entry.Key, req.ItemRequirement.RequirementType, req.ItemRequirement.CollectionStatus))
+                        .Select(g => (g.First(), g.Count()))
+                        .ToList()
                     ).ToList();
             }
             else
             {
                 itemRequirements = gearsetsService
-                    .AllItemRequirements.SelectMany(entry => (
-                        entry
-                            .Value
-                            .Select(g => (g, 1))
-                            .ToList()
-                        )
+                    .AllItemRequirements
+                    .Where(entry => itemDataService.GetItemNameById(entry.Key).Contains(itemNameFilter))
+                    .SelectMany(entry => entry
+                        .Value
+                        .Select(g => (g, 1))
+                        .ToList()
                     ).ToList();
             }
-
 
             groupedColumns[0].Sort(true);
         }
@@ -183,6 +184,18 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
             if (ImGui.Checkbox("Group by Gearset", ref groupReqs))
                 updateItemRequirements();
 
+            ImGui.SameLine();
+            ImGui.Spacing();
+            ImGui.SameLine();
+
+            ImGui.SetNextItemWidth(150f);
+            ImGui.InputText("###filter_item_name_input_text", ref itemNameFilter, maxLength: 200);
+
+            ImGui.SameLine();
+
+            if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.Filter, "Filter Items"))
+                updateItemRequirements();
+
             ImGui.Spacing();
             ImGui.Separator();
             ImGui.Spacing();
@@ -191,7 +204,7 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
 
             var tableFlags = (
                 ImGuiTableFlags.RowBg
-                | ImGuiTableFlags.SizingStretchProp
+                | ImGuiTableFlags.SizingStretchSame
                 | ImGuiTableFlags.Sortable
                 | ImGuiTableFlags.SortMulti
                 | ImGuiTableFlags.ScrollY
