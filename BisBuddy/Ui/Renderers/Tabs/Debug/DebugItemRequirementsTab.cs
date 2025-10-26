@@ -139,6 +139,10 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
             if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.Sync, "Refresh"))
                 updateItemRequirements();
 
+            ImGui.Spacing();
+            ImGui.Separator();
+            ImGui.Spacing();
+
             using var table = ImRaii.Table("###item_requirements_table", columns.Count, ImGuiTableFlags.RowBg | ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.Sortable | ImGuiTableFlags.SortMulti | ImGuiTableFlags.ScrollY);
             if (!table)
                 return;
