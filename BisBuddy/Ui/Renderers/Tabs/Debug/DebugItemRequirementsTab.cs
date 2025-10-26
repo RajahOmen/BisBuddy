@@ -28,7 +28,11 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
 
         private bool firstDraw = true;
 
-        private readonly List<(string Name, Action<string> Init, Action<(ItemRequirementOwned Req, int Count)> Draw, Action<bool> Sort)> columns;
+        private bool groupReqs = true;
+
+        private readonly List<(string Name, Action<string> Init, Action<(ItemRequirementOwned Req, int Count)> Draw, Action<bool> Sort)> groupedColumns;
+        private readonly List<(string Name, Action<string> Init, Action<(ItemRequirementOwned Req, int Count)> Draw, Action<bool> Sort)> ungroupedColumns;
+
 
         public DebugItemRequirementsTab(
             ITypedLogger<DebugItemRequirementsTab> logger,
@@ -43,7 +47,10 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
             this.configurationService = configurationService;
             this.itemRequirements = [];
 
-            this.columns = [
+            var quantityColumnName = "#";
+            var gearpieceColumnName = "Gearpiece";
+
+            this.groupedColumns = [
                 (
                 "Item Id",
                 (name) => ImGui.TableSetupColumn(name, ImGuiTableColumnFlags.DefaultSort | ImGuiTableColumnFlags.WidthFixed, 60f),
@@ -57,7 +64,7 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
                 (desc) => itemRequirements = itemRequirements.OrderByDirection(req => itemDataService.GetItemNameById(req.Req.ItemRequirement.ItemId), desc).ToList()
             ),
             (
-                "#",
+                quantityColumnName,
                 (name) => ImGui.TableSetupColumn(name, ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.PreferSortDescending, 30f),
                 (g) => ImGui.Text($"{g.Count}"),
                 (desc) => itemRequirements = itemRequirements.OrderByDirection(g => g.Count, desc).ToList()
@@ -67,6 +74,12 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
                 (name) => ImGui.TableSetupColumn(name, ImGuiTableColumnFlags.PreferSortDescending),
                 (g) => ImGui.Text($"{g.Req.Gearset.Name}"),
                 (desc) => itemRequirements = itemRequirements.OrderByDirection(g => g.Req.Gearset.Name, desc).ToList()
+            ),
+            (
+                gearpieceColumnName,
+                (name) => ImGui.TableSetupColumn(name, ImGuiTableColumnFlags.PreferSortDescending),
+                (g) => ImGui.Text(g.Req.Gearpiece.ItemName),
+                (desc) => itemRequirements = itemRequirements.OrderByDirection(g => g.Req.Gearpiece.ItemName, desc).ToList()
             ),
             (
                 "Requirement Type",
@@ -93,6 +106,11 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
                 },
                 (desc) => itemRequirements = itemRequirements.OrderByDirection(g => $"{getColor(g.Req.Gearset).Color}", desc).ToList()
             )];
+
+            this.ungroupedColumns = groupedColumns.ToList();
+
+            this.ungroupedColumns = ungroupedColumns.Where(c => c.Name != quantityColumnName).ToList();
+            this.groupedColumns = groupedColumns.Where(c => c.Name != gearpieceColumnName).ToList();
         }
 
         private (string Source, Vector4 Color) getColor(Gearset gearset)
@@ -112,17 +130,32 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
 
         private void updateItemRequirements()
         {
-            itemRequirements = gearsetsService
-                .AllItemRequirements.SelectMany(entry => (
-                    entry
-                        .Value
-                        .GroupBy(req => (req.Gearset, entry.Key, req.ItemRequirement.RequirementType, req.ItemRequirement.CollectionStatus))
-                        .Select(g => (g.First(), g.Count()))
-                        .ToList()
-                    )
-                ).ToList();
+            if (groupReqs)
+            {
+                itemRequirements = gearsetsService
+                    .AllItemRequirements.SelectMany(entry => (
+                        entry
+                            .Value
+                            .GroupBy(req => (req.Gearset, entry.Key, req.ItemRequirement.RequirementType, req.ItemRequirement.CollectionStatus))
+                            .Select(g => (g.First(), g.Count()))
+                            .ToList()
+                        )
+                    ).ToList();
+            }
+            else
+            {
+                itemRequirements = gearsetsService
+                    .AllItemRequirements.SelectMany(entry => (
+                        entry
+                            .Value
+                            .Select(g => (g, 1))
+                            .ToList()
+                        )
+                    ).ToList();
+            }
 
-            columns[0].Sort(true);
+
+            groupedColumns[0].Sort(true);
         }
 
         public void PreDraw() {
@@ -139,9 +172,16 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
             if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.Sync, "Refresh"))
                 updateItemRequirements();
 
+            ImGui.SameLine();
+
+            if (ImGui.Checkbox("Group by Gearset", ref groupReqs))
+                updateItemRequirements();
+
             ImGui.Spacing();
             ImGui.Separator();
             ImGui.Spacing();
+
+            var columns = groupReqs ? groupedColumns : ungroupedColumns;
 
             using var table = ImRaii.Table("###item_requirements_table", columns.Count, ImGuiTableFlags.RowBg | ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.Sortable | ImGuiTableFlags.SortMulti | ImGuiTableFlags.ScrollY);
             if (!table)
@@ -156,18 +196,25 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
             var sortSpecs = ImGui.TableGetSortSpecs();
             if (sortSpecs.SpecsDirty)
             {
-                logger.Verbose($"dirty!! {sortSpecs.Specs.ColumnIndex}, desc: {sortSpecs.Specs.SortDirection == ImGuiSortDirection.Descending}");
                 sortSpecs.SpecsDirty = false;
                 columns[sortSpecs.Specs.ColumnIndex].Sort(sortSpecs.Specs.SortDirection == ImGuiSortDirection.Descending);
             }
 
-            foreach (var reqGroup in itemRequirements)
+            var clipper = ImGui.ImGuiListClipper();
+            clipper.Begin(itemRequirements.Count);
+
+            while (clipper.Step())
             {
-                ImGui.TableNextRow();
-                foreach (var col in columns)
+                for (var rowIdx = clipper.DisplayStart; rowIdx < clipper.DisplayEnd; rowIdx++)
                 {
-                    ImGui.TableNextColumn();
-                    col.Draw(reqGroup);
+                    using var _ = ImRaii.PushId(rowIdx);
+                    var reqGroup = itemRequirements[rowIdx];
+                    ImGui.TableNextRow();
+                    foreach (var col in columns)
+                    {
+                        ImGui.TableNextColumn();
+                        col.Draw(reqGroup);
+                    }
                 }
             }
         }
