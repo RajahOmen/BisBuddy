@@ -313,6 +313,33 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Addon Highlights.
+        /// </summary>
+        public static string DebugAddonsTab {
+            get {
+                return ResourceManager.GetString("DebugAddonsTab", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Item Requirements.
+        /// </summary>
+        public static string DebugItemRequirementsTab {
+            get {
+                return ResourceManager.GetString("DebugItemRequirementsTab", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Item Solver Results.
+        /// </summary>
+        public static string DebugSolverResultsTab {
+            get {
+                return ResourceManager.GetString("DebugSolverResultsTab", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Debug.
         /// </summary>
         public static string DebugTabName {

@@ -22,6 +22,7 @@ using BisBuddy.Ui.Renderers.Components;
 using BisBuddy.Ui.Renderers.ContextMenus;
 using BisBuddy.Ui.Renderers.Tabs;
 using BisBuddy.Ui.Renderers.Tabs.Config;
+using BisBuddy.Ui.Renderers.Tabs.Debug;
 using BisBuddy.Ui.Renderers.Tabs.Main;
 using BisBuddy.Ui.Windows;
 using Dalamud.Interface;
@@ -195,6 +196,10 @@ public sealed partial class Plugin : IDalamudPlugin
                 builder.RegisterType<ConfigTab>().Keyed<TabRenderer<MainWindowTab>>(MainWindowTab.PluginConfig).InstancePerMatchingLifetimeScope(windowScopeTag);
                 builder.RegisterType<DebugTab>().Keyed<TabRenderer<MainWindowTab>>(MainWindowTab.PluginDebug).InstancePerMatchingLifetimeScope(windowScopeTag);
 
+                // debug tab tabs
+                builder.RegisterType<DebugItemRequirementsTab>().Keyed<TabRenderer<DebugToolTab>>(DebugToolTab.ItemRequirements).InstancePerMatchingLifetimeScope(windowScopeTag);
+                builder.RegisterType<DebugSolverResultsTab>().Keyed<TabRenderer<DebugToolTab>>(DebugToolTab.SolverResults).InstancePerMatchingLifetimeScope(windowScopeTag);
+                builder.RegisterType<DebugAddonsTab>().Keyed<TabRenderer<DebugToolTab>>(DebugToolTab.Addons).InstancePerMatchingLifetimeScope(windowScopeTag);
 
                 // config window tabs
                 builder.RegisterType<GeneralSettingsTab>().Keyed<TabRenderer<ConfigWindowTab>>(ConfigWindowTab.General).InstancePerMatchingLifetimeScope(windowScopeTag);

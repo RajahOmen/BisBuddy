@@ -738,4 +738,13 @@ or to have a unique color to highlight items in</value>
   <data name="ContextMenuUnlockAll" xml:space="preserve">
     <value>Unlock all</value>
   </data>
+  <data name="DebugItemRequirementsTab" xml:space="preserve">
+    <value>Item Requirements</value>
+  </data>
+  <data name="DebugSolverResultsTab" xml:space="preserve">
+    <value>Item Solver Results</value>
+  </data>
+  <data name="DebugAddonsTab" xml:space="preserve">
+    <value>Addon Highlights</value>
+  </data>
 </root>

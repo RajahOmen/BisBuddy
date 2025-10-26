@@ -471,4 +471,13 @@ or to have a unique color to highlight items in</value>
   <data name="UiThemeColorGearpieceButton" type="System.Resources.ResXNullRef, System.Windows.Forms">
     <value />
   </data>
+  <data name="DebugItemRequirementsTab" type="System.Resources.ResXNullRef, System.Windows.Forms">
+    <value />
+  </data>
+  <data name="DebugSolverResultsTab" type="System.Resources.ResXNullRef, System.Windows.Forms">
+    <value />
+  </data>
+  <data name="DebugAddonsTab" type="System.Resources.ResXNullRef, System.Windows.Forms">
+    <value />
+  </data>
 </root>

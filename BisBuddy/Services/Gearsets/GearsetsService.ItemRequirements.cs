@@ -23,7 +23,14 @@ namespace BisBuddy.Services.Gearsets
                         requirements[requirement.ItemRequirement.ItemId] = [requirement];
                 }
             }
-            currentItemRequirements = requirements;
+
+            var readOnlyReqs = new Dictionary<uint, IReadOnlyList<ItemRequirementOwned>>();
+            foreach (var (itemId, reqs) in requirements)
+            {
+                readOnlyReqs[itemId] = reqs.AsReadOnly();
+            }
+
+            currentItemRequirements = readOnlyReqs;
         }
 
         /// <summary>

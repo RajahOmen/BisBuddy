@@ -54,9 +54,11 @@ namespace BisBuddy.Services.Gearsets
         private ulong currentLocalContentId => clientState.LocalContentId;
 
         private List<Gearset> currentGearsets = [];
-        private Dictionary<uint, List<ItemRequirementOwned>> currentItemRequirements = [];
+        private Dictionary<uint, IReadOnlyList<ItemRequirementOwned>> currentItemRequirements = [];
         private GearsetSortType currentGearsetsSortType = GearsetSortType.ImportDate;
         private bool currentGearsetsSortDescending = false;
+
+        public IReadOnlyDictionary<uint, IReadOnlyList<ItemRequirementOwned>> AllItemRequirements => currentItemRequirements;
 
         public IReadOnlyList<Gearset> CurrentGearsets
         {
@@ -211,6 +213,8 @@ namespace BisBuddy.Services.Gearsets
     public interface IGearsetsService : IHostedService
     {
         public IReadOnlyList<Gearset> CurrentGearsets { get; }
+
+        public IReadOnlyDictionary<uint, IReadOnlyList<ItemRequirementOwned>> AllItemRequirements { get; }
         /// <summary>
         /// Indicates if gearsets for the current character have been loaded
         /// </summary>
