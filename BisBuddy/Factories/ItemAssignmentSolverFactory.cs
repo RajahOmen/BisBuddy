@@ -20,13 +20,15 @@ namespace BisBuddy.Factories
         private readonly IMateriaFactory materiaFactory = materiaFactory;
         private readonly IConfigurationService configurationService = configurationService;
 
+        public IItemAssignmentSolver? LastCreatedSolver { get; private set; } = null;
+
         public IItemAssignmentSolver Create(
             IEnumerable<Gearset> allGearsets,
             IEnumerable<Gearset> assignableGearsets,
             List<GameInventoryItem> inventoryItems
             )
         {
-            return new ItemAssigmentSolver(
+            var solver = new ItemAssigmentSolver(
                 logger,
                 allGearsets,
                 assignableGearsets,
@@ -36,6 +38,8 @@ namespace BisBuddy.Factories
                 configurationService.StrictMateriaMatching,
                 configurationService.HighlightPrerequisiteMateria
                 );
+            LastCreatedSolver = solver;
+            return solver;
         }
     }
 
@@ -46,5 +50,7 @@ namespace BisBuddy.Factories
             IEnumerable<Gearset> assignableGearsets,
             List<GameInventoryItem> inventoryItems
             );
+
+        public IItemAssignmentSolver? LastCreatedSolver { get; }
     }
 }

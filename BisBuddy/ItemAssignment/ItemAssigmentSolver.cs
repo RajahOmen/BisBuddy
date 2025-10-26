@@ -20,6 +20,9 @@ namespace BisBuddy.ItemAssignment
         // for edges between for dummy group assignments and their items
         public static readonly int DummyEdgeWeightValue = NoEdgeWeightValue + 1;
 
+        public SolveResult? GearpiecesResult { get; private set; } = null;
+        public SolveResult? PrerequisitesResult { get; private set; } = null;
+
         private readonly ITypedLogger<ItemAssigmentSolver> logger;
         private readonly bool strictMateriaMatching;
         private readonly bool assignPrerequisiteMateria;
@@ -101,8 +104,22 @@ namespace BisBuddy.ItemAssignment
             }
         }
 
-        private void logSolution(int[] assignments, int[,] edges, List<GameInventoryItem> items, List<IAssignmentGroup> groups)
+        private void logResult(bool logPrereqs = false)
         {
+            SolveResult? resultToLog;
+            if (logPrereqs)
+                resultToLog = PrerequisitesResult;
+            else
+                resultToLog = GearpiecesResult;
+
+            if (resultToLog is not SolveResult result)
+            {
+                logger.Warning($"Tried to log solve, got null result");
+                return;
+            }
+
+            var (assignments, edges, items, groups) = result;
+
             var rows = edges.GetLength(0);
             var columns = edges.GetLength(1);
 
@@ -165,14 +182,16 @@ namespace BisBuddy.ItemAssignment
             }
             catch (InvalidOperationException)
             {
-                logSolution(
-                    [],
-                    gearpieceEdges,
-                    gearpieceCandidateItems,
-                    gearpieceGroups
+                GearpiecesResult = new()
+                {
+                    Assignments = [],
+                    Edges = gearpieceEdges,
+                    CandidateItems = gearpieceCandidateItems,
+                    AssignmentGroups = gearpieceGroups
                         .Select(g => (IAssignmentGroup)g)
                         .ToList()
-                        );
+                };
+                logResult();
                 throw;
             }
             // this removes candidate items from prereq list as well
@@ -194,28 +213,35 @@ namespace BisBuddy.ItemAssignment
 
             // stage 4: assign remaining valid items as prerequisites
             var prerequisiteAssignments = solveAndAssignPrerequisites(assignPrerequisiteMateria);
+
+            GearpiecesResult = new()
+            {
+                Assignments = gearpieceAssignments,
+                Edges = gearpieceEdges,
+                CandidateItems = gearpieceCandidateItems,
+                AssignmentGroups = gearpieceGroups
+                    .Select(g => (IAssignmentGroup)g)
+                    .ToList()
+            };
+
+            PrerequisitesResult = new()
+            {
+                Assignments = prerequisiteAssignments,
+                Edges = prerequisiteEdges ?? new int[0, 0],
+                CandidateItems = prerequisiteCandidateItems,
+                AssignmentGroups = prerequisiteGroups
+                    .Select(g => (IAssignmentGroup)g)
+                    .ToList()
+            };
+
 #if DEBUG
             logger.Debug("Item Assignment Solver Solution");
 
             logger.Debug("Gearpiece Assignments");
-            logSolution(
-                gearpieceAssignments,
-                gearpieceEdges,
-                gearpieceCandidateItems,
-                gearpieceGroups
-                    .Select(g => (IAssignmentGroup)g)
-                    .ToList()
-                    );
+            logResult();
 
             logger.Debug("Prerequisite Assignments");
-            logSolution(
-                prerequisiteAssignments,
-                prerequisiteEdges ?? new int[0, 0],
-                prerequisiteCandidateItems,
-                prerequisiteGroups
-                    .Select(g => (IAssignmentGroup)g)
-                    .ToList()
-                );
+            logResult(logPrereqs: true);
 #endif
 
             return updatedGearpieces;
@@ -561,5 +587,8 @@ namespace BisBuddy.ItemAssignment
     public interface IItemAssignmentSolver
     {
         public List<Gearpiece> SolveAndAssign();
+
+        public SolveResult? GearpiecesResult { get; }
+        public SolveResult? PrerequisitesResult { get; }
     }
 }
