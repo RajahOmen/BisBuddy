@@ -13,6 +13,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using static Dalamud.Interface.Windowing.Window;
+using ItemRequirementTableColumn = System.Collections.Generic.List<(
+    string Name,
+    System.Action<string> Init,
+    System.Action<(BisBuddy.Gear.ItemRequirementOwned Req, int Count)> Draw,
+    System.Action<bool> Sort
+    )>;
 
 namespace BisBuddy.Ui.Renderers.Tabs.Debug
 {
@@ -30,8 +36,8 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
 
         private bool groupReqs = true;
 
-        private readonly List<(string Name, Action<string> Init, Action<(ItemRequirementOwned Req, int Count)> Draw, Action<bool> Sort)> groupedColumns;
-        private readonly List<(string Name, Action<string> Init, Action<(ItemRequirementOwned Req, int Count)> Draw, Action<bool> Sort)> ungroupedColumns;
+        private readonly ItemRequirementTableColumn groupedColumns;
+        private readonly ItemRequirementTableColumn ungroupedColumns;
 
 
         public DebugItemRequirementsTab(
@@ -183,7 +189,14 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
 
             var columns = groupReqs ? groupedColumns : ungroupedColumns;
 
-            using var table = ImRaii.Table("###item_requirements_table", columns.Count, ImGuiTableFlags.RowBg | ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.Sortable | ImGuiTableFlags.SortMulti | ImGuiTableFlags.ScrollY);
+            var tableFlags = (
+                ImGuiTableFlags.RowBg
+                | ImGuiTableFlags.SizingStretchProp
+                | ImGuiTableFlags.Sortable
+                | ImGuiTableFlags.SortMulti
+                | ImGuiTableFlags.ScrollY
+                );
+            using var table = ImRaii.Table("###item_requirements_table", columns.Count, tableFlags);
             if (!table)
                 return;
 
