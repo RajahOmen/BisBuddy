@@ -195,7 +195,13 @@ namespace BisBuddy.Items
             {
                 foreach (var shopItem in shop.Item)
                 {
-                    var receiveCount = shopItem.ReceiveItems
+                    var receiveItems = shopItem.ReceiveItems.Where(item => item.Item.RowId != 0);
+
+                    // not actually recieving an item
+                    if (!receiveItems.Any())
+                        continue;
+
+                    var receiveCount = receiveItems
                         .Min(itemReceive =>
                             itemReceive.ReceiveCount
                         );
@@ -213,12 +219,11 @@ namespace BisBuddy.Items
                         ).ToList();
 
                     // No costed items that are not currency
-                    if (itemCosts.Count == 0) continue;
+                    if (itemCosts.Count == 0)
+                        continue;
 
-                    foreach (var receiveItem in shopItem.ReceiveItems)
-                    {
+                    foreach (var receiveItem in receiveItems)
                         itemPrerequisiteOptions.Add((receiveItem.Item.RowId, itemCosts));
-                    }
                 }
             }
 
