@@ -331,7 +331,7 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Prerequisites.
+        ///   Looks up a localized string similar to Item Prerequisites.
         /// </summary>
         public static string DebugPrerequisitesTab {
             get {

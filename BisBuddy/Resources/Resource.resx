@@ -748,6 +748,6 @@ or to have a unique color to highlight items in</value>
     <value>Addon Highlights</value>
   </data>
   <data name="DebugPrerequisitesTab" xml:space="preserve">
-    <value>Prerequisites</value>
+    <value>Item Prerequisites</value>
   </data>
 </root>
