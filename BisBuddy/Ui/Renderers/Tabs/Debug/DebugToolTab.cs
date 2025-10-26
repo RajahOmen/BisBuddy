@@ -18,5 +18,8 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
 
         [Display(ResourceType = typeof(Resource), Name = nameof(Resource.DebugAddonsTab))]
         Addons,
+
+        [Display(ResourceType = typeof(Resource), Name = nameof(Resource.DebugPrerequisitesTab))]
+        Prerequisites,
     }
 }

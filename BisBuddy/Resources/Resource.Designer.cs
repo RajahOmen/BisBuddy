@@ -331,6 +331,15 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Prerequisites.
+        /// </summary>
+        public static string DebugPrerequisitesTab {
+            get {
+                return ResourceManager.GetString("DebugPrerequisitesTab", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Item Solver Results.
         /// </summary>
         public static string DebugSolverResultsTab {

@@ -200,6 +200,8 @@ public sealed partial class Plugin : IDalamudPlugin
                 builder.RegisterType<DebugItemRequirementsTab>().Keyed<TabRenderer<DebugToolTab>>(DebugToolTab.ItemRequirements).InstancePerMatchingLifetimeScope(windowScopeTag);
                 builder.RegisterType<DebugSolverResultsTab>().Keyed<TabRenderer<DebugToolTab>>(DebugToolTab.SolverResults).InstancePerMatchingLifetimeScope(windowScopeTag);
                 builder.RegisterType<DebugAddonsTab>().Keyed<TabRenderer<DebugToolTab>>(DebugToolTab.Addons).InstancePerMatchingLifetimeScope(windowScopeTag);
+                builder.RegisterType<DebugPrerequisitesTab>().Keyed<TabRenderer<DebugToolTab>>(DebugToolTab.Prerequisites).InstancePerMatchingLifetimeScope(windowScopeTag);
+
 
                 // config window tabs
                 builder.RegisterType<GeneralSettingsTab>().Keyed<TabRenderer<ConfigWindowTab>>(ConfigWindowTab.General).InstancePerMatchingLifetimeScope(windowScopeTag);
