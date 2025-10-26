@@ -27,7 +27,7 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
         public WindowSizeConstraints? TabSizeConstraints => null;
 
         private bool firstDraw = true;
-        private string targetNameFilter = string.Empty;
+        private string targetFilter = string.Empty;
         private string sourceNameFilter = string.Empty;
 
         private List<ItemRelation> itemsCoffers = [];
@@ -44,8 +44,10 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
         {
             var newCoffers = itemDataService
                 .ItemsCoffers
-                .Where(entry => itemDataService.GetItemNameById(entry.Key).Contains(targetNameFilter))
-                .SelectMany(entry => entry
+                .Where(entry =>
+                    itemDataService.GetItemNameById(entry.Key).Contains(targetFilter)
+                    || $"{entry.Key}" == targetFilter
+                ).SelectMany(entry => entry
                     .Where(val => itemDataService.GetItemNameById(val.ItemId).Contains(sourceNameFilter))
                     .Select<(uint, CofferSourceType), ItemRelation>(val => (
                         entry.Key,
@@ -57,7 +59,7 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
 
             var newPrerequisites = itemDataService
                 .ItemsPrerequisites
-                .Where(entry => itemDataService.GetItemNameById(entry.Key).Contains(targetNameFilter))
+                .Where(entry => itemDataService.GetItemNameById(entry.Key).Contains(targetFilter))
                 .SelectMany(entry =>
                     entry
                         .Where(vals => vals.ItemIds.Any(val => itemDataService.GetItemNameById(val).Contains(sourceNameFilter)))
@@ -66,8 +68,8 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
                             var shopName = itemDataService.GetShopNameById(vals.Item2);
                             return (
                                 entry.Key,
-                                $"{vals.Item2}",
                                 shopName == string.Empty ? "UNKNOWN" : shopName,
+                                $"{vals.Item2}",
                                 vals.Item1
                                     .GroupBy(val => val)
                                     .Select(g => (g.Key, g.Count()))
@@ -99,7 +101,7 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
             ImGui.SameLine();
 
             ImGui.SetNextItemWidth(150f);
-            ImGui.InputText("###filter_target_input_text", ref targetNameFilter, maxLength: 200);
+            ImGui.InputText("###filter_target_input_text", ref targetFilter, maxLength: 200);
 
             ImGui.SameLine();
 
@@ -200,7 +202,7 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
             }
 
             var clipper = ImGui.ImGuiListClipper();
-            clipper.Begin(relations.Count, ImGui.GetTextLineHeightWithSpacing());
+            clipper.Begin(relations.Count, ImGui.GetTextLineHeight());
 
             while (clipper.Step())
             {
@@ -214,6 +216,10 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
                     ImGui.TableNextColumn();
 
                     ImGui.Text(itemDataService.GetItemNameById(targetItemId));
+                    if (ImGui.IsItemHovered())
+                        ImGui.SetTooltip($"{targetItemId}");
+                    if (ImGui.IsItemClicked())
+                        ImGui.SetClipboardText($"{targetItemId}");
 
                     ImGui.TableNextColumn();
 
@@ -233,11 +239,15 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
                     ImGui.Text(text);
                     if (ImGui.IsItemHovered())
                         ImGui.SetTooltip(itemIdsText);
+                    if (ImGui.IsItemClicked())
+                        ImGui.SetClipboardText($"{targetItemId}");
 
                     ImGui.TableNextColumn();
                     ImGui.Text(sourceName);
                     if (sourceTooltip is not null && ImGui.IsItemHovered())
                         ImGui.SetTooltip(sourceTooltip);
+                    if (sourceTooltip is not null && ImGui.IsItemClicked())
+                        ImGui.SetClipboardText($"{targetItemId}");
                 }
             }
             
