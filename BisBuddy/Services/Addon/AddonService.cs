@@ -36,8 +36,38 @@ namespace BisBuddy.Services.Addon
         private readonly Dictionary<nint, HighlightColor> highlightedNodes = [];
         protected IReadOnlyDictionary<nint, (NodeBase Node, HighlightColor Color)> CustomNodes => customNodes;
 
-        protected bool isEnabled { get; private set; } = false;
+        public bool IsEnabled { get; private set; } = false;
         public abstract string AddonName { get; }
+        public bool IsAddonVisible
+        {
+            get
+            {
+                debugService.AssertMainThreadDebug();
+                var addon = gameGui.GetAddonByName(AddonName);
+                return addon.IsReady && addon.IsVisible;
+            }
+        }
+        public unsafe IReadOnlyCollection<(uint, NodeHighlightType, HighlightColor)> NodeHighlights
+        {
+            get
+            {
+                debugService.AssertMainThreadDebug();
+
+                var nodes = new List<(uint, NodeHighlightType, HighlightColor)>();
+                foreach (var (nodePtr, highlightInfo) in customNodes)
+                {
+                    var parentNodeId = ((AtkResNode*)nodePtr)->NodeId;
+                    nodes.Add((parentNodeId, NodeHighlightType.Custom, highlightInfo.Color));
+                }
+                foreach (var (nodePtr, color) in highlightedNodes)
+                {
+                    var nodeId = ((AtkResNode*)nodePtr)->NodeId;
+                    nodes.Add((nodeId, NodeHighlightType.Custom, color));
+                }
+
+                return nodes;
+            }
+        }
 
         // for lists that scroll, to avoid them rendering off the bottom
         protected abstract float CustomNodeMaxY { get; }
@@ -68,9 +98,9 @@ namespace BisBuddy.Services.Addon
 
         protected void setListeningStatus(bool toEnable)
         {
-            if (toEnable && !isEnabled) // If we want to enable and it's not enabled
+            if (toEnable && !IsEnabled) // If we want to enable and it's not enabled
                 registerListeners();
-            else if (!toEnable && isEnabled) // If we want to disable and it's enabled
+            else if (!toEnable && IsEnabled) // If we want to disable and it's enabled
                 unregisterListeners();
             // Otherwise, do nothing
         }
@@ -84,7 +114,7 @@ namespace BisBuddy.Services.Addon
                 addonLifecycle.RegisterListener(AddonEvent.PreFinalize, AddonName, handlePreFinalize);
                 registerAddonListeners();
 
-                isEnabled = true;
+                IsEnabled = true;
                 logger.Verbose($"Registered listeners");
             }
             catch (Exception ex)
@@ -97,7 +127,7 @@ namespace BisBuddy.Services.Addon
         {
             try
             {
-                if (isEnabled) // only perform these if it is enabled
+                if (IsEnabled) // only perform these if it is enabled
                 {
                     gearsetsService.OnGearsetsChange -= handleUpdateHighlightColor;
                     configurationService.OnConfigurationChange -= handleUpdateHighlightColor;
@@ -107,7 +137,7 @@ namespace BisBuddy.Services.Addon
                 unmarkNodes();
                 destroyNodes();
 
-                isEnabled = false;
+                IsEnabled = false;
                 logger.Verbose($"Unregistered listeners");
             }
             catch (Exception ex)
@@ -331,6 +361,10 @@ namespace BisBuddy.Services.Addon
 
     public interface IAddonEventListener : IHostedService
     {
+        public bool IsEnabled { get; }
+        public string AddonName { get; }
+        public bool IsAddonVisible { get; }
 
+        public IReadOnlyCollection<(uint NodeId, NodeHighlightType Type, HighlightColor Color)> NodeHighlights { get; }
     }
 }
