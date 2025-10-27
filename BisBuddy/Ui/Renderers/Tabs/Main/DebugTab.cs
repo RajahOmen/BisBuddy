@@ -2,11 +2,8 @@ using Autofac.Features.Indexed;
 using BisBuddy.Services;
 using BisBuddy.Services.Configuration;
 using BisBuddy.Ui.Renderers.Components;
-using BisBuddy.Ui.Renderers.Tabs.Config;
 using BisBuddy.Ui.Renderers.Tabs.Debug;
-using BisBuddy.Ui.Windows;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using System;
@@ -40,7 +37,8 @@ namespace BisBuddy.Ui.Renderers.Tabs.Main
 
         private DebugToolTab selectedDebugTab = DebugToolTab.ItemRequirements;
 
-        public void PreDraw() {
+        public void PreDraw()
+        {
             if (firstDraw)
             {
                 firstDraw = false;

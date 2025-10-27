@@ -33,7 +33,7 @@ public class Configuration : IConfigurationProperties
 
     // DEBUGGING
     public bool EnableDebugging { get; set; } = false;
-    public bool DebugFrameworkAsserts { get; set; } = false;
+    public FrameworkThreadBehaviorType DebugFrameworkThreadBehavior { get; set; } = FrameworkThreadBehaviorType.Warning;
 
     public Dictionary<ulong, CharacterInfo> CharactersData { get; set; } = [];
 }
@@ -60,6 +60,6 @@ public interface IConfigurationProperties : IPluginConfiguration
 
     // DEBUGGING
     public bool EnableDebugging { get; set; }
-    public bool DebugFrameworkAsserts { get; set; }
+    public FrameworkThreadBehaviorType DebugFrameworkThreadBehavior { get; set; }
 }
 

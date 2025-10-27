@@ -166,7 +166,8 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
             groupedColumns[0].Sort(true);
         }
 
-        public void PreDraw() {
+        public void PreDraw()
+        {
             if (!firstDraw)
                 return;
 

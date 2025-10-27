@@ -1,4 +1,5 @@
 using BisBuddy.Services.Configuration;
+using BisBuddy.Ui.Renderers.Components;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility.Raii;
 using System;
@@ -6,9 +7,13 @@ using static Dalamud.Interface.Windowing.Window;
 
 namespace BisBuddy.Ui.Renderers.Tabs.Config
 {
-    public class DebugSettingsTab(IConfigurationService configurationService) : TabRenderer<ConfigWindowTab>
+    public class DebugSettingsTab(
+        IConfigurationService configurationService,
+        UiComponents uiComponents
+        ) : TabRenderer<ConfigWindowTab>
     {
         private readonly IConfigurationService configurationService = configurationService;
+        private readonly UiComponents uiComponents = uiComponents;
 
         public WindowSizeConstraints? TabSizeConstraints => null;
 
@@ -20,17 +25,22 @@ namespace BisBuddy.Ui.Renderers.Tabs.Config
             if (ImGui.Checkbox("Enable Debugging", ref debuggingEnabled))
                 configurationService.EnableDebugging = debuggingEnabled;
 
-            using var _ = ImRaii.Disabled(!debuggingEnabled);
-
             ImGui.Spacing();
             ImGui.Separator();
             ImGui.Spacing();
 
-            var frameworkAsserts = configurationService.DebugFrameworkAsserts;
-            if (ImGui.Checkbox("Enable Framework Asserts", ref frameworkAsserts))
-                configurationService.DebugFrameworkAsserts = frameworkAsserts;
+            using var _ = ImRaii.Disabled(!debuggingEnabled);
+
+            ImGui.Text("Framework Thread Checks");
             if (ImGui.IsItemHovered())
-                ImGui.SetTooltip("Sends errors to log if internal logic is corrupted. May cause features to break");
+                ImGui.SetTooltip(
+                    "Diagnosis tool for illegal game data access/manipulation off the main thread"
+                );
+
+            if (uiComponents.DrawCachedEnumComboDropdown(
+                configurationService.DebugFrameworkThreadBehavior,
+                out var newEnumValue))
+                configurationService.DebugFrameworkThreadBehavior = newEnumValue;
         }
 
         public void PreDraw() { }

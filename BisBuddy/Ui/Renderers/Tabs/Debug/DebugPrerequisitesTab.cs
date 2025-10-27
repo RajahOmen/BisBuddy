@@ -82,7 +82,8 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
             itemsPrerequisites = newPrerequisites.ToList();
         }
 
-        public void PreDraw() {
+        public void PreDraw()
+        {
             if (!firstDraw)
                 return;
 
@@ -187,7 +188,8 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
                             r => r.TargetItemId,
                             specs.SortDirection == ImGuiSortDirection.Descending
                         ).ToList();
-                } else if (specs.ColumnIndex == 1)
+                }
+                else if (specs.ColumnIndex == 1)
                 {
                     relations = relations
                         .OrderByDirection(
@@ -243,7 +245,8 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
                     var text = string.Join(
                         "\n",
                         sourceItems.Select(
-                            itemGroup => {
+                            itemGroup =>
+                            {
                                 var countText = itemGroup.SourceCount > 1 ? $"  x {itemGroup.SourceCount}" : "";
                                 return $"{itemDataService.GetItemNameById(itemGroup.SourceItemId)}{countText}";
                             })
@@ -262,7 +265,7 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
                         ImGui.SetClipboardText($"{targetItemId}");
                 }
             }
-            
+
             return relations;
         }
     }

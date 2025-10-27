@@ -340,10 +340,9 @@ namespace BisBuddy.Ui.Renderers.Tabs.Main
 
                     // SORT KIND
                     var availWidth = ImGui.GetContentRegionAvail().X - ImGui.GetStyle().ItemSpacing.X;
-                    var nextSortType = uiComponents.DrawCachedEnumSelectableDropdown(activeSortType, size: new(0, buttonSize.Y));
-                    if (nextSortType != activeSortType)
+                    if (uiComponents.DrawCachedEnumSelectableDropdown(activeSortType, out var newSortType, size: new(0, buttonSize.Y)))
                     {
-                        activeSortType = nextSortType;
+                        activeSortType = newSortType;
                         gearsetsService.ChangeGearsetSortOrder(activeSortType, sortDescending);
                     }
 

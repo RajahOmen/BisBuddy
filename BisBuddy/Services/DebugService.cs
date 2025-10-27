@@ -13,10 +13,21 @@ namespace BisBuddy.Services
 
         public void AssertMainThreadDebug()
         {
-            if (!configurationService.DebugFrameworkAsserts)
-                return;
-
-            ThreadSafety.AssertMainThread();
+            switch (configurationService.DebugFrameworkThreadBehavior)
+            {
+                case FrameworkThreadBehaviorType.Warning:
+                    if (!ThreadSafety.IsMainThread)
+                    {
+                        var stackTrace = new System.Diagnostics.StackTrace(fNeedFileInfo: true, skipFrames: 1);
+                        logger.Warning($"Not on main thread!\n{stackTrace}");
+                    }
+                    break;
+                case FrameworkThreadBehaviorType.Assert:
+                    ThreadSafety.AssertMainThread();
+                    break;
+                default:
+                    break;
+            }
         }
     }
 

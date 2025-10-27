@@ -41,8 +41,9 @@ namespace BisBuddy.Ui.Renderers.Components
         /// <param name="popupFlags">Flags for opening the popup</param>
         /// <param name="popupWindowFlags">The popup's window flags</param>
         /// <returns></returns>
-        public T DrawCachedEnumSelectableDropdown<T>(
+        public bool DrawCachedEnumSelectableDropdown<T>(
             T enumToDraw,
+            out T newEnumValue,
             Vector2? size = null,
             Vector2? itemSpacing = null,
             bool selected = true,
@@ -53,7 +54,7 @@ namespace BisBuddy.Ui.Renderers.Components
         {
             using var id = ImRaii.PushId("uicomponent_draw_dropdown");
 
-            var selectedVal = enumToDraw;
+            newEnumValue = enumToDraw;
 
             var buttonName = attributeService
                 .GetEnumAttribute<DisplayAttribute>(enumToDraw)!
@@ -78,72 +79,92 @@ namespace BisBuddy.Ui.Renderers.Components
                 ImGui.OpenPopup($"draw_dropdown_popup", popupFlags);
             }
 
+            var selectionMade = false;
             var dropdownWidth = Math.Max(buttonSize.X, 70 * ImGuiHelpers.GlobalScale);
             ImGui.SetNextWindowSize(new(dropdownWidth, 0));
             using (ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, Vector2.Zero))
             using (var dropdownPopup = ImRaii.Popup($"draw_dropdown_popup"))
             {
-                if (dropdownPopup)
-                {
-                    var spacing = itemSpacing ?? Constants.SelectableListSpacing;
-                    spacing *= ImGuiHelpers.GlobalScale;
+                if (!dropdownPopup)
+                    return false;
 
-                    using var style = ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, spacing);
-                    var selectableSize = new Vector2(dropdownWidth, ImGui.GetTextLineHeightWithSpacing());
-                    foreach (T val in Enum.GetValues(typeof(T)))
-                    {
-                        var optionName = attributeService
-                            .GetEnumAttribute<DisplayAttribute>(val)!
-                            .GetName()!;
-                        var optionSize = ImGui.CalcTextSize(optionName);
-                        var optionSelected = val.Equals(selectedVal);
-                        var pos = ImGui.GetCursorPos();
-                        var textPosOffset = new Vector2(
-                            spacing.X,
-                            (selectableSize.Y - optionSize.Y) / 2
-                            );
-                        ImGui.SetCursorPos(pos + textPosOffset);
-                        ImGui.Text(optionName);
-                        ImGui.SetCursorPos(pos);
-                        if (ImGui.Selectable($"###draw_dropdown_{optionName}", optionSelected, ImGuiSelectableFlags.None, selectableSize))
-                            selectedVal = val;
-                    }
-                }
-            }
+                var spacing = itemSpacing ?? Constants.SelectableListSpacing;
+                spacing *= ImGuiHelpers.GlobalScale;
 
-            return selectedVal;
-        }
-
-        public T DrawCachedEnumComboDropdown<T>(
-            T enumToDraw,
-            bool selected = true,
-            ImGuiComboFlags flags = ImGuiComboFlags.None
-            ) where T : Enum
-        {
-            using var id = ImRaii.PushId($"uicomponent_draw_combo_{enumToDraw}");
-
-            var comboName = attributeService
-                .GetEnumAttribute<DisplayAttribute>(enumToDraw)!
-                .GetName()!;
-            using var combo = ImRaii.Combo("##uicomponent_combo", comboName, flags);
-
-            if (!combo.Success)
-                return enumToDraw;
-
-            var selectedVal = enumToDraw;
-            using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(5, 5)))
-            {
+                using var style = ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, spacing);
+                var selectableSize = new Vector2(dropdownWidth, ImGui.GetTextLineHeightWithSpacing());
                 foreach (T val in Enum.GetValues(typeof(T)))
                 {
                     var optionName = attributeService
                         .GetEnumAttribute<DisplayAttribute>(val)!
                         .GetName()!;
-                    if (ImGui.Selectable($"{optionName}##draw_dropdown"))
-                        selectedVal = val;
+                    var optionSize = ImGui.CalcTextSize(optionName);
+                    var optionSelected = val.Equals(newEnumValue);
+                    var pos = ImGui.GetCursorPos();
+                    var textPosOffset = new Vector2(
+                        spacing.X,
+                        (selectableSize.Y - optionSize.Y) / 2
+                        );
+                    ImGui.SetCursorPos(pos + textPosOffset);
+                    ImGui.Text(optionName);
+                    ImGui.SetCursorPos(pos);
+                    if (ImGui.Selectable($"###draw_dropdown_{optionName}", optionSelected, ImGuiSelectableFlags.None, selectableSize))
+                    {
+                        newEnumValue = val;
+                        selectionMade = true;
+                    }
                 }
             }
 
-            return selectedVal;
+            return selectionMade;
+        }
+
+        public bool DrawCachedEnumComboDropdown<T>(
+            T enumToDraw,
+            out T newEnumValue,
+            bool selected = true,
+            ImGuiComboFlags flags = ImGuiComboFlags.None
+            ) where T : Enum
+        {
+            newEnumValue = enumToDraw;
+            using var id = ImRaii.PushId($"uicomponent_draw_combo_{enumToDraw}");
+
+            var comboAttribute = attributeService
+                .GetEnumAttribute<DisplayAttribute>(enumToDraw)!;
+            var comboName = comboAttribute.GetName()!;
+
+            using var combo = ImRaii.Combo("##uicomponent_combo", comboName, flags);
+            if (
+                ImGui.IsItemHovered()
+                && comboAttribute.GetDescription() is string comboDesc
+            )
+                ImGui.SetTooltip(comboDesc);
+
+            if (!combo)
+                return false;
+
+            var selectionMade = false;
+            using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(5, 5)))
+            {
+                foreach (T val in Enum.GetValues(typeof(T)))
+                {
+                    var optionAttribute = attributeService
+                        .GetEnumAttribute<DisplayAttribute>(val)!;
+                    var optionName = optionAttribute.GetName()!;
+                    if (ImGui.Selectable($"{optionName}##draw_dropdown"))
+                    {
+                        selectionMade = true;
+                        newEnumValue = val;
+                    }
+                    if (ImGui.IsItemHovered()
+                        && optionAttribute.GetDescription() is string optionDesc)
+                    {
+                        ImGui.SetTooltip(optionDesc);
+                    }
+                }
+            }
+
+            return selectionMade;
         }
 
         /// <summary>

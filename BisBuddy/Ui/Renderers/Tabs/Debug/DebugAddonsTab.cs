@@ -1,16 +1,16 @@
+using BisBuddy.Extensions;
 using BisBuddy.Services;
 using BisBuddy.Services.Addon;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface.Components;
 using Dalamud.Interface;
+using Dalamud.Interface.Components;
+using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using static Dalamud.Interface.Windowing.Window;
-using BisBuddy.Extensions;
 using System.Numerics;
-
+using static Dalamud.Interface.Windowing.Window;
 using AddonTableColumns = System.Collections.Generic.List<(
     string Name,
     System.Action<string> Init,
@@ -23,7 +23,6 @@ using AddonTableColumns = System.Collections.Generic.List<(
     )> Draw,
     System.Action<bool> Sort
     )>;
-
 using NodeHighlightGroup = (
     BisBuddy.Services.Addon.IAddonEventListener Listener,
     BisBuddy.Services.Addon.NodeHighlightType Type,
@@ -31,7 +30,6 @@ using NodeHighlightGroup = (
     uint NodeId,
     int Count
 );
-using Dalamud.Interface.Utility;
 
 namespace BisBuddy.Ui.Renderers.Tabs.Debug
 {
@@ -146,7 +144,7 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
                     .SelectMany(listener => listener
                         .NodeHighlights
                         .GroupBy(node => (node.Type, node.Color.BaseColor))
-                        .Select(g => (listener, g.First().Type, g.First().Color, 0u, g.Count())) 
+                        .Select(g => (listener, g.First().Type, g.First().Color, 0u, g.Count()))
                 ).ToList();
             else
                 addonNodeHighlights = addonListeners
@@ -159,7 +157,8 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
             columns[sortColumnIdx].Sort(sortDesc);
         }
 
-        public void PreDraw() {
+        public void PreDraw()
+        {
             if (!firstDraw && !autoRefresh)
                 return;
 
