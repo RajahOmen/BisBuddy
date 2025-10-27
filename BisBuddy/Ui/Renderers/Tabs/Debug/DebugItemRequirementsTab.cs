@@ -7,13 +7,14 @@ using BisBuddy.Services.Gearsets;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Components;
+using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using static Dalamud.Interface.Windowing.Window;
-using ItemRequirementTableColumn = System.Collections.Generic.List<(
+using ItemRequirementTableColumns = System.Collections.Generic.List<(
     string Name,
     System.Action<string> Init,
     System.Action<(BisBuddy.Gear.ItemRequirementOwned Req, int Count)> Draw,
@@ -38,8 +39,8 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
 
         private string itemNameFilter = string.Empty;
 
-        private readonly ItemRequirementTableColumn groupedColumns;
-        private readonly ItemRequirementTableColumn ungroupedColumns;
+        private readonly ItemRequirementTableColumns groupedColumns;
+        private readonly ItemRequirementTableColumns ungroupedColumns;
 
 
         public DebugItemRequirementsTab(
@@ -59,7 +60,7 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
             var gearpieceColumnName = "Gearpiece";
 
             this.groupedColumns = [
-                (
+            (
                 "Item Id",
                 (name) => ImGui.TableSetupColumn(name, ImGuiTableColumnFlags.DefaultSort | ImGuiTableColumnFlags.WidthFixed, 60f),
                 (g) => ImGui.Text($"{g.Req.ItemRequirement.ItemId % 1_000_000}"),
@@ -202,6 +203,13 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
             ImGui.Spacing();
             ImGui.Separator();
             ImGui.Spacing();
+
+            if (itemRequirements.Count == 0)
+            {
+                ImGui.NewLine();
+                ImGuiHelpers.CenteredText("No Item Requirements");
+                return;
+            }
 
             var columns = groupReqs ? groupedColumns : ungroupedColumns;
 

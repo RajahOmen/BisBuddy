@@ -144,6 +144,14 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
             if (!tabItem)
                 return relations;
 
+            if (relations.Count == 0)
+            {
+                ImGui.NewLine();
+                ImGuiHelpers.CenteredText($"No Item {relationsName}");
+                ImGui.NewLine();
+                return relations;
+            }
+
             ImGui.Spacing();
 
             var tableFlags = (

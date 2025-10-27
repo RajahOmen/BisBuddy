@@ -5,6 +5,7 @@ using BisBuddy.Services.Gearsets;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Components;
+using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using System;
 using System.Numerics;
@@ -45,29 +46,49 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
             ImGui.Separator();
             ImGui.Spacing();
 
-            if (gearpiecesResult is SolveResult gearResult
-                && gearResult.CandidateItems.Count > 0
-                && gearResult.AssignmentGroups.Count > 0)
-                drawSolveResult("Gearpiece Assignments", gearResult);
-            else
-                ImGui.Text("No Gearpiece Assignments");
+            using var tabBar = ImRaii.TabBar("##solve_results_tabs");
+            if (!tabBar)
+                return;
 
-            ImGui.Spacing();
-            ImGui.Separator();
-            ImGui.Spacing();
+            using (var gearpieceTab = ImRaii.TabItem("Gearpieces"))
+            {
+                if (gearpieceTab)
+                {
+                    if (gearpiecesResult is SolveResult gearResult
+                        && gearResult.CandidateItems.Count > 0
+                        && gearResult.AssignmentGroups.Count > 0)
+                    {
+                        drawSolveResult(gearResult);
+                    }
+                    else
+                    {
+                        ImGui.NewLine();
+                        ImGuiHelpers.CenteredText("No Gearpiece Assignments");
+                    }
+                }
+            }
 
-            if (prerequisitesResult is SolveResult prereqResult
-                && prereqResult.CandidateItems.Count > 0
-                && prereqResult.AssignmentGroups.Count > 0)
-                drawSolveResult("Prerequisite Assignments", prereqResult);
-            else
-                ImGui.Text("No Prerequisite Assignments");
+            using (var prerequisitesTab = ImRaii.TabItem("Prerequisites"))
+            {
+                if (prerequisitesTab)
+                {
+                    if (prerequisitesResult is SolveResult prereqResult
+                        && prereqResult.CandidateItems.Count > 0
+                        && prereqResult.AssignmentGroups.Count > 0)
+                    {
+                        drawSolveResult(prereqResult);
+                    }
+                    else
+                    {
+                        ImGui.NewLine();
+                        ImGuiHelpers.CenteredText("No Prerequisite Assignments");
+                    }
+                }
+            }
         }
 
-        private void drawSolveResult(string resultTitle, SolveResult result)
+        private void drawSolveResult(SolveResult result)
         {
-            ImGui.Text(resultTitle);
-
             ImGui.Spacing();
 
             var (assignments, edges, candidateItems, assignmentGroups) = result;
@@ -80,12 +101,11 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
                 | ImGuiTableFlags.SizingStretchProp
                 | ImGuiTableFlags.PadOuterX
                 );
-            using var table = ImRaii.Table($"{resultTitle}##solve_result_table", numColumns, flags);
+            using var table = ImRaii.Table($"##solve_result_table", numColumns, flags);
             if (!table)
                 return;
 
             // HEADER SETUP
-
             ImGui.TableSetupColumn("Idx", ImGuiTableColumnFlags.WidthFixed, 25f);
             ImGui.TableSetupColumn("Gearpiece", initWidthOrWeight: 2f);
             foreach (var item in candidateItems)
@@ -93,19 +113,26 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
 
             ImGui.TableSetupScrollFreeze(0, 1);
             ImGui.TableNextRow(ImGuiTableRowFlags.Headers);
-            for (var i = 0; i < numColumns; i++)
-            {
-                if (!ImGui.TableSetColumnIndex(i))
-                    continue;
 
-                var colName = ImGui.TableGetColumnName(i);
-                ImGui.TableHeader(colName);
+            ImGui.TableNextColumn();
+            ImGui.TableHeader("Idx");
+
+            ImGui.TableNextColumn();
+            ImGui.TableHeader("Gearpiece");
+
+            foreach (var item in candidateItems)
+            {
+                ImGui.TableNextColumn();
+
+                var itemName = itemDataService.GetItemNameById(item.ItemId);
+                ImGui.TableHeader(itemName);
                 if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip(colName);
+                    ImGui.SetTooltip($"{itemName} ({item.ItemId})");
+                if (ImGui.IsItemClicked())
+                    ImGui.SetClipboardText($"{item.ItemId}");
             }
 
             // TABLE DATA
-
             var pickedColor = new Vector4(0, 1, 0, 1);
             var numRows = edges.GetLength(0);
             var numCols = edges.GetLength(1);
@@ -117,7 +144,7 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
 
                 var assignGroup = assignmentGroups[rowIdx];
 
-                 //was this assign group actually assigned a candidate item?
+                // was this assign group actually assigned a candidate item?
                 int? assignIdx = null;
                 for (var i = 0; i < assignments.Length; i++)
                 {
@@ -138,7 +165,9 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
                 else
                     ImGui.Text(assignGroupItemName);
                 if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip(assignGroupItemName);
+                    ImGui.SetTooltip($"{assignGroupItemName} ({assignGroup.ItemId})");
+                if (ImGui.IsItemClicked())
+                    ImGui.SetClipboardText($"{assignGroup.ItemId}");
 
                 // draw the edge weights
                 for (var colIdx = 0; colIdx < numCols; colIdx++)
