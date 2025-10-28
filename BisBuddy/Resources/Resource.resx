@@ -768,4 +768,7 @@ or to have a unique color to highlight items in</value>
   <data name="DebugFrameworkThreadBehaviorAssertTooltip" xml:space="preserve">
     <value>Throw an exception. WARNING: Can break functionality if errors are encountered</value>
   </data>
+  <data name="CommandDescriptionOpenDebug" xml:space="preserve">
+    <value>Open plugin debug if debugging is enabled</value>
+  </data>
 </root>

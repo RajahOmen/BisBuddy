@@ -169,6 +169,15 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Open plugin debug if debugging is enabled.
+        /// </summary>
+        public static string CommandDescriptionOpenDebug {
+            get {
+                return ResourceManager.GetString("CommandDescriptionOpenDebug", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Debugging.
         /// </summary>
         public static string ConfigDebugSectionHeader {

@@ -99,6 +99,7 @@ public sealed partial class Plugin : IDalamudPlugin
                 builder.RegisterType<OpenMainCommand>().AsImplementedInterfaces().SingleInstance();
                 builder.RegisterType<OpenConfigCommand>().AsImplementedInterfaces().SingleInstance();
                 builder.RegisterType<AddGearsetCommand>().AsImplementedInterfaces().SingleInstance();
+                builder.RegisterType<OpenDebugCommand>().AsImplementedInterfaces().SingleInstance();
 
                 // item data service wrapper over game excel data
                 builder.RegisterType<ItemDataService>().As<IItemDataService>().SingleInstance();
