@@ -1,6 +1,7 @@
 using BisBuddy.Gear;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
+using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Enums;
 using FFXIVClientStructs.FFXIV.Client.Graphics;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
@@ -19,6 +20,7 @@ namespace BisBuddy.Services.Addon
     public unsafe class ItemDetailService(AddonServiceDependencies<ItemDetailService> deps)
         : AddonService<ItemDetailService>(deps)
     {
+        private readonly IGameGui gameGui = deps.GameGui;
         public override string AddonName => "ItemDetail";
 
         // ADDON NODE IDS
@@ -65,8 +67,6 @@ namespace BisBuddy.Services.Addon
             DetailKind.GearSet
         }.ToFrozenSet();
 
-        protected override float CustomNodeMaxY => float.MaxValue;
-
         protected override void registerAddonListeners()
         {
             gearsetsService.OnGearsetsChange += handleManualUpdate;
@@ -80,17 +80,20 @@ namespace BisBuddy.Services.Addon
             neededGearsets = [];
         }
 
-        protected override void updateListeningStatus(bool effectsAssignments)
-            => setListeningStatus(configurationService.AnnotateTooltips);
+        protected override bool isEnabledFromConfig
+            => configurationService.AnnotateTooltips;
 
         private void handleManualUpdate()
         {
             // manually trigger refresh
+            debugService.AssertMainThreadDebug();
             handleHoveredItemChanged(null, gameGui.HoveredItem);
         }
 
         private unsafe void handleHoveredItemChanged(object? sender, ulong itemId)
         {
+            debugService.AssertMainThreadDebug();
+
             if (itemId == 0)
                 return;
             try
@@ -117,7 +120,7 @@ namespace BisBuddy.Services.Addon
                 };
                 setNodeVisibility(true);
 
-                var addonPtr = (AtkUnitBase*)gameGui.GetAddonByName(AddonName).Address;
+                var addonPtr = (AtkUnitBase*)AddonPtr.Address;
 
                 if (addonPtr == null || !addonPtr->IsVisible)
                     return;
@@ -212,7 +215,7 @@ namespace BisBuddy.Services.Addon
             if (customTextNode == null)
                 return; // doesn't exist, nothing to hide
 
-            var addon = (AtkUnitBase*)gameGui.GetAddonByName(AddonName).Address;
+            var addon = (AtkUnitBase*)AddonPtr.Address;
             if (addon == null)
                 return; // addon doesn't exist somehow
 

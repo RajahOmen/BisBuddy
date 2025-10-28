@@ -169,6 +169,15 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Open plugin debug if debugging is enabled.
+        /// </summary>
+        public static string CommandDescriptionOpenDebug {
+            get {
+                return ResourceManager.GetString("CommandDescriptionOpenDebug", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Debugging.
         /// </summary>
         public static string ConfigDebugSectionHeader {
@@ -309,6 +318,96 @@ namespace BisBuddy.Resources {
         public static string ContextMenuUnlockAll {
             get {
                 return ResourceManager.GetString("ContextMenuUnlockAll", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Addon Highlights.
+        /// </summary>
+        public static string DebugAddonsTab {
+            get {
+                return ResourceManager.GetString("DebugAddonsTab", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Throw Error.
+        /// </summary>
+        public static string DebugFrameworkThreadBehaviorAssertName {
+            get {
+                return ResourceManager.GetString("DebugFrameworkThreadBehaviorAssertName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Throw an exception. WARNING: Can break functionality if errors are encountered.
+        /// </summary>
+        public static string DebugFrameworkThreadBehaviorAssertTooltip {
+            get {
+                return ResourceManager.GetString("DebugFrameworkThreadBehaviorAssertTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do Nothing.
+        /// </summary>
+        public static string DebugFrameworkThreadBehaviorIgnoreName {
+            get {
+                return ResourceManager.GetString("DebugFrameworkThreadBehaviorIgnoreName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ignore the issue and continue. Please only use if warnings are flooding the console and the issue has been reported.
+        /// </summary>
+        public static string DebugFrameworkThreadBehaviorIgnoreTooltip {
+            get {
+                return ResourceManager.GetString("DebugFrameworkThreadBehaviorIgnoreTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Log Warning.
+        /// </summary>
+        public static string DebugFrameworkThreadBehaviorWarningName {
+            get {
+                return ResourceManager.GetString("DebugFrameworkThreadBehaviorWarningName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Log a warning to the console. Default behavior.
+        /// </summary>
+        public static string DebugFrameworkThreadBehaviorWarningTooltip {
+            get {
+                return ResourceManager.GetString("DebugFrameworkThreadBehaviorWarningTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Item Requirements.
+        /// </summary>
+        public static string DebugItemRequirementsTab {
+            get {
+                return ResourceManager.GetString("DebugItemRequirementsTab", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Item Prerequisites.
+        /// </summary>
+        public static string DebugPrerequisitesTab {
+            get {
+                return ResourceManager.GetString("DebugPrerequisitesTab", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Item Solver Results.
+        /// </summary>
+        public static string DebugSolverResultsTab {
+            get {
+                return ResourceManager.GetString("DebugSolverResultsTab", resourceCulture);
             }
         }
         

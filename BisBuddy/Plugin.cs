@@ -22,6 +22,7 @@ using BisBuddy.Ui.Renderers.Components;
 using BisBuddy.Ui.Renderers.ContextMenus;
 using BisBuddy.Ui.Renderers.Tabs;
 using BisBuddy.Ui.Renderers.Tabs.Config;
+using BisBuddy.Ui.Renderers.Tabs.Debug;
 using BisBuddy.Ui.Renderers.Tabs.Main;
 using BisBuddy.Ui.Windows;
 using Dalamud.Interface;
@@ -52,7 +53,6 @@ public sealed partial class Plugin : IDalamudPlugin
 
     public Plugin(
         IDalamudPluginInterface pluginInterface,
-        IChatGui chatGui,
         ICommandManager commandManager,
         IGameInventory gameInventory,
         IGameGui gameGui,
@@ -76,7 +76,6 @@ public sealed partial class Plugin : IDalamudPlugin
             {
                 builder.RegisterInstance(pluginInterface).As<IDalamudPluginInterface>().SingleInstance();
                 builder.RegisterInstance(pluginInterface.UiBuilder).As<IUiBuilder>().SingleInstance();
-                builder.RegisterInstance(chatGui).As<IChatGui>().SingleInstance();
                 builder.RegisterInstance(commandManager).As<ICommandManager>().SingleInstance();
                 builder.RegisterInstance(gameInventory).As<IGameInventory>().SingleInstance();
                 builder.RegisterInstance(gameGui).As<IGameGui>().SingleInstance();
@@ -93,13 +92,20 @@ public sealed partial class Plugin : IDalamudPlugin
                 // more rich logging information
                 builder.RegisterGeneric(typeof(TypedLogger<>)).As(typeof(ITypedLogger<>)).InstancePerDependency();
 
+                // debugging
+                builder.RegisterType<DebugService>().As<IDebugService>().SingleInstance();
+
                 // commands
                 builder.RegisterType<OpenMainCommand>().AsImplementedInterfaces().SingleInstance();
                 builder.RegisterType<OpenConfigCommand>().AsImplementedInterfaces().SingleInstance();
                 builder.RegisterType<AddGearsetCommand>().AsImplementedInterfaces().SingleInstance();
+                builder.RegisterType<OpenDebugCommand>().AsImplementedInterfaces().SingleInstance();
 
                 // item data service wrapper over game excel data
                 builder.RegisterType<ItemDataService>().As<IItemDataService>().SingleInstance();
+
+                // get inventory items
+                builder.RegisterType<InventoryItemsService>().AsImplementedInterfaces().SingleInstance();
 
                 // kamitoolkit
                 builder.RegisterType<NativeController>().AsSelf().SingleInstance();
@@ -192,13 +198,19 @@ public sealed partial class Plugin : IDalamudPlugin
                 builder.RegisterType<ConfigTab>().Keyed<TabRenderer<MainWindowTab>>(MainWindowTab.PluginConfig).InstancePerMatchingLifetimeScope(windowScopeTag);
                 builder.RegisterType<DebugTab>().Keyed<TabRenderer<MainWindowTab>>(MainWindowTab.PluginDebug).InstancePerMatchingLifetimeScope(windowScopeTag);
 
+                // debug tab tabs
+                builder.RegisterType<DebugItemRequirementsTab>().Keyed<TabRenderer<DebugToolTab>>(DebugToolTab.ItemRequirements).InstancePerMatchingLifetimeScope(windowScopeTag);
+                builder.RegisterType<DebugSolverResultsTab>().Keyed<TabRenderer<DebugToolTab>>(DebugToolTab.SolverResults).InstancePerMatchingLifetimeScope(windowScopeTag);
+                builder.RegisterType<DebugAddonsTab>().Keyed<TabRenderer<DebugToolTab>>(DebugToolTab.Addons).InstancePerMatchingLifetimeScope(windowScopeTag);
+                builder.RegisterType<DebugPrerequisitesTab>().Keyed<TabRenderer<DebugToolTab>>(DebugToolTab.Prerequisites).InstancePerMatchingLifetimeScope(windowScopeTag);
+
 
                 // config window tabs
                 builder.RegisterType<GeneralSettingsTab>().Keyed<TabRenderer<ConfigWindowTab>>(ConfigWindowTab.General).InstancePerMatchingLifetimeScope(windowScopeTag);
                 builder.RegisterType<HighlightingSettingsTab>().Keyed<TabRenderer<ConfigWindowTab>>(ConfigWindowTab.Highlighting).InstancePerMatchingLifetimeScope(windowScopeTag);
                 builder.RegisterType<InventorySettingsTab>().Keyed<TabRenderer<ConfigWindowTab>>(ConfigWindowTab.Inventory).InstancePerMatchingLifetimeScope(windowScopeTag);
                 builder.RegisterType<UiThemeSettingsTab>().Keyed<TabRenderer<ConfigWindowTab>>(ConfigWindowTab.UiTheme).InstancePerMatchingLifetimeScope(windowScopeTag);
-                //builder.RegisterType<DebugSettingsTab>().Keyed<TabRenderer<ConfigWindowTab>>(ConfigWindowTab.Debug).InstancePerMatchingLifetimeScope(windowScopeTag);
+                builder.RegisterType<DebugSettingsTab>().Keyed<TabRenderer<ConfigWindowTab>>(ConfigWindowTab.Debug).InstancePerMatchingLifetimeScope(windowScopeTag);
 
                 // other ui elements
                 builder.RegisterType<UiComponents>().AsSelf().SingleInstance();
@@ -266,6 +278,9 @@ public sealed partial class Plugin : IDalamudPlugin
                 // handle active language
                 builder.RegisterType<LanguageService>().AsImplementedInterfaces().SingleInstance();
 
+                // log bad node highlights
+                builder.RegisterType<InvalidNodePollerService>().AsImplementedInterfaces().SingleInstance();
+
                 // addon listeners
                 //   inventories
                 builder.RegisterType<InventoryBuddyService>().AsImplementedInterfaces().AsSelf().SingleInstance();
@@ -312,7 +327,7 @@ public sealed partial class Plugin : IDalamudPlugin
 
 #if DEBUG
             var commandService = host.Services.GetRequiredService<ICommandService>();
-            commandService.ExecuteCommand("/bis", "c");
+            commandService.ExecuteCommand("/bis", "d");
 #endif
         }
         catch (Exception ex)

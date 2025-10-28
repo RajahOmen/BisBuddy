@@ -3,8 +3,8 @@ using BisBuddy.Gear.Melds;
 using BisBuddy.Gear.Prerequisites;
 using BisBuddy.Mappers;
 using BisBuddy.Services;
+using BisBuddy.Services.ItemData;
 using Dalamud.Game;
-using Dalamud.Game.Inventory;
 using Dalamud.Plugin.Services;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
@@ -21,11 +21,10 @@ namespace BisBuddy.Items
     {
         private readonly ITypedLogger<ItemDataService> logger;
         private readonly IDataManager dataManager;
-        private readonly IGameInventory gameInventory;
         private readonly IMapper<string, GearpieceType> gearpieceTypeMapper;
 
-        private ILookup<uint, uint>? itemsCoffers = null;
-        private ILookup<uint, List<uint>>? itemsPrerequisites = null;
+        private ILookup<uint, (uint ItemId, CofferSourceType SourceType)>? itemsCoffers = null;
+        private ILookup<uint, (List<uint> ItemIds, uint SourceShopId)>? itemsPrerequisites = null;
 
         public static readonly int MaxItemPrerequisites = 25;
         private ExcelSheet<Item> ItemSheet { get; init; }
@@ -33,7 +32,7 @@ namespace BisBuddy.Items
         private ExcelSheet<SpecialShop> ShopSheet { get; init; }
         private ExcelSheet<SheetMateria> Materia { get; init; }
         private ExcelSheet<ClassJob> ClassJobEn { get; init; }
-        public ILookup<uint, uint> ItemsCoffers
+        public ILookup<uint, (uint ItemId, CofferSourceType SourceType)> ItemsCoffers
         {
             get
             {
@@ -49,7 +48,7 @@ namespace BisBuddy.Items
                 return itemsCoffers;
             }
         }
-        public ILookup<uint, List<uint>> ItemsPrerequisites
+        public ILookup<uint, (List<uint> ItemIds, uint SourceShopId)> ItemsPrerequisites
         {
             get
             {
@@ -72,13 +71,10 @@ namespace BisBuddy.Items
         public ItemDataService(
             ITypedLogger<ItemDataService> logger,
             IDataManager dataManager,
-            IGameInventory gameInventory,
             IMapper<string, GearpieceType> gearpieceTypeMapper
-
             )
         {
             this.logger = logger;
-            this.gameInventory = gameInventory;
             this.dataManager = dataManager;
             this.gearpieceTypeMapper = gearpieceTypeMapper;
 
@@ -101,7 +97,7 @@ namespace BisBuddy.Items
                 if (item.Key < debugMinItemId) continue;
 
                 var itemName = SeStringToString(ItemSheet.GetRow(item.Key).Name);
-                foreach (var cofferId in item)
+                foreach (var (cofferId, _) in item)
                 {
                     var cofferName = SeStringToString(ItemSheet.GetRow(cofferId).Name);
                     logger.Verbose($"{cofferName,-50} => {itemName}");
@@ -115,7 +111,7 @@ namespace BisBuddy.Items
                 if (item.Key < debugMinItemId) continue;
 
                 var recieveItemName = SeStringToString(ItemSheet.GetRow(item.Key).Name);
-                foreach (var itemId in item)
+                foreach (var (itemId, _) in item)
                 {
                     var prereqItemNames = itemId.Select(id => SeStringToString(ItemSheet.GetRow(id).Name));
                     logger.Verbose($"{string.Join(" + ", prereqItemNames.GroupBy(n => n).Select(g => $"{g.Count()}x {g.Key}")),-60} => {recieveItemName}");
@@ -128,11 +124,27 @@ namespace BisBuddy.Items
 
     public interface IItemDataService
     {
+        /// <summary>
+        /// Mapping of which items can be obtained via opening what coffers
+        /// 
+        /// item inside coffer -> coffer
+        /// </summary>
+        public ILookup<uint, (uint ItemId, CofferSourceType SourceType)> ItemsCoffers { get; }
+
+        /// <summary>
+        /// Mapping of which items can be obtained by doing some manner of trade-in.
+        /// Since a trade-in may require more than one item, this mapping is 1-many
+        /// 
+        /// item obtained -> items required to complete trade in
+        /// </summary>
+        public ILookup<uint, (List<uint> ItemIds, uint SourceShopId)> ItemsPrerequisites { get; }
+
         public uint ConvertItemIdToHq(uint id);
         public string SeStringToString(ReadOnlySeString input);
         public string GetItemNameById(uint id);
         public uint GetItemIdByName(string name);
-        public List<uint> GetItemMateriaIds(GameInventoryItem item);
+        public string GetShopNameById(uint shopId);
+        public uint GetMateriaItemId(ushort materiaTypeId, byte materiaGrade);
 
         /// <summary>
         /// Returns if an item can have materia attached to it

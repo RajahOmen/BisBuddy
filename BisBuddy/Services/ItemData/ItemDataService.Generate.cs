@@ -1,3 +1,4 @@
+using BisBuddy.Services.ItemData;
 using Dalamud.Utility;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
@@ -57,11 +58,11 @@ namespace BisBuddy.Items
         /// </summary>
         /// <param name="existingCofferSources">List of existing loot supplement relations</param>
         /// <param name="itemSheet">The game itemSheet</param>
-        private static void addNewCoffers(List<ItemSupplement> existingCofferSources, ExcelSheet<Item> itemSheet)
+        private static void addNewCoffers(List<(ItemSupplement Item, CofferSourceType SourceType)> existingCofferSources, ExcelSheet<Item> itemSheet)
         {
             // list of ids of coffer-like items with known contents
             var knownCoffers = existingCofferSources
-                .Select(item => item.SourceItemId)
+                .Select(entry => entry.Item.SourceItemId)
                 .ToHashSet();
 
             // get list of coffer-like items with unknown contents
@@ -142,13 +143,13 @@ namespace BisBuddy.Items
                             .First();
 
                         var newItemSupplement = new ItemSupplement(bestMatch.RowId, coffer.RowId, ItemSupplementSource.Loot);
-                        existingCofferSources.Add(newItemSupplement);
+                        existingCofferSources.Add((newItemSupplement, CofferSourceType.ClosestMatch));
                     }
                 }
             }
         }
 
-        private ILookup<uint, uint> generateItemsCoffers(ExcelSheet<Item> itemSheet)
+        private ILookup<uint, (uint, CofferSourceType)> generateItemsCoffers(ExcelSheet<Item> itemSheet)
         {
             try
             {
@@ -171,13 +172,14 @@ namespace BisBuddy.Items
 
                 var cofferLines = lines
                     .Where(item => item.ItemSupplementSource == ItemSupplementSource.Loot)
+                    .Select(item => (Item: item, SourceType: CofferSourceType.LuminaSupplemental))
                     .ToList();
 
                 // use game data to try and parse new coffers that don't exist in pulled data
                 addNewCoffers(cofferLines, itemSheet);
 
                 return cofferLines
-                    .ToLookup(i => i.ItemId, i => i.SourceItemId);
+                    .ToLookup(i => i.Item.ItemId, i => (i.Item.SourceItemId, i.SourceType));
             }
             catch (Exception ex)
             {
@@ -186,16 +188,22 @@ namespace BisBuddy.Items
             }
         }
 
-        private ILookup<uint, List<uint>> generateItemsPrerequisites()
+        private ILookup<uint, (List<uint> ItemIds, uint SourceShopId)> generateItemsPrerequisites()
         {
-            var itemPrerequisiteOptions = new List<(uint ItemId, List<uint> ShopCostIds)>();
+            var itemPrerequisiteOptions = new List<(uint ItemId, List<uint> ShopCostIds, uint SourceShopId)>();
             var itemExchangeShops = getRelevantShops(ShopSheet);
 
             foreach (var shop in itemExchangeShops)
             {
                 foreach (var shopItem in shop.Item)
                 {
-                    var receiveCount = shopItem.ReceiveItems
+                    var receiveItems = shopItem.ReceiveItems.Where(item => item.Item.RowId != 0);
+
+                    // not actually recieving an item
+                    if (!receiveItems.Any())
+                        continue;
+
+                    var receiveCount = receiveItems
                         .Min(itemReceive =>
                             itemReceive.ReceiveCount
                         );
@@ -213,18 +221,17 @@ namespace BisBuddy.Items
                         ).ToList();
 
                     // No costed items that are not currency
-                    if (itemCosts.Count == 0) continue;
+                    if (itemCosts.Count == 0)
+                        continue;
 
-                    foreach (var receiveItem in shopItem.ReceiveItems)
-                    {
-                        itemPrerequisiteOptions.Add((receiveItem.Item.RowId, itemCosts));
-                    }
+                    foreach (var receiveItem in receiveItems)
+                        itemPrerequisiteOptions.Add((receiveItem.Item.RowId, itemCosts, shop.RowId));
                 }
             }
 
             return itemPrerequisiteOptions
-                .DistinctBy(i => $"{i.ItemId} {string.Join("", i.ShopCostIds)}")
-                .ToLookup(i => i.ItemId, i => i.ShopCostIds);
+                .DistinctBy(i => $"{i.ItemId}|{i.SourceShopId}|{string.Join("", i.ShopCostIds)}")
+                .ToLookup(i => i.ItemId, i => (i.ShopCostIds, i.SourceShopId));
         }
     }
 }

@@ -4,6 +4,7 @@ using BisBuddy.Services.Configuration;
 using BisBuddy.Services.Gearsets;
 using Dalamud.Game.Addon.Lifecycle;
 using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
+using Dalamud.Game.NativeWrapper;
 using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using KamiToolKit;
@@ -21,59 +22,111 @@ namespace BisBuddy.Services.Addon
         AddonServiceDependencies<T> dependencies
         ) : IAddonEventListener where T : class
     {
+        private readonly IGameGui gameGui = dependencies.GameGui;
         protected readonly ITypedLogger<T> logger = dependencies.logger;
+        protected readonly IFramework framework = dependencies.framework;
         protected readonly IAddonLifecycle addonLifecycle = dependencies.AddonLifecycle;
-        protected readonly IGameGui gameGui = dependencies.GameGui;
         protected readonly NativeController nativeController = dependencies.NativeController;
         protected readonly IGearsetsService gearsetsService = dependencies.GearsetsService;
         protected readonly IItemDataService itemDataService = dependencies.ItemDataService;
         protected readonly IConfigurationService configurationService = dependencies.ConfigurationService;
+        protected readonly IDebugService debugService = dependencies.DebugService;
 
         private static readonly HighlightColor NullColor = new(0.0f, 0.0f, 0.0f, 0.393f);
         private readonly Dictionary<nint, (NodeBase Node, HighlightColor Color)> customNodes = [];
         private readonly Dictionary<nint, HighlightColor> highlightedNodes = [];
         protected IReadOnlyDictionary<nint, (NodeBase Node, HighlightColor Color)> CustomNodes => customNodes;
 
-        protected bool isEnabled { get; private set; } = false;
+        public bool IsEnabled { get; private set; } = false;
         public abstract string AddonName { get; }
+        public bool IsAddonVisible
+        {
+            get
+            {
+                debugService.AssertMainThreadDebug();
 
-        // for lists that scroll, to avoid them rendering off the bottom
-        protected abstract float CustomNodeMaxY { get; }
+                var addon = AddonPtr;
+                return addon.IsReady && addon.IsVisible;
+            }
+        }
+        public bool IsAddonNull
+        {
+            get
+            {
+                debugService.AssertMainThreadDebug();
+
+                return AddonPtr.IsNull;
+            }
+        }
+        public unsafe IReadOnlyCollection<(uint, NodeHighlightType, HighlightColor)> NodeHighlights
+        {
+            get
+            {
+                debugService.AssertMainThreadDebug();
+
+                var nodes = new List<(uint, NodeHighlightType, HighlightColor)>();
+                foreach (var (nodePtr, highlightInfo) in customNodes)
+                {
+                    var parentNodeId = ((AtkResNode*)nodePtr)->NodeId;
+                    nodes.Add((parentNodeId, NodeHighlightType.Custom, highlightInfo.Color));
+                }
+                foreach (var (nodePtr, color) in highlightedNodes)
+                {
+                    var nodeId = ((AtkResNode*)nodePtr)->NodeId;
+                    nodes.Add((nodeId, NodeHighlightType.Native, color));
+                }
+
+                return nodes;
+            }
+        }
 
         protected abstract unsafe NodeBase initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon, HighlightColor color);
 
         protected abstract void registerAddonListeners();
         protected abstract void unregisterAddonListeners();
-        protected abstract void updateListeningStatus(bool effectsAssignments);
+        protected abstract bool isEnabledFromConfig { get; }
+
+
+        protected AtkUnitBasePtr AddonPtr
+        {
+            get
+            {
+                debugService.AssertMainThreadDebug();
+                return gameGui.GetAddonByName(AddonName);
+            }
+        }
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
             // ensure listening status remains updated with user configuration
-            configurationService.OnConfigurationChange += updateListeningStatus;
+            configurationService.OnConfigurationChange += updateListeningStatusFromConfig;
 
             // set initial listening status to configs initialized value
-            updateListeningStatus(false);
+            updateListeningStatusFromConfig();
 
             return Task.CompletedTask;
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            setListeningStatus(false);
-            configurationService.OnConfigurationChange -= updateListeningStatus;
+            setListeningStatus(toEnable: false);
+            configurationService.OnConfigurationChange -= updateListeningStatusFromConfig;
             return Task.CompletedTask;
         }
 
-        protected void setListeningStatus(bool toEnable)
+        private void updateListeningStatusFromConfig(bool effectsAssignments = false)
+            => setListeningStatus(isEnabledFromConfig);
+
+        private void setListeningStatus(bool toEnable)
         {
-            if (toEnable && !isEnabled) // If we want to enable and it's not enabled
+            if (toEnable && !IsEnabled) // If we want to enable and it's not enabled
                 registerListeners();
-            else if (!toEnable && isEnabled) // If we want to disable and it's enabled
+            else if (!toEnable && IsEnabled) // If we want to disable and it's enabled
                 unregisterListeners();
             // Otherwise, do nothing
         }
 
-        protected void registerListeners()
+        private void registerListeners()
         {
             try
             {
@@ -82,7 +135,7 @@ namespace BisBuddy.Services.Addon
                 addonLifecycle.RegisterListener(AddonEvent.PreFinalize, AddonName, handlePreFinalize);
                 registerAddonListeners();
 
-                isEnabled = true;
+                IsEnabled = true;
                 logger.Verbose($"Registered listeners");
             }
             catch (Exception ex)
@@ -91,11 +144,13 @@ namespace BisBuddy.Services.Addon
             }
         }
 
-        protected unsafe void unregisterListeners()
+        private unsafe void unregisterListeners()
         {
+            debugService.AssertMainThreadDebug();
+
             try
             {
-                if (isEnabled) // only perform these if it is enabled
+                if (IsEnabled) // only perform these if it is enabled
                 {
                     gearsetsService.OnGearsetsChange -= handleUpdateHighlightColor;
                     configurationService.OnConfigurationChange -= handleUpdateHighlightColor;
@@ -105,7 +160,7 @@ namespace BisBuddy.Services.Addon
                 unmarkNodes();
                 destroyNodes();
 
-                isEnabled = false;
+                IsEnabled = false;
                 logger.Verbose($"Unregistered listeners");
             }
             catch (Exception ex)
@@ -116,16 +171,19 @@ namespace BisBuddy.Services.Addon
 
         private unsafe void handleUpdateHighlightColor()
         {
-            if (gameGui.GetAddonByName(AddonName).IsNull && highlightedNodes.Count > 0)
-                throw new Exception($"Addon \"{AddonName}\" is not loaded, cannot update \"{highlightedNodes.Count}\" node highlight colors");
+            framework.RunOnFrameworkThread(() =>
+            {
+                if (AddonPtr.IsNull && highlightedNodes.Count > 0)
+                    throw new Exception($"Addon \"{AddonName}\" is not loaded, cannot update \"{highlightedNodes.Count}\" node highlight colors");
 
-            // update colors for existing atk nodes that was just highlighted
-            foreach (var nodeData in highlightedNodes)
-                nodeData.Value.ColorExistingNode((AtkResNode*)nodeData.Key);
+                // update colors for existing atk nodes that was just highlighted
+                foreach (var nodeData in highlightedNodes)
+                    nodeData.Value.ColorExistingNode((AtkResNode*)nodeData.Key);
 
-            // update colors for nodes that we added
-            foreach (var nodeData in customNodes.Values)
-                nodeData.Color.ColorCustomNode(nodeData.Node, configurationService.BrightListItemHighlighting);
+                // update colors for nodes that we added
+                foreach (var nodeData in customNodes.Values)
+                    nodeData.Color.ColorCustomNode(nodeData.Node, configurationService.BrightListItemHighlighting);
+            });
         }
 
         private unsafe void handleUpdateHighlightColor(bool effectsAssignments = false)
@@ -133,6 +191,8 @@ namespace BisBuddy.Services.Addon
 
         private unsafe void handlePreFinalize(AddonEvent type, AddonArgs args)
         {
+            debugService.AssertMainThreadDebug();
+
             // ensure all nodes are destroyed before finalizing
             unmarkNodes();
             destroyNodes();
@@ -140,6 +200,8 @@ namespace BisBuddy.Services.Addon
 
         protected unsafe NodeBase createCustomNode(AtkResNode* parentNode, AtkUnitBase* addon, HighlightColor color)
         {
+            debugService.AssertMainThreadDebug();
+
             logger.Verbose(
                 $"Creating custom node (parent node \"{parentNode->NodeId}\") " +
                 $"in \"{AddonName}\" with color {color.BaseColor}"
@@ -167,7 +229,9 @@ namespace BisBuddy.Services.Addon
 
         private unsafe bool setAddColor(AtkResNode* node, HighlightColor? color)
         {
-            if (gameGui.GetAddonByName(AddonName).IsNull)
+            debugService.AssertMainThreadDebug();
+
+            if (!AddonPtr.IsReady)
                 throw new Exception($"Addon \"{AddonName}\" is not loaded, cannot set node highlight color");
 
             var nodeHighlighted = highlightedNodes.TryGetValue((nint)node, out var currentColor);
@@ -201,13 +265,15 @@ namespace BisBuddy.Services.Addon
 
         private unsafe bool setCustomNodeVisibility(AtkResNode* parentNode, HighlightColor? color)
         {
+            debugService.AssertMainThreadDebug();
+
             if (!customNodes.TryGetValue((nint)parentNode, out var customNodeData))
             {
                 // no need to create a node if it's not going to be enabled
                 if (color is null)
                     return false;
 
-                var addon = (AtkUnitBase*)gameGui.GetAddonByName(AddonName).Address;
+                var addon = (AtkUnitBase*)AddonPtr.Address;
                 customNodeData = (createCustomNode(parentNode, addon, color), color);
             }
 
@@ -235,6 +301,8 @@ namespace BisBuddy.Services.Addon
 
         protected unsafe void setNodeNeededMark(AtkResNode* parentNode, HighlightColor? color, bool highlightParent, bool useCustomNode)
         {
+            debugService.AssertMainThreadDebug();
+
             // node parent is null
             if (parentNode == null)
                 return;
@@ -258,12 +326,14 @@ namespace BisBuddy.Services.Addon
 
         protected unsafe void unmarkNodes(AtkResNode* parentNodeFilter = null)
         {
+            debugService.AssertMainThreadDebug();
+
             try
             {
                 var highlightedNodesCount = highlightedNodes.Count;
 
                 // only unhighlight nodes if the addon is loaded
-                if (!gameGui.GetAddonByName(AddonName).IsNull)
+                if (!AddonPtr.IsNull)
                 {
                     for (var i = 0; i < highlightedNodesCount; i++)
                     {
@@ -303,7 +373,7 @@ namespace BisBuddy.Services.Addon
             }
         }
 
-        protected unsafe void destroyNodes()
+        private unsafe void destroyNodes()
         {
             var count = customNodes.Count;
             foreach (var customNodeEntry in customNodes)
@@ -320,6 +390,10 @@ namespace BisBuddy.Services.Addon
 
     public interface IAddonEventListener : IHostedService
     {
-
+        public bool IsEnabled { get; }
+        public string AddonName { get; }
+        public bool IsAddonVisible { get; }
+        public bool IsAddonNull { get; }
+        public IReadOnlyCollection<(uint NodeId, NodeHighlightType Type, HighlightColor Color)> NodeHighlights { get; }
     }
 }

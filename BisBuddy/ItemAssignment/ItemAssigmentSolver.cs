@@ -5,7 +5,6 @@ using BisBuddy.Gear.Prerequisites;
 using BisBuddy.Items;
 using BisBuddy.Services;
 using BisBuddy.Util;
-using Dalamud.Game.Inventory;
 using LinearAssignment;
 using System;
 using System.Collections.Generic;
@@ -20,6 +19,9 @@ namespace BisBuddy.ItemAssignment
         // for edges between for dummy group assignments and their items
         public static readonly int DummyEdgeWeightValue = NoEdgeWeightValue + 1;
 
+        public SolveResult? GearpiecesResult { get; private set; } = null;
+        public SolveResult? PrerequisitesResult { get; private set; } = null;
+
         private readonly ITypedLogger<ItemAssigmentSolver> logger;
         private readonly bool strictMateriaMatching;
         private readonly bool assignPrerequisiteMateria;
@@ -29,8 +31,8 @@ namespace BisBuddy.ItemAssignment
         private readonly IEnumerable<Gearset> assignableGearsets;
         private readonly List<GearpieceAssignmentGroup> gearpieceGroups = [];
         private readonly List<PrerequisiteAssignmentGroup> prerequisiteGroups = [];
-        private readonly List<GameInventoryItem> gearpieceCandidateItems;
-        private List<GameInventoryItem> prerequisiteCandidateItems;
+        private readonly List<InventoryItem> gearpieceCandidateItems;
+        private List<InventoryItem> prerequisiteCandidateItems;
         private readonly List<Assignment> assignments = [];
         private readonly List<Gearpiece> assignedGearpieces = [];
         private readonly int[,] gearpieceEdges;
@@ -40,7 +42,7 @@ namespace BisBuddy.ItemAssignment
             ITypedLogger<ItemAssigmentSolver> logger,
             IEnumerable<Gearset> allGearsets,
             IEnumerable<Gearset> assignableGearsets,
-            List<GameInventoryItem> inventoryItems,
+            List<InventoryItem> inventoryItems,
             IItemDataService itemData,
             IMateriaFactory materiaFactory,
             bool strictMateriaMatching,
@@ -78,7 +80,7 @@ namespace BisBuddy.ItemAssignment
             prerequisiteCandidateItems = inventoryItems;
         }
 
-        private static void removeManuallyCollectedItems(IEnumerable<Gearset> gearsets, List<GameInventoryItem> inventoryItems)
+        private static void removeManuallyCollectedItems(IEnumerable<Gearset> gearsets, List<InventoryItem> inventoryItems)
         {
             var manuallyCollectedItemIds = gearsets
                 .SelectMany(set =>
@@ -101,8 +103,22 @@ namespace BisBuddy.ItemAssignment
             }
         }
 
-        private void logSolution(int[] assignments, int[,] edges, List<GameInventoryItem> items, List<IAssignmentGroup> groups)
+        private void logResult(bool logPrereqs = false)
         {
+            SolveResult? resultToLog;
+            if (logPrereqs)
+                resultToLog = PrerequisitesResult;
+            else
+                resultToLog = GearpiecesResult;
+
+            if (resultToLog is not SolveResult result)
+            {
+                logger.Warning($"Tried to log solve, got null result");
+                return;
+            }
+
+            var (assignments, edges, items, groups) = result;
+
             var rows = edges.GetLength(0);
             var columns = edges.GetLength(1);
 
@@ -165,14 +181,16 @@ namespace BisBuddy.ItemAssignment
             }
             catch (InvalidOperationException)
             {
-                logSolution(
-                    [],
-                    gearpieceEdges,
-                    gearpieceCandidateItems,
-                    gearpieceGroups
+                GearpiecesResult = new()
+                {
+                    Assignments = [],
+                    Edges = gearpieceEdges,
+                    CandidateItems = gearpieceCandidateItems,
+                    AssignmentGroups = gearpieceGroups
                         .Select(g => (IAssignmentGroup)g)
                         .ToList()
-                        );
+                };
+                logResult();
                 throw;
             }
             // this removes candidate items from prereq list as well
@@ -194,28 +212,35 @@ namespace BisBuddy.ItemAssignment
 
             // stage 4: assign remaining valid items as prerequisites
             var prerequisiteAssignments = solveAndAssignPrerequisites(assignPrerequisiteMateria);
+
+            GearpiecesResult = new()
+            {
+                Assignments = gearpieceAssignments,
+                Edges = gearpieceEdges,
+                CandidateItems = gearpieceCandidateItems,
+                AssignmentGroups = gearpieceGroups
+                    .Select(g => (IAssignmentGroup)g)
+                    .ToList()
+            };
+
+            PrerequisitesResult = new()
+            {
+                Assignments = prerequisiteAssignments,
+                Edges = prerequisiteEdges ?? new int[0, 0],
+                CandidateItems = prerequisiteCandidateItems,
+                AssignmentGroups = prerequisiteGroups
+                    .Select(g => (IAssignmentGroup)g)
+                    .ToList()
+            };
+
 #if DEBUG
             logger.Debug("Item Assignment Solver Solution");
 
             logger.Debug("Gearpiece Assignments");
-            logSolution(
-                gearpieceAssignments,
-                gearpieceEdges,
-                gearpieceCandidateItems,
-                gearpieceGroups
-                    .Select(g => (IAssignmentGroup)g)
-                    .ToList()
-                    );
+            logResult();
 
             logger.Debug("Prerequisite Assignments");
-            logSolution(
-                prerequisiteAssignments,
-                prerequisiteEdges ?? new int[0, 0],
-                prerequisiteCandidateItems,
-                prerequisiteGroups
-                    .Select(g => (IAssignmentGroup)g)
-                    .ToList()
-                );
+            logResult(logPrereqs: true);
 #endif
 
             return updatedGearpieces;
@@ -250,7 +275,7 @@ namespace BisBuddy.ItemAssignment
             prerequisiteEdges = new int[prerequisiteGroups.Count, prerequisiteCandidateItems.Count];
             var assignments = new int[prerequisiteCandidateItems.Count];
 
-            var candidateItemList = new List<GameInventoryItem>(prerequisiteCandidateItems);
+            var candidateItemList = new List<InventoryItem>(prerequisiteCandidateItems);
 
             var itemCount = candidateItemList.Count;
             // n(n+1)/2 + buffer
@@ -319,9 +344,8 @@ namespace BisBuddy.ItemAssignment
                     var candidate = gearpieceCandidateItems[candIdx];
 
                     // item ids match, set edge to weight score calculated by group for this candidate
-                    var candidateMateriaIds = itemData.GetItemMateriaIds(candidate);
                     var candidateMateria = new MateriaGroup(
-                        candidateMateriaIds.Select(id => materiaFactory.Create(id))
+                        candidate.MateriaIds.Select(id => materiaFactory.Create(id))
                         );
                     var edgeWeight = group.CandidateEdgeWeight(candidate.ItemId, candidateMateria);
                     gearpieceEdges[groupIdx, candIdx] = edgeWeight;
@@ -427,12 +451,11 @@ namespace BisBuddy.ItemAssignment
 
                 // add assignment to assignments list
                 var groupToAssign = gearpieceGroups[assignment];
-                var candidateMateriaIds = itemData.GetItemMateriaIds(candidate);
                 assignments.Add(
                     new Assignment
                     {
                         ItemId = candidate.ItemId,
-                        ItemMateria = candidateMateriaIds.Select(id => materiaFactory.Create(id)).ToList(),
+                        ItemMateria = candidate.MateriaIds.Select(id => materiaFactory.Create(id)).ToList(),
                         Gearpieces = groupToAssign.Gearpieces
                     });
 
@@ -561,5 +584,8 @@ namespace BisBuddy.ItemAssignment
     public interface IItemAssignmentSolver
     {
         public List<Gearpiece> SolveAndAssign();
+
+        public SolveResult? GearpiecesResult { get; }
+        public SolveResult? PrerequisitesResult { get; }
     }
 }

@@ -24,7 +24,8 @@ public class PrerequisiteNodeComponentRenderer(
     IRendererFactory rendererFactory,
     ITextureProvider textureProvider,
     IAttributeService attributeService,
-    IItemDataService itemDataService
+    IItemDataService itemDataService,
+    IDebugService debugService
     ) : ComponentRendererBase<IPrerequisiteNode>
 {
     private readonly ITypedLogger<PrerequisiteNodeComponentRenderer> logger = logger;
@@ -33,6 +34,7 @@ public class PrerequisiteNodeComponentRenderer(
     private readonly ITextureProvider textureProvider = textureProvider;
     private readonly IAttributeService attributeService = attributeService;
     private readonly IItemDataService itemDataService = itemDataService;
+    private readonly IDebugService debugService = debugService;
     private IPrerequisiteNode? prerequisiteNode;
 
     private HashSet<PrerequisiteOrNode> prereqsDrawn = [];
@@ -309,8 +311,6 @@ public class PrerequisiteNodeComponentRenderer(
             var iconYOffset = collectionStatusButtonSize.Y * (1 - ratio) / 2;
             ImGui.SetCursorPos(buttonPos + new Vector2(iconXOffset, iconYOffset));
 
-            //if (textureProvider.GetFromGameIcon((int)collectionStatusTheme.Icon).TryGetWrap(out var texture, out var exception))
-            //ImGui.Image(texture.Handle, collectionStatusButtonIconSize, collectionStatusTheme.TextColor);
             // draw lock icon
             if (node.CollectLock)
             {
@@ -331,6 +331,7 @@ public class PrerequisiteNodeComponentRenderer(
             {
                 ImGui.SetCursorPos(buttonPos + new Vector2(iconXOffset, iconYOffset));
 
+                debugService.AssertMainThreadDebug();
                 if (textureProvider.GetFromGameIcon((int)collectionStatusTheme.Icon).TryGetWrap(out var texture, out var exception))
                     ImGui.Image(texture.Handle, collectionStatusButtonIconSize, collectionStatusTheme.TextColor);
             }

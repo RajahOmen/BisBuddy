@@ -25,8 +25,6 @@ namespace BisBuddy.Services.Addon
         // what items are needed from the marketboard listings
         private readonly Dictionary<int, HighlightColor> neededItemColors = [];
 
-        protected override float CustomNodeMaxY => 500f;
-
         protected override void registerAddonListeners()
         {
             addonLifecycle.RegisterListener(AddonEvent.PreDraw, AddonName, handlePreDraw);
@@ -35,11 +33,13 @@ namespace BisBuddy.Services.Addon
         {
             addonLifecycle.UnregisterListener(handlePreDraw);
         }
-        protected override void updateListeningStatus(bool effectsAssignments)
-            => setListeningStatus(configurationService.HighlightMarketboard);
+        protected override bool isEnabledFromConfig
+            => configurationService.HighlightMarketboard;
 
         private unsafe void handlePreDraw(AddonEvent type, AddonArgs args)
         {
+            debugService.AssertMainThreadDebug();
+
             try
             {
                 updateNeededItems();
@@ -48,7 +48,7 @@ namespace BisBuddy.Services.Addon
                     unmarkNodes();
                     return;
                 };
-                var addon = (AddonItemSearch*)gameGui.GetAddonByName(AddonName).Address;
+                var addon = (AddonItemSearch*)AddonPtr.Address;
                 if (addon == null || !addon->IsVisible) return; // addon not visible/rendered
                 if (addon->ResultsList == null || addon->ResultsList->ListLength == 0) return; // no items in search
 

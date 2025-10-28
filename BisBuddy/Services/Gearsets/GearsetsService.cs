@@ -25,19 +25,18 @@ namespace BisBuddy.Services.Gearsets
         ITypedLogger<GearsetsService> logger,
         IFramework framework,
         IClientState clientState,
-        IGameInventory gameInventory,
         IConfigurationService configurationService,
         IFileService fileService,
         JsonSerializerOptions jsonSerializerOptions,
         IItemAssignmentSolverFactory itemAssignmentSolverFactory,
         IQueueService queueService,
         IInventoryUpdateDisplayService inventoryUpdateDisplayService,
-        IImportGearsetService importGearsetService
+        IImportGearsetService importGearsetService,
+        IInventoryItemsService inventoryItemsService
         ) : IGearsetsService
     {
         private readonly ITypedLogger<GearsetsService> logger = logger;
         private readonly IFramework framework = framework;
-        private readonly IGameInventory gameInventory = gameInventory;
         private readonly IClientState clientState = clientState;
         private readonly IConfigurationService configurationService = configurationService;
         private readonly IFileService fileService = fileService;
@@ -46,17 +45,18 @@ namespace BisBuddy.Services.Gearsets
         private readonly IQueueService queueService = queueService;
         private readonly IInventoryUpdateDisplayService inventoryUpdateDisplayService = inventoryUpdateDisplayService;
         private readonly IImportGearsetService importGearsetService = importGearsetService;
+        private readonly IInventoryItemsService inventoryItemsService = inventoryItemsService;
 
         private bool gearsetsDirty = false;
         private bool assignmentsDirty = false;
         private bool gearsetsChangeLocked = false;
 
-        private ulong currentLocalContentId => clientState.LocalContentId;
-
         private List<Gearset> currentGearsets = [];
-        private Dictionary<uint, List<ItemRequirementOwned>> currentItemRequirements = [];
+        private Dictionary<uint, IReadOnlyList<ItemRequirementOwned>> currentItemRequirements = [];
         private GearsetSortType currentGearsetsSortType = GearsetSortType.ImportDate;
         private bool currentGearsetsSortDescending = false;
+
+        public IReadOnlyDictionary<uint, IReadOnlyList<ItemRequirementOwned>> AllItemRequirements => currentItemRequirements;
 
         public IReadOnlyList<Gearset> CurrentGearsets
         {
@@ -70,8 +70,12 @@ namespace BisBuddy.Services.Gearsets
 
         public bool GearsetsLoaded { get; private set; } = false;
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        private ulong currentLocalContentId = 0;
+
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
+            currentLocalContentId = await framework.Run(() => clientState.LocalContentId, cancellationToken);
+
             // updating gearset data per framework update
             framework.Update += onUpdate;
 
@@ -91,9 +95,7 @@ namespace BisBuddy.Services.Gearsets
 
             // if configured to, run scan to ensure up-to-date
             if (GearsetsLoaded && configurationService.AutoScanInventory)
-                ScheduleUpdateFromInventory();
-
-            return Task.CompletedTask;
+                scheduleGearsetsChange(updateAssignments: true);
         }
 
         public async Task StopAsync(CancellationToken cancellationToken)
@@ -112,7 +114,7 @@ namespace BisBuddy.Services.Gearsets
             foreach (var gearset in currentGearsets)
                 gearset.OnGearsetChange -= handleGearsetChange;
 
-            await saveCurrentGearsetsAsync();
+            await saveGearsetsAsync(currentLocalContentId, currentGearsets);
         }
 
         /// <summary>
@@ -123,18 +125,19 @@ namespace BisBuddy.Services.Gearsets
         /// <returns>The gearsets for the logged in character id</returns>
         private void loadGearsets()
         {
+            var localContentId = currentLocalContentId;
             try
             {
-                logger.Debug($"Loading gearsets for \"{currentLocalContentId}\"");
+                logger.Debug($"Loading gearsets for \"{localContentId}\"");
                 // unregister change listening from old gearsets
                 foreach (var gearset in currentGearsets)
                     gearset.OnGearsetChange -= handleGearsetChange;
 
-                if (currentLocalContentId == 0)
+                if (localContentId == 0)
                     currentGearsets = [];
                 else
                 {
-                    using var gearsetsReadStream = fileService.OpenReadGearsetsStream(currentLocalContentId);
+                    using var gearsetsReadStream = fileService.OpenReadGearsetsStream(localContentId);
                     currentGearsets = JsonSerializer.Deserialize<List<Gearset>>(
                         gearsetsReadStream,
                         jsonSerializerOptions
@@ -144,9 +147,9 @@ namespace BisBuddy.Services.Gearsets
             }
             catch (FileNotFoundException)
             {
-                logger.Warning($"No gearsets file found for \"{currentLocalContentId}\", creating new");
+                logger.Warning($"No gearsets file found for \"{localContentId}\", creating new");
                 currentGearsets = [];
-                _ = saveCurrentGearsetsAsync();
+                _ = saveGearsetsAsync(localContentId, []);
                 GearsetsLoaded = true;
             }
             finally
@@ -160,38 +163,39 @@ namespace BisBuddy.Services.Gearsets
 
         private void scheduleSaveCurrentGearsets()
         {
-            logger.Verbose($"Enqueuing save of current gearsets for \"{currentLocalContentId}\"");
-            queueService.Enqueue($"GEARSETS_SAVE_{currentLocalContentId}", saveCurrentGearsets);
+            var localContentId = currentLocalContentId;
+            logger.Verbose($"Enqueuing save of current gearsets for \"{localContentId}\"");
+            queueService.Enqueue($"GEARSETS_SAVE_{localContentId}", () => saveGearsets(localContentId, [.. currentGearsets]));
         }
 
-        private void saveCurrentGearsets()
+        private void saveGearsets(ulong localContentId, List<Gearset> gearsets)
         {
             // don't save anything if no gearsets are actually loaded
-            if (!GearsetsLoaded || currentLocalContentId == 0)
+            if (!GearsetsLoaded || localContentId == 0)
                 return;
 
-            var gearsetsListStr = serializeGearsets(currentGearsets);
+            var gearsetsListStr = serializeGearsets(gearsets);
 
-            logger.Verbose($"Saving {currentLocalContentId}'s current gearsets");
+            logger.Verbose($"Saving {localContentId}'s current gearsets");
 
             fileService.WriteGearsetsString(
-                currentLocalContentId,
+                localContentId,
                 gearsetsListStr
                 );
         }
 
-        private async Task saveCurrentGearsetsAsync()
+        private async Task saveGearsetsAsync(ulong localContentId, List<Gearset> gearsets)
         {
             // don't save anything if no gearsets are actually loaded
-            if (!GearsetsLoaded || currentLocalContentId == 0)
+            if (!GearsetsLoaded || localContentId == 0)
                 return;
 
-            var gearsetsListStr = serializeGearsets(currentGearsets);
+            var gearsetsListStr = serializeGearsets(gearsets);
 
-            logger.Verbose($"Saving {currentLocalContentId}'s current gearsets");
+            logger.Verbose($"Saving {localContentId}'s current gearsets");
 
             await fileService.WriteGearsetsStringAsync(
-                currentLocalContentId,
+                localContentId,
                 gearsetsListStr
                 );
         }
@@ -211,6 +215,8 @@ namespace BisBuddy.Services.Gearsets
     public interface IGearsetsService : IHostedService
     {
         public IReadOnlyList<Gearset> CurrentGearsets { get; }
+
+        public IReadOnlyDictionary<uint, IReadOnlyList<ItemRequirementOwned>> AllItemRequirements { get; }
         /// <summary>
         /// Indicates if gearsets for the current character have been loaded
         /// </summary>
@@ -261,7 +267,7 @@ namespace BisBuddy.Services.Gearsets
         /// <param name="gearsetsToUpdate">The gearsets whose state may be changed by this update</param>
         /// <param name="saveChanges">If the changes should be saved upon completion</param>
         /// <param name="manualUpdate">If this update was triggered by direct user input</param>
-        public void ScheduleUpdateFromInventory(
+        public void QueueUpdateFromInventory(
             IEnumerable<Gearset> gearsetsToUpdate,
             bool saveChanges = true,
             bool manualUpdate = false
@@ -272,7 +278,7 @@ namespace BisBuddy.Services.Gearsets
         /// </summary>
         /// <param name="saveChanges">If the changes should be saved upon completion</param>
         /// <param name="manualUpdate">If this update was triggered by direct user input</param>
-        public void ScheduleUpdateFromInventory(
+        public void QueueUpdateFromInventory(
             bool saveChanges = true,
             bool manualUpdate = false
             );

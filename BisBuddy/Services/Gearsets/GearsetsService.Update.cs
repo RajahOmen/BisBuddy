@@ -2,7 +2,6 @@ using BisBuddy.Extensions;
 using BisBuddy.Gear;
 using BisBuddy.Import;
 using BisBuddy.Util;
-using Dalamud.Game.Inventory;
 using Dalamud.Plugin.Services;
 using System;
 using System.Collections.Generic;
@@ -66,7 +65,8 @@ namespace BisBuddy.Services.Gearsets
             if (gearsetsChangeLocked)
                 return;
 
-            scheduleGearsetsChange(effectsAssignments);
+            var updateAssignments = effectsAssignments && configurationService.PluginUpdateInventoryScan;
+            scheduleGearsetsChange(updateAssignments: updateAssignments);
         }
 
         private void scheduleGearsetsChange(bool updateAssignments)
@@ -87,8 +87,8 @@ namespace BisBuddy.Services.Gearsets
 
             try
             {
-                if (configurationService.PluginUpdateInventoryScan && assignmentsDirty)
-                    ScheduleUpdateFromInventory();
+                if (assignmentsDirty)
+                    QueueUpdateFromInventory();
                 else
                     triggerGearsetsChange(saveToFile: true);
             }
@@ -101,17 +101,19 @@ namespace BisBuddy.Services.Gearsets
 
         private void handleLogin()
         {
-            logger.Debug($"handling login");
+            logger.Debug($"handling login {clientState.LocalContentId}");
+            currentLocalContentId = clientState.LocalContentId;
             loadGearsets();
             if (configurationService.AutoScanInventory)
-                ScheduleUpdateFromInventory();
+                QueueUpdateFromInventory();
         }
 
         private void handleLogout(int type, int code)
         {
             logger.Debug($"handling logout");
-            currentGearsets = [];
             GearsetsLoaded = false;
+            currentLocalContentId = 0;
+            currentGearsets = [];
         }
 
         private void handleConfigChange(bool effectsAssignments)
@@ -125,7 +127,7 @@ namespace BisBuddy.Services.Gearsets
                 return;
 
             logger.Debug($"handling config change");
-            ScheduleUpdateFromInventory();
+            QueueUpdateFromInventory();
         }
 
         public async Task<ImportGearsetsResult> AddGearsetsFromSource(ImportGearsetSourceType sourceType, string sourceString)
@@ -209,12 +211,12 @@ namespace BisBuddy.Services.Gearsets
             scheduleGearsetsChange(updateAssignments: true);
         }
 
-        public void ScheduleUpdateFromInventory(
+        public void QueueUpdateFromInventory(
             bool saveChanges = true,
             bool manualUpdate = false
-            ) => ScheduleUpdateFromInventory(CurrentGearsets, saveChanges, manualUpdate);
+            ) => QueueUpdateFromInventory(CurrentGearsets, saveChanges, manualUpdate);
 
-        public void ScheduleUpdateFromInventory(
+        public void QueueUpdateFromInventory(
             IEnumerable<Gearset> gearsetsToUpdate,
             bool saveChanges = true,
             bool manualUpdate = false
@@ -231,8 +233,10 @@ namespace BisBuddy.Services.Gearsets
             inventoryUpdateDisplayService.UpdateIsQueued = true;
             inventoryUpdateDisplayService.IsManualUpdate = manualUpdate;
 
+            var localContentId = currentLocalContentId;
+            var inventoryItemsList = inventoryItemsService.GetInventoryItems(Constants.InventorySources);
             // don't block main thread, queue for execution instead
-            var queuedUpdate = queueService.Enqueue($"ASSIGNMENTS_UPDATE_{currentLocalContentId}", () =>
+            var queuedUpdate = queueService.Enqueue($"ASSIGNMENTS_UPDATE_{localContentId}", () =>
             {
                 // returns number of gearpiece status changes after update
                 try
@@ -242,12 +246,10 @@ namespace BisBuddy.Services.Gearsets
                     if (!GearsetsLoaded)
                         return;
 
-                    var itemsList = getGameInventoryItems();
-
                     var solver = itemAssignmentSolverFactory.Create(
                         allGearsets: currentGearsets,
                         assignableGearsets: gearsetsToUpdate,
-                        inventoryItems: itemsList
+                        inventoryItems: inventoryItemsList
                         );
 
                     var updatedGearpieces = solver.SolveAndAssign();
@@ -275,28 +277,6 @@ namespace BisBuddy.Services.Gearsets
                 inventoryUpdateDisplayService.UpdateIsQueued = false;
                 inventoryUpdateDisplayService.GearpieceUpdateCount = 0;
             }
-        }
-
-        private List<GameInventoryItem> getGameInventoryItems()
-        {
-            var itemsList = new List<GameInventoryItem>();
-            foreach (var source in Constants.InventorySources)
-            {
-                var items = gameInventory.GetInventoryItems(source);
-
-                foreach (var item in items)
-                {
-                    if (item.ItemId == 0)
-                        continue;
-
-                    for (var i = 0; i < item.Quantity; i++)
-                    {
-                        // add each item in stack individually
-                        itemsList.Add(item);
-                    }
-                }
-            }
-            return itemsList;
         }
     }
 }

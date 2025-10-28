@@ -20,7 +20,8 @@ namespace BisBuddy.Ui.Renderers.Components
         IRendererFactory rendererFactory,
         IConfigurationService configurationService,
         IAttributeService attributeService,
-        JsonSerializerOptions jsonSerializerOptions
+        JsonSerializerOptions jsonSerializerOptions,
+        IDebugService debugService
         ) : ComponentRendererBase<Gearset>
     {
         private readonly ITypedLogger<GearsetComponentRenderer> logger = logger;
@@ -29,6 +30,7 @@ namespace BisBuddy.Ui.Renderers.Components
         private readonly IConfigurationService configurationService = configurationService;
         private readonly IAttributeService attributeService = attributeService;
         private readonly JsonSerializerOptions jsonSerializerOptions = jsonSerializerOptions;
+        private readonly IDebugService debugService = debugService;
         private Gearset? gearset;
 
         private UiTheme uiTheme =>
@@ -144,6 +146,7 @@ namespace BisBuddy.Ui.Renderers.Components
             cursorPos.Y += (available.Y - (iconSize.Y - spacing.Y)) / 2;
 
             var classJobInfo = gearset.ClassJobInfo;
+            debugService.AssertMainThreadDebug();
             if (textureProvider.GetFromGameIcon(classJobInfo.IconId).TryGetWrap(out var texture, out var exception))
             {
                 ImGui.SetCursorScreenPos(cursorPos);

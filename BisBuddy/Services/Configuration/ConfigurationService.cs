@@ -178,6 +178,17 @@ namespace BisBuddy.Services.Configuration
             set => updateConfigProperty(cfg => cfg.EnableDebugging, value, affectsAssignments: false);
         }
 
+        public FrameworkThreadBehaviorType DebugFrameworkThreadBehavior
+        {
+            get
+            {
+                if (!configuration.EnableDebugging)
+                    return FrameworkThreadBehaviorType.Warning;
+                return configuration.DebugFrameworkThreadBehavior;
+            }
+            set => updateConfigProperty(cfg => cfg.DebugFrameworkThreadBehavior, value, affectsAssignments: false);
+        }
+
         public HighlightColor DefaultHighlightColor
         {
             get => configuration.DefaultHighlightColor;

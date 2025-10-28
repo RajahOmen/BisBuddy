@@ -7,7 +7,6 @@ namespace BisBuddy.Services.Addon.ShopExchange
     {
         // the type of shop this is (what do items in this shop cost?)
         public override string AddonName => "ShopExchangeCurrency";
-        protected override float CustomNodeMaxY => 384;
 
         // ADDON ATKVALUE INDEXES
         protected override int AtkValueItemCountIndex => 4;

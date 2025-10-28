@@ -738,4 +738,37 @@ or to have a unique color to highlight items in</value>
   <data name="ContextMenuUnlockAll" xml:space="preserve">
     <value>Unlock all</value>
   </data>
+  <data name="DebugItemRequirementsTab" xml:space="preserve">
+    <value>Item Requirements</value>
+  </data>
+  <data name="DebugSolverResultsTab" xml:space="preserve">
+    <value>Item Solver Results</value>
+  </data>
+  <data name="DebugAddonsTab" xml:space="preserve">
+    <value>Addon Highlights</value>
+  </data>
+  <data name="DebugPrerequisitesTab" xml:space="preserve">
+    <value>Item Prerequisites</value>
+  </data>
+  <data name="DebugFrameworkThreadBehaviorIgnoreName" xml:space="preserve">
+    <value>Do Nothing</value>
+  </data>
+  <data name="DebugFrameworkThreadBehaviorWarningName" xml:space="preserve">
+    <value>Log Warning</value>
+  </data>
+  <data name="DebugFrameworkThreadBehaviorAssertName" xml:space="preserve">
+    <value>Throw Error</value>
+  </data>
+  <data name="DebugFrameworkThreadBehaviorIgnoreTooltip" xml:space="preserve">
+    <value>Ignore the issue and continue. Please only use if warnings are flooding the console and the issue has been reported</value>
+  </data>
+  <data name="DebugFrameworkThreadBehaviorWarningTooltip" xml:space="preserve">
+    <value>Log a warning to the console. Default behavior</value>
+  </data>
+  <data name="DebugFrameworkThreadBehaviorAssertTooltip" xml:space="preserve">
+    <value>Throw an exception. WARNING: Can break functionality if errors are encountered</value>
+  </data>
+  <data name="CommandDescriptionOpenDebug" xml:space="preserve">
+    <value>Open plugin debug if debugging is enabled</value>
+  </data>
 </root>

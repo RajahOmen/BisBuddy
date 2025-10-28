@@ -61,8 +61,6 @@ namespace BisBuddy.Services.Addon
         private Dictionary<string, HighlightColor> unmeldedItemNames = deps.GearsetsService.GetUnmeldedMateriaColors();
         private Dictionary<string, HighlightColor> neededMateriaNames = [];
 
-        protected override float CustomNodeMaxY => 324f;
-
         protected override void registerAddonListeners()
         {
             gearsetsService.OnGearsetsChange += handleManualUpdate;
@@ -78,17 +76,22 @@ namespace BisBuddy.Services.Addon
             addonLifecycle.UnregisterListener(handlePreFinalize);
         }
 
-        protected override void updateListeningStatus(bool effectsAssignments)
-            => setListeningStatus(configurationService.HighlightMateriaMeld);
+        protected override bool isEnabledFromConfig
+            => configurationService.HighlightMateriaMeld;
 
         private void handleManualUpdate() =>
             unmeldedItemNames = gearsetsService.GetUnmeldedMateriaColors();
 
-        private void handlePreFinalize(AddonEvent type, AddonArgs? args) =>
+        private void handlePreFinalize(AddonEvent type, AddonArgs? args)
+        {
+            debugService.AssertMainThreadDebug();
             meldPlanService.SetCurrentMeldPlanItemId(null);
+        }
 
         private unsafe void handlePreDraw(AddonEvent type, AddonArgs args)
         {
+            debugService.AssertMainThreadDebug();
+
             var updateArgs = (AddonDrawArgs)args;
             var addon = (AtkUnitBase*)updateArgs.Addon.Address;
             if (addon == null || !addon->IsVisible || !addon->WindowNode->IsVisible())

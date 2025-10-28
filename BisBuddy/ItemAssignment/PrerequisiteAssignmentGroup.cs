@@ -4,7 +4,6 @@ using BisBuddy.Gear.Melds;
 using BisBuddy.Gear.Prerequisites;
 using BisBuddy.Items;
 using BisBuddy.Services;
-using Dalamud.Game.Inventory;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,7 +37,7 @@ namespace BisBuddy.ItemAssignment
         private List<Materia> materiaList = [];
         public readonly HashSet<Gearset> Gearsets = [];
 
-        public Dictionary<Gearpiece, HashSet<(IPrerequisiteNode Node, GameInventoryItem Item)>> DirectlyAssignedNodes = [];
+        public Dictionary<Gearpiece, HashSet<(IPrerequisiteNode Node, InventoryItem Item)>> DirectlyAssignedNodes = [];
 
         public List<Materia> MateriaList
         {
@@ -79,8 +78,8 @@ namespace BisBuddy.ItemAssignment
             return needed.Count > 0;
         }
 
-        public List<GameInventoryItem> AssignItem(
-            GameInventoryItem item,
+        public List<InventoryItem> AssignItem(
+            InventoryItem item,
             IItemDataService itemData,
             IMateriaFactory materiaFactory,
             bool assignPrerequisiteMateria
@@ -89,7 +88,7 @@ namespace BisBuddy.ItemAssignment
             if (Gearpieces.Count == 0)
                 return [];
 
-            List<GameInventoryItem> shadowedAssignments = [];
+            List<InventoryItem> shadowedAssignments = [];
 
             foreach (var gearpiece in Gearpieces)
             {
@@ -103,10 +102,9 @@ namespace BisBuddy.ItemAssignment
 
                 if (assignPrerequisiteMateria && itemData.ItemIsMeldable(item.ItemId))
                 {
-                    var itemMateriaIds = itemData.GetItemMateriaIds(item);
-                    if (itemMateriaIds.Count > 0)
+                    if (item.MateriaIds.Count > 0)
                     {
-                        var newItemMateria = itemMateriaIds.Select(id => materiaFactory.Create(id));
+                        var newItemMateria = item.MateriaIds.Select(id => materiaFactory.Create(id));
                         gearpiece.ItemMateria.UnmeldAllMateria();
                         gearpiece.ItemMateria.MeldMultipleMateria(newItemMateria);
                     }

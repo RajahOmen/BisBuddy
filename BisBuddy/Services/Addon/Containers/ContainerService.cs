@@ -33,8 +33,6 @@ namespace BisBuddy.Services.Addon.Containers
 
         protected abstract List<nint> getDragDropComponents(nint gridAddon);
 
-        protected override float CustomNodeMaxY => float.MaxValue;
-
         protected override unsafe void registerAddonListeners()
         {
             addonLifecycle.RegisterListener(AddonEvent.PreDraw, AddonName, handlePreDraw);
@@ -51,11 +49,12 @@ namespace BisBuddy.Services.Addon.Containers
             addonLifecycle.UnregisterListener(handlePreDraw);
         }
 
-        protected override void updateListeningStatus(bool effectsAssignments)
-            => setListeningStatus(configurationService.HighlightInventories);
+        protected override bool isEnabledFromConfig =>
+            configurationService.HighlightInventories;
 
         private unsafe void handlePreDraw(AddonEvent type, AddonArgs args)
         {
+            debugService.AssertMainThreadDebug();
             try
             {
                 updateAddonData();
@@ -88,29 +87,7 @@ namespace BisBuddy.Services.Addon.Containers
             }
         }
 
-        protected unsafe List<GameInventoryItem> GetItemsOrdered(ItemOrderModuleSorter* sorter, int tabIdx, int numPages, int outputPageSize)
-        {
-            if (sorter == null) return [];
-
-            var orderedItemPtrs = Enumerable.Repeat(nint.Zero, sorter->Items.Count).ToList();
-
-            for (var i = 0; i < sorter->Items.Count; i++)
-            {
-                var itemInfo = sorter->Items[i].Value;
-                var itemIdx = GetSlotIndex(sorter, itemInfo);
-                var invItem = GetInventoryItem(sorter, itemInfo);
-                orderedItemPtrs[(int)itemIdx] = (nint)invItem;
-            }
-
-            var startIdx = Math.Max(tabIdx * numPages * outputPageSize, 0);
-            var endIdx = Math.Min(startIdx + numPages * outputPageSize, orderedItemPtrs.Count);
-
-            var visibleOrderedItems = orderedItemPtrs.Select(p => *(GameInventoryItem*)p).ToList()[startIdx..endIdx];
-
-            return visibleOrderedItems;
-        }
-
-        protected unsafe void updateAddonData()
+        private unsafe void updateAddonData()
         {
             var tabIdx = getTabIndex();
             // not on a page with items
@@ -120,10 +97,10 @@ namespace BisBuddy.Services.Addon.Containers
             updateDragDropComponentNodes();
         }
 
-        protected unsafe void updateNeededItemIndexes()
+        private unsafe void updateNeededItemIndexes()
         {
             neededItemColors.Clear();
-            var items = GetItemsOrdered(sorter, getTabIndex(), pagesPerView, itemsPerPage);
+            var items = getItemsOrdered(sorter, getTabIndex(), pagesPerView, itemsPerPage);
 
             // calculate items needed in inventory
             for (var i = 0; i < items.Count; i++)
@@ -142,7 +119,7 @@ namespace BisBuddy.Services.Addon.Containers
             }
         }
 
-        protected unsafe void updateDragDropComponentNodes()
+        private unsafe void updateDragDropComponentNodes()
         {
             dragDropComponentNodes.Clear();
 
@@ -174,18 +151,40 @@ namespace BisBuddy.Services.Addon.Containers
             }
         }
 
+        private static unsafe List<GameInventoryItem> getItemsOrdered(ItemOrderModuleSorter* sorter, int tabIdx, int numPages, int outputPageSize)
+        {
+            if (sorter == null) return [];
+
+            var orderedItemPtrs = Enumerable.Repeat(nint.Zero, sorter->Items.Count).ToList();
+
+            for (var i = 0; i < sorter->Items.Count; i++)
+            {
+                var itemInfo = sorter->Items[i].Value;
+                var itemIdx = getSlotIndex(sorter, itemInfo);
+                var invItem = getInventoryItem(sorter, itemInfo);
+                orderedItemPtrs[(int)itemIdx] = (nint)invItem;
+            }
+
+            var startIdx = Math.Max(tabIdx * numPages * outputPageSize, 0);
+            var endIdx = Math.Min(startIdx + numPages * outputPageSize, orderedItemPtrs.Count);
+
+            var visibleOrderedItems = orderedItemPtrs.Select(p => *(GameInventoryItem*)p).ToList()[startIdx..endIdx];
+
+            return visibleOrderedItems;
+        }
+
         // thanks to @haselnussbomber for these methods
-        protected unsafe long GetSlotIndex(ItemOrderModuleSorter* sorter, ItemOrderModuleSorterItemEntry* entry)
+        private static unsafe long getSlotIndex(ItemOrderModuleSorter* sorter, ItemOrderModuleSorterItemEntry* entry)
         {
             return entry->Slot + sorter->ItemsPerPage * entry->Page;
         }
 
-        protected unsafe InventoryItem* GetInventoryItem(ItemOrderModuleSorter* sorter, ItemOrderModuleSorterItemEntry* entry)
+        private static unsafe FFXIVClientStructs.FFXIV.Client.Game.InventoryItem* getInventoryItem(ItemOrderModuleSorter* sorter, ItemOrderModuleSorterItemEntry* entry)
         {
-            return GetInventoryItem(sorter, GetSlotIndex(sorter, entry));
+            return getInventoryItem(sorter, getSlotIndex(sorter, entry));
         }
 
-        protected unsafe InventoryItem* GetInventoryItem(ItemOrderModuleSorter* sorter, long slotIndex)
+        private static unsafe FFXIVClientStructs.FFXIV.Client.Game.InventoryItem* getInventoryItem(ItemOrderModuleSorter* sorter, long slotIndex)
         {
             if (sorter == null)
                 return null;

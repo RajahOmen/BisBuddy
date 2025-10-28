@@ -17,19 +17,19 @@ namespace BisBuddy.Services.Addon.Containers
             "InventoryGrid2E",
             "InventoryGrid3E",
             ];
-        protected override unsafe ItemOrderModuleSorter* sorter
-            => ItemOrderModule.Instance()->InventorySorter;
+        protected override unsafe ItemOrderModuleSorter* sorter =>
+            ItemOrderModule.Instance()->InventorySorter;
 
         protected override unsafe int getTabIndex()
         {
-            var addon = (AddonInventoryExpansion*)gameGui.GetAddonByName(AddonName).Address;
+            var addon = (AddonInventoryExpansion*)AddonPtr.Address;
             if (addon == null || !addon->IsVisible) return -1;
             return addon->TabIndex;
         }
 
         protected override unsafe List<nint> getAddons()
         {
-            var addon = (AddonInventoryExpansion*)gameGui.GetAddonByName(AddonName).Address;
+            var addon = (AddonInventoryExpansion*)AddonPtr.Address;
             if (addon == null)
                 return [];
 

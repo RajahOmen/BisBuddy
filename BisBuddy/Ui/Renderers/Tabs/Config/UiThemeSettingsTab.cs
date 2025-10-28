@@ -20,13 +20,15 @@ namespace BisBuddy.Ui.Renderers.Tabs.Config
         IConfigurationService configurationService,
         IAttributeService attributeService,
         ITextureProvider textureProvider,
-        UiComponents uiComponents
+        UiComponents uiComponents,
+        IDebugService debugService
         ) : TabRenderer<ConfigWindowTab>
     {
         private readonly IConfigurationService configurationService = configurationService;
         private readonly IAttributeService attributeService = attributeService;
         private readonly ITextureProvider textureProvider = textureProvider;
         private readonly UiComponents uiComponents = uiComponents;
+        private readonly IDebugService debugService = debugService;
 
         private UiTheme uiTheme => configurationService.UiTheme;
 
@@ -52,6 +54,7 @@ namespace BisBuddy.Ui.Renderers.Tabs.Config
                     var typeDescription = attributeService
                         .GetEnumAttribute<DisplayAttribute>(type)!.GetDescription()!;
 
+                    debugService.AssertMainThreadDebug();
                     if (textureProvider.GetFromGameIcon((int)gameIcon).TryGetWrap(out var texture, out var exception))
                     {
                         void drawImage()
