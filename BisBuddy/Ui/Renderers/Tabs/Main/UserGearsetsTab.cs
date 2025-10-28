@@ -325,7 +325,7 @@ namespace BisBuddy.Ui.Renderers.Tabs.Main
                     using (ImRaii.Disabled(inventoryUpdate.UpdateIsQueued))
                     using (ImRaii.PushFont(UiBuilder.IconFont))
                         if (UiComponents.SelectableCentered(FontAwesomeIcon.Sync.ToIconString(), size: buttonSize, labelPosOffsetScaled: new(1.5f, -1)))
-                            gearsetsService.ScheduleUpdateFromInventory(saveChanges: true, manualUpdate: true);
+                            gearsetsService.QueueUpdateFromInventory(saveChanges: true, manualUpdate: true);
                     if (ImGui.IsItemHovered())
                         ImGui.SetTooltip(Resource.SyncInventoryTooltip);
 

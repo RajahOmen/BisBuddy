@@ -2,9 +2,7 @@ using BisBuddy.Extensions;
 using BisBuddy.Gear;
 using BisBuddy.Import;
 using BisBuddy.Util;
-using Dalamud.Game.Inventory;
 using Dalamud.Plugin.Services;
-using Dalamud.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -67,7 +65,8 @@ namespace BisBuddy.Services.Gearsets
             if (gearsetsChangeLocked)
                 return;
 
-            scheduleGearsetsChange(effectsAssignments);
+            var updateAssignments = effectsAssignments && configurationService.PluginUpdateInventoryScan;
+            scheduleGearsetsChange(updateAssignments: updateAssignments);
         }
 
         private void scheduleGearsetsChange(bool updateAssignments)
@@ -88,8 +87,8 @@ namespace BisBuddy.Services.Gearsets
 
             try
             {
-                if (configurationService.PluginUpdateInventoryScan && assignmentsDirty)
-                    ScheduleUpdateFromInventory();
+                if (assignmentsDirty)
+                    QueueUpdateFromInventory();
                 else
                     triggerGearsetsChange(saveToFile: true);
             }
@@ -106,7 +105,7 @@ namespace BisBuddy.Services.Gearsets
             currentLocalContentId = clientState.LocalContentId;
             loadGearsets();
             if (configurationService.AutoScanInventory)
-                ScheduleUpdateFromInventory();
+                QueueUpdateFromInventory();
         }
 
         private void handleLogout(int type, int code)
@@ -128,7 +127,7 @@ namespace BisBuddy.Services.Gearsets
                 return;
 
             logger.Debug($"handling config change");
-            ScheduleUpdateFromInventory();
+            QueueUpdateFromInventory();
         }
 
         public async Task<ImportGearsetsResult> AddGearsetsFromSource(ImportGearsetSourceType sourceType, string sourceString)
@@ -212,12 +211,12 @@ namespace BisBuddy.Services.Gearsets
             scheduleGearsetsChange(updateAssignments: true);
         }
 
-        public void ScheduleUpdateFromInventory(
+        public void QueueUpdateFromInventory(
             bool saveChanges = true,
             bool manualUpdate = false
-            ) => ScheduleUpdateFromInventory(CurrentGearsets, saveChanges, manualUpdate);
+            ) => QueueUpdateFromInventory(CurrentGearsets, saveChanges, manualUpdate);
 
-        public void ScheduleUpdateFromInventory(
+        public void QueueUpdateFromInventory(
             IEnumerable<Gearset> gearsetsToUpdate,
             bool saveChanges = true,
             bool manualUpdate = false

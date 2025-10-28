@@ -40,7 +40,7 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
         public void Draw()
         {
             if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.Sync, "Sync Inventory"))
-                gearsetsService.ScheduleUpdateFromInventory(saveChanges: false);
+                gearsetsService.QueueUpdateFromInventory(saveChanges: false);
 
             ImGui.Spacing();
             ImGui.Separator();

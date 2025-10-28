@@ -35,8 +35,6 @@ namespace BisBuddy.Services.Addon
         private HighlightColor? nqColor = null;
         private HighlightColor? hqColor = null;
 
-        protected override float CustomNodeMaxY => 240f;
-
         protected override void registerAddonListeners()
         {
             addonLifecycle.RegisterListener(AddonEvent.PreDraw, AddonName, handlePreDraw);
@@ -45,8 +43,8 @@ namespace BisBuddy.Services.Addon
         {
             addonLifecycle.UnregisterListener(handlePreDraw);
         }
-        protected override void updateListeningStatus(bool effectsAssignments)
-            => setListeningStatus(configurationService.HighlightMarketboard);
+        protected override bool isEnabledFromConfig
+            => configurationService.HighlightMarketboard;
 
         private unsafe void handlePreDraw(AddonEvent type, AddonArgs args)
         {

@@ -5,7 +5,6 @@ using BisBuddy.Mappers;
 using BisBuddy.Services;
 using BisBuddy.Services.ItemData;
 using Dalamud.Game;
-using Dalamud.Game.Inventory;
 using Dalamud.Plugin.Services;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
@@ -22,7 +21,6 @@ namespace BisBuddy.Items
     {
         private readonly ITypedLogger<ItemDataService> logger;
         private readonly IDataManager dataManager;
-        private readonly IGameInventory gameInventory;
         private readonly IMapper<string, GearpieceType> gearpieceTypeMapper;
 
         private ILookup<uint, (uint ItemId, CofferSourceType SourceType)>? itemsCoffers = null;
@@ -73,12 +71,10 @@ namespace BisBuddy.Items
         public ItemDataService(
             ITypedLogger<ItemDataService> logger,
             IDataManager dataManager,
-            IGameInventory gameInventory,
             IMapper<string, GearpieceType> gearpieceTypeMapper
             )
         {
             this.logger = logger;
-            this.gameInventory = gameInventory;
             this.dataManager = dataManager;
             this.gearpieceTypeMapper = gearpieceTypeMapper;
 

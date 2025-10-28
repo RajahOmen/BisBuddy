@@ -4,7 +4,6 @@ using BisBuddy.Gear.Prerequisites;
 using BisBuddy.Resources;
 using BisBuddy.Util;
 using Dalamud.Game;
-using Dalamud.Game.Inventory;
 using Dalamud.Utility;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;

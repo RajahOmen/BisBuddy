@@ -25,8 +25,6 @@ namespace BisBuddy.Services.Addon
         // what items are needed from the marketboard listings
         private readonly Dictionary<int, HighlightColor> neededItemColors = [];
 
-        protected override float CustomNodeMaxY => 500f;
-
         protected override void registerAddonListeners()
         {
             addonLifecycle.RegisterListener(AddonEvent.PreDraw, AddonName, handlePreDraw);
@@ -35,8 +33,8 @@ namespace BisBuddy.Services.Addon
         {
             addonLifecycle.UnregisterListener(handlePreDraw);
         }
-        protected override void updateListeningStatus(bool effectsAssignments)
-            => setListeningStatus(configurationService.HighlightMarketboard);
+        protected override bool isEnabledFromConfig
+            => configurationService.HighlightMarketboard;
 
         private unsafe void handlePreDraw(AddonEvent type, AddonArgs args)
         {

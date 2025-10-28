@@ -18,8 +18,6 @@ namespace BisBuddy.Services.Addon
 
         public override string AddonName => "NeedGreed";
 
-        protected override float CustomNodeMaxY => float.MaxValue;
-
         protected override void registerAddonListeners()
         {
             addonLifecycle.RegisterListener(AddonEvent.PreDraw, AddonName, handlePreDraw);
@@ -30,8 +28,8 @@ namespace BisBuddy.Services.Addon
             addonLifecycle.UnregisterListener(handlePreDraw);
         }
 
-        protected override void updateListeningStatus(bool effectsAssignments)
-            => setListeningStatus(configurationService.HighlightNeedGreed);
+        protected override bool isEnabledFromConfig
+            => configurationService.HighlightNeedGreed;
 
         private unsafe void handlePreDraw(AddonEvent type, AddonArgs args)
         {

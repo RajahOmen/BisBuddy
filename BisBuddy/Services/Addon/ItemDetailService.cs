@@ -67,8 +67,6 @@ namespace BisBuddy.Services.Addon
             DetailKind.GearSet
         }.ToFrozenSet();
 
-        protected override float CustomNodeMaxY => float.MaxValue;
-
         protected override void registerAddonListeners()
         {
             gearsetsService.OnGearsetsChange += handleManualUpdate;
@@ -82,8 +80,8 @@ namespace BisBuddy.Services.Addon
             neededGearsets = [];
         }
 
-        protected override void updateListeningStatus(bool effectsAssignments)
-            => setListeningStatus(configurationService.AnnotateTooltips);
+        protected override bool isEnabledFromConfig
+            => configurationService.AnnotateTooltips;
 
         private void handleManualUpdate()
         {

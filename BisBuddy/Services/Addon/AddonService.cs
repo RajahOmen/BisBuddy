@@ -64,21 +64,19 @@ namespace BisBuddy.Services.Addon
                 foreach (var (nodePtr, color) in highlightedNodes)
                 {
                     var nodeId = ((AtkResNode*)nodePtr)->NodeId;
-                    nodes.Add((nodeId, NodeHighlightType.Custom, color));
+                    nodes.Add((nodeId, NodeHighlightType.Native, color));
                 }
 
                 return nodes;
             }
         }
 
-        // for lists that scroll, to avoid them rendering off the bottom
-        protected abstract float CustomNodeMaxY { get; }
-
         protected abstract unsafe NodeBase initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon, HighlightColor color);
 
         protected abstract void registerAddonListeners();
         protected abstract void unregisterAddonListeners();
-        protected abstract void updateListeningStatus(bool effectsAssignments);
+        protected abstract bool isEnabledFromConfig { get; }
+
 
         protected AtkUnitBasePtr AddonPtr
         {
@@ -92,22 +90,25 @@ namespace BisBuddy.Services.Addon
         public Task StartAsync(CancellationToken cancellationToken)
         {
             // ensure listening status remains updated with user configuration
-            configurationService.OnConfigurationChange += updateListeningStatus;
+            configurationService.OnConfigurationChange += updateListeningStatusFromConfig;
 
             // set initial listening status to configs initialized value
-            updateListeningStatus(false);
+            updateListeningStatusFromConfig();
 
             return Task.CompletedTask;
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            setListeningStatus(false);
-            configurationService.OnConfigurationChange -= updateListeningStatus;
+            setListeningStatus(toEnable: false);
+            configurationService.OnConfigurationChange -= updateListeningStatusFromConfig;
             return Task.CompletedTask;
         }
 
-        protected void setListeningStatus(bool toEnable)
+        private void updateListeningStatusFromConfig(bool effectsAssignments = false)
+            => setListeningStatus(isEnabledFromConfig);
+
+        private void setListeningStatus(bool toEnable)
         {
             if (toEnable && !IsEnabled) // If we want to enable and it's not enabled
                 registerListeners();
@@ -116,7 +117,7 @@ namespace BisBuddy.Services.Addon
             // Otherwise, do nothing
         }
 
-        protected void registerListeners()
+        private void registerListeners()
         {
             try
             {
@@ -134,7 +135,7 @@ namespace BisBuddy.Services.Addon
             }
         }
 
-        protected unsafe void unregisterListeners()
+        private unsafe void unregisterListeners()
         {
             debugService.AssertMainThreadDebug();
 
@@ -161,18 +162,19 @@ namespace BisBuddy.Services.Addon
 
         private unsafe void handleUpdateHighlightColor()
         {
-            debugService.AssertMainThreadDebug();
+            framework.RunOnFrameworkThread(() =>
+            {
+                if (AddonPtr.IsNull && highlightedNodes.Count > 0)
+                    throw new Exception($"Addon \"{AddonName}\" is not loaded, cannot update \"{highlightedNodes.Count}\" node highlight colors");
 
-            if (AddonPtr.IsNull && highlightedNodes.Count > 0)
-                throw new Exception($"Addon \"{AddonName}\" is not loaded, cannot update \"{highlightedNodes.Count}\" node highlight colors");
+                // update colors for existing atk nodes that was just highlighted
+                foreach (var nodeData in highlightedNodes)
+                    nodeData.Value.ColorExistingNode((AtkResNode*)nodeData.Key);
 
-            // update colors for existing atk nodes that was just highlighted
-            foreach (var nodeData in highlightedNodes)
-                nodeData.Value.ColorExistingNode((AtkResNode*)nodeData.Key);
-
-            // update colors for nodes that we added
-            foreach (var nodeData in customNodes.Values)
-                nodeData.Color.ColorCustomNode(nodeData.Node, configurationService.BrightListItemHighlighting);
+                // update colors for nodes that we added
+                foreach (var nodeData in customNodes.Values)
+                    nodeData.Color.ColorCustomNode(nodeData.Node, configurationService.BrightListItemHighlighting);
+            });
         }
 
         private unsafe void handleUpdateHighlightColor(bool effectsAssignments = false)
@@ -362,10 +364,8 @@ namespace BisBuddy.Services.Addon
             }
         }
 
-        protected unsafe void destroyNodes()
+        private unsafe void destroyNodes()
         {
-            debugService.AssertMainThreadDebug();
-
             var count = customNodes.Count;
             foreach (var customNodeEntry in customNodes)
             {
@@ -384,7 +384,6 @@ namespace BisBuddy.Services.Addon
         public bool IsEnabled { get; }
         public string AddonName { get; }
         public bool IsAddonVisible { get; }
-
         public IReadOnlyCollection<(uint NodeId, NodeHighlightType Type, HighlightColor Color)> NodeHighlights { get; }
     }
 }

@@ -33,8 +33,6 @@ namespace BisBuddy.Services.Addon.Containers
 
         protected abstract List<nint> getDragDropComponents(nint gridAddon);
 
-        protected override float CustomNodeMaxY => float.MaxValue;
-
         protected override unsafe void registerAddonListeners()
         {
             addonLifecycle.RegisterListener(AddonEvent.PreDraw, AddonName, handlePreDraw);
@@ -51,8 +49,8 @@ namespace BisBuddy.Services.Addon.Containers
             addonLifecycle.UnregisterListener(handlePreDraw);
         }
 
-        protected override void updateListeningStatus(bool effectsAssignments)
-            => setListeningStatus(configurationService.HighlightInventories);
+        protected override bool isEnabledFromConfig =>
+            configurationService.HighlightInventories;
 
         private unsafe void handlePreDraw(AddonEvent type, AddonArgs args)
         {

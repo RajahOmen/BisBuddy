@@ -5,7 +5,6 @@ using BisBuddy.Gear.Prerequisites;
 using BisBuddy.Items;
 using BisBuddy.Services;
 using BisBuddy.Util;
-using Dalamud.Game.Inventory;
 using LinearAssignment;
 using System;
 using System.Collections.Generic;

@@ -14,14 +14,12 @@ namespace BisBuddy.Services
 {
     public class InventoryChangeService(
         ITypedLogger<InventoryChangeService> logger,
-        IClientState clientState,
         IGameInventory gameInventory,
         IGearsetsService gearsetsService,
         IConfigurationService configurationService
         ) : IInventoryChangeService
     {
         private readonly ITypedLogger<InventoryChangeService> logger = logger;
-        private readonly IClientState clientState = clientState;
         private readonly IGameInventory gameInventory = gameInventory;
         private readonly IGearsetsService gearsetsService = gearsetsService;
         private readonly IConfigurationService configurationService = configurationService;
@@ -97,7 +95,7 @@ namespace BisBuddy.Services
 
                 // added to type we track, update gearsets
                 logger.Verbose($"item added, scehduling gearset update");
-                gearsetsService.ScheduleUpdateFromInventory();
+                gearsetsService.QueueUpdateFromInventory();
             }
             catch (Exception ex)
             {
@@ -130,7 +128,7 @@ namespace BisBuddy.Services
 
                 // removed from type we track, update gearsets
                 logger.Verbose($"item removed, scehduling gearset update");
-                gearsetsService.ScheduleUpdateFromInventory();
+                gearsetsService.QueueUpdateFromInventory();
             }
             catch (Exception ex)
             {
@@ -172,7 +170,7 @@ namespace BisBuddy.Services
 
                 logger.Verbose($"item changed, scehduling gearset update");
                 // changed in a type we track, update gearsets
-                gearsetsService.ScheduleUpdateFromInventory();
+                gearsetsService.QueueUpdateFromInventory();
             }
             catch (Exception ex)
             {
@@ -207,7 +205,7 @@ namespace BisBuddy.Services
 
                 logger.Verbose($"item moved, scehduling gearset update");
                 // moved untracked -> tracked or tracked -> untracked, update gearsets
-                gearsetsService.ScheduleUpdateFromInventory();
+                gearsetsService.QueueUpdateFromInventory();
             }
             catch (Exception ex)
             {

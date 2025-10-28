@@ -60,8 +60,8 @@ namespace BisBuddy.Services.Addon.ShopExchange
             addonLifecycle.UnregisterListener(handlePreDraw);
         }
 
-        protected override void updateListeningStatus(bool effectsAssignments)
-            => setListeningStatus(configurationService.HighlightShops);
+        protected override bool isEnabledFromConfig
+            => configurationService.HighlightShops;
 
         private unsafe void handlePreDraw(AddonEvent type, AddonArgs args)
         {

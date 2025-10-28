@@ -21,7 +21,6 @@ public unsafe class MeldPlanSelectorWindow : Window, IDisposable
     private static readonly int WindowYValueOffset = 76;
 
     private readonly ITypedLogger<MeldPlanSelectorWindow> logger;
-    private readonly IFramework framework;
     private readonly IGameGui gameGui;
     private readonly IMeldPlanService meldPlanService;
     private readonly IConfigurationService configService;
@@ -32,7 +31,6 @@ public unsafe class MeldPlanSelectorWindow : Window, IDisposable
 
     public MeldPlanSelectorWindow(
         ITypedLogger<MeldPlanSelectorWindow> logger,
-        IFramework framework,
         IGameGui gameGui,
         IMeldPlanService meldPlanService,
         IConfigurationService configService,
@@ -47,7 +45,6 @@ public unsafe class MeldPlanSelectorWindow : Window, IDisposable
         SizeCondition = ImGuiCond.Appearing;
 
         this.logger = logger;
-        this.framework = framework;
         this.gameGui = gameGui;
         this.meldPlanService = meldPlanService;
         this.configService = configService;

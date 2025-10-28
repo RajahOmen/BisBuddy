@@ -53,7 +53,6 @@ public sealed partial class Plugin : IDalamudPlugin
 
     public Plugin(
         IDalamudPluginInterface pluginInterface,
-        IChatGui chatGui,
         ICommandManager commandManager,
         IGameInventory gameInventory,
         IGameGui gameGui,
@@ -77,7 +76,6 @@ public sealed partial class Plugin : IDalamudPlugin
             {
                 builder.RegisterInstance(pluginInterface).As<IDalamudPluginInterface>().SingleInstance();
                 builder.RegisterInstance(pluginInterface.UiBuilder).As<IUiBuilder>().SingleInstance();
-                builder.RegisterInstance(chatGui).As<IChatGui>().SingleInstance();
                 builder.RegisterInstance(commandManager).As<ICommandManager>().SingleInstance();
                 builder.RegisterInstance(gameInventory).As<IGameInventory>().SingleInstance();
                 builder.RegisterInstance(gameGui).As<IGameGui>().SingleInstance();

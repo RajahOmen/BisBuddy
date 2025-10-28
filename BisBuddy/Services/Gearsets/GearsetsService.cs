@@ -6,7 +6,6 @@ using BisBuddy.Mediators;
 using BisBuddy.Services.Configuration;
 using BisBuddy.Services.ImportGearset;
 using Dalamud.Plugin.Services;
-using Dalamud.Utility;
 using Microsoft.Extensions.Hosting;
 using System.Collections.Generic;
 using System.IO;
@@ -26,7 +25,6 @@ namespace BisBuddy.Services.Gearsets
         ITypedLogger<GearsetsService> logger,
         IFramework framework,
         IClientState clientState,
-        IGameInventory gameInventory,
         IConfigurationService configurationService,
         IFileService fileService,
         JsonSerializerOptions jsonSerializerOptions,
@@ -34,13 +32,11 @@ namespace BisBuddy.Services.Gearsets
         IQueueService queueService,
         IInventoryUpdateDisplayService inventoryUpdateDisplayService,
         IImportGearsetService importGearsetService,
-        IInventoryItemsService inventoryItemsService,
-        IDebugService debugService
+        IInventoryItemsService inventoryItemsService
         ) : IGearsetsService
     {
         private readonly ITypedLogger<GearsetsService> logger = logger;
         private readonly IFramework framework = framework;
-        private readonly IGameInventory gameInventory = gameInventory;
         private readonly IClientState clientState = clientState;
         private readonly IConfigurationService configurationService = configurationService;
         private readonly IFileService fileService = fileService;
@@ -50,7 +46,6 @@ namespace BisBuddy.Services.Gearsets
         private readonly IInventoryUpdateDisplayService inventoryUpdateDisplayService = inventoryUpdateDisplayService;
         private readonly IImportGearsetService importGearsetService = importGearsetService;
         private readonly IInventoryItemsService inventoryItemsService = inventoryItemsService;
-        private readonly IDebugService debugService = debugService;
 
         private bool gearsetsDirty = false;
         private bool assignmentsDirty = false;
@@ -77,10 +72,9 @@ namespace BisBuddy.Services.Gearsets
 
         private ulong currentLocalContentId = 0;
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
-            debugService.AssertMainThreadDebug();
-            currentLocalContentId = clientState.LocalContentId;
+            currentLocalContentId = await framework.Run(() => clientState.LocalContentId, cancellationToken);
 
             // updating gearset data per framework update
             framework.Update += onUpdate;
@@ -101,9 +95,7 @@ namespace BisBuddy.Services.Gearsets
 
             // if configured to, run scan to ensure up-to-date
             if (GearsetsLoaded && configurationService.AutoScanInventory)
-                ScheduleUpdateFromInventory();
-
-            return Task.CompletedTask;
+                scheduleGearsetsChange(updateAssignments: true);
         }
 
         public async Task StopAsync(CancellationToken cancellationToken)
@@ -275,7 +267,7 @@ namespace BisBuddy.Services.Gearsets
         /// <param name="gearsetsToUpdate">The gearsets whose state may be changed by this update</param>
         /// <param name="saveChanges">If the changes should be saved upon completion</param>
         /// <param name="manualUpdate">If this update was triggered by direct user input</param>
-        public void ScheduleUpdateFromInventory(
+        public void QueueUpdateFromInventory(
             IEnumerable<Gearset> gearsetsToUpdate,
             bool saveChanges = true,
             bool manualUpdate = false
@@ -286,7 +278,7 @@ namespace BisBuddy.Services.Gearsets
         /// </summary>
         /// <param name="saveChanges">If the changes should be saved upon completion</param>
         /// <param name="manualUpdate">If this update was triggered by direct user input</param>
-        public void ScheduleUpdateFromInventory(
+        public void QueueUpdateFromInventory(
             bool saveChanges = true,
             bool manualUpdate = false
             );
