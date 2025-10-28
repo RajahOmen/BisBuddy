@@ -49,6 +49,15 @@ namespace BisBuddy.Services.Addon
                 return addon.IsReady && addon.IsVisible;
             }
         }
+        public bool IsAddonNull
+        {
+            get
+            {
+                debugService.AssertMainThreadDebug();
+
+                return AddonPtr.IsNull;
+            }
+        }
         public unsafe IReadOnlyCollection<(uint, NodeHighlightType, HighlightColor)> NodeHighlights
         {
             get
@@ -384,6 +393,7 @@ namespace BisBuddy.Services.Addon
         public bool IsEnabled { get; }
         public string AddonName { get; }
         public bool IsAddonVisible { get; }
+        public bool IsAddonNull { get; }
         public IReadOnlyCollection<(uint NodeId, NodeHighlightType Type, HighlightColor Color)> NodeHighlights { get; }
     }
 }

@@ -1,4 +1,5 @@
 using BisBuddy.Extensions;
+using BisBuddy.Gear;
 using BisBuddy.Services;
 using BisBuddy.Services.Addon;
 using Dalamud.Bindings.ImGui;
@@ -19,7 +20,8 @@ using AddonTableColumns = System.Collections.Generic.List<(
         BisBuddy.Services.Addon.NodeHighlightType Type,
         BisBuddy.Gear.HighlightColor Color,
         uint NodeId,
-        int Count
+        int Count,
+        bool Disposed
     )> Draw,
     System.Action<bool> Sort
     )>;
@@ -28,7 +30,8 @@ using NodeHighlightGroup = (
     BisBuddy.Services.Addon.NodeHighlightType Type,
     BisBuddy.Gear.HighlightColor Color,
     uint NodeId,
-    int Count
+    int Count,
+    bool Disposed
 );
 
 namespace BisBuddy.Ui.Renderers.Tabs.Debug
@@ -43,6 +46,7 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
         private bool autoRefresh = true;
         private int sortColumnIdx = 0;
         private bool sortDesc = true;
+        private bool storeDisposed = true;
 
         private readonly AddonTableColumns columns;
 
@@ -61,16 +65,35 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
             this.columns = [
                 (
                     "Addon Name",
-                    (name) => ImGui.TableSetupColumn(name, ImGuiTableColumnFlags.DefaultSort | ImGuiTableColumnFlags.PreferSortDescending | ImGuiTableColumnFlags.WidthFixed, 200f),
+                    (name) => ImGui.TableSetupColumn(name, ImGuiTableColumnFlags.DefaultSort | ImGuiTableColumnFlags.PreferSortDescending, 2),
                     (nodeGroup) => ImGui.Text(nodeGroup.Listener.AddonName),
                     (desc) => addonNodeHighlights = addonNodeHighlights.OrderByDirection(entry => entry.Listener.AddonName, desc).ToList()
                 ),
                 (
-                    "Visible",
-                    (name) => ImGui.TableSetupColumn(name, ImGuiTableColumnFlags.WidthFixed, 60f),
+                    "Addon Active",
+                    (name) => ImGui.TableSetupColumn(name),
+                    (nodeGroup) => {
+                        var color = new Vector4(1f, 0, 0, 0.5f);
+                        var addonNull = nodeGroup.Listener.IsAddonNull;
+                        var isBadEntry = addonNull && !nodeGroup.Disposed;
+                        var cursorPos = ImGui.GetCursorPos();
+                        if (isBadEntry)
+                            using (ImRaii.PushColor(ImGuiCol.Header, color, isBadEntry))
+                            using (ImRaii.PushColor(ImGuiCol.HeaderActive, color, isBadEntry))
+                            using (ImRaii.PushColor(ImGuiCol.HeaderHovered, color, isBadEntry))
+                                ImGui.Selectable("", selected: true, flags: ImGuiSelectableFlags.SpanAllColumns);
+
+                        ImGui.SetCursorPos(cursorPos);
+                        ImGui.Text(addonNull ? "No" : "Yes");
+                    },
+                    (desc) => addonNodeHighlights = addonNodeHighlights.OrderByDirection(entry => !entry.Listener.IsAddonNull, desc).ToList()
+                ),
+                (
+                    "Addon Visible",
+                    (name) => ImGui.TableSetupColumn(name),
                     (nodeGroup) => {
                         var color = new Vector4(0.8f, 0.8f, 0, 0.2f);
-                        var isBadEntry = !nodeGroup.Listener.IsAddonVisible;
+                        var isBadEntry = !nodeGroup.Listener.IsAddonVisible && !nodeGroup.Disposed;
                         var cursorPos = ImGui.GetCursorPos();
                         if (isBadEntry)
                             using (ImRaii.PushColor(ImGuiCol.Header, color, isBadEntry))
@@ -84,11 +107,11 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
                     (desc) => addonNodeHighlights = addonNodeHighlights.OrderByDirection(entry => entry.Listener.IsAddonVisible, desc).ToList()
                 ),
                 (
-                    "Enabled",
-                    (name) => ImGui.TableSetupColumn(name, ImGuiTableColumnFlags.WidthFixed, 60f),
+                    "Listener On",
+                    (name) => ImGui.TableSetupColumn(name),
                     (nodeGroup) => {
                         var color = new Vector4(0.8f, 0, 0, 0.2f);
-                        var isBadEntry = !nodeGroup.Listener.IsEnabled;
+                        var isBadEntry = !nodeGroup.Listener.IsEnabled && !nodeGroup.Disposed;
                         var cursorPos = ImGui.GetCursorPos();
                         if (isBadEntry)
                             using (ImRaii.PushColor(ImGuiCol.Header, color, isBadEntry))
@@ -102,10 +125,22 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
                     (desc) => addonNodeHighlights = addonNodeHighlights.OrderByDirection(entry => entry.Listener.IsEnabled, desc).ToList()
                 ),
                 (
-                    "#",
-                    (name) => ImGui.TableSetupColumn(name, ImGuiTableColumnFlags.WidthFixed, 30f),
+                    "Node Active",
+                    (name) => ImGui.TableSetupColumn(name),
+                    (nodeGroup) => ImGui.Text(nodeGroup.Disposed ? "No" : "Yes"),
+                    (desc) => addonNodeHighlights = addonNodeHighlights.OrderByDirection(entry => entry.Disposed, desc).ToList()
+                ),
+                (
+                    "Node Count",
+                    (name) => ImGui.TableSetupColumn(name),
                     (nodeGroup) => ImGui.Text($"{nodeGroup.Count}"),
                     (desc) => addonNodeHighlights = addonNodeHighlights.OrderByDirection(entry => entry.Count, desc).ToList()
+                ),
+                (
+                    "Node ID",
+                    (name) => ImGui.TableSetupColumn(name),
+                    (nodeGroup) => ImGui.Text($"{nodeGroup.NodeId}"),
+                    (desc) => addonNodeHighlights = addonNodeHighlights.OrderByDirection(entry => entry.NodeId, desc).ToList()
                 ),
                 (
                     "Node Type",
@@ -115,7 +150,7 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
                 ),
                 (
                     "Color",
-                    (name) => ImGui.TableSetupColumn(name),
+                    (name) => ImGui.TableSetupColumn(name, initWidthOrWeight: 2),
                     (nodeGroup) => {
                         var color = nodeGroup.Color.BaseColor;
                         ImGui.TextColored(color with { W = 1.0f }, $"{color}");
@@ -138,21 +173,42 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
         {
             debugService.AssertMainThreadDebug();
 
+            if (storeDisposed)
+            {
+                // make these count as disposed unless otherwise cleared
+                for (var idx = 0; idx < addonNodeHighlights.Count; idx++)
+                {
+                    var nodeGroup = addonNodeHighlights[idx];
+                    nodeGroup.Disposed = true;
+                    addonNodeHighlights[idx] = nodeGroup;
+                }
+            } else
+            {
+                addonNodeHighlights.Clear();
+            }
+
+
             if (groupByListener)
-                addonNodeHighlights = addonListeners
+                addonNodeHighlights.AddRange(addonListeners
                     .Where(listener => listener.NodeHighlights.Count > 0)
                     .SelectMany(listener => listener
                         .NodeHighlights
                         .GroupBy(node => (node.Type, node.Color.BaseColor))
-                        .Select(g => (listener, g.First().Type, g.First().Color, 0u, g.Count()))
-                ).ToList();
+                        .Select(g => (listener, g.First().Type, g.First().Color, 0u, g.Count(), false))
+                ));
             else
-                addonNodeHighlights = addonListeners
+                addonNodeHighlights.AddRange(addonListeners
                     .Where(listener => listener.NodeHighlights.Count > 0)
                     .SelectMany(listener => listener
                         .NodeHighlights
-                        .Select(node => (listener, node.Type, node.Color, node.NodeId, 1))
-                ).ToList();
+                        .Select(node => (listener, node.Type, node.Color, node.NodeId, 1, false))
+                ));
+
+
+            addonNodeHighlights = addonNodeHighlights
+                .GroupBy(group => (group.Listener, group.Type, group.NodeId, group.Color, group.Count))
+                .Select(g => g.OrderBy(g => g.Disposed).First())
+                .ToList();
 
             columns[sortColumnIdx].Sort(sortDesc);
         }
@@ -184,8 +240,31 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
             ImGui.Spacing();
             ImGui.SameLine();
 
-            if (ImGui.Checkbox("Group Nodes", ref groupByListener))
+            if (ImGui.Checkbox("List Disposed Nodes", ref storeDisposed))
+            {
+                if (storeDisposed)
+                    groupByListener = false;
                 updateNodeHighlights();
+            }
+
+            ImGui.SameLine();
+
+            using (ImRaii.Disabled(!storeDisposed))
+                if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.Trash, "Clear Current Disposed"))
+                    addonNodeHighlights = addonNodeHighlights.Where(group => !group.Disposed).ToList();
+
+            ImGui.SameLine();
+            ImGui.Spacing();
+            ImGui.SameLine();
+
+            if (ImGui.Checkbox("Group Nodes", ref groupByListener))
+            {
+                if (groupByListener)
+                    storeDisposed = false;
+
+                addonNodeHighlights.Clear();
+                updateNodeHighlights();
+            }
 
             ImGui.Spacing();
             ImGui.Separator();
@@ -198,20 +277,30 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
                 return;
             }
 
+            string badColumn;
+            if (groupByListener)
+                badColumn = "Node ID";
+            else
+                badColumn = "Node Count";
+
+            var columnsToDraw = columns
+                .Where(c => c.Name != badColumn)
+                .ToList();
+
             var tableFlags = (
                 ImGuiTableFlags.RowBg
-                | ImGuiTableFlags.SizingStretchSame
+                | ImGuiTableFlags.SizingStretchProp
                 | ImGuiTableFlags.Sortable
                 | ImGuiTableFlags.SortMulti
                 | ImGuiTableFlags.ScrollY
                 | ImGuiTableFlags.PadOuterX
                 | ImGuiTableFlags.BordersInnerV
                 );
-            using var table = ImRaii.Table("###item_requirements_table", columns.Count, tableFlags);
+            using var table = ImRaii.Table("###item_requirements_table", columnsToDraw.Count, tableFlags);
             if (!table)
                 return;
 
-            foreach (var col in columns)
+            foreach (var col in columnsToDraw)
                 col.Init(col.Name);
 
             ImGui.TableSetupScrollFreeze(0, 1);
@@ -223,7 +312,7 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
                 sortSpecs.SpecsDirty = false;
                 sortColumnIdx = sortSpecs.Specs.ColumnIndex;
                 sortDesc = sortSpecs.Specs.SortDirection == ImGuiSortDirection.Descending;
-                columns[sortColumnIdx].Sort(sortDesc);
+                columnsToDraw[sortColumnIdx].Sort(sortDesc);
             }
 
             var clipper = ImGui.ImGuiListClipper();
@@ -233,10 +322,11 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
             {
                 for (var rowIdx = clipper.DisplayStart; rowIdx < clipper.DisplayEnd; rowIdx++)
                 {
-                    using var _ = ImRaii.PushId(rowIdx);
                     var nodeGroup = addonNodeHighlights[rowIdx];
+                    using var id = ImRaii.PushId(rowIdx);
+                    using var style = ImRaii.PushStyle(ImGuiStyleVar.Alpha, 0.5f, nodeGroup.Disposed);
                     ImGui.TableNextRow();
-                    foreach (var col in columns)
+                    foreach (var col in columnsToDraw)
                     {
                         ImGui.TableNextColumn();
                         col.Draw(nodeGroup);
