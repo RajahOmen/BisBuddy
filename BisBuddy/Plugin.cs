@@ -324,7 +324,7 @@ public sealed partial class Plugin : IDalamudPlugin
 
 #if DEBUG
             var commandService = host.Services.GetRequiredService<ICommandService>();
-            commandService.ExecuteCommand("/bis", "c");
+            commandService.ExecuteCommand("/bis", "d");
 #endif
         }
         catch (Exception ex)
