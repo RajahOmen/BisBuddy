@@ -25,6 +25,7 @@ public class ImportGearsetWindow : Window, IDisposable
     private readonly IGearsetsService gearsetsService;
     private readonly List<IImportGearsetSource> importGearsetSources;
     private readonly IAttributeService attributeService;
+    private readonly IDebugService debugService;
 
     private string gearsetSourceString = string.Empty;
     private ImportGearsetSourceType gearsetSourceType = ImportGearsetSourceType.Xivgear;
@@ -37,7 +38,8 @@ public class ImportGearsetWindow : Window, IDisposable
         IClientState clientState,
         IGearsetsService gearsetsService,
         IEnumerable<IImportGearsetSource> importGearsetSources,
-        IAttributeService attributeService
+        IAttributeService attributeService,
+        IDebugService debugService
         )
         : base($"{Resource.ImportWindowTitle}##bisbuddy import gearset", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
@@ -55,6 +57,7 @@ public class ImportGearsetWindow : Window, IDisposable
         this.gearsetsService = gearsetsService;
         this.importGearsetSources = importGearsetSources.ToList();
         this.attributeService = attributeService;
+        this.debugService = debugService;
     }
 
     private async Task ImportNewGearsets()
@@ -98,6 +101,8 @@ public class ImportGearsetWindow : Window, IDisposable
 
     public override void Draw()
     {
+        debugService.AssertMainThreadDebug();
+
         if (clientState.IsLoggedIn)
             drawLoggedIn();
         else

@@ -19,29 +19,19 @@ namespace BisBuddy.Services.Addon.Containers
             "RetainerGrid3", // 1
             "RetainerGrid4", // 2
             ];
-        protected override unsafe ItemOrderModuleSorter* sorter
-        {
-            get
-            {
-                debugService.AssertMainThreadDebug();
-                return ItemOrderModule.Instance()->RetainerSorter[ItemOrderModule.Instance()->ActiveRetainerId];
-            }
-        }
+        protected override unsafe ItemOrderModuleSorter* sorter =>
+            ItemOrderModule.Instance()->RetainerSorter[ItemOrderModule.Instance()->ActiveRetainerId];
 
         protected override unsafe int getTabIndex()
         {
-            debugService.AssertMainThreadDebug();
-
-            var addon = (AddonInventoryRetainerLarge*)gameGui.GetAddonByName(AddonName).Address;
+            var addon = (AddonInventoryRetainerLarge*)AddonPtr.Address;
             if (addon == null || !addon->IsVisible) return -1;
             return addon->TabIndex;
         }
 
         protected override unsafe List<nint> getAddons()
         {
-            debugService.AssertMainThreadDebug();
-
-            var addon = (AddonInventoryRetainerLarge*)gameGui.GetAddonByName(AddonName).Address;
+            var addon = (AddonInventoryRetainerLarge*)AddonPtr.Address;
             if (addon == null || !addon->IsVisible)
                 return [];
 
@@ -61,9 +51,6 @@ namespace BisBuddy.Services.Addon.Containers
 
         protected override unsafe List<nint> getDragDropComponents(nint gridAddon)
         {
-            debugService.AssertMainThreadDebug();
-
-
             // this also works for retainer grids
             var slots = ((AddonInventoryGrid*)gridAddon)->Slots.ToArray();
 

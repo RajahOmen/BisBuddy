@@ -1,6 +1,7 @@
 using BisBuddy.Gear;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
+using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Enums;
 using FFXIVClientStructs.FFXIV.Client.Graphics;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
@@ -19,6 +20,7 @@ namespace BisBuddy.Services.Addon
     public unsafe class ItemDetailService(AddonServiceDependencies<ItemDetailService> deps)
         : AddonService<ItemDetailService>(deps)
     {
+        private readonly IGameGui gameGui = deps.GameGui;
         public override string AddonName => "ItemDetail";
 
         // ADDON NODE IDS
@@ -86,6 +88,7 @@ namespace BisBuddy.Services.Addon
         private void handleManualUpdate()
         {
             // manually trigger refresh
+            debugService.AssertMainThreadDebug();
             handleHoveredItemChanged(null, gameGui.HoveredItem);
         }
 
@@ -119,7 +122,7 @@ namespace BisBuddy.Services.Addon
                 };
                 setNodeVisibility(true);
 
-                var addonPtr = (AtkUnitBase*)gameGui.GetAddonByName(AddonName).Address;
+                var addonPtr = (AtkUnitBase*)AddonPtr.Address;
 
                 if (addonPtr == null || !addonPtr->IsVisible)
                     return;
@@ -210,13 +213,11 @@ namespace BisBuddy.Services.Addon
 
         private void setNodeVisibility(bool setVisible)
         {
-            debugService.AssertMainThreadDebug();
-
             var customTextNode = CustomNodes.Count > 0 ? CustomNodes.First().Value.Node : null;
             if (customTextNode == null)
                 return; // doesn't exist, nothing to hide
 
-            var addon = (AtkUnitBase*)gameGui.GetAddonByName(AddonName).Address;
+            var addon = (AtkUnitBase*)AddonPtr.Address;
             if (addon == null)
                 return; // addon doesn't exist somehow
 
@@ -229,7 +230,6 @@ namespace BisBuddy.Services.Addon
 
         private bool updateNeededGearsetNames(uint itemId)
         {
-            debugService.AssertMainThreadDebug();
             // where is this tooltip?
             var isInternalItem = false;
             var agent = AgentItemDetail.Instance();
@@ -263,8 +263,6 @@ namespace BisBuddy.Services.Addon
 
         private unsafe bool isItemNameTwoLines(AtkUnitBase* addon)
         {
-            debugService.AssertMainThreadDebug();
-
             // get if the item name is split over two lines or not
             var itemNameTextNode = addon->GetTextNodeById(AddonItemNameTextNodeId);
             var itemName = SeString.Parse((byte*)itemNameTextNode->GetText()).TextValue;
@@ -273,8 +271,6 @@ namespace BisBuddy.Services.Addon
 
         private unsafe void updateCustomNode(AtkUnitBase* addon, bool itemNameTwoLines)
         {
-            debugService.AssertMainThreadDebug();
-
             // assign custom text to node
             var customTextNode = CustomNodes.Count > 0
                 ? (TextNode)CustomNodes.First().Value.Node
@@ -289,8 +285,6 @@ namespace BisBuddy.Services.Addon
 
         protected override NodeBase initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon, HighlightColor color)
         {
-            debugService.AssertMainThreadDebug();
-
             TextNode? customTextNode = null;
             try
             {

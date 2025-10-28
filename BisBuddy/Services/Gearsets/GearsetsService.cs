@@ -32,7 +32,8 @@ namespace BisBuddy.Services.Gearsets
         IItemAssignmentSolverFactory itemAssignmentSolverFactory,
         IQueueService queueService,
         IInventoryUpdateDisplayService inventoryUpdateDisplayService,
-        IImportGearsetService importGearsetService
+        IImportGearsetService importGearsetService,
+        IDebugService debugService
         ) : IGearsetsService
     {
         private readonly ITypedLogger<GearsetsService> logger = logger;
@@ -46,12 +47,18 @@ namespace BisBuddy.Services.Gearsets
         private readonly IQueueService queueService = queueService;
         private readonly IInventoryUpdateDisplayService inventoryUpdateDisplayService = inventoryUpdateDisplayService;
         private readonly IImportGearsetService importGearsetService = importGearsetService;
+        private readonly IDebugService debugService = debugService;
 
         private bool gearsetsDirty = false;
         private bool assignmentsDirty = false;
         private bool gearsetsChangeLocked = false;
 
-        private ulong currentLocalContentId => clientState.LocalContentId;
+        private ulong currentLocalContentId {
+            get {
+                debugService.AssertMainThreadDebug();
+                return clientState.LocalContentId;
+            }
+        }
 
         private List<Gearset> currentGearsets = [];
         private Dictionary<uint, IReadOnlyList<ItemRequirementOwned>> currentItemRequirements = [];

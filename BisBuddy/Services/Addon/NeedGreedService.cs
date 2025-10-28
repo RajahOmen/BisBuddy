@@ -62,8 +62,6 @@ namespace BisBuddy.Services.Addon
 
         private unsafe void highlightItems(Dictionary<int, HighlightColor> indexColors, AddonNeedGreed* needGreed)
         {
-            debugService.AssertMainThreadDebug();
-
             var itemListComponent = (AtkComponentList*)needGreed
                 ->GetComponentByNodeId(AddonItemListNodeId);
 

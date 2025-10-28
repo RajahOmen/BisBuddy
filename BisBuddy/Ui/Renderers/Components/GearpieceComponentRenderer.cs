@@ -25,7 +25,8 @@ namespace BisBuddy.Ui.Renderers.Components
         IConfigurationService configurationService,
         IItemDataService itemDataService,
         IAttributeService attributeService,
-        UiComponents uiComponents
+        UiComponents uiComponents,
+        IDebugService debugService
         ) : ComponentRendererBase<Gearpiece>
     {
         private static readonly Vector4 ExpandedBackgroundColorMult = new(0.6f, 0.6f, 0.6f, 1.0f);
@@ -39,6 +40,8 @@ namespace BisBuddy.Ui.Renderers.Components
         private readonly IItemDataService itemDataService = itemDataService;
         private readonly IAttributeService attributeService = attributeService;
         private readonly UiComponents uiComponents = uiComponents;
+        private readonly IDebugService debugService = debugService;
+
         private Gearpiece? gearpiece;
         private bool isExpanded = false;
         private bool? nextIsExpanded = null;
@@ -274,6 +277,7 @@ namespace BisBuddy.Ui.Renderers.Components
                 {
                     ImGui.SetCursorPos(buttonPos + new Vector2(iconXOffset, iconYOffset));
 
+                    debugService.AssertMainThreadDebug();
                     if (textureProvider.GetFromGameIcon((int)collectionStatusTheme.Icon).TryGetWrap(out var texture, out var exception))
                         ImGui.Image(texture.Handle, collectionStatusButtonIconSize, collectionStatusTheme.TextColor);
                 }

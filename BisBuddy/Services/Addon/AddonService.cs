@@ -4,6 +4,7 @@ using BisBuddy.Services.Configuration;
 using BisBuddy.Services.Gearsets;
 using Dalamud.Game.Addon.Lifecycle;
 using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
+using Dalamud.Game.NativeWrapper;
 using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using KamiToolKit;
@@ -21,10 +22,10 @@ namespace BisBuddy.Services.Addon
         AddonServiceDependencies<T> dependencies
         ) : IAddonEventListener where T : class
     {
+        private readonly IGameGui gameGui = dependencies.GameGui;
         protected readonly ITypedLogger<T> logger = dependencies.logger;
         protected readonly IFramework framework = dependencies.framework;
         protected readonly IAddonLifecycle addonLifecycle = dependencies.AddonLifecycle;
-        protected readonly IGameGui gameGui = dependencies.GameGui;
         protected readonly NativeController nativeController = dependencies.NativeController;
         protected readonly IGearsetsService gearsetsService = dependencies.GearsetsService;
         protected readonly IItemDataService itemDataService = dependencies.ItemDataService;
@@ -43,7 +44,8 @@ namespace BisBuddy.Services.Addon
             get
             {
                 debugService.AssertMainThreadDebug();
-                var addon = gameGui.GetAddonByName(AddonName);
+
+                var addon = AddonPtr;
                 return addon.IsReady && addon.IsVisible;
             }
         }
@@ -77,6 +79,15 @@ namespace BisBuddy.Services.Addon
         protected abstract void registerAddonListeners();
         protected abstract void unregisterAddonListeners();
         protected abstract void updateListeningStatus(bool effectsAssignments);
+
+        protected AtkUnitBasePtr AddonPtr
+        {
+            get
+            {
+                debugService.AssertMainThreadDebug();
+                return gameGui.GetAddonByName(AddonName);
+            }
+        }
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
@@ -125,6 +136,8 @@ namespace BisBuddy.Services.Addon
 
         protected unsafe void unregisterListeners()
         {
+            debugService.AssertMainThreadDebug();
+
             try
             {
                 if (IsEnabled) // only perform these if it is enabled
@@ -150,7 +163,7 @@ namespace BisBuddy.Services.Addon
         {
             debugService.AssertMainThreadDebug();
 
-            if (gameGui.GetAddonByName(AddonName).IsNull && highlightedNodes.Count > 0)
+            if (AddonPtr.IsNull && highlightedNodes.Count > 0)
                 throw new Exception($"Addon \"{AddonName}\" is not loaded, cannot update \"{highlightedNodes.Count}\" node highlight colors");
 
             // update colors for existing atk nodes that was just highlighted
@@ -167,6 +180,8 @@ namespace BisBuddy.Services.Addon
 
         private unsafe void handlePreFinalize(AddonEvent type, AddonArgs args)
         {
+            debugService.AssertMainThreadDebug();
+
             // ensure all nodes are destroyed before finalizing
             unmarkNodes();
             destroyNodes();
@@ -205,7 +220,7 @@ namespace BisBuddy.Services.Addon
         {
             debugService.AssertMainThreadDebug();
 
-            if (!gameGui.GetAddonByName(AddonName).IsReady)
+            if (!AddonPtr.IsReady)
                 throw new Exception($"Addon \"{AddonName}\" is not loaded, cannot set node highlight color");
 
             var nodeHighlighted = highlightedNodes.TryGetValue((nint)node, out var currentColor);
@@ -247,7 +262,7 @@ namespace BisBuddy.Services.Addon
                 if (color is null)
                     return false;
 
-                var addon = (AtkUnitBase*)gameGui.GetAddonByName(AddonName).Address;
+                var addon = (AtkUnitBase*)AddonPtr.Address;
                 customNodeData = (createCustomNode(parentNode, addon, color), color);
             }
 
@@ -275,6 +290,8 @@ namespace BisBuddy.Services.Addon
 
         protected unsafe void setNodeNeededMark(AtkResNode* parentNode, HighlightColor? color, bool highlightParent, bool useCustomNode)
         {
+            debugService.AssertMainThreadDebug();
+
             // node parent is null
             if (parentNode == null)
                 return;
@@ -299,12 +316,13 @@ namespace BisBuddy.Services.Addon
         protected unsafe void unmarkNodes(AtkResNode* parentNodeFilter = null)
         {
             debugService.AssertMainThreadDebug();
+
             try
             {
                 var highlightedNodesCount = highlightedNodes.Count;
 
                 // only unhighlight nodes if the addon is loaded
-                if (!gameGui.GetAddonByName(AddonName).IsNull)
+                if (!AddonPtr.IsNull)
                 {
                     for (var i = 0; i < highlightedNodesCount; i++)
                     {
@@ -346,6 +364,8 @@ namespace BisBuddy.Services.Addon
 
         protected unsafe void destroyNodes()
         {
+            debugService.AssertMainThreadDebug();
+
             var count = customNodes.Count;
             foreach (var customNodeEntry in customNodes)
             {

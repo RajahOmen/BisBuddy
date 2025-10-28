@@ -50,7 +50,7 @@ namespace BisBuddy.Services.Addon
                     unmarkNodes();
                     return;
                 };
-                var addon = (AddonItemSearch*)gameGui.GetAddonByName(AddonName).Address;
+                var addon = (AddonItemSearch*)AddonPtr.Address;
                 if (addon == null || !addon->IsVisible) return; // addon not visible/rendered
                 if (addon->ResultsList == null || addon->ResultsList->ListLength == 0) return; // no items in search
 
@@ -77,8 +77,6 @@ namespace BisBuddy.Services.Addon
 
         private unsafe void updateNeededItems()
         {
-            debugService.AssertMainThreadDebug();
-
             try
             {
                 neededItemColors.Clear();
@@ -118,8 +116,6 @@ namespace BisBuddy.Services.Addon
 
         protected override unsafe NodeBase initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon, HighlightColor color)
         {
-            debugService.AssertMainThreadDebug();
-
             NineGridNode? customNode = null;
             try
             {

@@ -239,8 +239,6 @@ namespace BisBuddy.Services.Addon.ShopExchange
 
         protected override unsafe NodeBase initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon, HighlightColor color)
         {
-            debugService.AssertMainThreadDebug();
-
             NineGridNode? customNode = null;
             try
             {

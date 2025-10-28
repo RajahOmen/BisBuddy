@@ -31,6 +31,7 @@ namespace BisBuddy.Ui.Renderers.Tabs.Main
         private readonly UiComponents uiComponents;
         private readonly IRendererFactory rendererFactory;
         private readonly IInventoryUpdateDisplayService inventoryUpdate;
+        private readonly IDebugService debugService;
 
         private Gearset? activeGearset = null;
         private Gearpiece? nextActiveGearpiece = null;
@@ -57,7 +58,8 @@ namespace BisBuddy.Ui.Renderers.Tabs.Main
             IWindowService windowService,
             UiComponents uiComponents,
             IRendererFactory rendererFactory,
-            IInventoryUpdateDisplayService inventoryUpdate
+            IInventoryUpdateDisplayService inventoryUpdate,
+            IDebugService debugService
             )
         {
             this.logger = logger;
@@ -69,6 +71,7 @@ namespace BisBuddy.Ui.Renderers.Tabs.Main
             this.uiComponents = uiComponents;
             this.rendererFactory = rendererFactory;
             this.inventoryUpdate = inventoryUpdate;
+            this.debugService = debugService;
             this.clientState.Login += handleLogin;
         }
 
@@ -93,6 +96,8 @@ namespace BisBuddy.Ui.Renderers.Tabs.Main
 
         public void Draw()
         {
+            debugService.AssertMainThreadDebug();
+
             if (!clientState.IsLoggedIn)
             {
                 DrawLoggedOut();
@@ -276,6 +281,7 @@ namespace BisBuddy.Ui.Renderers.Tabs.Main
                         ImGui.SetCursorPos(new(cursorPos.X + iconXOffset, cursorPos.Y + iconYOffset));
 
                         var classJobInfo = gearset.ClassJobInfo;
+                        debugService.AssertMainThreadDebug();
                         using (ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(0, panelSelectableSize.Y - iconSize.Y)))
                             if (textureProvider.GetFromGameIcon(classJobInfo.IconIdFramed).TryGetWrap(out var texture, out var exception))
                             {

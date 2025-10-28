@@ -84,8 +84,11 @@ namespace BisBuddy.Services.Addon
         private void handleManualUpdate() =>
             unmeldedItemNames = gearsetsService.GetUnmeldedMateriaColors();
 
-        private void handlePreFinalize(AddonEvent type, AddonArgs? args) =>
+        private void handlePreFinalize(AddonEvent type, AddonArgs? args)
+        {
+            debugService.AssertMainThreadDebug();
             meldPlanService.SetCurrentMeldPlanItemId(null);
+        }
 
         private unsafe void handlePreDraw(AddonEvent type, AddonArgs args)
         {
@@ -130,8 +133,6 @@ namespace BisBuddy.Services.Addon
 
         private unsafe bool updateItemSelected(AtkUnitBase* addon)
         {
-            debugService.AssertMainThreadDebug();
-
             try
             {
                 var atkValues = addon->AtkValues;
@@ -197,8 +198,6 @@ namespace BisBuddy.Services.Addon
             int atkValueListStartIndex
             )
         {
-            debugService.AssertMainThreadDebug();
-
             try
             {
                 var atkValues = addon->AtkValues;
@@ -247,8 +246,6 @@ namespace BisBuddy.Services.Addon
 
         private unsafe void updateUnmeldedItemIndexes(AtkUnitBase* addon)
         {
-            debugService.AssertMainThreadDebug();
-
             // check if filtering right side items is enabled. If so, do not highlight right items
             // and mark the button in red to indicate that it should be adjusted
             var baseNode = new BaseNode(addon);
@@ -333,8 +330,6 @@ namespace BisBuddy.Services.Addon
             AtkComponentNode* parentNode
             )
         {
-            debugService.AssertMainThreadDebug();
-
             var parentNodeComponent = (AtkComponentList*)parentNode->Component;
 
             if (highlightedIndexColors.Count == 0 || parentNodeComponent->ListLength == 0)
@@ -350,8 +345,6 @@ namespace BisBuddy.Services.Addon
 
         protected override unsafe NodeBase initializeCustomNode(AtkResNode* parentNodePtr, AtkUnitBase* addon, HighlightColor color)
         {
-            debugService.AssertMainThreadDebug();
-
             NineGridNode? customNode = null;
             try
             {

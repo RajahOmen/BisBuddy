@@ -11,11 +11,13 @@ namespace BisBuddy.Services.ImportGearset
         private readonly ITypedLogger<ImportGearsetService> logger;
         private readonly IClientState clientState;
         private readonly Dictionary<ImportGearsetSourceType, IImportGearsetSource> sources;
+        private readonly IDebugService debugService;
 
         public ImportGearsetService(
             ITypedLogger<ImportGearsetService> logger,
             IClientState clientState,
-            IEnumerable<IImportGearsetSource> sources
+            IEnumerable<IImportGearsetSource> sources,
+            IDebugService debugService
             )
         {
             this.logger = logger;
@@ -23,6 +25,7 @@ namespace BisBuddy.Services.ImportGearset
             this.sources = [];
             foreach (var source in sources)
                 this.sources[source.SourceType] = source;
+            this.debugService = debugService;
         }
 
         public IReadOnlyList<ImportGearsetSourceType> RegisteredSourceTypes => [.. sources.Keys];
@@ -35,6 +38,8 @@ namespace BisBuddy.Services.ImportGearset
         {
             try
             {
+                debugService.AssertMainThreadDebug();
+
                 if (!clientState.IsLoggedIn)
                     throw new GearsetImportException(GearsetImportStatusType.NotLoggedIn);
 

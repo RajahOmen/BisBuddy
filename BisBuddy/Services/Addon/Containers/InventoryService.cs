@@ -14,29 +14,19 @@ namespace BisBuddy.Services.Addon.Containers
         protected override string[] dragDropGridAddonNames => [
             "InventoryGrid",
             ];
-        protected override unsafe ItemOrderModuleSorter* sorter
-        {
-            get
-            {
-                debugService.AssertMainThreadDebug();
-                return ItemOrderModule.Instance()->InventorySorter;
-            }
-        }
+        protected override unsafe ItemOrderModuleSorter* sorter =>
+            ItemOrderModule.Instance()->InventorySorter;
 
         protected override unsafe int getTabIndex()
         {
-            debugService.AssertMainThreadDebug();
-
-            var addon = (AddonInventory*)gameGui.GetAddonByName(AddonName).Address;
+            var addon = (AddonInventory*)AddonPtr.Address;
             if (addon == null || !addon->IsVisible) return -1;
             return addon->TabIndex;
         }
 
         protected override unsafe List<nint> getAddons()
         {
-            debugService.AssertMainThreadDebug();
-
-            var addon = (AddonInventory*)gameGui.GetAddonByName(AddonName).Address;
+            var addon = (AddonInventory*)AddonPtr.Address;
             if (addon == null)
                 return [];
 
@@ -52,8 +42,6 @@ namespace BisBuddy.Services.Addon.Containers
 
         protected override unsafe List<nint> getDragDropComponents(nint gridAddon)
         {
-            debugService.AssertMainThreadDebug();
-
             var slots = ((AddonInventoryGrid*)gridAddon)->Slots.ToArray();
 
             return slots.Select(s => (nint)s.Value).Where(s => s != nint.Zero).ToList();

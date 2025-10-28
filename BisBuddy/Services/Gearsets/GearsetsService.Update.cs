@@ -279,6 +279,8 @@ namespace BisBuddy.Services.Gearsets
 
         private List<GameInventoryItem> getGameInventoryItems()
         {
+            debugService.AssertMainThreadDebug();
+
             var itemsList = new List<GameInventoryItem>();
             foreach (var source in Constants.InventorySources)
             {
