@@ -19,7 +19,7 @@ namespace BisBuddy.Services
         private readonly IFramework framework = framework;
         private readonly IEnumerable<IAddonEventListener> listeners = listeners;
 
-        private const int LogUpdatePeriod = 1000;
+        private const int LogUpdatePeriod = 6000;
         private int currentUpdateTicks = (int)(LogUpdatePeriod * 0.9);
 
         private void logInvalidNodes(IFramework framework)
