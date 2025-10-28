@@ -278,6 +278,9 @@ public sealed partial class Plugin : IDalamudPlugin
                 // handle active language
                 builder.RegisterType<LanguageService>().AsImplementedInterfaces().SingleInstance();
 
+                // log bad node highlights
+                builder.RegisterType<InvalidNodePollerService>().AsImplementedInterfaces().SingleInstance();
+
                 // addon listeners
                 //   inventories
                 builder.RegisterType<InventoryBuddyService>().AsImplementedInterfaces().AsSelf().SingleInstance();
