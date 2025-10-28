@@ -89,58 +89,24 @@ namespace BisBuddy.Items
             return SeStringToString(shop.Name);
         }
 
-        public List<uint> GetItemMateriaIds(GameInventoryItem item)
+        public uint GetMateriaItemId(ushort materiaId, byte materiaGrade)
         {
-            // returns a list of materia ids that are melded to item
-            var materiaList = new List<uint>();
-
-            // iterate over materia slots
-            for (var i = 0; i < item.Materia.Length; i++)
+            try
             {
-                var materiaId = item.Materia[i];
-                var materiaGrade = item.MateriaGrade[i];
+                // can fail for weird gear, like Eternal Ring//
+                if (!Materia.TryGetRow(materiaId, out var materiaRow))
+                    return 0;
 
-                // no materia in this slot, assume all after are empty
-                if (materiaId == 0) break;
+                // row is materiaId (the type: crt, det, etc), column is materia grade (I, II, III, etc)
+                var materiaItem = materiaRow.Item[materiaGrade];
 
-                // add item id of materia to list
-                try
-                {
-                    var materiaItemId = getMateriaItemId(materiaId, materiaGrade);
-                    if (materiaItemId != 0) materiaList.Add(materiaItemId);
-                }
-                catch (Exception e)
-                {
-                    logger.Error(e, $"Failed to get materia item id for item {GetItemNameById(item.ItemId)} (materia id {materiaId}, materia grade {materiaGrade})");
-                    DumpData(item);
-                }
+                return materiaItem.RowId;
             }
-
-            return materiaList;
-        }
-
-        private unsafe void DumpData(GameInventoryItem item)
-        {
-            var data = new byte[0x48];
-            var ptr = (byte*)item.Address;
-            for (var i = 0; i < 0x48; i++)
+            catch (Exception e)
             {
-                data[i] = ptr[i];
+                logger.Error(e, $"Failed to get materia item id for materia id {materiaId}, materia grade {materiaGrade}");
+                throw;
             }
-            var str = string.Join(' ', data.Select(t => t.ToString("X")));
-            logger.Fatal(str);
-        }
-
-        private uint getMateriaItemId(ushort materiaId, byte materiaGrade)
-        {
-            // can fail for weird gear, like Eternal Ring//
-            if (!Materia.TryGetRow(materiaId, out var materiaRow))
-                return 0;
-
-            // row is materiaId (the type: crt, det, etc), column is materia grade (I, II, III, etc)
-            var materiaItem = materiaRow.Item[materiaGrade];
-
-            return materiaItem.RowId;
         }
 
         /// <summary>

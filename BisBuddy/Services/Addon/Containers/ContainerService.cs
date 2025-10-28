@@ -181,12 +181,12 @@ namespace BisBuddy.Services.Addon.Containers
             return entry->Slot + sorter->ItemsPerPage * entry->Page;
         }
 
-        private static unsafe InventoryItem* getInventoryItem(ItemOrderModuleSorter* sorter, ItemOrderModuleSorterItemEntry* entry)
+        private static unsafe FFXIVClientStructs.FFXIV.Client.Game.InventoryItem* getInventoryItem(ItemOrderModuleSorter* sorter, ItemOrderModuleSorterItemEntry* entry)
         {
             return getInventoryItem(sorter, getSlotIndex(sorter, entry));
         }
 
-        private static unsafe InventoryItem* getInventoryItem(ItemOrderModuleSorter* sorter, long slotIndex)
+        private static unsafe FFXIVClientStructs.FFXIV.Client.Game.InventoryItem* getInventoryItem(ItemOrderModuleSorter* sorter, long slotIndex)
         {
             if (sorter == null)
                 return null;

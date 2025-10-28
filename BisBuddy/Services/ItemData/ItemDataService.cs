@@ -148,7 +148,7 @@ namespace BisBuddy.Items
         public string GetItemNameById(uint id);
         public uint GetItemIdByName(string name);
         public string GetShopNameById(uint shopId);
-        public List<uint> GetItemMateriaIds(GameInventoryItem item);
+        public uint GetMateriaItemId(ushort materiaTypeId, byte materiaGrade);
 
         /// <summary>
         /// Returns if an item can have materia attached to it

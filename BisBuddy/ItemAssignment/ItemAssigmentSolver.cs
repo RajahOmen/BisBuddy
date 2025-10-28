@@ -32,8 +32,8 @@ namespace BisBuddy.ItemAssignment
         private readonly IEnumerable<Gearset> assignableGearsets;
         private readonly List<GearpieceAssignmentGroup> gearpieceGroups = [];
         private readonly List<PrerequisiteAssignmentGroup> prerequisiteGroups = [];
-        private readonly List<GameInventoryItem> gearpieceCandidateItems;
-        private List<GameInventoryItem> prerequisiteCandidateItems;
+        private readonly List<InventoryItem> gearpieceCandidateItems;
+        private List<InventoryItem> prerequisiteCandidateItems;
         private readonly List<Assignment> assignments = [];
         private readonly List<Gearpiece> assignedGearpieces = [];
         private readonly int[,] gearpieceEdges;
@@ -43,7 +43,7 @@ namespace BisBuddy.ItemAssignment
             ITypedLogger<ItemAssigmentSolver> logger,
             IEnumerable<Gearset> allGearsets,
             IEnumerable<Gearset> assignableGearsets,
-            List<GameInventoryItem> inventoryItems,
+            List<InventoryItem> inventoryItems,
             IItemDataService itemData,
             IMateriaFactory materiaFactory,
             bool strictMateriaMatching,
@@ -81,7 +81,7 @@ namespace BisBuddy.ItemAssignment
             prerequisiteCandidateItems = inventoryItems;
         }
 
-        private static void removeManuallyCollectedItems(IEnumerable<Gearset> gearsets, List<GameInventoryItem> inventoryItems)
+        private static void removeManuallyCollectedItems(IEnumerable<Gearset> gearsets, List<InventoryItem> inventoryItems)
         {
             var manuallyCollectedItemIds = gearsets
                 .SelectMany(set =>
@@ -276,7 +276,7 @@ namespace BisBuddy.ItemAssignment
             prerequisiteEdges = new int[prerequisiteGroups.Count, prerequisiteCandidateItems.Count];
             var assignments = new int[prerequisiteCandidateItems.Count];
 
-            var candidateItemList = new List<GameInventoryItem>(prerequisiteCandidateItems);
+            var candidateItemList = new List<InventoryItem>(prerequisiteCandidateItems);
 
             var itemCount = candidateItemList.Count;
             // n(n+1)/2 + buffer
@@ -345,9 +345,8 @@ namespace BisBuddy.ItemAssignment
                     var candidate = gearpieceCandidateItems[candIdx];
 
                     // item ids match, set edge to weight score calculated by group for this candidate
-                    var candidateMateriaIds = itemData.GetItemMateriaIds(candidate);
                     var candidateMateria = new MateriaGroup(
-                        candidateMateriaIds.Select(id => materiaFactory.Create(id))
+                        candidate.MateriaIds.Select(id => materiaFactory.Create(id))
                         );
                     var edgeWeight = group.CandidateEdgeWeight(candidate.ItemId, candidateMateria);
                     gearpieceEdges[groupIdx, candIdx] = edgeWeight;
@@ -453,12 +452,11 @@ namespace BisBuddy.ItemAssignment
 
                 // add assignment to assignments list
                 var groupToAssign = gearpieceGroups[assignment];
-                var candidateMateriaIds = itemData.GetItemMateriaIds(candidate);
                 assignments.Add(
                     new Assignment
                     {
                         ItemId = candidate.ItemId,
-                        ItemMateria = candidateMateriaIds.Select(id => materiaFactory.Create(id)).ToList(),
+                        ItemMateria = candidate.MateriaIds.Select(id => materiaFactory.Create(id)).ToList(),
                         Gearpieces = groupToAssign.Gearpieces
                     });
 

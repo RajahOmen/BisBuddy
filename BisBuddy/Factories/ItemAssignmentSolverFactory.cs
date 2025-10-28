@@ -25,7 +25,7 @@ namespace BisBuddy.Factories
         public IItemAssignmentSolver Create(
             IEnumerable<Gearset> allGearsets,
             IEnumerable<Gearset> assignableGearsets,
-            List<GameInventoryItem> inventoryItems
+            List<InventoryItem> inventoryItems
             )
         {
             var solver = new ItemAssigmentSolver(
@@ -48,7 +48,7 @@ namespace BisBuddy.Factories
         public IItemAssignmentSolver Create(
             IEnumerable<Gearset> allGearsets,
             IEnumerable<Gearset> assignableGearsets,
-            List<GameInventoryItem> inventoryItems
+            List<InventoryItem> inventoryItems
             );
 
         public IItemAssignmentSolver? LastCreatedSolver { get; }

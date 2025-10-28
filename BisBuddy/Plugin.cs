@@ -105,6 +105,9 @@ public sealed partial class Plugin : IDalamudPlugin
                 // item data service wrapper over game excel data
                 builder.RegisterType<ItemDataService>().As<IItemDataService>().SingleInstance();
 
+                // get inventory items
+                builder.RegisterType<InventoryItemsService>().AsImplementedInterfaces().SingleInstance();
+
                 // kamitoolkit
                 builder.RegisterType<NativeController>().AsSelf().SingleInstance();
 
