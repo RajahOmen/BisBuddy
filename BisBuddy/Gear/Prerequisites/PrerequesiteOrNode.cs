@@ -48,15 +48,6 @@ namespace BisBuddy.Gear.Prerequisites
                 prereq.SetIsCollectedLocked(toCollect);
         }
         public HashSet<string> ChildNodeIds => [.. PrerequisiteTree.Select(p => p.NodeId), .. PrerequisiteTree.SelectMany(p => p.ChildNodeIds)];
-        public IEnumerable<ItemRequirement> ItemRequirements
-        {
-            get
-            {
-                foreach (var prereq in PrerequisiteTree)
-                    foreach (var requirement in prereq.ItemRequirements)
-                        yield return requirement;
-            }
-        }
         public CollectionStatusType CollectionStatus
         {
             get
@@ -98,6 +89,24 @@ namespace BisBuddy.Gear.Prerequisites
                 prereq.OnPrerequisiteChange += handlePrereqChange;
         }
 
+        public event PrerequisiteChangeHandler? OnPrerequisiteChange;
+
+        public IEnumerable<ItemRequirement> GetItemRequirements(bool includeDisabledNodes = false)
+        {
+            if (includeDisabledNodes)
+            {
+                foreach (var (prereq, _) in CompletePrerequisiteTree)
+                    foreach (var requirement in prereq.GetItemRequirements(includeDisabledNodes))
+                        yield return requirement;
+            }
+            else
+            {
+                foreach (var prereq in PrerequisiteTree)
+                    foreach (var requirement in prereq.GetItemRequirements(includeDisabledNodes))
+                        yield return requirement;
+            }
+        }
+
         public void SetPrerequisiteActiveStatus(IPrerequisiteNode prereq, bool isActive)
         {
             var matches = completePrerequisiteTree.Index().Where(entry => entry.Item.Node == prereq);
@@ -120,8 +129,6 @@ namespace BisBuddy.Gear.Prerequisites
 
             OnPrerequisiteChange?.Invoke();
         }
-
-        public event PrerequisiteChangeHandler? OnPrerequisiteChange;
 
         private void handlePrereqChange() =>
             OnPrerequisiteChange?.Invoke();

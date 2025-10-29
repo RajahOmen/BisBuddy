@@ -229,20 +229,37 @@ namespace BisBuddy.Gear.Melds
             return matchingMateria;
         }
 
-        public void Add(Materia item) =>
+        public void Add(Materia item)
+        {
             materiaList.Add(item);
+            item.OnMateriaChange += handleOnMateriaChange;
+            handleOnMateriaChange();
+        }
 
-        public void Clear() =>
+        public void Clear()
+        {
+            foreach (var item in materiaList)
+                item.OnMateriaChange -= handleOnMateriaChange;
+
             materiaList.Clear();
-
+            handleOnMateriaChange();
+        }
+        
         public bool Contains(Materia item) =>
             materiaList.Contains(item);
 
         public void CopyTo(Materia[] array, int arrayIndex) =>
             materiaList.CopyTo(array, arrayIndex);
 
-        public bool Remove(Materia item) =>
-            materiaList.Remove(item);
+        public bool Remove(Materia item)
+        {
+            if (!materiaList.Remove(item))
+                return false;
+
+            item.OnMateriaChange -= handleOnMateriaChange;
+            handleOnMateriaChange();
+            return true;
+        }
 
         public IEnumerator<Materia> GetEnumerator() =>
             materiaList.GetEnumerator();

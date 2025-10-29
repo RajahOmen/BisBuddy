@@ -1,5 +1,6 @@
 using BisBuddy.Gear.Prerequisites;
 using BisBuddy.Items;
+using BisBuddy.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,10 +9,14 @@ using System.Text.Json.Serialization;
 
 namespace BisBuddy.Converters
 {
-    internal class PrerequisiteOrNodeConverter(IItemDataService itemData) : JsonConverter<PrerequisiteOrNode>
+    internal class PrerequisiteOrNodeConverter(
+        ITypedLogger<PrerequisiteOrNodeConverter> logger,
+        IItemDataService itemData
+        ) : JsonConverter<PrerequisiteOrNode>
     {
         private const string DisabledPrereqsPropName = "DisabledPrereqs";
         public const string TypeDescriminatorValue = "or";
+        private readonly ITypedLogger<PrerequisiteOrNodeConverter> logger = logger;
         private readonly IItemDataService itemData = itemData;
 
         public override PrerequisiteOrNode? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)

@@ -230,7 +230,7 @@ namespace BisBuddy.Items
             }
 
             return itemPrerequisiteOptions
-                .DistinctBy(i => $"{i.ItemId}|{i.SourceShopId}|{string.Join("", i.ShopCostIds)}")
+                .DistinctBy(i => $"{i.ItemId}|{string.Join("", i.ShopCostIds)}")
                 .ToLookup(i => i.ItemId, i => (i.ShopCostIds, i.SourceShopId));
         }
     }

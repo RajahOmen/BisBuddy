@@ -78,23 +78,6 @@ namespace BisBuddy.Gear.Prerequisites
             triggerPrerequisiteChange();
         }
         public HashSet<string> ChildNodeIds => [.. PrerequisiteTree.Select(p => p.NodeId), .. PrerequisiteTree.SelectMany(p => p.ChildNodeIds)];
-        public IEnumerable<ItemRequirement> ItemRequirements
-        {
-            get
-            {
-                yield return new ItemRequirement()
-                {
-                    ItemId = ItemId,
-                    CollectionStatus = CollectionStatus,
-                    RequirementType = RequirementType.Prerequisite,
-                };
-
-                if (PrerequisiteTree.Count > 0)
-                    foreach (var requirement in PrerequisiteTree[0].ItemRequirements)
-                        yield return requirement;
-            }
-        }
-
 
         public CollectionStatusType CollectionStatus
         {
@@ -133,6 +116,20 @@ namespace BisBuddy.Gear.Prerequisites
         }
 
         public event PrerequisiteChangeHandler? OnPrerequisiteChange;
+
+        public IEnumerable<ItemRequirement> GetItemRequirements(bool includeDisabledNodes = false)
+        {
+            yield return new ItemRequirement()
+            {
+                ItemId = ItemId,
+                CollectionStatus = CollectionStatus,
+                RequirementType = RequirementType.Prerequisite,
+            };
+
+            if (PrerequisiteTree.Count > 0)
+                foreach (var requirement in PrerequisiteTree[0].GetItemRequirements(includeDisabledNodes))
+                    yield return requirement;
+        }
 
         private void handlePrereqChange() =>
             triggerPrerequisiteChange();

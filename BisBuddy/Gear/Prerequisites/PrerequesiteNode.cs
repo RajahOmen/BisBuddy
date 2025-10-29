@@ -11,10 +11,10 @@ namespace BisBuddy.Gear.Prerequisites
         public string ItemName { get; set; }
         public IReadOnlyList<IPrerequisiteNode> PrerequisiteTree { get; }
         public HashSet<string> ChildNodeIds { get; }
-        public IEnumerable<ItemRequirement> ItemRequirements { get; }
         public PrerequisiteNodeSourceType SourceType { get; set; }
 
         public event PrerequisiteChangeHandler? OnPrerequisiteChange;
+        public IEnumerable<ItemRequirement> GetItemRequirements(bool includeDisabledNodes = false);
         public void AddNode(IPrerequisiteNode newNode);
         public void ReplaceNode(int index, IPrerequisiteNode newNode);
         public void InsertNode(int index, IPrerequisiteNode newNode);
