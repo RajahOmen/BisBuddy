@@ -46,6 +46,7 @@ namespace BisBuddy.Ui.Renderers.Tabs.Config
                                 | ImGuiColorEditFlags.AlphaBar
                                 | ImGuiColorEditFlags.NoSidePreview
                                 | ImGuiColorEditFlags.DisplayRgb
+                                | ImGuiColorEditFlags.DisplayHex
                                 | ImGuiColorEditFlags.NoBorder
                                 ))
                             {
