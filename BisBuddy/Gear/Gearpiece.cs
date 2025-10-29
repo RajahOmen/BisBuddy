@@ -161,7 +161,7 @@ namespace BisBuddy.Gear
 
             if (!IsCollected && PrerequisiteTree is not null)
             {
-                var prerequisiteRequirements = PrerequisiteTree.ItemRequirements;
+                var prerequisiteRequirements = PrerequisiteTree.GetItemRequirements();
                 foreach (var requirement in prerequisiteRequirements)
                     yield return new(
                         requirement,

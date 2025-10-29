@@ -200,19 +200,26 @@ namespace BisBuddy.Items
             {
                 foreach (var newChildNode in newPrerequisiteNode.PrerequisiteTree)
                 {
-                    var newChildNodeItemIds = newChildNode.ItemRequirements.Select(req => req.ItemId);
+                    var newChildNodeItemIds = newChildNode
+                        .GetItemRequirements(includeDisabledNodes: true)
+                        .Select(req => req.ItemId);
 
                     // add nodes that exist in new tree to old tree
                     var existsInOldNode = ((PrerequisiteOrNode)oldPrerequisiteNode)
                         .CompletePrerequisiteTree
                         .Any(entry =>
-                            entry.Node.ItemRequirements.Select(req => req.ItemId).SequenceEqual(newChildNodeItemIds)
+                            entry.Node.GetItemRequirements(includeDisabledNodes: true).Select(req => req.ItemId).SequenceEqual(newChildNodeItemIds)
                             && entry.Node.GetType() == newChildNode.GetType()
                         );
 
                     if (!existsInOldNode)
                     {
                         logger.Debug($"New alternative found for \"{itemId}\", added to existing {nameof(PrerequisiteOrNode)} layer");
+                        logger.Debug($"NEW: {string.Join(", ", newChildNodeItemIds)}");
+                        foreach (var node in ((PrerequisiteOrNode)oldPrerequisiteNode).CompletePrerequisiteTree)
+                        {
+                            logger.Debug($"OLD: {string.Join(", ", node.Node.GetItemRequirements(includeDisabledNodes: true).Select(r => r.ItemId))}");
+                        }
                         oldPrerequisiteNode.AddNode(newChildNode);
                     }
 
@@ -223,8 +230,8 @@ namespace BisBuddy.Items
 
         private static bool sameItemRequirements(IPrerequisiteNode node1, IPrerequisiteNode node2)
         {
-            var items1 = node1.ItemRequirements;
-            var items2 = node2.ItemRequirements;
+            var items1 = node1.GetItemRequirements(includeDisabledNodes: true);
+            var items2 = node2.GetItemRequirements(includeDisabledNodes: true);
 
             return items1.Count() == items2.Count() && !items1.Except(items2).Any();
         }
