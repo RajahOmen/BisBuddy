@@ -292,6 +292,7 @@ namespace BisBuddy.Ui.Renderers.Components
                                     | ImGuiColorEditFlags.AlphaBar
                                     | ImGuiColorEditFlags.NoSidePreview
                                     | ImGuiColorEditFlags.DisplayRgb
+                                    | ImGuiColorEditFlags.DisplayHex
                                     | ImGuiColorEditFlags.NoBorder
                                     | ImGuiColorEditFlags.NoDragDrop
                                     ))
