@@ -779,4 +779,8 @@ or to have a unique color to highlight items in</value>
     <value>Copy {0} link</value>
     <comment>{0} - the type/domain of this gearset's url</comment>
   </data>
+  <data name="GearpieceCollectionStatusUnlockedSuffix" xml:space="preserve">
+    <value>{0}. Right click to lock</value>
+    <comment>{0} - Collection status of the gearpiece</comment>
+  </data>
 </root>

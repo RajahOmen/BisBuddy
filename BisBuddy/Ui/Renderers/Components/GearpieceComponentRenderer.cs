@@ -11,6 +11,7 @@ using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Plugin.Services;
+using Dalamud.Utility;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -243,11 +244,11 @@ namespace BisBuddy.Ui.Renderers.Components
                         ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
                         var collectionStatusDesc = attributeService
                             .GetEnumAttribute<DisplayAttribute>(gearpiece.CollectionStatus)!
-                            .GetDescription();
+                            .GetDescription()!;
 
                         var tooltip = gearpiece.CollectLock
                             ? string.Format(Resource.CollectionStatusLockedTooltipPrefix, collectionStatusDesc)
-                            : collectionStatusDesc;
+                            : Resource.GearpieceCollectionStatusUnlockedSuffix.Format(collectionStatusDesc);
 
                         UiComponents.SetSolidTooltip(tooltip);
                     }
