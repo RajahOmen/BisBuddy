@@ -184,6 +184,7 @@ namespace BisBuddy.Ui.Renderers.Components
 
             using (ImRaii.PushStyle(ImGuiStyleVar.FramePadding, buttonPaddingSize))
             using (ImRaii.PushColor(ImGuiCol.FrameBg, checkboxColor))
+            using (ImRaii.PushStyle(ImGuiStyleVar.Alpha, 0.5f, !enabled))
             {
                 if (ImGui.Checkbox("###gearset_enable_checkbox", ref enabled))
                 {
@@ -320,7 +321,7 @@ namespace BisBuddy.Ui.Renderers.Components
                         if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.Copy, $"{sourceUrlTypeName}##copy_gearset_url"))
                             ImGui.SetClipboardText(gearset.SourceUrl);
                         if (ImGui.IsItemHovered())
-                            UiComponents.SetSolidTooltip(string.Format(Resource.GearsetUrlTooltip, gearset.SourceType));
+                            UiComponents.SetSolidTooltip(string.Format(Resource.GearsetUrlTooltip, sourceUrlTypeName));
                         ImGui.TableNextRow();
                     }
                     // don't support simultaneous source urls and strings for now

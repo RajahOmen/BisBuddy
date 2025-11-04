@@ -364,11 +364,32 @@ namespace BisBuddy.Items
                 && hasExchangesPrereqs
                 )
             {
-                // composed of both shop/exchange sources and supplemental sources
+
+                // try to compact the tree, if possible
+                var compositeTree = new List<IPrerequisiteNode>();
+                if (supplementalTree is PrerequisiteOrNode)
+                    foreach (var suppPrereq in supplementalTree.PrerequisiteTree)
+                    {
+                        suppPrereq.SourceType = supplementalTree.SourceType;
+                        compositeTree.Add(suppPrereq);
+                    }
+                else
+                    compositeTree.Add(supplementalTree);
+
+                if (exchangesTree is PrerequisiteOrNode)
+                    foreach (var excPrereq in exchangesTree.PrerequisiteTree)
+                    {
+                        excPrereq.SourceType = exchangesTree.SourceType;
+                        compositeTree.Add(excPrereq);
+                    }
+                else
+                    compositeTree.Add(exchangesTree);
+
+                // exchangesTree of both shop/exchange sources and supplemental sources
                 var compoundGroup = new PrerequisiteOrNode(
                     itemId,
                     itemName,
-                    [supplementalTree, exchangesTree],
+                    compositeTree,
                     PrerequisiteNodeSourceType.Compound
                     );
 
