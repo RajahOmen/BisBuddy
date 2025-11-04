@@ -250,6 +250,24 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Copy {0} text.
+        /// </summary>
+        public static string ContextMenuCopyString {
+            get {
+                return ResourceManager.GetString("ContextMenuCopyString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Copy {0} link.
+        /// </summary>
+        public static string ContextMenuCopyUrl {
+            get {
+                return ResourceManager.GetString("ContextMenuCopyUrl", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Delete Gearset.
         /// </summary>
         public static string ContextMenuDeleteGearset {
@@ -1023,7 +1041,7 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Etro.gg.
+        ///   Looks up a localized string similar to Etro.
         /// </summary>
         public static string ImportEtroName {
             get {
@@ -1229,7 +1247,7 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Xivgear.app.
+        ///   Looks up a localized string similar to Xivgear.
         /// </summary>
         public static string ImportXivgearName {
             get {

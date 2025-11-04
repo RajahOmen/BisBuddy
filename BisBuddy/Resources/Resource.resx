@@ -493,10 +493,10 @@ or to have a unique color to highlight items in</value>
     <value>Active</value>
   </data>
   <data name="ImportXivgearName" xml:space="preserve">
-    <value>Xivgear.app</value>
+    <value>Xivgear</value>
   </data>
   <data name="ImportEtroName" xml:space="preserve">
-    <value>Etro.gg</value>
+    <value>Etro</value>
   </data>
   <data name="ImportJsonName" xml:space="preserve">
     <value>JSON</value>
@@ -770,5 +770,13 @@ or to have a unique color to highlight items in</value>
   </data>
   <data name="CommandDescriptionOpenDebug" xml:space="preserve">
     <value>Open plugin debug if debugging is enabled</value>
+  </data>
+  <data name="ContextMenuCopyString" xml:space="preserve">
+    <value>Copy {0} text</value>
+    <comment>{0} - is the kind of string the gearset source string is</comment>
+  </data>
+  <data name="ContextMenuCopyUrl" xml:space="preserve">
+    <value>Copy {0} link</value>
+    <comment>{0} - the type/domain of this gearset's url</comment>
   </data>
 </root>

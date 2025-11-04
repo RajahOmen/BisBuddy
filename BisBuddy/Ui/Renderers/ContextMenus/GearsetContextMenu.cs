@@ -1,12 +1,15 @@
 using BisBuddy.Factories;
 using BisBuddy.Gear;
+using BisBuddy.Import;
 using BisBuddy.Resources;
 using BisBuddy.Services;
 using BisBuddy.Services.Configuration;
 using BisBuddy.Services.Gearsets;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
+using Dalamud.Utility;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Numerics;
 using System.Text.Json;
@@ -18,11 +21,13 @@ namespace BisBuddy.Ui.Renderers.ContextMenus
         IContextMenuEntryFactory factory,
         IGearsetsService gearsetsService,
         IConfigurationService configurationService,
+        IAttributeService attributeService,
         JsonSerializerOptions jsonSerializerOptions
         ) : ContextMenuBase<Gearset, GearsetContextMenu>(logger, factory)
     {
         private readonly IGearsetsService gearsetsService = gearsetsService;
         private readonly IConfigurationService configurationService = configurationService;
+        private readonly IAttributeService attributeService = attributeService;
         private readonly JsonSerializerOptions jsonSerializerOptions = jsonSerializerOptions;
 
         private UiTheme uiTheme => configurationService.UiTheme;
@@ -34,6 +39,12 @@ namespace BisBuddy.Ui.Renderers.ContextMenus
         {
             if (newComponent is not Gearset gearset)
                 return [];
+
+            var gearsetTypeName = string.Empty;
+            if (gearset.SourceType is ImportGearsetSourceType sourceType)
+                gearsetTypeName = attributeService
+                    .GetEnumAttribute<DisplayAttribute>(sourceType)!
+                    .GetName()!;
 
             return [
                 factory.Create(
@@ -73,8 +84,18 @@ namespace BisBuddy.Ui.Renderers.ContextMenus
                     },
                     shouldDraw: () => gearset.Gearpieces.Any(g => g.CollectLock)),
                 factory.Create(
-                    entryName: Resource.ContextMenuCopyJson,
+                    entryName: Resource.ContextMenuCopyString.Format(gearsetTypeName),
                     icon: FontAwesomeIcon.Copy,
+                    onClick: () => ImGui.SetClipboardText(gearset.SourceString),
+                    shouldDraw: () => gearset.SourceString is not null && gearset.SourceType is not null),
+                factory.Create(
+                    entryName: Resource.ContextMenuCopyUrl.Format(gearsetTypeName),
+                    icon: FontAwesomeIcon.Copy,
+                    onClick: () => ImGui.SetClipboardText(gearset.SourceUrl),
+                    shouldDraw: () => gearset.SourceUrl is not null && gearset.SourceType is not null),
+                factory.Create(
+                    entryName: Resource.ContextMenuCopyJson,
+                    icon: FontAwesomeIcon.FileExport,
                     onClick: () => ImGui.SetClipboardText(JsonSerializer.Serialize(gearset, jsonSerializerOptions))),
                 factory.Create(
                     entryName: Resource.ContextMenuDeleteGearset,
