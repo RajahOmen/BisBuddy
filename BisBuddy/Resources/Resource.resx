@@ -323,7 +323,7 @@ List menu highlights are not affected</value>
   </data>
   <data name="GearpieceLockedDisabledTooltip" xml:space="preserve">
     <value>{0}
-Lock gearpiece to change status</value>
+Right click + Lock gearpiece to change status</value>
     <comment>When the materia is attached to a locked gearpiece</comment>
   </data>
   <data name="SearchInventoryForItemTooltip" xml:space="preserve">

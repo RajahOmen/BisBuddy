@@ -237,6 +237,10 @@ namespace BisBuddy.Ui.Renderers.Tabs.Main
                                     ? gearset
                                     : null;
                             mainSelectableHovered = ImGui.IsItemHovered();
+
+                            if (mainSelectableHovered)
+                                ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+
                             // right click context menu
                             rendererFactory
                                 .GetRenderer(gearset, RendererType.ContextMenu)
