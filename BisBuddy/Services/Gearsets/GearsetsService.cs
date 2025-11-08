@@ -98,7 +98,7 @@ namespace BisBuddy.Services.Gearsets
                 scheduleGearsetsChange(updateAssignments: true);
         }
 
-        public async Task StopAsync(CancellationToken cancellationToken)
+        public Task StopAsync(CancellationToken cancellationToken)
         {
             // updating gearset data per framework update
             framework.Update -= onUpdate;
@@ -114,7 +114,9 @@ namespace BisBuddy.Services.Gearsets
             foreach (var gearset in currentGearsets)
                 gearset.OnGearsetChange -= handleGearsetChange;
 
-            await saveGearsetsAsync(currentLocalContentId, currentGearsets);
+            saveGearsets(currentLocalContentId, currentGearsets);
+
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -149,7 +151,7 @@ namespace BisBuddy.Services.Gearsets
             {
                 logger.Warning($"No gearsets file found for \"{localContentId}\", creating new");
                 currentGearsets = [];
-                _ = saveGearsetsAsync(localContentId, []);
+                saveGearsets(localContentId, []);
                 GearsetsLoaded = true;
             }
             finally
@@ -179,22 +181,6 @@ namespace BisBuddy.Services.Gearsets
             logger.Verbose($"Saving {localContentId}'s current gearsets");
 
             fileService.WriteGearsetsString(
-                localContentId,
-                gearsetsListStr
-                );
-        }
-
-        private async Task saveGearsetsAsync(ulong localContentId, List<Gearset> gearsets)
-        {
-            // don't save anything if no gearsets are actually loaded
-            if (!GearsetsLoaded || localContentId == 0)
-                return;
-
-            var gearsetsListStr = serializeGearsets(gearsets);
-
-            logger.Verbose($"Saving {localContentId}'s current gearsets");
-
-            await fileService.WriteGearsetsStringAsync(
                 localContentId,
                 gearsetsListStr
                 );

@@ -237,18 +237,20 @@ namespace BisBuddy.Services.Configuration
             return Task.CompletedTask;
         }
 
-        public async Task StopAsync(CancellationToken cancellationToken)
+        public Task StopAsync(CancellationToken cancellationToken)
         {
             try
             {
                 logger.Verbose($"Saving configuration file");
                 var configText = JsonSerializer.Serialize(configuration, jsonSerializerOptions);
-                await fileService.WriteConfigStringAsync(configText, cancellationToken);
+                fileService.WriteConfigString(configText);
             }
             catch (Exception ex)
             {
                 logger.Error($"Error saving config file", ex);
             }
+
+            return Task.CompletedTask;
         }
     }
 

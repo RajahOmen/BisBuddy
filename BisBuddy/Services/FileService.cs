@@ -1,11 +1,9 @@
 using BisBuddy.Util;
 using Dalamud.Plugin;
+using Dalamud.Utility;
 using System;
 using System.IO;
 using System.IO.Abstractions;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace BisBuddy.Services
 {
     public class FileService(
@@ -50,7 +48,7 @@ namespace BisBuddy.Services
         {
             try
             {
-                file.WriteAllText(pluginInterface.ConfigFile.FullName, serializedConfigData);
+                FilesystemUtil.WriteAllTextSafe(pluginInterface.ConfigFile.FullName, serializedConfigData);
             }
             catch (Exception ex)
             {
@@ -64,33 +62,7 @@ namespace BisBuddy.Services
             {
                 if (!fileSystem.Directory.Exists(gearsetsDirectoryPath))
                     createGearsetsDirectory();
-                file.WriteAllText(getCharacterGearsetPath(contentId), serializedGearsetsData);
-            }
-            catch (Exception ex)
-            {
-                logger.Error(ex, $"Error writing gearsets for contentId {contentId}");
-            }
-        }
-
-        public async Task WriteConfigStringAsync(string serializedConfigData, CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                await file.WriteAllTextAsync(pluginInterface.ConfigFile.FullName, serializedConfigData, cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                logger.Error(ex, "Error writing configuration data");
-            }
-        }
-
-        public async Task WriteGearsetsStringAsync(ulong contentId, string serializedGearsetsData, CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                if (!fileSystem.Directory.Exists(gearsetsDirectoryPath))
-                    createGearsetsDirectory();
-                await file.WriteAllTextAsync(getCharacterGearsetPath(contentId), serializedGearsetsData, cancellationToken);
+                FilesystemUtil.WriteAllTextSafe(getCharacterGearsetPath(contentId), serializedGearsetsData);
             }
             catch (Exception ex)
             {
@@ -126,18 +98,5 @@ namespace BisBuddy.Services
         /// <param name="contentId">The content id of the character to save the gearset data to</param>
         /// <param name="serializedGearsetsList">The serialized gearset data to save</param>
         public void WriteGearsetsString(ulong contentId, string serializedGearsetsList);
-
-        /// <summary>
-        /// Saves the provided configuration data to file asynchronously
-        /// </summary>
-        /// <param name="serializedConfigData">The serialized configuration data</param>
-        public Task WriteConfigStringAsync(string serializedConfigData, CancellationToken cancellationToken = default);
-
-        /// <summary>
-        /// Saves the provided gearset data to file for the provided character contentId asynchronously
-        /// </summary>
-        /// <param name="contentId">The content id of the character to save the gearset data to</param>
-        /// <param name="serializedGearsetsList">The serialized gearset data to save</param>
-        public Task WriteGearsetsStringAsync(ulong contentId, string serializedGearsetsList, CancellationToken cancellationToken = default);
     }
 }

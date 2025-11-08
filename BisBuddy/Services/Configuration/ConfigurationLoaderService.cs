@@ -4,7 +4,6 @@ using BisBuddy.Util;
 using Newtonsoft.Json;
 using System;
 using System.IO;
-using System.Linq;
 using System.Numerics;
 using System.Text.Json;
 using System.Threading;
@@ -158,7 +157,7 @@ namespace BisBuddy.Services.Configuration
         /// </summary>
         /// <param name="configJson">JsonDocument config</param>
         /// <returns></returns>
-        private async Task<Configuration> migrate3To4(JsonDocument configJson, CancellationToken cancellationToken = default)
+        private Configuration migrate3To4(JsonDocument configJson, CancellationToken cancellationToken = default)
         {
             var config = configJson.Deserialize<Configuration>(jsonSerializerOptions)
                 ?? new Configuration();
@@ -168,12 +167,11 @@ namespace BisBuddy.Services.Configuration
                 return config;
 
             // move gearsets to actual file
-            var writeGearsetsTasks = config.CharactersData.Select(async charData =>
+            foreach (var charData in config.CharactersData)
             {
                 var gearsets = JsonSerializer.Serialize(charData.Value.Gearsets, jsonSerializerOptions);
-                await fileService.WriteGearsetsStringAsync(charData.Key, gearsets, cancellationToken);
-            });
-            await Task.WhenAll(writeGearsetsTasks);
+                fileService.WriteGearsetsString(charData.Key, gearsets);
+            }
 
             // delete data in the config
             config.CharactersData.Clear();
