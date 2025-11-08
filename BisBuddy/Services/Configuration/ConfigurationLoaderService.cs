@@ -77,7 +77,7 @@ namespace BisBuddy.Services.Configuration
                 {
                     1 => await migrate1To2(configStream, cancellationToken),
                     2 => migrate2To3(configJson),
-                    3 => await migrate3To4(configJson, cancellationToken),
+                    3 => migrate3To4(configJson, cancellationToken),
                     _ => throw new JsonException($"Invalid version number \"{configVersion}\"")
                 };
                 newConfig.Version = version + 1;
