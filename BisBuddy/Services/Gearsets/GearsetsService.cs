@@ -27,7 +27,7 @@ namespace BisBuddy.Services.Gearsets
         IClientState clientState,
         IConfigurationService configurationService,
         IFileService fileService,
-        JsonSerializerOptions jsonSerializerOptions,
+        IJsonSerializerService jsonSerializerService,
         IItemAssignmentSolverFactory itemAssignmentSolverFactory,
         IQueueService queueService,
         IInventoryUpdateDisplayService inventoryUpdateDisplayService,
@@ -40,7 +40,7 @@ namespace BisBuddy.Services.Gearsets
         private readonly IClientState clientState = clientState;
         private readonly IConfigurationService configurationService = configurationService;
         private readonly IFileService fileService = fileService;
-        private readonly JsonSerializerOptions jsonSerializerOptions = jsonSerializerOptions;
+        private readonly IJsonSerializerService jsonSerializerService = jsonSerializerService;
         private readonly IItemAssignmentSolverFactory itemAssignmentSolverFactory = itemAssignmentSolverFactory;
         private readonly IQueueService queueService = queueService;
         private readonly IInventoryUpdateDisplayService inventoryUpdateDisplayService = inventoryUpdateDisplayService;
@@ -140,9 +140,8 @@ namespace BisBuddy.Services.Gearsets
                 else
                 {
                     using var gearsetsReadStream = fileService.OpenReadGearsetsStream(localContentId);
-                    currentGearsets = JsonSerializer.Deserialize<List<Gearset>>(
-                        gearsetsReadStream,
-                        jsonSerializerOptions
+                    currentGearsets = jsonSerializerService.Deserialize<List<Gearset>>(
+                        gearsetsReadStream
                         ) ?? [];
                     GearsetsLoaded = true;
                 }
@@ -176,7 +175,7 @@ namespace BisBuddy.Services.Gearsets
             if (!GearsetsLoaded || localContentId == 0)
                 return;
 
-            var gearsetsListStr = serializeGearsets(gearsets);
+            var gearsetsListStr = jsonSerializerService.Serialize(gearsets);
 
             logger.Verbose($"Saving {localContentId}'s current gearsets");
 
@@ -186,16 +185,8 @@ namespace BisBuddy.Services.Gearsets
                 );
         }
 
-        private string serializeGearsets(List<Gearset> gearsets)
-        {
-            return JsonSerializer.Serialize(
-                gearsets,
-                jsonSerializerOptions
-                );
-        }
-
         public string ExportGearsetToJsonStr(Gearset gearset) =>
-            JsonSerializer.Serialize(gearset, jsonSerializerOptions);
+            jsonSerializerService.Serialize(gearset);
     }
 
     public interface IGearsetsService : IHostedService

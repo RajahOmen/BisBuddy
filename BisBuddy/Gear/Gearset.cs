@@ -7,7 +7,6 @@ namespace BisBuddy.Gear
 {
     public delegate void GearsetChangeHandler(bool effectsAssignments);
 
-    [Serializable]
     public class Gearset
     {
         private readonly IReadOnlyList<Gearpiece> gearpieces = [];

@@ -4,7 +4,6 @@ using System.Linq;
 
 namespace BisBuddy.Gear.Prerequisites
 {
-    [Serializable]
     public class PrerequisiteOrNode : IPrerequisiteNode
     {
         private readonly List<(IPrerequisiteNode Node, bool IsActive)> completePrerequisiteTree;

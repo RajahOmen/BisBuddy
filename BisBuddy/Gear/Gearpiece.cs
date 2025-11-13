@@ -4,12 +4,12 @@ using BisBuddy.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace BisBuddy.Gear
 {
     public delegate void GearpieceChangeHandler();
 
-    [Serializable]
     public class Gearpiece : ICollectableItem
     {
         private bool isCollected;
