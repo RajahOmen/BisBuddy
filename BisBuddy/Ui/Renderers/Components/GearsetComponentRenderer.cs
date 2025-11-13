@@ -10,7 +10,6 @@ using Dalamud.Interface.Utility.Raii;
 using Dalamud.Plugin.Services;
 using System.ComponentModel.DataAnnotations;
 using System.Numerics;
-using System.Text.Json;
 
 namespace BisBuddy.Ui.Renderers.Components
 {

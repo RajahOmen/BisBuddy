@@ -244,7 +244,7 @@ namespace BisBuddy.Gear.Melds
             materiaList.Clear();
             handleOnMateriaChange();
         }
-        
+
         public bool Contains(Materia item) =>
             materiaList.Contains(item);
 
