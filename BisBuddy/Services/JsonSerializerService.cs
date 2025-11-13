@@ -8,9 +8,22 @@ using System.Threading.Tasks;
 
 namespace BisBuddy.Services
 {
-    public class JsonSerializerService(JsonSerializerOptions options) : IJsonSerializerService
+    public class JsonSerializerService : IJsonSerializerService
     {
-        private readonly JsonSerializerOptions jsonSerializerOptions = options;
+        private readonly JsonSerializerOptions jsonSerializerOptions;
+
+        public JsonSerializerService(
+            ITypedLogger<JsonSerializerService> logger,
+            JsonSerializerOptions options
+            )
+        {
+            jsonSerializerOptions = options;
+
+            var jsonConverterNames = jsonSerializerOptions.Converters
+                .Select(c => c.GetType().Name)
+                .ToList();
+            logger.Debug($"JsonSerializerService initialized with {jsonConverterNames.Count} converters ({string.Join(", ", jsonConverterNames)})");
+        }
 
         public T? Deserialize<T>(string jsonString) =>
             JsonSerializer.Deserialize<T>(jsonString, jsonSerializerOptions);
