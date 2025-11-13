@@ -159,7 +159,8 @@ public sealed partial class Plugin : IDalamudPlugin
                     };
 
                     // get count of all the custom converters defined
-                    var expectedConverterCount = Assembly.GetExecutingAssembly()
+                    var expectedConverterCount = Assembly
+                        .GetExecutingAssembly()
                         .GetTypes()
                         .Where(t =>
                             t.IsClass
@@ -189,15 +190,17 @@ public sealed partial class Plugin : IDalamudPlugin
                 }).As<JsonSerializerOptions>().SingleInstance();
 
                 // converters
-                builder.RegisterType<GearpieceConverter>().As<JsonConverter>().SingleInstance();
-                builder.RegisterType<MateriaGroupConverter>().As<JsonConverter>().SingleInstance();
-                builder.RegisterType<MateriaConverter>().As<JsonConverter>().SingleInstance();
-                builder.RegisterType<PrerequisiteNodeConverter>().As<JsonConverter>().SingleInstance();
-                builder.RegisterType<PrerequisiteAndNodeConverter>().As<JsonConverter>().SingleInstance();
-                builder.RegisterType<PrerequisiteAtomNodeConverter>().As<JsonConverter>().SingleInstance();
-                builder.RegisterType<PrerequisiteOrNodeConverter>().As<JsonConverter>().SingleInstance();
-                builder.RegisterType<GearsetsListConverter>().As<JsonConverter>().SingleInstance();
-                builder.RegisterType<GearsetConverter>().As<JsonConverter>().SingleInstance();
+                var assemblyConverters = Assembly
+                    .GetExecutingAssembly()
+                    .GetTypes()
+                    .Where(t =>
+                        t.IsClass
+                        && !t.IsAbstract
+                        && (t.BaseType?.IsGenericType ?? false)
+                        && t.BaseType!.GetGenericTypeDefinition() == typeof(JsonConverter<>));
+
+                foreach (var converter in assemblyConverters)
+                    builder.RegisterType(converter).As<JsonConverter>().SingleInstance();
 
                 // windows
                 builder.RegisterType<WindowSystem>().AsSelf().SingleInstance();
