@@ -2,11 +2,7 @@ using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Autofac.Features.AttributeFilters;
 using BisBuddy.Commands;
-using BisBuddy.Converters;
 using BisBuddy.Factories;
-using BisBuddy.Gear;
-using BisBuddy.Gear.Melds;
-using BisBuddy.Gear.Prerequisites;
 using BisBuddy.Items;
 using BisBuddy.Mappers;
 using BisBuddy.Mediators;
@@ -43,6 +39,7 @@ using System.Net.Http;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 
 namespace BisBuddy;
 
@@ -140,6 +137,7 @@ public sealed partial class Plugin : IDalamudPlugin
                 builder.RegisterType<FileSystem>().As<IFileSystem>().SingleInstance();
                 builder.RegisterType<FileService>().As<IFileService>().SingleInstance();
                 builder.RegisterType<ConfigurationLoaderService>().As<IConfigurationLoaderService>().SingleInstance();
+                builder.RegisterType<JsonSerializerService>().As<IJsonSerializerService>().SingleInstance();
 
                 // cached attribute retrieval
                 builder.RegisterType<AttributeService>().As<IAttributeService>().SingleInstance();
@@ -148,32 +146,57 @@ public sealed partial class Plugin : IDalamudPlugin
                 builder.RegisterType<GearpieceTypeMapper>().AsImplementedInterfaces().SingleInstance();
 
                 // options for the serializer
-                builder.Register((c) =>
+                builder.Register((ctx) =>
                 {
-                    JsonSerializerOptions jsonSerializerOptions = new()
+                    var options = new JsonSerializerOptions()
                     {
                         PropertyNameCaseInsensitive = true,
                         IncludeFields = true
                     };
 
-                    var converters = c.Resolve<IEnumerable<JsonConverter>>();
-                    foreach (var converter in converters)
-                        jsonSerializerOptions.Converters.Add(converter);
+                    // get count of all the custom converters defined
+                    var expectedConverterCount = Assembly
+                        .GetExecutingAssembly()
+                        .GetTypes()
+                        .Where(t =>
+                            t.IsClass
+                            && !t.IsAbstract
+                            && (t.BaseType?.IsGenericType ?? false)
+                            && t.BaseType!.GetGenericTypeDefinition() == typeof(JsonConverter<>))
+                        .Count();
 
-                    return jsonSerializerOptions;
-                }).As<JsonSerializerOptions>()
-                .InstancePerDependency();
+                    var converters = ctx.Resolve<IEnumerable<JsonConverter>>();
+
+                    // ensure I've registered all the converters I've written
+                    if (converters.Count() != expectedConverterCount)
+                    {
+                        var registeredConverterNames = string.Join(", ", converters
+                            .Select(c => c.GetType().Name)
+                            .OrderBy(n => n));
+
+                        throw new InvalidOperationException($"Expected {expectedConverterCount} JsonConverters, but only registered {converters.Count()} ({registeredConverterNames})");
+                    }
+
+                    foreach (var converter in converters)
+                        options.Converters.Add(converter);
+
+                    options.TypeInfoResolver = new DefaultJsonTypeInfoResolver();
+                    options.MakeReadOnly();
+                    return options;
+                }).As<JsonSerializerOptions>().SingleInstance();
 
                 // converters
-                builder.RegisterType<GearpieceConverter>().As<JsonConverter>().As<JsonConverter<Gearpiece>>().SingleInstance();
-                builder.RegisterType<MateriaGroupConverter>().As<JsonConverter>().As<JsonConverter<MateriaGroup>>().SingleInstance();
-                builder.RegisterType<MateriaConverter>().As<JsonConverter>().As<JsonConverter<Materia>>().SingleInstance();
-                builder.RegisterType<PrerequisiteNodeConverter>().As<JsonConverter>().As<JsonConverter<IPrerequisiteNode>>().SingleInstance();
-                builder.RegisterType<PrerequisiteAndNodeConverter>().As<JsonConverter>().As<JsonConverter<PrerequisiteAndNode>>().SingleInstance();
-                builder.RegisterType<PrerequisiteAtomNodeConverter>().As<JsonConverter>().As<JsonConverter<PrerequisiteAtomNode>>().SingleInstance();
-                builder.RegisterType<PrerequisiteOrNodeConverter>().As<JsonConverter>().As<JsonConverter<PrerequisiteOrNode>>().SingleInstance();
-                builder.RegisterType<GearsetsListConverter>().As<JsonConverter>().As<JsonConverter<List<Gearset>>>().SingleInstance();
-                builder.RegisterType<GearsetConverter>().As<JsonConverter>().As<JsonConverter<Gearset>>().SingleInstance();
+                var assemblyConverters = Assembly
+                    .GetExecutingAssembly()
+                    .GetTypes()
+                    .Where(t =>
+                        t.IsClass
+                        && !t.IsAbstract
+                        && (t.BaseType?.IsGenericType ?? false)
+                        && t.BaseType!.GetGenericTypeDefinition() == typeof(JsonConverter<>));
+
+                foreach (var converter in assemblyConverters)
+                    builder.RegisterType(converter).As<JsonConverter>().SingleInstance();
 
                 // windows
                 builder.RegisterType<WindowSystem>().AsSelf().SingleInstance();
@@ -301,19 +324,6 @@ public sealed partial class Plugin : IDalamudPlugin
                 builder.RegisterType<MateriaAttachService>().AsImplementedInterfaces().AsSelf().SingleInstance();
                 //   need greed
                 builder.RegisterType<NeedGreedService>().AsImplementedInterfaces().AsSelf().SingleInstance();
-            })
-            .ConfigureServices(services =>
-            {
-                // register converters to json options
-                services.AddOptions<JsonSerializerOptions>()
-                .Configure<IServiceProvider>((opts, serviceProvider) =>
-                {
-                    opts.PropertyNameCaseInsensitive = true;
-                    opts.IncludeFields = true;
-
-                    foreach (var converter in serviceProvider.GetServices<JsonConverter>())
-                        opts.Converters.Add(converter);
-                });
             })
             .Build();
 

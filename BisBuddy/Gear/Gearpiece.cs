@@ -1,7 +1,6 @@
 using BisBuddy.Gear.Melds;
 using BisBuddy.Gear.Prerequisites;
 using BisBuddy.Services;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -9,7 +8,6 @@ namespace BisBuddy.Gear
 {
     public delegate void GearpieceChangeHandler();
 
-    [Serializable]
     public class Gearpiece : ICollectableItem
     {
         private bool isCollected;

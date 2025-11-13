@@ -10,7 +10,6 @@ using Dalamud.Interface.Utility.Raii;
 using Dalamud.Plugin.Services;
 using System.ComponentModel.DataAnnotations;
 using System.Numerics;
-using System.Text.Json;
 
 namespace BisBuddy.Ui.Renderers.Components
 {
@@ -20,7 +19,7 @@ namespace BisBuddy.Ui.Renderers.Components
         IRendererFactory rendererFactory,
         IConfigurationService configurationService,
         IAttributeService attributeService,
-        JsonSerializerOptions jsonSerializerOptions,
+        IJsonSerializerService jsonSerializerService,
         IDebugService debugService
         ) : ComponentRendererBase<Gearset>
     {
@@ -29,7 +28,7 @@ namespace BisBuddy.Ui.Renderers.Components
         private readonly IRendererFactory rendererFactory = rendererFactory;
         private readonly IConfigurationService configurationService = configurationService;
         private readonly IAttributeService attributeService = attributeService;
-        private readonly JsonSerializerOptions jsonSerializerOptions = jsonSerializerOptions;
+        private readonly IJsonSerializerService jsonSerializerService = jsonSerializerService;
         private readonly IDebugService debugService = debugService;
         private Gearset? gearset;
 
@@ -349,7 +348,7 @@ namespace BisBuddy.Ui.Renderers.Components
                 ImGui.Selectable(Resource.GearsetPropertiesDataRowLabel, size: size);
                 ImGui.TableNextColumn();
                 if (ImGuiComponents.IconButtonWithText(FontAwesomeIcon.FileExport, $"{Resource.GearsetJsonButton}##export_gearset_json"))
-                    ImGui.SetClipboardText(JsonSerializer.Serialize(gearset, jsonSerializerOptions));
+                    ImGui.SetClipboardText(jsonSerializerService.Serialize(gearset));
                 if (ImGui.IsItemHovered())
                     UiComponents.SetSolidTooltip(Resource.GearsetJsonTooltip);
             }

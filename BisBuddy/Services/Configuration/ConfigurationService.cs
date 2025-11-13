@@ -4,10 +4,8 @@ using Microsoft.Extensions.Hosting;
 using System;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace BisBuddy.Services.Configuration
 {
@@ -23,7 +21,7 @@ namespace BisBuddy.Services.Configuration
         private readonly IFramework framework;
         private readonly IQueueService queueService;
         private readonly IFileService fileService;
-        private readonly JsonSerializerOptions jsonSerializerOptions;
+        private readonly IJsonSerializerService jsonSerializerService;
 
         public ConfigurationService(
             ITypedLogger<ConfigurationService> logger,
@@ -31,14 +29,14 @@ namespace BisBuddy.Services.Configuration
             IConfigurationLoaderService loadConfigurationService,
             IQueueService queueService,
             IFileService fileService,
-            JsonSerializerOptions jsonSerializerOptions
+            IJsonSerializerService jsonSerializerService
         )
         {
             this.logger = logger;
             this.framework = framework;
             this.queueService = queueService;
             this.fileService = fileService;
-            this.jsonSerializerOptions = jsonSerializerOptions;
+            this.jsonSerializerService = jsonSerializerService;
             configuration = loadConfigurationService.LoadConfig();
             configuration.DefaultHighlightColor.OnColorChange += handleDefaultHighlightColorChange;
         }
@@ -217,7 +215,7 @@ namespace BisBuddy.Services.Configuration
             try
             {
                 logger.Verbose($"Saving configuration file");
-                var configText = JsonSerializer.Serialize(configuration, jsonSerializerOptions);
+                var configText = jsonSerializerService.Serialize(configuration);
                 fileService.WriteConfigString(configText);
             }
             catch (Exception ex)
@@ -239,17 +237,6 @@ namespace BisBuddy.Services.Configuration
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            try
-            {
-                logger.Verbose($"Saving configuration file");
-                var configText = JsonSerializer.Serialize(configuration, jsonSerializerOptions);
-                fileService.WriteConfigString(configText);
-            }
-            catch (Exception ex)
-            {
-                logger.Error($"Error saving config file", ex);
-            }
-
             return Task.CompletedTask;
         }
     }

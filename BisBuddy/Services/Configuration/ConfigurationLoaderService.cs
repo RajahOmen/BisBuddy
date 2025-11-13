@@ -9,7 +9,6 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using JsonException = System.Text.Json.JsonException;
-using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace BisBuddy.Services.Configuration
 {
@@ -17,13 +16,13 @@ namespace BisBuddy.Services.Configuration
         ITypedLogger<ConfigurationLoaderService> logger,
         IFileService fileService,
         IItemDataService itemDataService,
-        JsonSerializerOptions jsonSerializerOptions
+        IJsonSerializerService jsonSerializerService
         ) : IConfigurationLoaderService
     {
         private readonly ITypedLogger<ConfigurationLoaderService> logger = logger;
         private readonly IFileService fileService = fileService;
         private readonly IItemDataService itemDataService = itemDataService;
-        private readonly JsonSerializerOptions jsonSerializerOptions = jsonSerializerOptions;
+        private readonly IJsonSerializerService jsonSerializerService = jsonSerializerService;
 
         public IConfigurationProperties LoadConfig()
             => loadConfigAsync().Result;
@@ -45,7 +44,7 @@ namespace BisBuddy.Services.Configuration
                     logger.Warning($"Config version {configVersion} found, current {Configuration.CurrentVersion}. Attempting migration");
                     return await migrateOldConfig(configJson, configStream, configVersion, cancellationToken);
                 }
-                return configJson.Deserialize<Configuration>(jsonSerializerOptions) ?? new Configuration();
+                return jsonSerializerService.Deserialize<Configuration>(configJson) ?? new Configuration();
             }
             catch (FileNotFoundException)
             {
@@ -141,11 +140,11 @@ namespace BisBuddy.Services.Configuration
             HighlightColor? highlightColor = null;
             if (configJson.RootElement.TryGetProperty("HighlightColor", out var highlightColorProperty))
             {
-                var highlightColorVector = highlightColorProperty.Deserialize<Vector4>(jsonSerializerOptions);
+                var highlightColorVector = jsonSerializerService.Deserialize<Vector4>(highlightColorProperty);
                 highlightColor = new HighlightColor(highlightColorVector);
             }
 
-            var config = configJson.Deserialize<Configuration>(jsonSerializerOptions) ?? new Configuration();
+            var config = jsonSerializerService.Deserialize<Configuration>(configJson) ?? new Configuration();
             if (highlightColor is not null)
                 config.DefaultHighlightColor = highlightColor;
 
@@ -159,7 +158,7 @@ namespace BisBuddy.Services.Configuration
         /// <returns></returns>
         private Configuration migrate3To4(JsonDocument configJson, CancellationToken cancellationToken = default)
         {
-            var config = configJson.Deserialize<Configuration>(jsonSerializerOptions)
+            var config = jsonSerializerService.Deserialize<Configuration>(configJson)
                 ?? new Configuration();
 
             // no gearsets stored in configuration
@@ -169,7 +168,7 @@ namespace BisBuddy.Services.Configuration
             // move gearsets to actual file
             foreach (var charData in config.CharactersData)
             {
-                var gearsets = JsonSerializer.Serialize(charData.Value.Gearsets, jsonSerializerOptions);
+                var gearsets = jsonSerializerService.Serialize(charData.Value.Gearsets);
                 fileService.WriteGearsetsString(charData.Key, gearsets);
             }
 

@@ -85,40 +85,6 @@ namespace BisBuddy.Items
             ClassJobEn = dataManager.GetExcelSheet<ClassJob>() ?? throw new InvalidOperationException("ClassJob sheet not found");
             NameToId = [];
             materiaItemIds = [];
-#if DEBUG
-            // minimum item id to display for debug logging. Update with new patches to review generations
-            // filters out most older items for easier debugging
-            uint debugMinItemId = 46000; // lower than most recent to ensure get new items 
-
-            logger.Verbose("Coffer Relations Found");
-            foreach (var item in ItemsCoffers)
-            {
-                // only show "new" items
-                if (item.Key < debugMinItemId) continue;
-
-                var itemName = SeStringToString(ItemSheet.GetRow(item.Key).Name);
-                foreach (var (cofferId, _) in item)
-                {
-                    var cofferName = SeStringToString(ItemSheet.GetRow(cofferId).Name);
-                    logger.Verbose($"{cofferName,-50} => {itemName}");
-                }
-            }
-            logger.Verbose("End Coffer Relations Found");
-            logger.Verbose($"Item Prerequisites Found");
-            foreach (var item in ItemsPrerequisites)
-            {
-                // only show "new" items
-                if (item.Key < debugMinItemId) continue;
-
-                var recieveItemName = SeStringToString(ItemSheet.GetRow(item.Key).Name);
-                foreach (var (itemId, _) in item)
-                {
-                    var prereqItemNames = itemId.Select(id => SeStringToString(ItemSheet.GetRow(id).Name));
-                    logger.Verbose($"{string.Join(" + ", prereqItemNames.GroupBy(n => n).Select(g => $"{g.Count()}x {g.Key}")),-60} => {recieveItemName}");
-                }
-            }
-            logger.Verbose($"End Item Prerequisites Found");
-#endif
         }
     }
 

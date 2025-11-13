@@ -233,16 +233,6 @@ namespace BisBuddy.ItemAssignment
                     .ToList()
             };
 
-#if DEBUG
-            logger.Debug("Item Assignment Solver Solution");
-
-            logger.Debug("Gearpiece Assignments");
-            logResult();
-
-            logger.Debug("Prerequisite Assignments");
-            logResult(logPrereqs: true);
-#endif
-
             return updatedGearpieces;
         }
 

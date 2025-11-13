@@ -1,5 +1,4 @@
 using BisBuddy.Extensions;
-using BisBuddy.Gear;
 using BisBuddy.Services;
 using BisBuddy.Services.Addon;
 using Dalamud.Bindings.ImGui;
@@ -182,7 +181,8 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
                     nodeGroup.Disposed = true;
                     addonNodeHighlights[idx] = nodeGroup;
                 }
-            } else
+            }
+            else
             {
                 addonNodeHighlights.Clear();
             }

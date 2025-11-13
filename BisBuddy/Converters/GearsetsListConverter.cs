@@ -2,7 +2,6 @@ using BisBuddy.Gear;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -10,62 +9,46 @@ namespace BisBuddy.Converters
 {
     public class GearsetsListConverter : JsonConverter<List<Gearset>>
     {
-        private JsonSerializerOptions? jsonSerializerOptions = null;
-
-        /// <summary>
-        /// Create a copy of the provided serializer options, but without this converter in the list.
-        /// </summary>
-        /// <param name="options">The original JsonSerializerOptions object</param>
-        /// <returns>A clone of the options object, without any custom converters for List<Gearset></Gearset></returns>
-        private static JsonSerializerOptions createOptions(JsonSerializerOptions options)
-        {
-            var newJsonSerializerOptions = new JsonSerializerOptions();
-
-            var type = typeof(JsonSerializerOptions);
-            foreach (var prop in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
-            {
-                if (!prop.CanRead || !prop.CanWrite)
-                    continue;
-
-                if (prop.Name == nameof(JsonSerializerOptions.Converters))
-                    continue;
-
-                var value = prop.GetValue(options);
-                prop.SetValue(newJsonSerializerOptions, value);
-            }
-
-            foreach (var converter in options.Converters)
-            {
-                // remove any converter for this from this list
-                if (converter.Type != typeof(List<Gearset>))
-                    newJsonSerializerOptions.Converters.Add(converter);
-            }
-
-            return newJsonSerializerOptions;
-        }
-
         public override List<Gearset>? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            jsonSerializerOptions ??= createOptions(options);
+            List<Gearset> gearsetList = [];
 
-            var list = JsonSerializer.Deserialize<List<Gearset>>(ref reader, jsonSerializerOptions);
+            if (reader.TokenType != JsonTokenType.StartArray)
+                throw new JsonException($"Expected list of gearsets for GearsetListConverter, got {reader.TokenType}");
 
-            if (list is not List<Gearset> gearsetList)
-                return list;
+            while (reader.Read())
+            {
+                if (reader.TokenType == JsonTokenType.EndArray)
+                    break;
 
-            var priority = gearsetList
-                .Where(g => g.Priority == null)
-                .Count();
+                if (JsonSerializer.Deserialize<Gearset>(ref reader, options) is not Gearset gearset)
+                    throw new JsonException($"Expected Gearset object in GearsetListConverter, got {reader.TokenType}");
 
-            foreach (var gearset in list)
-                gearset.Priority ??= priority--;
+                gearsetList.Add(gearset);
+            }
+
+            updateNullPriorities(gearsetList);
 
             return gearsetList;
         }
 
+        private void updateNullPriorities(List<Gearset> gearsets)
+        {
+            var nullPriorities = gearsets
+                .Where(g => g.Priority is null)
+                .Count();
+            foreach (var gearset in gearsets)
+                gearset.Priority ??= nullPriorities--;
+        }
+
         public override void Write(Utf8JsonWriter writer, List<Gearset> value, JsonSerializerOptions options)
         {
-            JsonSerializer.Serialize(writer, value, jsonSerializerOptions);
+            writer.WriteStartArray();
+
+            foreach (var gearset in value)
+                JsonSerializer.Serialize(writer, gearset, options);
+
+            writer.WriteEndArray();
         }
     }
 }

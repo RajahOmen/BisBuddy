@@ -12,7 +12,6 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Numerics;
-using System.Text.Json;
 
 namespace BisBuddy.Ui.Renderers.ContextMenus
 {
@@ -22,13 +21,13 @@ namespace BisBuddy.Ui.Renderers.ContextMenus
         IGearsetsService gearsetsService,
         IConfigurationService configurationService,
         IAttributeService attributeService,
-        JsonSerializerOptions jsonSerializerOptions
+        IJsonSerializerService jsonSerializerService
         ) : ContextMenuBase<Gearset, GearsetContextMenu>(logger, factory)
     {
         private readonly IGearsetsService gearsetsService = gearsetsService;
         private readonly IConfigurationService configurationService = configurationService;
         private readonly IAttributeService attributeService = attributeService;
-        private readonly JsonSerializerOptions jsonSerializerOptions = jsonSerializerOptions;
+        private readonly IJsonSerializerService jsonSerializerService = jsonSerializerService;
 
         private UiTheme uiTheme => configurationService.UiTheme;
 
@@ -96,7 +95,7 @@ namespace BisBuddy.Ui.Renderers.ContextMenus
                 factory.Create(
                     entryName: Resource.ContextMenuCopyJson,
                     icon: FontAwesomeIcon.FileExport,
-                    onClick: () => ImGui.SetClipboardText(JsonSerializer.Serialize(gearset, jsonSerializerOptions))),
+                    onClick: () => ImGui.SetClipboardText(jsonSerializerService.Serialize(gearset))),
                 factory.Create(
                     entryName: Resource.ContextMenuDeleteGearset,
                     icon: FontAwesomeIcon.Trash,
