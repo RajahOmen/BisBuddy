@@ -18,6 +18,7 @@ namespace BisBuddy.Services
         private readonly IEnumerable<ICommand> commands;
         private readonly Dictionary<string, ICommand> commandHandlers;
         private readonly string commandDescriptions;
+        private bool commandsRegistered = false;
 
         public CommandService(
             ICommandManager commandManager,
@@ -45,13 +46,17 @@ namespace BisBuddy.Services
                 ShowInHelp = true,
                 HelpMessage = string.Format(Resource.AliasChatCommandHelpMessage, Constants.FullChatCommand)
             });
+            commandsRegistered = true;
             return Task.CompletedTask;
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            commandManager.RemoveHandler(Constants.FullChatCommand);
-            commandManager.RemoveHandler(Constants.ShortChatCommand);
+            if (commandsRegistered)
+            {
+                commandManager.RemoveHandler(Constants.FullChatCommand);
+                commandManager.RemoveHandler(Constants.ShortChatCommand);
+            }
             return Task.CompletedTask;
         }
 
