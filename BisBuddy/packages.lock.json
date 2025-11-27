@@ -21,6 +21,12 @@
           "Microsoft.Extensions.DependencyInjection.Abstractions": "8.0.1"
         }
       },
+      "CommunityToolkit.Mvvm": {
+        "type": "Direct",
+        "requested": "[8.4.0, )",
+        "resolved": "8.4.0",
+        "contentHash": "tqVU8yc/ADO9oiTRyTnwhFN68hCwvkliMierptWOudIAvWY1mWCh5VFh+guwHJmpMwfg0J0rY+yyd5Oy7ty9Uw=="
+      },
       "DalamudPackager": {
         "type": "Direct",
         "requested": "[13.0.0, )",
@@ -66,8 +72,8 @@
       "LuminaSupplemental.Excel": {
         "type": "Direct",
         "requested": "[*, )",
-        "resolved": "3.0.5",
-        "contentHash": "wcsIHasdWJy0BqIdQV5Wqj5pq2f9ZbNmVU7rT61ZYpba/rur0/RpMVPeetn8tFTNLJvzPUbp0BVzEBsFujaVtg==",
+        "resolved": "3.0.7",
+        "contentHash": "/IBscZH8ppRP6CdTL8aExOJGaXR4uIjr+JvomUGNdXPJq5iqY6Lg4KuVP3kB1XxxzB7C91zYfytm8uOm7I1sPg==",
         "dependencies": {
           "CSVFile": "3.2.0",
           "CsvHelper": "30.0.1",

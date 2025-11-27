@@ -1,6 +1,11 @@
+using System.Collections.Generic;
+using System;
 using System.IO.Abstractions;
 using System.Linq;
+using System.Reflection;
 using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
+using System.Text.Json.Serialization;
 
 namespace BisBuddy.Services
 {
@@ -10,15 +15,44 @@ namespace BisBuddy.Services
 
         public JsonSerializerService(
             ITypedLogger<JsonSerializerService> logger,
-            JsonSerializerOptions options
+            IEnumerable<JsonConverter> converters
             )
         {
-            jsonSerializerOptions = options;
+            jsonSerializerOptions = new JsonSerializerOptions()
+            {
+                PropertyNameCaseInsensitive = true,
+                IncludeFields = true
+            };
 
-            var jsonConverterNames = jsonSerializerOptions.Converters
+            // get count of all the custom converters defined
+            var expectedConverterCount = Assembly
+                .GetExecutingAssembly()
+                .GetTypes()
+                .Where(t =>
+                    t.IsClass
+                    && !t.IsAbstract
+                    && (t.BaseType?.IsGenericType ?? false)
+                    && t.BaseType!.GetGenericTypeDefinition() == typeof(JsonConverter<>))
+                .Count();
+
+            logger.Verbose($"{string.Join(", ", converters.OrderBy(t => t.GetType().Name).Select(c => c.GetType().Name))}");
+
+            var registeredConverterNames = converters
                 .Select(c => c.GetType().Name)
+                .OrderBy(n => n)
                 .ToList();
-            logger.Debug($"JsonSerializerService initialized with {jsonConverterNames.Count} converters ({string.Join(", ", jsonConverterNames)})");
+
+            // ensure I've registered all the converters I've written
+            if (registeredConverterNames.Count != expectedConverterCount)
+                throw new InvalidOperationException($"Expected {expectedConverterCount} JsonConverters, but only registered {registeredConverterNames.Count} ({registeredConverterNames})");
+
+            foreach (var converter in converters)
+                jsonSerializerOptions.Converters.Add(converter);
+
+            jsonSerializerOptions.TypeInfoResolver = new DefaultJsonTypeInfoResolver();
+            jsonSerializerOptions.MakeReadOnly();
+
+            logger.Debug($"JsonSerializerService initialized with {registeredConverterNames.Count} converters ({string.Join(", ", registeredConverterNames)})");
         }
 
         public T? Deserialize<T>(string jsonString) =>

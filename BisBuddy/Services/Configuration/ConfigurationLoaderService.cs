@@ -1,6 +1,7 @@
 using BisBuddy.Gear;
 using BisBuddy.Items;
 using BisBuddy.Util;
+using Dalamud.Utility;
 using Newtonsoft.Json;
 using System;
 using System.IO;
@@ -25,15 +26,12 @@ namespace BisBuddy.Services.Configuration
         private readonly IJsonSerializerService jsonSerializerService = jsonSerializerService;
 
         public IConfigurationProperties LoadConfig()
-            => loadConfigAsync().Result;
-
-        private async Task<Configuration> loadConfigAsync(CancellationToken cancellationToken = default)
         {
             try
             {
                 logger.Verbose($"Loading config...");
                 using var configStream = fileService.OpenReadConfigStream();
-                using var configJson = await JsonDocument.ParseAsync(configStream, cancellationToken: cancellationToken);
+                using var configJson = JsonDocument.Parse(configStream);
                 var configVersion = configJson
                     .RootElement
                     .GetProperty(nameof(IConfigurationProperties.Version))
@@ -42,7 +40,7 @@ namespace BisBuddy.Services.Configuration
                 if (configVersion != Configuration.CurrentVersion)
                 {
                     logger.Warning($"Config version {configVersion} found, current {Configuration.CurrentVersion}. Attempting migration");
-                    return await migrateOldConfig(configJson, configStream, configVersion, cancellationToken);
+                    return migrateOldConfig(configJson, configStream, configVersion);
                 }
                 return jsonSerializerService.Deserialize<Configuration>(configJson) ?? new Configuration();
             }
@@ -62,11 +60,10 @@ namespace BisBuddy.Services.Configuration
             }
         }
 
-        private async Task<Configuration> migrateOldConfig(
+        private Configuration migrateOldConfig(
             JsonDocument configJson,
             Stream configStream,
-            int configVersion,
-            CancellationToken cancellationToken = default
+            int configVersion
             )
         {
             var newConfig = new Configuration();
@@ -74,9 +71,9 @@ namespace BisBuddy.Services.Configuration
             {
                 newConfig = version switch
                 {
-                    1 => await migrate1To2(configStream, cancellationToken),
+                    1 => migrate1To2(configStream),
                     2 => migrate2To3(configJson),
-                    3 => migrate3To4(configJson, cancellationToken),
+                    3 => migrate3To4(configJson),
                     _ => throw new JsonException($"Invalid version number \"{configVersion}\"")
                 };
                 newConfig.Version = version + 1;
@@ -94,7 +91,7 @@ namespace BisBuddy.Services.Configuration
         /// <param name="configStream">The stream of text for the serialized config to migrate</param>
         /// <returns></returns>
         /// <exception cref="JsonException">If the config fails to deserialize with the old system</exception>
-        private async Task<Configuration> migrate1To2(Stream configStream, CancellationToken cancellationToken = default)
+        private Configuration migrate1To2(Stream configStream)
         {
             /// <summary>
             /// migrate from newtonsoft to stj
@@ -103,7 +100,7 @@ namespace BisBuddy.Services.Configuration
             try
             {
                 var reader = new StreamReader(configStream);
-                var configText = await reader.ReadToEndAsync(cancellationToken);
+                var configText = reader.ReadToEnd();
                 var config = JsonConvert.DeserializeObject<Configuration>(configText)
                     ?? throw new JsonException("Old config result is null");
 
@@ -156,7 +153,7 @@ namespace BisBuddy.Services.Configuration
         /// </summary>
         /// <param name="configJson">JsonDocument config</param>
         /// <returns></returns>
-        private Configuration migrate3To4(JsonDocument configJson, CancellationToken cancellationToken = default)
+        private Configuration migrate3To4(JsonDocument configJson)
         {
             var config = jsonSerializerService.Deserialize<Configuration>(configJson)
                 ?? new Configuration();

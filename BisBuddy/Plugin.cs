@@ -145,58 +145,19 @@ public sealed partial class Plugin : IDalamudPlugin
                 // mappers
                 builder.RegisterType<GearpieceTypeMapper>().AsImplementedInterfaces().SingleInstance();
 
-                // options for the serializer
-                builder.Register((ctx) =>
-                {
-                    var options = new JsonSerializerOptions()
-                    {
-                        PropertyNameCaseInsensitive = true,
-                        IncludeFields = true
-                    };
-
-                    // get count of all the custom converters defined
-                    var expectedConverterCount = Assembly
-                        .GetExecutingAssembly()
-                        .GetTypes()
-                        .Where(t =>
-                            t.IsClass
-                            && !t.IsAbstract
-                            && (t.BaseType?.IsGenericType ?? false)
-                            && t.BaseType!.GetGenericTypeDefinition() == typeof(JsonConverter<>))
-                        .Count();
-
-                    var converters = ctx.Resolve<IEnumerable<JsonConverter>>();
-
-                    // ensure I've registered all the converters I've written
-                    if (converters.Count() != expectedConverterCount)
-                    {
-                        var registeredConverterNames = string.Join(", ", converters
-                            .Select(c => c.GetType().Name)
-                            .OrderBy(n => n));
-
-                        throw new InvalidOperationException($"Expected {expectedConverterCount} JsonConverters, but only registered {converters.Count()} ({registeredConverterNames})");
-                    }
-
-                    foreach (var converter in converters)
-                        options.Converters.Add(converter);
-
-                    options.TypeInfoResolver = new DefaultJsonTypeInfoResolver();
-                    options.MakeReadOnly();
-                    return options;
-                }).As<JsonSerializerOptions>().SingleInstance();
-
                 // converters
-                var assemblyConverters = Assembly
+                var jsonConverterTypes = Assembly
                     .GetExecutingAssembly()
                     .GetTypes()
-                    .Where(t =>
-                        t.IsClass
-                        && !t.IsAbstract
-                        && (t.BaseType?.IsGenericType ?? false)
-                        && t.BaseType!.GetGenericTypeDefinition() == typeof(JsonConverter<>));
+                    .Where(type =>
+                        type.IsClass
+                        && !type.IsAbstract
+                        && (type.BaseType?.IsGenericType ?? false)
+                        && type.BaseType!.GetGenericTypeDefinition() == typeof(JsonConverter<>)
+                    );
 
-                foreach (var converter in assemblyConverters)
-                    builder.RegisterType(converter).As<JsonConverter>().SingleInstance();
+                foreach (var converterType in jsonConverterTypes)
+                    builder.RegisterType(converterType).As<JsonConverter>().SingleInstance();
 
                 // windows
                 builder.RegisterType<WindowSystem>().AsSelf().SingleInstance();
@@ -226,7 +187,6 @@ public sealed partial class Plugin : IDalamudPlugin
                 builder.RegisterType<DebugSolverResultsTab>().Keyed<TabRenderer<DebugToolTab>>(DebugToolTab.SolverResults).InstancePerMatchingLifetimeScope(windowScopeTag);
                 builder.RegisterType<DebugAddonsTab>().Keyed<TabRenderer<DebugToolTab>>(DebugToolTab.Addons).InstancePerMatchingLifetimeScope(windowScopeTag);
                 builder.RegisterType<DebugPrerequisitesTab>().Keyed<TabRenderer<DebugToolTab>>(DebugToolTab.Prerequisites).InstancePerMatchingLifetimeScope(windowScopeTag);
-
 
                 // config window tabs
                 builder.RegisterType<GeneralSettingsTab>().Keyed<TabRenderer<ConfigWindowTab>>(ConfigWindowTab.General).InstancePerMatchingLifetimeScope(windowScopeTag);

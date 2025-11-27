@@ -40,26 +40,26 @@ public class Configuration : IConfigurationProperties
 
 public interface IConfigurationProperties : IPluginConfiguration
 {
-    public bool HighlightNeedGreed { get; set; }
-    public bool HighlightShops { get; set; }
-    public bool HighlightMateriaMeld { get; set; }
-    public bool HighlightNextMateria { get; set; }
-    public bool HighlightUncollectedItemMateria { get; set; }
-    public bool HighlightPrerequisiteMateria { get; set; }
-    public bool HighlightInventories { get; set; }
-    public bool HighlightCollectedInInventory { get; set; }
-    public bool HighlightMarketboard { get; set; }
-    public bool AnnotateTooltips { get; set; }
-    public bool AutoCompleteItems { get; set; }
-    public bool AutoScanInventory { get; set; }
-    public bool PluginUpdateInventoryScan { get; set; }
-    public bool StrictMateriaMatching { get; set; }
-    public bool BrightListItemHighlighting { get; set; }
-    public HighlightColor DefaultHighlightColor { get; }
-    public UiTheme UiTheme { get; set; }
+    bool HighlightNeedGreed { get; set; }
+    bool HighlightShops { get; set; }
+    bool HighlightMateriaMeld { get; set; }
+    bool HighlightNextMateria { get; set; }
+    bool HighlightUncollectedItemMateria { get; set; }
+    bool HighlightPrerequisiteMateria { get; set; }
+    bool HighlightInventories { get; set; }
+    bool HighlightCollectedInInventory { get; set; }
+    bool HighlightMarketboard { get; set; }
+    bool AnnotateTooltips { get; set; }
+    bool AutoCompleteItems { get; set; }
+    bool AutoScanInventory { get; set; }
+    bool PluginUpdateInventoryScan { get; set; }
+    bool StrictMateriaMatching { get; set; }
+    bool BrightListItemHighlighting { get; set; }
+    HighlightColor DefaultHighlightColor { get; }
+    UiTheme UiTheme { get; set; }
 
     // DEBUGGING
-    public bool EnableDebugging { get; set; }
-    public FrameworkThreadBehaviorType DebugFrameworkThreadBehavior { get; set; }
+    bool EnableDebugging { get; set; }
+    FrameworkThreadBehaviorType DebugFrameworkThreadBehavior { get; set; }
 }
 
