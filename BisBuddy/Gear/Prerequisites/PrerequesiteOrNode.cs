@@ -53,8 +53,18 @@ namespace BisBuddy.Gear.Prerequisites
             {
                 if (IsCollected)
                     return CollectionStatusType.ObtainedComplete;
-                if (PrerequisiteTree.Any(p => p.CollectionStatus >= CollectionStatusType.Obtainable))
+
+                var (anyObtainable, anyPartial) = PrerequisiteTree
+                    .Select(p => p.CollectionStatus)
+                    .Aggregate((AnyObtainable: false, AnyPartial: false), (acc, status) => (
+                        acc.AnyObtainable || status >= CollectionStatusType.Obtainable,
+                        acc.AnyPartial || status >= CollectionStatusType.NotObtainablePartial
+                    ));
+
+                if (anyObtainable)
                     return CollectionStatusType.Obtainable;
+                if (anyPartial)
+                    return CollectionStatusType.NotObtainablePartial;
                 return CollectionStatusType.NotObtainable;
             }
         }

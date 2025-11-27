@@ -1527,6 +1527,15 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Some prerequisite(s) collected.
+        /// </summary>
+        public static string NotObtainablePartialHelp {
+            get {
+                return ResourceManager.GetString("NotObtainablePartialHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Item obtainable using prerequisites.
         /// </summary>
         public static string ObtainableHelp {
