@@ -203,13 +203,21 @@ namespace BisBuddy.Services.Configuration
         public UiTheme UiTheme
         {
             get => configuration.UiTheme;
-            set => updateConfigProperty(cfg => cfg.UiTheme, value, affectsAssignments: false);
+            set
+            {
+                if (configuration.UiTheme == value)
+                    return;
+
+                configuration.UiTheme.PropertyChanged -= handleUiThemePropertyChange;
+                value.PropertyChanged += handleUiThemePropertyChange;
+                updateConfigProperty(cfg => cfg.UiTheme, value, affectsAssignments: false);
+            }
         }
 
         public void ResetUiTheme()
         {
             logger.Info($"Resetting UI theme to default");
-            configuration.UiTheme = new UiTheme();
+            UiTheme = new UiTheme();
         }
 
         private void handleDefaultHighlightColorChange()
