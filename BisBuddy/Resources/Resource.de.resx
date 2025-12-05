@@ -783,4 +783,7 @@ or to have a unique color to highlight items in</value>
     <value>{0}. Right click to lock</value>
     <comment>{0} - Collection status of the gearpiece</comment>
   </data>
+  <data name="NotObtainablePartialHelp" xml:space="preserve">
+    <value>Some prerequisite(s) collected</value>
+  </data>
 </root>
