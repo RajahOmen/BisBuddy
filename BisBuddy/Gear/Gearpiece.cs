@@ -105,10 +105,11 @@ namespace BisBuddy.Gear
                     return ItemMateria.All(m => m.CollectionStatus == CollectionStatusType.ObtainedComplete)
                         ? CollectionStatusType.ObtainedComplete
                         : CollectionStatusType.ObtainedPartial;
-                if (PrerequisiteTree is IPrerequisiteNode tree
-                    && tree.CollectionStatus >= CollectionStatusType.Obtainable)
+                if (PrerequisiteTree is not IPrerequisiteNode tree)
+                    return CollectionStatusType.NotObtainable;
+                if (tree.CollectionStatus >= CollectionStatusType.Obtainable)
                     return CollectionStatusType.Obtainable;
-                return CollectionStatusType.NotObtainable;
+                return tree.CollectionStatus;
             }
         }
 

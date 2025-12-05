@@ -2,6 +2,7 @@ using BisBuddy.Gear;
 using Dalamud.Plugin.Services;
 using Microsoft.Extensions.Hosting;
 using System;
+using System.ComponentModel;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
@@ -15,7 +16,7 @@ namespace BisBuddy.Services.Configuration
     /// <param name="affectsAssignments">If the configuration data change may effect how items are assigned</param>
     public delegate void ConfigurationChangeDelegate(bool affectsAssignments);
 
-    public class ConfigurationService : IConfigurationService
+    public class ConfigurationService : IConfigurationService, IDisposable
     {
         private readonly ITypedLogger<ConfigurationService> logger;
         private readonly IFramework framework;
@@ -39,6 +40,13 @@ namespace BisBuddy.Services.Configuration
             this.jsonSerializerService = jsonSerializerService;
             configuration = loadConfigurationService.LoadConfig();
             configuration.DefaultHighlightColor.OnColorChange += handleDefaultHighlightColorChange;
+            configuration.UiTheme.PropertyChanged += handleUiThemePropertyChange;
+        }
+
+        public void Dispose()
+        {
+            configuration.DefaultHighlightColor.OnColorChange -= handleDefaultHighlightColorChange;
+            configuration.UiTheme.PropertyChanged -= handleUiThemePropertyChange;
         }
 
         private IConfigurationProperties configuration { get; set; }
@@ -195,16 +203,30 @@ namespace BisBuddy.Services.Configuration
         public UiTheme UiTheme
         {
             get => configuration.UiTheme;
-            set => updateConfigProperty(cfg => cfg.UiTheme, value, affectsAssignments: false);
+            set
+            {
+                if (configuration.UiTheme == value)
+                    return;
+
+                configuration.UiTheme.PropertyChanged -= handleUiThemePropertyChange;
+                value.PropertyChanged += handleUiThemePropertyChange;
+                updateConfigProperty(cfg => cfg.UiTheme, value, affectsAssignments: false);
+            }
         }
 
         public void ResetUiTheme()
         {
             logger.Info($"Resetting UI theme to default");
-            configuration.UiTheme = new UiTheme();
+            UiTheme = new UiTheme();
         }
 
         private void handleDefaultHighlightColorChange()
+        {
+            scheduleSave();
+            triggerConfigurationChange(affectsAssignments: false);
+        }
+
+        private void handleUiThemePropertyChange(object? obj, PropertyChangedEventArgs args)
         {
             scheduleSave();
             triggerConfigurationChange(affectsAssignments: false);

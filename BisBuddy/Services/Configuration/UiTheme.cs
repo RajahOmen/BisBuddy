@@ -2,6 +2,7 @@ using BisBuddy.Gear;
 using BisBuddy.Ui;
 using System;
 using System.Numerics;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace BisBuddy.Services.Configuration;
 
@@ -9,9 +10,10 @@ namespace BisBuddy.Services.Configuration;
 /// Determines how certain UI elements should be themed/displayed
 /// </summary>
 [Serializable]
-public class UiTheme
+public partial class UiTheme : ObservableObject
 {
-    public Vector4 DeleteColor { get; set; } = new Vector4(
+    [ObservableProperty]
+    private Vector4 deleteColor = new(
         x: 0.6f, // Red
         y: 0.1f, // Green
         z: 0.1f, // Blue
@@ -21,7 +23,8 @@ public class UiTheme
     /// <summary>
     /// The color of text used to indicate that an item is obtained and all materia are melded.
     /// </summary>
-    public Vector4 ObtainedCompleteTextColor { get; set; } = new(
+    [ObservableProperty]
+    private Vector4 obtainedCompleteTextColor = new(
         x: 0.2f, // Red
         y: 1.0f, // Green
         z: 0.2f, // Blue
@@ -31,12 +34,14 @@ public class UiTheme
     /// <summary>
     /// The icon used to indicate that an item is obtained and all materia are melded.
     /// </summary>
-    public GameIcon ObtainedCompleteIcon { get; set; } = GameIcon.BlueCheck;
+    [ObservableProperty]
+    private GameIcon obtainedCompleteIcon = GameIcon.BlueCheck;
 
     /// <summary>
     /// The color of text used to indicate that an item is obtained but not all materia are melded.
     /// </summary>
-    public Vector4 ObtainedPartialTextColor { get; set; } = new(
+    [ObservableProperty]
+    private Vector4 obtainedPartialTextColor = new(
         x: 1.0f, // Red
         y: 1.0f, // Green
         z: 0.2f, // Blue
@@ -46,12 +51,14 @@ public class UiTheme
     /// <summary>
     /// The icon used to indicate that an item is obtained but not all materia are melded.
     /// </summary>
-    public GameIcon ObtainedPartialIcon { get; set; } = GameIcon.YellowWarningTriangle;
+    [ObservableProperty]
+    private GameIcon obtainedPartialIcon = GameIcon.YellowWarningTriangle;
 
     /// <summary>
     /// The color of text used to indicate that an item is obtainable, but not yet obtained.
     /// </summary>
-    public Vector4 ObtainableTextColor { get; set; } = new(
+    [ObservableProperty]
+    private Vector4 obtainableTextColor = new(
         x: 0.2f, // Red
         y: 0.8f, // Green
         z: 1.0f, // Blue
@@ -61,12 +68,32 @@ public class UiTheme
     /// <summary>
     /// The icon used to indicate that an item is obtainable, but not yet obtained.
     /// </summary>
-    public GameIcon ObtainableIcon { get; set; } = GameIcon.BlueQuestionSquare;
+    [ObservableProperty]
+    private GameIcon obtainableIcon = GameIcon.BlueQuestionSquare;
+
+
+    /// <summary>
+    /// The icon used to indicate that an item is currently not obtained, but some progress has been made.
+    /// </summary>
+    [ObservableProperty]
+    private Vector4 notObtainablePartialTextColor = new(
+        x: 1.0f, // Red
+        y: 0.7f, // Green
+        z: 0.2f, // Blue
+        w: 1.0f  // Alpha
+        );
+
+    /// <summary>
+    /// The icon used to indicate that an item is currently not obtained, but some progress has been made.
+    /// </summary>
+    [ObservableProperty]
+    private GameIcon notObtainablePartialIcon = GameIcon.YellowWarningTriangle;
 
     /// <summary>
     /// The color of text used to indicate that an item is currently not obtained.
     /// </summary>
-    public Vector4 UnobtainedTextColor { get; set; } = new(
+    [ObservableProperty]
+    private Vector4 unobtainedTextColor = new(
         x: 1.0f, // Red
         y: 0.2f, // Green
         z: 0.2f, // Blue
@@ -76,12 +103,14 @@ public class UiTheme
     /// <summary>
     /// The icon used to indicate that an item is currently not obtained.
     /// </summary>
-    public GameIcon UnobtainedIcon { get; set; } = GameIcon.RedCross;
+    [ObservableProperty]
+    private GameIcon unobtainedIcon = GameIcon.RedCross;
 
     /// <summary>
     /// The color that the edge of a materia slot is when it isn't an advanced/overmeld slot
     /// </summary>
-    public Vector4 MateriaSlotNormalColor { get; set; } = new(
+    [ObservableProperty]
+    private Vector4 materiaSlotNormalColor = new(
         x: 0.2f, // Red
         y: 0.8f, // Green
         z: 0.2f, // Blue
@@ -92,7 +121,8 @@ public class UiTheme
     /// <summary>
     /// The color that the edge of a materia slot is when it is an advanced/overmeld slot
     /// </summary>
-    public Vector4 MateriaSlotAdvancedColor { get; set; } = new(
+    [ObservableProperty]
+    private Vector4 materiaSlotAdvancedColor = new(
         x: 0.8f, // Red
         y: 0.2f, // Green
         z: 0.2f, // Blue
@@ -102,7 +132,32 @@ public class UiTheme
     /// <summary>
     /// If true, gearsets will show the color accent on the header when it is viewed.
     /// </summary>
-    public bool ShowGearsetColorAccentFlag { get; set; } = true;
+    [ObservableProperty]
+    private bool showGearsetColorAccentFlag = true;
+
+    [ObservableProperty]
+    private Vector4 buttonColor = new(
+        x: 0.2f,
+        y: 0.2f,
+        z: 0.2f,
+        w: 1.0f
+        );
+
+    [ObservableProperty]
+    private Vector4 buttonHovered = new(
+        x: 0.3f,
+        y: 0.3f,
+        z: 0.3f,
+        w: 1.0f
+        );
+
+    [ObservableProperty]
+    private Vector4 buttonActive = new(
+        x: 0.4f,
+        y: 0.4f,
+        z: 0.4f,
+        w: 1.0f
+        );
 
     /// <summary>
     /// Returns the text color and icon associated with a given collection status type for
@@ -119,6 +174,7 @@ public class UiTheme
             CollectionStatusType.ObtainedComplete => (ObtainedCompleteTextColor, ObtainedCompleteIcon),
             CollectionStatusType.ObtainedPartial => (ObtainedPartialTextColor, ObtainedPartialIcon),
             CollectionStatusType.Obtainable => (ObtainableTextColor, ObtainableIcon),
+            CollectionStatusType.NotObtainablePartial => (NotObtainablePartialTextColor, NotObtainablePartialIcon),
             CollectionStatusType.NotObtainable => (UnobtainedTextColor, UnobtainedIcon),
             _ => throw new ArgumentOutOfRangeException(nameof(status), status, null)
         };
@@ -139,6 +195,10 @@ public class UiTheme
                 ObtainableTextColor = textColor;
                 ObtainableIcon = icon;
                 break;
+            case CollectionStatusType.NotObtainablePartial:
+                NotObtainablePartialTextColor = textColor;
+                NotObtainablePartialIcon = icon;
+                break;
             case CollectionStatusType.NotObtainable:
                 UnobtainedTextColor = textColor;
                 UnobtainedIcon = icon;
@@ -147,25 +207,4 @@ public class UiTheme
                 throw new ArgumentOutOfRangeException(nameof(status), status, null);
         }
     }
-
-    public Vector4 ButtonColor { get; set; } = new(
-        x: 0.2f,
-        y: 0.2f,
-        z: 0.2f,
-        w: 1.0f
-        );
-
-    public Vector4 ButtonHovered { get; set; } = new(
-        x: 0.3f,
-        y: 0.3f,
-        z: 0.3f,
-        w: 1.0f
-        );
-
-    public Vector4 ButtonActive { get; set; } = new(
-        x: 0.4f,
-        y: 0.4f,
-        z: 0.4f,
-        w: 1.0f
-        );
 }
