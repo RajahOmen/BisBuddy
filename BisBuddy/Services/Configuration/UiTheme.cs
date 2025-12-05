@@ -71,6 +71,24 @@ public partial class UiTheme : ObservableObject
     [ObservableProperty]
     private GameIcon obtainableIcon = GameIcon.BlueQuestionSquare;
 
+
+    /// <summary>
+    /// The icon used to indicate that an item is currently not obtained, but some progress has been made.
+    /// </summary>
+    [ObservableProperty]
+    private Vector4 notObtainablePartialTextColor = new(
+        x: 1.0f, // Red
+        y: 0.7f, // Green
+        z: 0.2f, // Blue
+        w: 1.0f  // Alpha
+        );
+
+    /// <summary>
+    /// The icon used to indicate that an item is currently not obtained, but some progress has been made.
+    /// </summary>
+    [ObservableProperty]
+    private GameIcon notObtainablePartialIcon = GameIcon.YellowWarningTriangle;
+
     /// <summary>
     /// The color of text used to indicate that an item is currently not obtained.
     /// </summary>
@@ -156,6 +174,7 @@ public partial class UiTheme : ObservableObject
             CollectionStatusType.ObtainedComplete => (ObtainedCompleteTextColor, ObtainedCompleteIcon),
             CollectionStatusType.ObtainedPartial => (ObtainedPartialTextColor, ObtainedPartialIcon),
             CollectionStatusType.Obtainable => (ObtainableTextColor, ObtainableIcon),
+            CollectionStatusType.NotObtainablePartial => (NotObtainablePartialTextColor, NotObtainablePartialIcon),
             CollectionStatusType.NotObtainable => (UnobtainedTextColor, UnobtainedIcon),
             _ => throw new ArgumentOutOfRangeException(nameof(status), status, null)
         };
@@ -175,6 +194,10 @@ public partial class UiTheme : ObservableObject
             case CollectionStatusType.Obtainable:
                 ObtainableTextColor = textColor;
                 ObtainableIcon = icon;
+                break;
+            case CollectionStatusType.NotObtainablePartial:
+                NotObtainablePartialTextColor = textColor;
+                NotObtainablePartialIcon = icon;
                 break;
             case CollectionStatusType.NotObtainable:
                 UnobtainedTextColor = textColor;
