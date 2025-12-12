@@ -173,6 +173,12 @@ namespace BisBuddy.ItemAssignment
             if (!neededItemIds.TryGetValue(candidateId, out var neededData))
                 return ItemAssigmentSolver.NoEdgeWeightValue;
 
+            if (Gearpieces
+                    .Select(g => g.PrerequisiteTree?.MinRemainingItems() ?? 1000)
+                    .Min() == 0)
+                return ItemAssigmentSolver.NoEdgeWeightValue;
+
+
             var remainingPrereqs = Gearpieces
                 .Select(g => g.PrerequisiteTree?.MinRemainingItems(candidateId) ?? 1000)
                 .Min();

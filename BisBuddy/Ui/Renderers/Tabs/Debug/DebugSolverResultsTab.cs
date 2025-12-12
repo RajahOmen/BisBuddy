@@ -8,6 +8,7 @@ using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 using static Dalamud.Interface.Windowing.Window;
 
@@ -145,22 +146,19 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
                 var assignGroup = assignmentGroups[rowIdx];
 
                 // was this assign group actually assigned a candidate item?
-                int? assignIdx = null;
+                var assignIdxs = new HashSet<int>();
                 for (var i = 0; i < assignments.Length; i++)
                 {
                     // TODO: Coupling here, change when replacing ItemAssignmentSolver
                     if (assignments[i] == rowIdx && edges[rowIdx, i] != ItemAssigmentSolver.NoEdgeWeightValue)
-                    {
-                        assignIdx = i;
-                        break;
-                    }
+                        assignIdxs.Add(i);
                 }
 
                 ImGui.Text($"{rowIdx}");
                 ImGui.TableNextColumn();
 
                 var assignGroupItemName = itemDataService.GetItemNameById(assignGroup.ItemId);
-                if (assignIdx is not null)
+                if (assignIdxs.Count > 0)
                     ImGui.TextColored(pickedColor, assignGroupItemName);
                 else
                     ImGui.Text(assignGroupItemName);
@@ -181,7 +179,7 @@ namespace BisBuddy.Ui.Renderers.Tabs.Debug
                     if (edgeWeight == ItemAssigmentSolver.DummyEdgeWeightValue)
                         edgeWeightLabel = "DUMMY";
 
-                    if (colIdx == assignIdx)
+                    if (assignIdxs.Contains(colIdx))
                         ImGui.TextColored(pickedColor, edgeWeightLabel);
                     else
                         ImGui.Text(edgeWeightLabel);

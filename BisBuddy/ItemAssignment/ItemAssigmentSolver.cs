@@ -280,7 +280,7 @@ namespace BisBuddy.ItemAssignment
                 // pop first item id to be assigned in queue
                 var itemToAssign = candidateItemList[0];
                 candidateItemList.RemoveAt(0);
-                var itemIdx = prerequisiteCandidateItems.IndexOf(itemToAssign);
+                var itemIdx = prerequisiteCandidateItems.FindIndex(i => ReferenceEquals(itemToAssign, i));
 
                 // find prereq group with highest edge score for this item
                 var bestAssignScore = NoEdgeWeightValue;
@@ -310,6 +310,7 @@ namespace BisBuddy.ItemAssignment
                     // assign item. If assignment would shadow earlier-assigned items, re-add to assignment queue
                     var oldAssignedItems = bestGroup.AssignItem(itemToAssign, itemData, materiaFactory, assignPrerequisiteMateria);
                     candidateItemList.AddRange(oldAssignedItems);
+                    logger.Verbose($"assigning item idx {itemIdx} to group idx {bestGroupIdx}");
                 }
             }
             while (loopCount++ < maxLoops);
