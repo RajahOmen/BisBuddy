@@ -259,7 +259,8 @@ public sealed partial class Plugin : IDalamudPlugin
                 builder.RegisterType<CommandService>().AsImplementedInterfaces().SingleInstance();
 
                 // handle active language
-                builder.RegisterType<LanguageService>().AsImplementedInterfaces().SingleInstance();
+                // TODO: disable for now, old strings causing errors
+                //builder.RegisterType<LanguageService>().AsImplementedInterfaces().SingleInstance();
 
                 // log bad node highlights
                 builder.RegisterType<InvalidNodePollerService>().AsImplementedInterfaces().SingleInstance();
