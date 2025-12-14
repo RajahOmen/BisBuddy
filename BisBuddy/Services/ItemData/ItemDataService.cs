@@ -1,3 +1,5 @@
+using AllaganLib.GameSheets.Service;
+using AllaganLib.GameSheets.Sheets;
 using BisBuddy.Gear;
 using BisBuddy.Gear.Melds;
 using BisBuddy.Gear.Prerequisites;
@@ -71,7 +73,8 @@ namespace BisBuddy.Items
         public ItemDataService(
             ITypedLogger<ItemDataService> logger,
             IDataManager dataManager,
-            IMapper<string, GearpieceType> gearpieceTypeMapper
+            IMapper<string, GearpieceType> gearpieceTypeMapper,
+            SheetManager sheetManager
             )
         {
             this.logger = logger;
@@ -85,6 +88,13 @@ namespace BisBuddy.Items
             ClassJobEn = dataManager.GetExcelSheet<ClassJob>() ?? throw new InvalidOperationException("ClassJob sheet not found");
             NameToId = [];
             materiaItemIds = [];
+
+            var itemSheet = sheetManager.GetSheet<ItemSheet>();
+            var itemSources = itemSheet.GetItemSources(43078);
+            if (itemSources is not null)
+                foreach (var source in itemSources)
+                    foreach (var costItem in source.CostItems)
+                        logger.Debug($"AAAAAAAAAAA: {costItem.ItemRow.NameString}");
         }
     }
 

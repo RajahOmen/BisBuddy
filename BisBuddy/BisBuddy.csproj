@@ -12,19 +12,21 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Autofac" Version="8.4.0" />
+    <PackageReference Include="AllaganLib.Data" Version="1.3.7" />
+    <PackageReference Include="AllaganLib.GameSheets" Version="1.3.11" />
+    <PackageReference Include="Autofac" Version="9.0.0" />
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-    <PackageReference Include="Fastenshtein" Version="1.0.10" />
+    <PackageReference Include="Fastenshtein" Version="1.0.11" />
     <PackageReference Include="LinearAssignment" Version="1.2.0" />
     <PackageReference Include="Lumina" Version="6.4.0" />
     <PackageReference Include="Lumina.Excel" Version="7.3.1" />
-    <PackageReference Include="LuminaSupplemental.Excel" Version="*" />
-	<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.8" />
-	<PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.8" />
-    <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="9.0.8" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.8" />
-    <PackageReference Include="TestableIO.System.IO.Abstractions.Wrappers" Version="22.0.15" />
+    <PackageReference Include="LuminaSupplemental.Excel" Version="3.0.7" />
+	<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.1" />
+	<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.1" />
+    <PackageReference Include="TestableIO.System.IO.Abstractions.Wrappers" Version="22.1.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -57,7 +59,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Update="DalamudPackager" Version="13.0.0" />
-    <PackageReference Update="DotNet.ReproducibleBuilds" Version="1.2.25" />
+    <PackageReference Update="DalamudPackager" Version="13.1.0" />
+    <PackageReference Update="DotNet.ReproducibleBuilds" Version="1.2.39" />
   </ItemGroup>
 </Project>

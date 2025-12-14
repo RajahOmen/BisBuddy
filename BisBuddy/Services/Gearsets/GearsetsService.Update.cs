@@ -232,7 +232,6 @@ namespace BisBuddy.Services.Gearsets
             // display loading state in main menu
             inventoryUpdateDisplayService.UpdateIsQueued = true;
             inventoryUpdateDisplayService.IsManualUpdate = manualUpdate;
-
             var localContentId = currentLocalContentId;
             var inventoryItemsList = inventoryItemsService.GetInventoryItems(Constants.InventorySources);
             // don't block main thread, queue for execution instead

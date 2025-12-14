@@ -1,3 +1,4 @@
+using AllaganLib.GameSheets.Service;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Autofac.Features.AttributeFilters;
@@ -82,6 +83,15 @@ public sealed partial class Plugin : IDalamudPlugin
                 builder.RegisterInstance(clientState).As<IClientState>().SingleInstance();
                 builder.RegisterInstance(textureProvider).As<ITextureProvider>().SingleInstance();
                 builder.RegisterInstance(framework).As<IFramework>().SingleInstance();
+
+                builder.Register(ctx =>
+                    new SheetManager(
+                        ctx.Resolve<IDataManager>().GameData,
+                        new() {
+                            Logger = ctx.Resolve<ITypedLogger<SheetManager>>(),
+                        }
+                    )
+                ).AsSelf().SingleInstance();
 
                 // wrap item finder module into service
                 builder.RegisterType<ItemFinderService>().As<IItemFinderService>().SingleInstance();
