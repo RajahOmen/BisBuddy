@@ -34,6 +34,10 @@ namespace BisBuddy.Services
 
         private void setLanguage(string langCode)
         {
+            // override to always "en" for now
+            // TODO: fix strings in other language resource files being outdated
+            langCode = "en";
+
             var newCultureInfo = new CultureInfo(langCode);
             logger.Info($"Setting plugin language to \"{newCultureInfo}\"");
             Resource.Culture = newCultureInfo;
