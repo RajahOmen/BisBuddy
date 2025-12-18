@@ -8,7 +8,6 @@ using Dalamud.Game.NativeWrapper;
 using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using KamiToolKit;
-using KamiToolKit.System;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
@@ -26,7 +25,6 @@ namespace BisBuddy.Services.Addon
         protected readonly ITypedLogger<T> logger = dependencies.logger;
         protected readonly IFramework framework = dependencies.framework;
         protected readonly IAddonLifecycle addonLifecycle = dependencies.AddonLifecycle;
-        protected readonly NativeController nativeController = dependencies.NativeController;
         protected readonly IGearsetsService gearsetsService = dependencies.GearsetsService;
         protected readonly IItemDataService itemDataService = dependencies.ItemDataService;
         protected readonly IConfigurationService configurationService = dependencies.ConfigurationService;
@@ -213,15 +211,16 @@ namespace BisBuddy.Services.Addon
             {
                 customNode.MarkDirty();
                 if (parentNode->GetNodeType() is NodeType.Component)
-                    nativeController.AttachNode(customNode, (AtkComponentNode*)parentNode);
+                    customNode.AttachNode((AtkComponentNode*)parentNode);
                 else
-                    nativeController.AttachNode(customNode, parentNode);
+                    customNode.AttachNode(parentNode);
                 customNodes.Add((nint)parentNode, (customNode, color));
                 return customNode;
             }
             catch (Exception ex)
             {
-                nativeController.DisposeNode(ref customNode);
+                customNode.Dispose();
+                customNode = null;
                 logger.Error(ex, $"Failed to create custom node in \"{AddonName}\"");
                 throw;
             }
@@ -379,7 +378,8 @@ namespace BisBuddy.Services.Addon
             foreach (var customNodeEntry in customNodes)
             {
                 var node = customNodeEntry.Value.Node;
-                nativeController.DisposeNode(ref node);
+                node.Dispose();
+                node = null;
                 customNodes.Remove(customNodeEntry.Key);
             }
 

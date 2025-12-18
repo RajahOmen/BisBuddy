@@ -58,7 +58,8 @@ public sealed partial class Plugin : IDalamudPlugin
         IDataManager dataManager,
         IClientState clientState,
         ITextureProvider textureProvider,
-        IFramework framework
+        IFramework framework,
+        IPlayerState playerState
         )
     {
         host = new HostBuilder()
@@ -82,6 +83,7 @@ public sealed partial class Plugin : IDalamudPlugin
                 builder.RegisterInstance(clientState).As<IClientState>().SingleInstance();
                 builder.RegisterInstance(textureProvider).As<ITextureProvider>().SingleInstance();
                 builder.RegisterInstance(framework).As<IFramework>().SingleInstance();
+                builder.RegisterInstance(playerState).As<IPlayerState>().SingleInstance();
 
                 // wrap item finder module into service
                 builder.RegisterType<ItemFinderService>().As<IItemFinderService>().SingleInstance();
@@ -103,9 +105,6 @@ public sealed partial class Plugin : IDalamudPlugin
 
                 // get inventory items
                 builder.RegisterType<InventoryItemsService>().AsImplementedInterfaces().SingleInstance();
-
-                // kamitoolkit
-                builder.RegisterType<NativeController>().AsSelf().SingleInstance();
 
                 // memory cache
                 builder.RegisterType<MemoryCache>().As<IMemoryCache>().SingleInstance();
@@ -292,6 +291,8 @@ public sealed partial class Plugin : IDalamudPlugin
         logger.Info($"Initialization complete, starting...");
         try
         {
+            var resolvedPluginInterface = host.Services.GetRequiredService<IDalamudPluginInterface>();
+            KamiToolKitLibrary.Initialize(resolvedPluginInterface);
             host.Start();
             logger.Info($"Started successfully");
 
@@ -325,6 +326,7 @@ public sealed partial class Plugin : IDalamudPlugin
         logger.Info($"Teardown start");
         host.StopAsync().GetAwaiter().GetResult();
         host.Dispose();
+        KamiToolKitLibrary.Dispose();
         logger.Info($"Teardown finish");
     }
 }

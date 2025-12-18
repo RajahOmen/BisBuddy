@@ -101,8 +101,8 @@ namespace BisBuddy.Services.Gearsets
 
         private void handleLogin()
         {
-            logger.Debug($"handling login {clientState.LocalContentId}");
-            currentLocalContentId = clientState.LocalContentId;
+            currentLocalContentId = playerState.ContentId;
+            logger.Debug($"handling login {currentLocalContentId}");
             loadGearsets();
             if (configurationService.AutoScanInventory)
                 QueueUpdateFromInventory();

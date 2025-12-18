@@ -1,63 +1,92 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project Sdk="Dalamud.NET.Sdk/13.1.0">
+<Project Sdk="Dalamud.NET.Sdk/14.0.0">
+    <PropertyGroup>
+        <TargetFramework>net10.0-windows</TargetFramework>
+        <Version>0.2.4.0</Version>
+        <Changelog>7.4/API 14 update</Changelog>
+        <Description>Gearing, simplified.</Description>
+        <PackageProjectUrl>https://github.com/RajahOmen/BisBuddy</PackageProjectUrl>
+        <RepoUrl>https://github.com/RajahOmen/BisBuddy</RepoUrl>
+        <Author>Lily</Author>
+        <Name>BISBuddy</Name>
+        <DalamudApiLevel>14</DalamudApiLevel>
+        <TestingDalamudApiLevel>14</TestingDalamudApiLevel>
+        <Punchline>Gearing, simplified.</Punchline>
+        <Description>Highlights gear, coffers, and materia needed for all your gearsets
+Import from from Etro, Xivgear, or Teamcraft for easy setup
+            
+Highlights items needed for gearsets on:
+    - Need/Greed Loot Windows
+    - NPC Shops and Exchanges
+    - Marketboard
+    - Player Inventories
+    - Item Tooltips
+           
+When melding materia, highlights:
+    - Items to meld
+    - Materia to meld to item
+            
+Automatically syncs gearsets with player inventory</Description>
+        <Tags>bis;loot;best in slot;need;greed;gearset;gear;coffer;materia;meld;etro;xivgear</Tags>
+        <ImageUrls>
+            https://raw.githubusercontent.com/RajahOmen/BisBuddy/main/images/needgreed.png;
+            https://raw.githubusercontent.com/RajahOmen/BisBuddy/main/images/npcshopexchange.png;
+            https://raw.githubusercontent.com/RajahOmen/BisBuddy/main/images/materiamelding.png;
+            https://raw.githubusercontent.com/RajahOmen/BisBuddy/main/images/inventory.png;
+            https://raw.githubusercontent.com/RajahOmen/BisBuddy/main/images/itemtooltip.png
+        </ImageUrls>
+        <IconUrl>https://raw.githubusercontent.com/RajahOmen/BisBuddy/main/images/icon.png</IconUrl>
+        <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
+        <IsPackable>false</IsPackable>
+        <NeutralLanguage>en</NeutralLanguage>
+    </PropertyGroup>
 
-  <PropertyGroup>
-    <TargetFramework>net9.0-windows</TargetFramework>
-    <Version>0.2.3.2</Version>
-    <Description>Gearing made simple.</Description>
-    <PackageProjectUrl>https://github.com/RajahOmen/BisBuddy</PackageProjectUrl>
-    <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
-    <IsPackable>false</IsPackable>
-    <NeutralLanguage>en</NeutralLanguage>
-  </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Autofac" Version="9.0.0" />
+        <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
+        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+        <PackageReference Include="Fastenshtein" Version="1.0.11" />
+        <PackageReference Include="LinearAssignment" Version="1.2.0" />
+        <PackageReference Include="Lumina" Version="7.1.0" />
+        <PackageReference Include="Lumina.Excel" Version="7.4.0" />
+        <PackageReference Include="LuminaSupplemental.Excel" Version="*" />
+	    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.1" />
+	    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.1" />
+        <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="10.0.1" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.1" />
+        <PackageReference Include="TestableIO.System.IO.Abstractions.Wrappers" Version="22.1.0" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Autofac" Version="8.4.0" />
-    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-    <PackageReference Include="Fastenshtein" Version="1.0.10" />
-    <PackageReference Include="LinearAssignment" Version="1.2.0" />
-    <PackageReference Include="Lumina" Version="6.4.0" />
-    <PackageReference Include="Lumina.Excel" Version="7.3.1" />
-    <PackageReference Include="LuminaSupplemental.Excel" Version="*" />
-	<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.8" />
-	<PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.8" />
-    <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="9.0.8" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.8" />
-    <PackageReference Include="TestableIO.System.IO.Abstractions.Wrappers" Version="22.0.15" />
-  </ItemGroup>
+    <ItemGroup>
+        <Compile Update="Resources\Resource.ja.Designer.cs">
+            <DesignTime>True</DesignTime>
+            <AutoGen>True</AutoGen>
+            <DependentUpon>Resource.ja.resx</DependentUpon>
+        </Compile>
+        <Compile Update="Resources\Resource.Designer.cs">
+            <DesignTime>True</DesignTime>
+            <AutoGen>True</AutoGen>
+            <DependentUpon>Resource.resx</DependentUpon>
+        </Compile>
+    </ItemGroup>
 
-  <ItemGroup>
-    <Compile Update="Resources\Resource.ja.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resource.ja.resx</DependentUpon>
-    </Compile>
-    <Compile Update="Resources\Resource.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resource.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
+    <ItemGroup>
+        <EmbeddedResource Update="Resources\Resource.ja.resx">
+            <Generator>ResXFileCodeGenerator</Generator>
+            <LastGenOutput>Resource.ja.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+        <EmbeddedResource Update="Resources\Resource.resx">
+            <Generator>PublicResXFileCodeGenerator</Generator>
+            <LastGenOutput>Resource.Designer.cs</LastGenOutput>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </EmbeddedResource>
+    </ItemGroup>
 
-  <ItemGroup>
-    <EmbeddedResource Update="Resources\Resource.ja.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resource.ja.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Resources\Resource.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resource.Designer.cs</LastGenOutput>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </EmbeddedResource>
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\KamiToolKit\KamiToolKit.csproj" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\KamiToolKit\KamiToolKit.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Update="DalamudPackager" Version="13.0.0" />
-    <PackageReference Update="DotNet.ReproducibleBuilds" Version="1.2.25" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Update="DotNet.ReproducibleBuilds" Version="1.2.39" />
+    </ItemGroup>
 </Project>

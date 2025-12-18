@@ -24,6 +24,7 @@ namespace BisBuddy.Services.Gearsets
         ITypedLogger<GearsetsService> logger,
         IFramework framework,
         IClientState clientState,
+        IPlayerState playerState,
         IConfigurationService configurationService,
         IFileService fileService,
         IJsonSerializerService jsonSerializerService,
@@ -37,6 +38,7 @@ namespace BisBuddy.Services.Gearsets
         private readonly ITypedLogger<GearsetsService> logger = logger;
         private readonly IFramework framework = framework;
         private readonly IClientState clientState = clientState;
+        private readonly IPlayerState playerState = playerState;
         private readonly IConfigurationService configurationService = configurationService;
         private readonly IFileService fileService = fileService;
         private readonly IJsonSerializerService jsonSerializerService = jsonSerializerService;
@@ -73,7 +75,7 @@ namespace BisBuddy.Services.Gearsets
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            currentLocalContentId = await framework.Run(() => clientState.LocalContentId, cancellationToken);
+            currentLocalContentId = await framework.Run(() => playerState.ContentId, cancellationToken);
 
             // updating gearset data per framework update
             framework.Update += onUpdate;

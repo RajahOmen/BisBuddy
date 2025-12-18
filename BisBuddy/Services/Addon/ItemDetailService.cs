@@ -8,12 +8,14 @@ using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using KamiToolKit.Extensions;
 using KamiToolKit.Nodes;
-using KamiToolKit.System;
+using KamiToolKit;
 using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using Dalamud.Utility;
+using Lumina.Text.ReadOnly;
 
 namespace BisBuddy.Services.Addon
 {
@@ -136,7 +138,7 @@ namespace BisBuddy.Services.Addon
             }
         }
 
-        public SeString usedInSeString(
+        public ReadOnlySeString usedInSeString(
             TextNode node,
             bool twoLines
             )
@@ -176,7 +178,12 @@ namespace BisBuddy.Services.Addon
                 }
 
                 var newOutputStr = string.Concat(outputStr, outputGearsetName, gearsetCount, nextSeparator);
-                var newOutputSeString = new SeString(new TextPayload(newOutputStr));
+                using var stringBuilder = new RentedSeStringBuilder();
+                var newOutputSeString = stringBuilder
+                    .Builder
+                    .Append(newOutputStr)
+                    .ToReadOnlySeString();
+
                 var textSize = node.GetTextDrawSize(newOutputSeString);
 
                 if (textSize.X + separatorLength <= maxLength)
@@ -191,22 +198,25 @@ namespace BisBuddy.Services.Addon
                 }
             }
 
-            var outputBuilder = new SeStringBuilder();
-            outputBuilder.AddUiForeground(CustomNodeNormalTextColorType);
+            using var outputBuilder = new RentedSeStringBuilder();
+
+            outputBuilder.Builder.PushColorType(CustomNodeNormalTextColorType);
 
             foreach (var (gearsetName, gearsetCount, separator) in neededStrings)
             {
-                outputBuilder.AddText(gearsetName);
+                outputBuilder.Builder.Append(gearsetName);
                 if (gearsetCount != string.Empty)
                 {
-                    outputBuilder.AddUiForeground(CustomNodeCountTextColorType);
-                    outputBuilder.AddText(gearsetCount);
-                    outputBuilder.AddUiForegroundOff();
+                    outputBuilder.Builder.PushColorType(CustomNodeCountTextColorType);
+                    outputBuilder.Builder.Append(gearsetCount);
+                    outputBuilder.Builder.PopColorType();
                 }
-                outputBuilder.AddText(separator);
+                outputBuilder.Builder.Append(separator);
             }
 
-            return outputBuilder.Build();
+            outputBuilder.Builder.PopColorType();
+
+            return outputBuilder.Builder.ToReadOnlySeString();
         }
 
         private void setNodeVisibility(bool setVisible)
