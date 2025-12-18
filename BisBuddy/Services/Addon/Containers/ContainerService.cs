@@ -5,7 +5,7 @@ using Dalamud.Game.Inventory;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using FFXIVClientStructs.FFXIV.Component.GUI;
-using KamiToolKit.System;
+using KamiToolKit;
 using System;
 using System.Collections.Generic;
 using System.Linq;

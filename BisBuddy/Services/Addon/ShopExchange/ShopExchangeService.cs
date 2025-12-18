@@ -4,7 +4,7 @@ using Dalamud.Game.Addon.Lifecycle;
 using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using KamiToolKit.Nodes;
-using KamiToolKit.System;
+using KamiToolKit;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -69,7 +69,7 @@ namespace BisBuddy.Services.Addon.ShopExchange
 
             try
             {
-                var addon = (AtkUnitBase*)((AddonDrawArgs)args).Addon.Address;
+                var addon = (AtkUnitBase*)args.Addon.Address;
 
                 var shopExchangeNode = new BaseNode(addon);
 

@@ -6,7 +6,7 @@ using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
 using Dalamud.Game.Text.SeStringHandling;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using KamiToolKit.Nodes;
-using KamiToolKit.System;
+using KamiToolKit;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -92,8 +92,7 @@ namespace BisBuddy.Services.Addon
         {
             debugService.AssertMainThreadDebug();
 
-            var updateArgs = (AddonDrawArgs)args;
-            var addon = (AtkUnitBase*)updateArgs.Addon.Address;
+            var addon = (AtkUnitBase*)args.Addon.Address;
             if (addon == null || !addon->IsVisible || !addon->WindowNode->IsVisible())
             {
                 unmarkNodes();

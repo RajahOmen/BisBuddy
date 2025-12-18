@@ -7,7 +7,7 @@ using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Info;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using KamiToolKit.Nodes;
-using KamiToolKit.System;
+using KamiToolKit;
 using System;
 using System.Collections.Generic;
 using System.Linq;
