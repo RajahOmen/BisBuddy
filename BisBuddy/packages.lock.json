@@ -26,9 +26,9 @@
       },
       "DalamudPackager": {
         "type": "Direct",
-        "requested": "[14.0.0, )",
-        "resolved": "14.0.0",
-        "contentHash": "9c1q/eAeAs82mkQWBOaCvbt3GIQxAIadz5b/7pCXDIy9nHPtnRc+tDXEvKR+M36Wvi7n+qBTevRupkLUQp6DFA=="
+        "requested": "[14.0.1, )",
+        "resolved": "14.0.1",
+        "contentHash": "y0WWyUE6dhpGdolK3iKgwys05/nZaVf4ZPtIjpLhJBZvHxkkiE23zYRo7K7uqAgoK/QvK5cqF6l3VG5AbgC6KA=="
       },
       "DotNet.ReproducibleBuilds": {
         "type": "Direct",
@@ -60,9 +60,9 @@
       },
       "Lumina.Excel": {
         "type": "Direct",
-        "requested": "[7.4.0, )",
-        "resolved": "7.4.0",
-        "contentHash": "RlJT0Xc1bltPrnsy1ZlLsrTDNOnQNfyxDT37xkCW7mr3w9IjhklsL9J+/+aM31G1Uv0g01AjwHm6RQKdKYi6HQ==",
+        "requested": "[7.4.1, )",
+        "resolved": "7.4.1",
+        "contentHash": "j8MeFA8MFFhXOrhfMrmTJAyIzwLVMF/52hujG00sFEYCLb25AFW8NhkiG8O1PLksdkeTnEvirNSfD5sPXBcTrg==",
         "dependencies": {
           "Lumina": "7.1.0"
         }
