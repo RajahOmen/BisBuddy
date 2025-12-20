@@ -41,7 +41,7 @@ namespace BisBuddy.Services.Addon
                 if (addon == null || !addon->IsVisible) return;
 
                 var itemIndexesToHighlight = new Dictionary<int, HighlightColor>();
-                for (var itemIdx = 0; itemIdx < addon->NumItems; itemIdx++)
+                for (var itemIdx = 0; itemIdx < addon->Items.Length; itemIdx++)
                 {
                     var lootItem = addon->Items[itemIdx];
                     var itemColor = gearsetsService.GetRequirementColor(lootItem.ItemId);
