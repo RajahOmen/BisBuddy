@@ -92,6 +92,14 @@ namespace BisBuddy.Ui.Renderers.Tabs.Main
         public void PreDraw()
         {
             removeDeletedGearset();
+
+            if (firstLoggedInDrawCall && gearsetsService.CurrentGearsets.Count > 0)
+            {
+                activeGearset ??= gearsetsService
+                    .CurrentGearsets
+                    .FirstOrDefault(g => g.IsActive, gearsetsService.CurrentGearsets[0]);
+                firstLoggedInDrawCall = false;
+            }
         }
 
         public void Draw()
@@ -102,12 +110,6 @@ namespace BisBuddy.Ui.Renderers.Tabs.Main
             {
                 DrawLoggedOut();
                 return;
-            }
-
-            if (firstLoggedInDrawCall && gearsetsService.CurrentGearsets.Count > 0)
-            {
-                activeGearset ??= gearsetsService.CurrentGearsets[0];
-                firstLoggedInDrawCall = false;
             }
 
             var tableFlags =
@@ -206,7 +208,7 @@ namespace BisBuddy.Ui.Renderers.Tabs.Main
                         var cursorPos = ImGui.GetCursorPos();
                         var cursorScreenPos = ImGui.GetCursorScreenPos();
 
-                        var gearsetSelected = gearset == activeGearset;
+                        var gearsetSelected = gearset.Id == (activeGearset?.Id ?? string.Empty);
                         var mainSelectableHovered = false;
 
                         using (ImRaii.PushStyle(ImGuiStyleVar.Alpha, 0.6f, !gearset.IsActive))
