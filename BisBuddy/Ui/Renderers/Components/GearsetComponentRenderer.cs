@@ -77,22 +77,26 @@ namespace BisBuddy.Ui.Renderers.Components
                 ImGui.SetCursorPosY(ImGui.GetCursorPosY() + oldWindowPadding.Y);
                 try
                 {
-                    using (ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, windowPadding))
-                    using (ImRaii.Child("gearset_view_panel_tabs", new Vector2(0, 0), border: false, ImGuiWindowFlags.AlwaysUseWindowPadding))
-                    using (ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, oldWindowPadding))
-                    {
-                        using var gearsetTabBar = ImRaii.TabBar("###gearset_tab");
-                        if (!gearsetTabBar)
-                            return;
 
-                        using (var gearpieceTab = ImRaii.TabItem(Resource.GearsetGearpiecesTabName))
-                            if (gearpieceTab)
+                    ImGui.SetCursorPosX(ImGui.GetCursorPosX() + windowPadding.X);
+
+                    using var gearsetTabBar = ImRaii.TabBar("###gearset_tab");
+                    if (!gearsetTabBar)
+                        return;
+
+                    using (var gearpieceTab = ImRaii.TabItem(Resource.GearsetGearpiecesTabName))
+                        if (gearpieceTab)
+                            using (ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, windowPadding))
+                            using (ImRaii.Child("gearset_view_gearpieces_tab", new Vector2(0, 0), border: false, ImGuiWindowFlags.AlwaysUseWindowPadding))
+                            using (ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, oldWindowPadding))
                                 DrawGearpiecesTab(gearset);
 
-                        using (var propertiesTab = ImRaii.TabItem(Resource.GearsetPropertiesTabName))
-                            if (propertiesTab)
+                    using (var propertiesTab = ImRaii.TabItem(Resource.GearsetPropertiesTabName))
+                        if (propertiesTab)
+                            using (ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, windowPadding))
+                            using (ImRaii.Child("gearset_view_properties_tab", new Vector2(0, 0), border: false, ImGuiWindowFlags.AlwaysUseWindowPadding))
+                            using (ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, oldWindowPadding))
                                 DrawPropertiesTab(gearset);
-                    }
                 }
                 finally
                 {
