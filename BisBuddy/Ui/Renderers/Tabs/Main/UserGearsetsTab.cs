@@ -418,7 +418,10 @@ namespace BisBuddy.Ui.Renderers.Tabs.Main
             }
         }
 
-        private void handleLogin() =>
+        private void handleLogin()
+        {
+            activeGearset = null;
             firstLoggedInDrawCall = true;
+        }
     }
 }
