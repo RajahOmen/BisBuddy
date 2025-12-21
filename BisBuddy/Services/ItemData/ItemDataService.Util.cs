@@ -1,3 +1,4 @@
+using BisBuddy.Extensions;
 using BisBuddy.Gear;
 using BisBuddy.Gear.Melds;
 using BisBuddy.Gear.Prerequisites;
@@ -180,11 +181,10 @@ namespace BisBuddy.Items
                 // find node matching the old node in the new or node
                 var oldNodeIndex = newPrerequisiteNode
                     .PrerequisiteTree
-                    .Index()
-                    .First(node =>
-                        node.Item.GetType() == oldPrerequisiteNode.GetType()
-                        && sameItemRequirements(node.Item, oldPrerequisiteNode)
-                    ).Index;
+                    .FindIndex(node =>
+                        node.GetType() == oldPrerequisiteNode.GetType()
+                        && sameItemRequirements(node, oldPrerequisiteNode)
+                    );
 
                 logger.Debug($"New alternative found for \"{itemId}\", added as new {nameof(PrerequisiteOrNode)} layer (idx: {oldNodeIndex})");
 

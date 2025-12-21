@@ -27,5 +27,22 @@ namespace BisBuddy.Extensions
                 ? source.ThenByDescending(keySelector)
                 : source.ThenBy(keySelector);
         }
+
+        public static int FindIndex<T>(
+            this IReadOnlyList<T> source,
+            Predicate<T> predicate
+            )
+        {
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(predicate);
+            var index = 0;
+            foreach (var item in source)
+            {
+                if (predicate(item))
+                    return index;
+                index++;
+            }
+            return -1;
+        }
     }
 }
