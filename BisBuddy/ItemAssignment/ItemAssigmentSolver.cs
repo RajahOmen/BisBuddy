@@ -388,8 +388,8 @@ namespace BisBuddy.ItemAssignment
                     if (gearpiece.PrerequisiteTree == null)
                         continue;
 
-                    // already assigned in gearpiece assignment solution or is manually collected, don't add this to any group
-                    if (assignedGearpieces.Contains(gearpiece) || gearpiece.CollectLock)
+                    // already assigned in gearpiece assignment solution, don't add this to any group
+                    if (assignedGearpieces.Contains(gearpiece))
                         continue;
 
                     overallPrereqIdx++;
