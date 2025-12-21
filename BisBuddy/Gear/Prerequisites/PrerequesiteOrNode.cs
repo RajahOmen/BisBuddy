@@ -211,10 +211,6 @@ namespace BisBuddy.Gear.Prerequisites
 
         public IPrerequisiteNode? AssignItemId(uint itemId)
         {
-            // don't assign if OR is already satisfied
-            if (IsCollected)
-                return null;
-
             foreach (var prereq in PrerequisiteTree)
             {
                 var assignResult = prereq.AssignItemId(itemId);

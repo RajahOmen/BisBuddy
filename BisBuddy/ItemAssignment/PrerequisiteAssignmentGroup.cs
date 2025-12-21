@@ -13,7 +13,8 @@ namespace BisBuddy.ItemAssignment
     public class PrerequisiteAssignmentGroup : IAssignmentGroup
     {
         private readonly ITypedLogger<ItemAssigmentSolver> logger;
-
+        // #-1: If this overassigns the gearpiece, heavily penalize it
+        private static readonly int OverassignedPenalty = -1000000;
         // #0: If this would complete this prereq, value it highly
         private static readonly int FinishesPrereqBonus = 100000;
         // #1: prioritize filling prereqs at a higher depth (less nested)
@@ -173,10 +174,11 @@ namespace BisBuddy.ItemAssignment
             if (!neededItemIds.TryGetValue(candidateId, out var neededData))
                 return ItemAssigmentSolver.NoEdgeWeightValue;
 
+            var overassignedPenalty = 0;
             if (Gearpieces
                     .Select(g => g.PrerequisiteTree?.MinRemainingItems() ?? 1000)
                     .Min() == 0)
-                return ItemAssigmentSolver.NoEdgeWeightValue;
+                overassignedPenalty = OverassignedPenalty;
 
 
             var remainingPrereqs = Gearpieces
@@ -207,6 +209,10 @@ namespace BisBuddy.ItemAssignment
                 {
                     "gearpieceIndexPenalty",
                     minGearpieceIdx * GearpieceIndexScoreScalar
+                },
+                {
+                    "overassignedPenalty",
+                    overassignedPenalty
                 }
             };
 

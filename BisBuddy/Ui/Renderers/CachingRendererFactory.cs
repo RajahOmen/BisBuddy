@@ -1,14 +1,34 @@
 using Autofac;
+using BisBuddy.Services;
+using Dalamud.Plugin.Services;
+using System;
 using System.Collections.Generic;
 
 namespace BisBuddy.Ui.Renderers
 {
-    public class CachingRendererFactory(
-           ILifetimeScope rootScope
-           ) : IRendererFactory
+    public class CachingRendererFactory : IRendererFactory, IDisposable
     {
-        private readonly ILifetimeScope rootScope = rootScope;
+        private readonly ITypedLogger<CachingRendererFactory> logger;
+        private readonly ILifetimeScope rootScope;
+        private readonly IClientState clientState;
         private readonly Dictionary<(object, RendererType), ILifetimeScope> scopeCache = [];
+
+        public CachingRendererFactory(
+            ITypedLogger<CachingRendererFactory> logger,
+            ILifetimeScope rootScope,
+            IClientState clientState
+        )
+        {
+            this.logger = logger;
+            this.rootScope = rootScope;
+            this.clientState = clientState;
+            clientState.Logout += handleOnLogout;
+        }
+
+        public void Dispose()
+        {
+            clientState.Logout -= handleOnLogout;
+        }
 
         public IRenderer<T> GetRenderer<T>(
             T itemToRender,
@@ -25,6 +45,12 @@ namespace BisBuddy.Ui.Renderers
             renderer.Initialize(itemToRender);
 
             return renderer;
+        }
+
+        private void handleOnLogout(int type, int code)
+        {
+            logger.Debug($"Purging {scopeCache.Count} renderers");
+            scopeCache.Clear();
         }
     }
 }
