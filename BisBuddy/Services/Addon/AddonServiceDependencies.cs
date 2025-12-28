@@ -2,7 +2,6 @@ using BisBuddy.Items;
 using BisBuddy.Services.Configuration;
 using BisBuddy.Services.Gearsets;
 using Dalamud.Plugin.Services;
-using KamiToolKit;
 
 namespace BisBuddy.Services.Addon
 {

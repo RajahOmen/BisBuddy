@@ -94,7 +94,7 @@ public class MainWindow : Window, IDisposable
     {
         // Appended ##{num} to update the order if I want to change the tab order in future
         // as dalamud will not update the order unless the name changes
-        using var tabBar = ImRaii.TabBar("mainWindowTab##0");
+        using var tabBar = ImRaii.TabBar("mainWindowTab##1");
         if (!tabBar)
             return;
 

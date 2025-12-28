@@ -6,5 +6,8 @@ namespace BisBuddy.Gear
     {
         public uint ItemId = itemId;
         public IReadOnlyList<uint> MateriaIds = materiaIds;
+
+        public InventoryItem Copy() =>
+            new(ItemId, [.. MateriaIds]);
     }
 }

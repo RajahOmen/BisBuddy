@@ -207,7 +207,7 @@ namespace BisBuddy.Services.ImportGearset
                 // xivgear only provides NQ items, convert to HQ
                 var gearpieceId = itemDataService.ConvertItemIdToHq(id.GetUInt32());
 
-                MateriaGroup gearpieceMateria = [];
+                List<Materia> gearpieceMateria = [];
 
                 if (slot.Value.TryGetProperty("materia", out var materiaArray))
                 {

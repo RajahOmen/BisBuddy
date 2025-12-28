@@ -111,6 +111,10 @@ namespace BisBuddy.Items
         public uint GetItemIdByName(string name);
         public string GetShopNameById(uint shopId);
         public uint GetMateriaItemId(ushort materiaTypeId, byte materiaGrade);
+        public int GetPercentChanceToAttach(uint materiaGrade, int overmeldSlotIdx, bool attachToHq);
+
+        public bool ItemIdIsHq(uint itemId);
+
 
         /// <summary>
         /// Returns if an item can have materia attached to it
@@ -134,11 +138,11 @@ namespace BisBuddy.Items
         public ushort GetItemIconId(uint itemId);
 
         /// <summary>
-        /// Returns the number of normal (non-advanced) materia slots an item has
+        /// Returns the number of materia slots an item has
         /// </summary>
         /// <param name="itemId">The item id to check</param>
-        /// <returns>How many materia can be attached to this item without advanced melding.</returns>
-        public int GetItemMateriaSlotCount(uint itemId);
+        /// <returns>How many materia can be attached to this item.</returns>
+        public (int Normal, int Advanced) GetItemMateriaSlotCount(uint itemId);
 
         /// <summary>   
         /// Extends the given PrerequisiteNode with new leaves at the node's direct child level according to current

@@ -14,14 +14,16 @@ namespace BisBuddy.Gear.Melds
     {
         // maximum length of gearset name for a plan
         public static readonly int MaxMeldPlanNameLength = 30;
-        // string appended to unmelded materia in the meld plan
-        public static readonly string UnmeldedColorblindIndicator = "*";
 
         private List<(Materia Type, int Count)> statusGroups = [];
-        private List<(string MateriaText, bool IsMelded)> materiaInfo = [];
         private readonly List<Materia> materiaList;
 
-        public MateriaGroup(IEnumerable<Materia>? materia = null)
+        public MateriaGroup(
+            IEnumerable<Materia> materia,
+            int? maxSize,
+            int? unadvancedSlots,
+            bool attachToHq
+            )
         {
             materiaList = materia?.ToList() ?? [];
             foreach (var mat in materiaList)
@@ -41,8 +43,6 @@ namespace BisBuddy.Gear.Melds
         public IReadOnlyList<(Materia Type, int Count)> StatusGroups =>
             statusGroups;
 
-        public IReadOnlyList<(string MateriaText, bool IsMelded)> MateriaInfo =>
-            materiaInfo;
 
         public int Count =>
             materiaList.Count;
@@ -57,7 +57,6 @@ namespace BisBuddy.Gear.Melds
         private void handleOnMateriaChange()
         {
             updateStatusGroups();
-            updateMateriaInfo();
             triggerMateriaGroupChange();
         }
 
@@ -67,19 +66,6 @@ namespace BisBuddy.Gear.Melds
                 .GroupBy(m => (m.ItemId, m.IsCollected))
                 .OrderBy(g => g.Key.IsCollected)
                 .Select(g => (g.First(), g.Count()))
-                .ToList();
-        }
-
-        private void updateMateriaInfo()
-        {
-            materiaInfo = materiaList
-                .Select(m => (
-                    // MateriaText
-                    // TODO: USE SHORT NAME HERE
-                    $"+{m.StatQuantity} {m.StatFullName}{(m.IsCollected ? "" : UnmeldedColorblindIndicator)}",
-                    // IsMelded
-                    m.IsCollected
-                    ))
                 .ToList();
         }
 
@@ -126,10 +112,13 @@ namespace BisBuddy.Gear.Melds
             }
         }
 
-        public int MeldMultipleMateria(IEnumerable<Materia> materiaToMeld)
+        public int MeldMultipleMateria(IEnumerable<Materia> materiaToMeld) =>
+            MeldMultipleMateria(materiaToMeld.Select(m => m.ItemId));
+
+        public int MeldMultipleMateria(IEnumerable<uint> materiaIdsToMeld)
         {
             // copy, since this will be modified here
-            var materiaIdsToMeld = new List<uint>(materiaToMeld.Select(m => m.ItemId).ToList());
+            var materiaIdsList = materiaIdsToMeld.ToList();
 
             var slottedCount = 0;
 
@@ -140,9 +129,9 @@ namespace BisBuddy.Gear.Melds
                 var assignedIdx = -1;
 
                 // iterate over candidate materia list
-                for (var candidateIdx = 0; candidateIdx < materiaIdsToMeld.Count; candidateIdx++)
+                for (var candidateIdx = 0; candidateIdx < materiaIdsList.Count; candidateIdx++)
                 {
-                    var candidateItemId = materiaIdsToMeld[candidateIdx];
+                    var candidateItemId = materiaIdsList[candidateIdx];
 
                     // gearpiece slot requires this candidate materia id
                     if (candidateItemId == materiaSlot.ItemId)
@@ -164,7 +153,7 @@ namespace BisBuddy.Gear.Melds
                 // remove candidate from list if it was assigned
                 if (assignedIdx > -1)
                 {
-                    materiaIdsToMeld.RemoveAt(assignedIdx);
+                    materiaIdsList.RemoveAt(assignedIdx);
                 }
                 else
                 {

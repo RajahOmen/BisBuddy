@@ -2,30 +2,77 @@ using BisBuddy.Gear;
 using BisBuddy.Items;
 using BisBuddy.Util;
 using Dalamud.Game.Inventory;
+using Dalamud.Game.Inventory.InventoryEventArgTypes;
 using Dalamud.Plugin.Services;
-using Dalamud.Utility;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace BisBuddy.Services
 {
-    public class InventoryItemsService(
-        ITypedLogger<InventoryItemsService> logger,
-        IFramework framework,
-        IGameInventory gameInventory,
-        IItemDataService itemDataService
-        ) : IInventoryItemsService
+    public class InventoryItemsService : IInventoryItemsService, IDisposable
     {
-        private readonly ITypedLogger<InventoryItemsService> logger = logger;
-        private readonly IFramework framework = framework;
-        private readonly IGameInventory gameInventory = gameInventory;
-        private readonly IItemDataService itemDataService = itemDataService;
+        private readonly ITypedLogger<InventoryItemsService> logger;
+        private readonly IFramework framework;
+        private readonly IClientState clientState;
+        private readonly IGameInventory gameInventory;
+        private readonly IItemDataService itemDataService;
 
-        public List<InventoryItem> GetInventoryItems(IEnumerable<GameInventoryType> inventories)
+        private Dictionary<uint, (InventoryItem Item, int Count)> inventoryItemsCountCache = [];
+        private List<InventoryItem> inventoryItemsListCache = [];
+
+        public IReadOnlyDictionary<uint, (InventoryItem Item, int Count)> ItemInventoryQuantities =>
+            inventoryItemsCountCache;
+        public IReadOnlyList<InventoryItem> InventoryItems =>
+            inventoryItemsListCache;
+
+        public InventoryItemsService(
+            ITypedLogger<InventoryItemsService> logger,
+            IFramework framework,
+            IClientState clientState,
+            IGameInventory gameInventory,
+            IItemDataService itemDataService
+        )
         {
+            this.logger = logger;
+            this.framework = framework;
+            this.clientState = clientState;
+            this.gameInventory = gameInventory;
+            this.itemDataService = itemDataService;
+
+            this.clientState.Login += handleLogin;
+            this.clientState.Logout += handleLogout;
+            this.gameInventory.InventoryChangedRaw += handleInventoryChanged;
+
+            if (clientState.IsLoggedIn)
+                updateInventoryItemsCache();
+        }
+
+        public void Dispose()
+        {
+            this.clientState.Login -= handleLogin;
+            this.clientState.Logout -= handleLogout;
+            this.gameInventory.InventoryChanged -= handleInventoryChanged;
+        }
+
+        private void handleInventoryChanged(IReadOnlyCollection<InventoryEventArgs> _) =>
+            updateInventoryItemsCache();
+
+        private void handleLogin() =>
+            updateInventoryItemsCache();
+
+        private void handleLogout(int type, int code)
+        {
+            inventoryItemsCountCache.Clear();
+            inventoryItemsListCache.Clear();
+        }
+
+        private void updateInventoryItemsCache()
+        {
+            Dictionary<uint, (InventoryItem Item, int Count)> newCountCache = [];
+            List<InventoryItem> newListCache = [];
             var invItemsTask = framework.RunOnFrameworkThread(() =>
             {
-                var itemsList = new List<InventoryItem>();
                 foreach (var source in Constants.InventorySources)
                 {
                     var items = gameInventory.GetInventoryItems(source);
@@ -36,20 +83,19 @@ namespace BisBuddy.Services
                             continue;
 
                         var itemMateriaIds = getItemMateriaIds(item);
+                        var invItem = new InventoryItem(item.ItemId, itemMateriaIds);
+
+                        var (_, existingCount) = newCountCache.GetValueOrDefault(invItem.ItemId);
+                        newCountCache[invItem.ItemId] = (invItem, existingCount + item.Quantity);
+
+                        // add each item in stack individually
                         for (var i = 0; i < item.Quantity; i++)
-                        {
-                            var invItem = new InventoryItem(item.ItemId, itemMateriaIds);
-                            // add each item in stack individually
-                            itemsList.Add(invItem);
-                        }
+                            newListCache.Add(invItem.Copy());
                     }
                 }
-                return itemsList;
+                inventoryItemsCountCache = newCountCache;
+                inventoryItemsListCache = newListCache;
             });
-
-            invItemsTask.WaitSafely();
-
-            return invItemsTask.GetResultSafely();
         }
 
         private List<uint> getItemMateriaIds(GameInventoryItem item)
@@ -97,6 +143,7 @@ namespace BisBuddy.Services
 
     public interface IInventoryItemsService
     {
-        public List<InventoryItem> GetInventoryItems(IEnumerable<GameInventoryType> inventories);
+        IReadOnlyList<InventoryItem> InventoryItems { get; }
+        IReadOnlyDictionary<uint, (InventoryItem Item, int Count)> ItemInventoryQuantities { get; }
     }
 }

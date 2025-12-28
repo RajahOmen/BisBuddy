@@ -1,21 +1,20 @@
 using BisBuddy.Gear;
 using Dalamud.Game.Text.SeStringHandling;
-using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Plugin.Services;
+using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.Enums;
 using FFXIVClientStructs.FFXIV.Client.Graphics;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using FFXIVClientStructs.FFXIV.Component.GUI;
+using KamiToolKit;
 using KamiToolKit.Extensions;
 using KamiToolKit.Nodes;
-using KamiToolKit;
+using Lumina.Text.ReadOnly;
 using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using Dalamud.Utility;
-using Lumina.Text.ReadOnly;
 
 namespace BisBuddy.Services.Addon
 {
@@ -119,7 +118,8 @@ namespace BisBuddy.Services.Addon
                 {
                     setNodeVisibility(false);
                     return;
-                };
+                }
+                ;
                 setNodeVisibility(true);
 
                 var addonPtr = (AtkUnitBase*)AddonPtr.Address;
@@ -253,6 +253,14 @@ namespace BisBuddy.Services.Addon
                 includeCollected: isInternalItem && configurationService.HighlightCollectedInInventory,
                 includeCollectedPrereqs: isInternalItem
                 );
+
+            if (itemRequirements is null || !itemRequirements.Any())
+            {
+                if (neededGearsets.Count == 0)
+                    return false;
+                neededGearsets = [];
+                return true;
+            }
 
             var newNeededGearsets = itemRequirements
                 .GroupBy(requirement => requirement.Gearset)

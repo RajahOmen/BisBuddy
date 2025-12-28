@@ -1,4 +1,3 @@
-using BisBuddy.Factories;
 using BisBuddy.Gear;
 using BisBuddy.Gear.Melds;
 using BisBuddy.Gear.Prerequisites;
@@ -82,7 +81,6 @@ namespace BisBuddy.ItemAssignment
         public List<InventoryItem> AssignItem(
             InventoryItem item,
             IItemDataService itemData,
-            IMateriaFactory materiaFactory,
             bool assignPrerequisiteMateria
             )
         {
@@ -105,9 +103,8 @@ namespace BisBuddy.ItemAssignment
                 {
                     if (item.MateriaIds.Count > 0)
                     {
-                        var newItemMateria = item.MateriaIds.Select(id => materiaFactory.Create(id));
                         gearpiece.ItemMateria.UnmeldAllMateria();
-                        gearpiece.ItemMateria.MeldMultipleMateria(newItemMateria);
+                        gearpiece.ItemMateria.MeldMultipleMateria(item.MateriaIds);
                     }
                 }
 
@@ -169,7 +166,7 @@ namespace BisBuddy.ItemAssignment
             return true;
         }
 
-        public int CandidateEdgeWeight(uint candidateId, MateriaGroup candidateMateria)
+        public int CandidateEdgeWeight(uint candidateId, List<uint> candidateMateria)
         {
             if (!neededItemIds.TryGetValue(candidateId, out var neededData))
                 return ItemAssigmentSolver.NoEdgeWeightValue;

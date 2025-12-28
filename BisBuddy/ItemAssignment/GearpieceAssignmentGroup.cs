@@ -104,7 +104,7 @@ namespace BisBuddy.ItemAssignment
         }
 
         // the edge score from candidate->gearpiece group. Values materia count first, then materia stat quantity
-        public int CandidateEdgeWeight(uint candidateId, MateriaGroup candidateMateria)
+        public int CandidateEdgeWeight(uint candidateId, List<uint> candidateMateria)
         {
             // if group is dummy for this item id, ensure slightly prioritized over no-edge assignments
             if (ItemId == candidateId && isDummy)
@@ -114,15 +114,26 @@ namespace BisBuddy.ItemAssignment
             if (candidateId != ItemId)
                 return ItemAssigmentSolver.NoEdgeWeightValue;
 
-            // assign itemCandidateMateria to group materia, 1-1, preserving duplicates
-            var materiaInCommon = candidateMateria.GetMatchingMateria(MateriaList);
+            var groupMateriaCounts = MateriaList
+                .GroupBy(m => m.ItemId)
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            var materiaInCommon = 0;
+            foreach (var materiaId in candidateMateria)
+            {
+                if (groupMateriaCounts.TryGetValue(materiaId, out var count) && count > 0)
+                {
+                    materiaInCommon++;
+                    groupMateriaCounts[materiaId] = count - 1;
+                }
+            }
 
             // get the sub-scores from the common materia etc.
             var subScores = new Dictionary<string, int>()
             {
                 {
                     "materiaCountScore",
-                    materiaInCommon.Count * MateriaCountScoreScalar
+                    materiaInCommon * MateriaCountScoreScalar
                 },
                 {
                     "groupSizeScore",

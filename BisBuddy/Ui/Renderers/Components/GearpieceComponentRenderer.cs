@@ -313,7 +313,7 @@ namespace BisBuddy.Ui.Renderers.Components
 
                 ImGui.SetCursorPos(materiaStartPos);
 
-                var materiaSlotCount = itemDataService.GetItemMateriaSlotCount(gearpiece.ItemId);
+                var materiaSlotCount = itemDataService.GetItemMateriaSlotCount(gearpiece.ItemId).Normal;
                 foreach (var (idx, materia) in gearpiece.ItemMateria.Index())
                 {
                     using (ImRaii.PushId(idx))

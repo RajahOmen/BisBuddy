@@ -92,6 +92,10 @@ namespace BisBuddy.Services.Gearsets
                 else
                     triggerGearsetsChange(saveToFile: true);
             }
+            catch (Exception ex)
+            {
+                logger.Error(ex, $"Failed to process scheduled gearsets change (assignmentsDirty = {assignmentsDirty})");
+            }
             finally
             {
                 gearsetsDirty = false;
@@ -114,6 +118,7 @@ namespace BisBuddy.Services.Gearsets
             GearsetsLoaded = false;
             currentLocalContentId = 0;
             currentGearsets = [];
+            scheduleGearsetsChange(updateAssignments: false);
         }
 
         private void handleConfigChange(bool effectsAssignments)
@@ -234,7 +239,6 @@ namespace BisBuddy.Services.Gearsets
             inventoryUpdateDisplayService.IsManualUpdate = manualUpdate;
 
             var localContentId = currentLocalContentId;
-            var inventoryItemsList = inventoryItemsService.GetInventoryItems(Constants.InventorySources);
             // don't block main thread, queue for execution instead
             var queuedUpdate = queueService.Enqueue($"ASSIGNMENTS_UPDATE_{localContentId}", () =>
             {
@@ -249,7 +253,7 @@ namespace BisBuddy.Services.Gearsets
                     var solver = itemAssignmentSolverFactory.Create(
                         allGearsets: currentGearsets,
                         assignableGearsets: gearsetsToUpdate,
-                        inventoryItems: inventoryItemsList
+                        inventoryItems: inventoryItemsService.InventoryItems.ToList()
                         );
 
                     var updatedGearpieces = solver.SolveAndAssign();

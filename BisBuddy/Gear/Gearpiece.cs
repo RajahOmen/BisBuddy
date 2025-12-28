@@ -64,7 +64,7 @@ namespace BisBuddy.Gear
             string itemName,
             GearpieceType gearpieceType,
             IPrerequisiteNode? prerequisiteTree,
-            MateriaGroup? itemMateria,
+            MateriaGroup itemMateria,
             bool isCollected = false,
             bool collectLock = false
         )
@@ -76,7 +76,7 @@ namespace BisBuddy.Gear
             PrerequisiteTree = prerequisiteTree;
             this.isCollected = isCollected;
             this.collectLock = collectLock;
-            ItemMateria = itemMateria ?? [];
+            ItemMateria = itemMateria;
 
             if (PrerequisiteTree is IPrerequisiteNode node)
                 node.OnPrerequisiteChange += triggerGearpieceChange;

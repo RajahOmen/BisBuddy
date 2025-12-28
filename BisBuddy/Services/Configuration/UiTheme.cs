@@ -1,8 +1,8 @@
 using BisBuddy.Gear;
 using BisBuddy.Ui;
+using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Numerics;
-using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace BisBuddy.Services.Configuration;
 
