@@ -254,7 +254,7 @@ namespace BisBuddy.Services.Addon
                 includeCollectedPrereqs: isInternalItem
                 );
 
-            if (itemRequirements is null || !itemRequirements.Any())
+            if (itemRequirements is null || itemRequirements.Count == 0)
             {
                 if (neededGearsets.Count == 0)
                     return false;

@@ -16,7 +16,7 @@ namespace BisBuddy.Services.Gearsets
             var itemCounts = inventoryItemsService.ItemInventoryQuantities.ToDictionary();
             foreach (var gearset in currentGearsets)
             {
-                foreach (var requirement in gearset.ItemRequirements(configurationService.HighlightUncollectedItemMateria))
+                foreach (var requirement in gearset.ItemRequirements(configurationService.HighlightUncollectedItemMateria).ToList())
                 {
                     var itemReq = requirement;
                     if (requirement.ItemRequirement.RequirementType == RequirementType.Materia
@@ -77,16 +77,36 @@ namespace BisBuddy.Services.Gearsets
             bool includeCollectedPrereqs = false
             )
         {
-            var itemIdRequirements = GetItemRequirements(
-                itemId,
-                includePrereqs,
-                includeMateria,
-                includeCollected,
-                includeObtainable,
-                includeCollectedPrereqs
-                );
+            if (!currentItemRequirements.TryGetValue(itemId, out var itemIdRequirements))
+                return false;
 
-            return itemIdRequirements.Any();
+            if (itemIdRequirements.Count == 0)
+                return false;
+
+            foreach (var req in itemIdRequirements)
+            {
+                var reqStatus = req.ItemRequirement.CollectionStatus;
+                if (!includeObtainable && reqStatus == CollectionStatusType.Obtainable)
+                    continue;
+
+                switch (req.ItemRequirement.RequirementType)
+                {
+                    case RequirementType.Gearpiece:
+                        if (includeCollected || reqStatus < CollectionStatusType.ObtainedPartial)
+                            return true;
+                        break;
+                    case RequirementType.Materia:
+                        if (includeMateria && (includeCollected || reqStatus < CollectionStatusType.ObtainedPartial))
+                            return true;
+                        break;
+                    case RequirementType.Prerequisite:
+                        if (includePrereqs && (includeCollectedPrereqs || reqStatus < CollectionStatusType.ObtainedPartial))
+                            return true;
+                        break;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -101,7 +121,7 @@ namespace BisBuddy.Services.Gearsets
         /// <param name="includeCollectedPrereqs">If includePrereqs is true, whether to include prerequisites marked as collected.
         /// True for 'internal' inventory sources. False for 'external' sources outside of player inventory</param>
         /// <returns>List of the items ItemRequirements that match the filters</returns>
-        public IEnumerable<ItemRequirementOwned> GetItemRequirements(
+        public IReadOnlyList<ItemRequirementOwned> GetItemRequirements(
             uint itemId,
             bool includePrereqs = true,
             bool includeMateria = true,
@@ -111,11 +131,12 @@ namespace BisBuddy.Services.Gearsets
             )
         {
             if (!currentItemRequirements.TryGetValue(itemId, out var itemIdRequirements))
-                yield break;
+                return [];
 
             if (itemIdRequirements.Count == 0)
-                yield break;
+                return [];
 
+            var items = new List<ItemRequirementOwned>();
             foreach (var req in itemIdRequirements)
             {
                 var reqStatus = req.ItemRequirement.CollectionStatus;
@@ -126,20 +147,20 @@ namespace BisBuddy.Services.Gearsets
                 {
                     case RequirementType.Gearpiece:
                         if (includeCollected || reqStatus < CollectionStatusType.ObtainedPartial)
-                            yield return req;
+                            items.Add(req);
                         break;
                     case RequirementType.Materia:
                         if (includeMateria && (includeCollected || reqStatus < CollectionStatusType.ObtainedPartial))
-                            yield return req;
+                            items.Add(req);
                         break;
                     case RequirementType.Prerequisite:
                         if (includePrereqs && (includeCollectedPrereqs || reqStatus < CollectionStatusType.ObtainedPartial))
-                            yield return req;
+                            items.Add(req);
                         break;
                 }
             }
 
-            yield break;
+            return items;
         }
 
         public HighlightColor? GetRequirementColor(

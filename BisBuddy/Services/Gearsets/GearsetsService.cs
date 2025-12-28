@@ -217,7 +217,7 @@ namespace BisBuddy.Services.Gearsets
             bool includeObtainable = false,
             bool includeCollectedPrereqs = false
         );
-        public IEnumerable<ItemRequirementOwned> GetItemRequirements(
+        public IReadOnlyList<ItemRequirementOwned> GetItemRequirements(
             uint itemId,
             bool includePrereqs = true,
             bool includeMateria = true,

@@ -156,9 +156,9 @@ namespace BisBuddy.Services.Addon
                 var nqItemId = infoProxy->SearchItemId;
                 var hqItemId = itemDataService.ConvertItemIdToHq(nqItemId);
 
-                var nqItemRequirements = gearsetsService.GetItemRequirements(nqItemId).ToList();
+                var nqItemRequirements = gearsetsService.GetItemRequirements(nqItemId);
                 var hqItemRequirements = hqItemId != nqItemId
-                    ? gearsetsService.GetItemRequirements(hqItemId).ToList()
+                    ? gearsetsService.GetItemRequirements(hqItemId)
                     : nqItemRequirements;
 
                 nqNeeded = nqItemRequirements.Count;
