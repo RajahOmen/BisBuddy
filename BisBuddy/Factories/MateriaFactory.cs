@@ -37,6 +37,10 @@ namespace BisBuddy.Factories
         /// <param name="isCollected">If the initial state of the materia should be melded</param>
         /// <param name="collectLock">If the initial collect state of the materia should be locked</param>
         /// <returns>A new instance of the specified materia.</returns>
-        Materia Create(uint itemId, bool isCollected = false, bool collectLock = false);
+        Materia Create(
+            uint itemId,
+            bool isCollected = false,
+            bool collectLock = false
+            );
     }
 }

@@ -3,6 +3,7 @@ using BisBuddy.Gear;
 using BisBuddy.Gear.Melds;
 using BisBuddy.Gear.Prerequisites;
 using System;
+using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -22,7 +23,7 @@ namespace BisBuddy.Converters
 
             uint? itemId = null;
             IPrerequisiteNode? prerequisiteTree = null;
-            MateriaGroup? itemMateria = null;
+            List<Materia>? itemMateria = null;
             bool? isCollected = null;
             bool? isManuallyCollected = null;
             bool? collectionStatusLocked = null;
@@ -44,7 +45,7 @@ namespace BisBuddy.Converters
                         prerequisiteTree = JsonSerializer.Deserialize<IPrerequisiteNode>(ref reader, options);
                         break;
                     case nameof(Gearpiece.ItemMateria):
-                        itemMateria = JsonSerializer.Deserialize<MateriaGroup>(ref reader, options);
+                        itemMateria = JsonSerializer.Deserialize<List<Materia>>(ref reader, options);
                         break;
                     case nameof(Gearpiece.IsCollected):
                         isCollected = reader.GetBoolean();
