@@ -786,4 +786,77 @@ or to have a unique color to highlight items in</value>
   <data name="NotObtainablePartialHelp" xml:space="preserve">
     <value>Some prerequisite(s) collected</value>
   </data>
+  <data name="MateriaCountsTabName" xml:space="preserve">
+    <value>Materia</value>
+  </data>
+  <data name="MateriaCountsMateriaNameHeader" xml:space="preserve">
+    <value>Materia Name</value>
+  </data>
+  <data name="MateriaCountsStatHeader" xml:space="preserve">
+    <value>Stat</value>
+  </data>
+  <data name="MateriaCountsSlotsHeader" xml:space="preserve">
+    <value>Slots</value>
+  </data>
+  <data name="MateriaCountsNeededHeader" xml:space="preserve">
+    <value>Needed</value>
+  </data>
+  <data name="MateriaCountsInventoryHeader" xml:space="preserve">
+    <value>Inventory</value>
+  </data>
+  <data name="MateriaCountsRemainingHeader" xml:space="preserve">
+    <value>Remaining</value>
+  </data>
+  <data name="MateriaCountsGearsetsComboTooltip" xml:space="preserve">
+    <value>Which gearset(s) to check for unfilled materia</value>
+  </data>
+  <data name="MateriaCountsGearsetsComboAllOption" xml:space="preserve">
+    <value>Select All</value>
+  </data>
+  <data name="MateriaCountsGearsetsComboNoneOption" xml:space="preserve">
+    <value>Deselect All</value>
+  </data>
+  <data name="MateriaCountsGearsetsComboNoneLoadedPreview" xml:space="preserve">
+    <value>No Gearsets Loaded</value>
+  </data>
+  <data name="MateriaCountsGearsetsComboNoneSelectedPreview" xml:space="preserve">
+    <value>No Gearsets Selected</value>
+  </data>
+  <data name="MateriaCountsGearsetsComboAllSelectedPreview" xml:space="preserve">
+    <value>All Gearsets Selected</value>
+  </data>
+  <data name="MateriaCountsGearsetsComboCountSelectedPreview" xml:space="preserve">
+    <value>{0} Gearsets Selected</value>
+    <comment>{0} - number of gearsets currently selected</comment>
+  </data>
+  <data name="MateriaCountsMeldConfidenceTooltip" xml:space="preserve">
+    <value>{0} chance that all selected slots are filled using the amount of materia listed
+CTRL+Click to insert number</value>
+    <comment>{0} - current percent confidence (i.e. 90.3%)</comment>
+  </data>
+  <data name="MateriaCountsMeldConfidenceSliderLabel" xml:space="preserve">
+    <value>Meld Confidence</value>
+    <comment>Always comes after the current percent confidence (i.e. 90.3% Meld Confidence)</comment>
+  </data>
+  <data name="MateriaCountsNoUnmeldedMateria" xml:space="preserve">
+    <value>All Materia Melded for Selected Gearsets(s)</value>
+  </data>
+  <data name="MateriaCountsNoSelectedGearsets" xml:space="preserve">
+    <value>Select Gearset(s) to view unmelded Materia</value>
+  </data>
+  <data name="MateriaCountsOvercountWarningText" xml:space="preserve">
+    <value>Warning:  Multiple gearsets using the same gearpiece may overcount materia required</value>
+  </data>
+  <data name="MateriaCountsOvercountWarningTooltip" xml:space="preserve">
+    <value>If the same gearpiece is used in more than one gearset, this list counts its materia twice, even if a single gearpiece in game could be shared by both
+If buying materia in bulk, only buy enough for one of the sets sharing a gearpiece
+
+Sets sharing gearpieces:
+{0}</value>
+    <comment>{0} - List of gearsets sharing gearpieces</comment>
+  </data>
+  <data name="MateriaCountsSearchInventory" xml:space="preserve">
+    <value>Search in inventories for {0}</value>
+    <comment>{0} - materia item name</comment>
+  </data>
 </root>

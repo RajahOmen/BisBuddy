@@ -23,10 +23,13 @@ namespace BisBuddy.Ui.Renderers.Tabs.Main
 
         // open configuration as a tab in the main window
         [Display(ResourceType = typeof(Resource), Name = nameof(Resource.ConfigTabName))]
-        PluginConfig = 4,
+        PluginConfig = 900,
 
         // open debugging tab
         [Display(ResourceType = typeof(Resource), Name = nameof(Resource.DebugTabName))]
-        PluginDebug = 5,
+        PluginDebug = 1000,
+
+        [Display(ResourceType = typeof(Resource), Name = nameof(Resource.MateriaCountsTabName))]
+        MateriaCounts = 6,
     }
 }

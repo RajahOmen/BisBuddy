@@ -19,7 +19,7 @@ namespace BisBuddy.Resources {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Resource {
@@ -1451,6 +1451,200 @@ namespace BisBuddy.Resources {
         public static string MateriaAbbrevTenacity {
             get {
                 return ResourceManager.GetString("MateriaAbbrevTenacity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select All.
+        /// </summary>
+        public static string MateriaCountsGearsetsComboAllOption {
+            get {
+                return ResourceManager.GetString("MateriaCountsGearsetsComboAllOption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All Gearsets Selected.
+        /// </summary>
+        public static string MateriaCountsGearsetsComboAllSelectedPreview {
+            get {
+                return ResourceManager.GetString("MateriaCountsGearsetsComboAllSelectedPreview", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} Gearsets Selected.
+        /// </summary>
+        public static string MateriaCountsGearsetsComboCountSelectedPreview {
+            get {
+                return ResourceManager.GetString("MateriaCountsGearsetsComboCountSelectedPreview", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No Gearsets Loaded.
+        /// </summary>
+        public static string MateriaCountsGearsetsComboNoneLoadedPreview {
+            get {
+                return ResourceManager.GetString("MateriaCountsGearsetsComboNoneLoadedPreview", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Deselect All.
+        /// </summary>
+        public static string MateriaCountsGearsetsComboNoneOption {
+            get {
+                return ResourceManager.GetString("MateriaCountsGearsetsComboNoneOption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No Gearsets Selected.
+        /// </summary>
+        public static string MateriaCountsGearsetsComboNoneSelectedPreview {
+            get {
+                return ResourceManager.GetString("MateriaCountsGearsetsComboNoneSelectedPreview", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Which gearset(s) to check for unfilled materia.
+        /// </summary>
+        public static string MateriaCountsGearsetsComboTooltip {
+            get {
+                return ResourceManager.GetString("MateriaCountsGearsetsComboTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Inventory.
+        /// </summary>
+        public static string MateriaCountsInventoryHeader {
+            get {
+                return ResourceManager.GetString("MateriaCountsInventoryHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Materia Name.
+        /// </summary>
+        public static string MateriaCountsMateriaNameHeader {
+            get {
+                return ResourceManager.GetString("MateriaCountsMateriaNameHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Meld Confidence.
+        /// </summary>
+        public static string MateriaCountsMeldConfidenceSliderLabel {
+            get {
+                return ResourceManager.GetString("MateriaCountsMeldConfidenceSliderLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} chance that all selected slots are filled using the amount of materia listed
+        ///CTRL+Click to insert number.
+        /// </summary>
+        public static string MateriaCountsMeldConfidenceTooltip {
+            get {
+                return ResourceManager.GetString("MateriaCountsMeldConfidenceTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Needed.
+        /// </summary>
+        public static string MateriaCountsNeededHeader {
+            get {
+                return ResourceManager.GetString("MateriaCountsNeededHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select Gearset(s) to view unmelded Materia.
+        /// </summary>
+        public static string MateriaCountsNoSelectedGearsets {
+            get {
+                return ResourceManager.GetString("MateriaCountsNoSelectedGearsets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All Materia Melded for Selected Gearsets(s).
+        /// </summary>
+        public static string MateriaCountsNoUnmeldedMateria {
+            get {
+                return ResourceManager.GetString("MateriaCountsNoUnmeldedMateria", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning:  Multiple gearsets using the same gearpiece may overcount materia required.
+        /// </summary>
+        public static string MateriaCountsOvercountWarningText {
+            get {
+                return ResourceManager.GetString("MateriaCountsOvercountWarningText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If the same gearpiece is used in more than one gearset, this list counts its materia twice, even if a single gearpiece in game could be shared by both
+        ///If buying materia in bulk, only buy enough for one of the sets sharing a gearpiece
+        ///
+        ///Sets sharing gearpieces:
+        ///{0}.
+        /// </summary>
+        public static string MateriaCountsOvercountWarningTooltip {
+            get {
+                return ResourceManager.GetString("MateriaCountsOvercountWarningTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remaining.
+        /// </summary>
+        public static string MateriaCountsRemainingHeader {
+            get {
+                return ResourceManager.GetString("MateriaCountsRemainingHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search in inventories for {0}.
+        /// </summary>
+        public static string MateriaCountsSearchInventory {
+            get {
+                return ResourceManager.GetString("MateriaCountsSearchInventory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Slots.
+        /// </summary>
+        public static string MateriaCountsSlotsHeader {
+            get {
+                return ResourceManager.GetString("MateriaCountsSlotsHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stat.
+        /// </summary>
+        public static string MateriaCountsStatHeader {
+            get {
+                return ResourceManager.GetString("MateriaCountsStatHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Materia.
+        /// </summary>
+        public static string MateriaCountsTabName {
+            get {
+                return ResourceManager.GetString("MateriaCountsTabName", resourceCulture);
             }
         }
         
