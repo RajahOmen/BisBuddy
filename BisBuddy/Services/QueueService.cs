@@ -30,8 +30,15 @@ namespace BisBuddy.Services
                 {
                     var (taskName, task) = await reader.ReadAsync(token);
                     logger.Verbose($"[{taskName}] Executing task");
-                    task();
-                    logger.Verbose($"[{taskName}] Task complete");
+                    try
+                    {
+                        task();
+                        logger.Verbose($"[{taskName}] Task complete");
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.Error(ex, $"[{taskName}] Task execution failed");
+                    }
                 }
             }
             catch (OperationCanceledException)

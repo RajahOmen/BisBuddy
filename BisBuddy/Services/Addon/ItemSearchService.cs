@@ -5,8 +5,8 @@ using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using FFXIVClientStructs.FFXIV.Component.GUI;
-using KamiToolKit.Nodes;
 using KamiToolKit;
+using KamiToolKit.Nodes;
 using System;
 using System.Collections.Generic;
 
@@ -47,7 +47,8 @@ namespace BisBuddy.Services.Addon
                 { // no items needed from list, return
                     unmarkNodes();
                     return;
-                };
+                }
+                ;
                 var addon = (AddonItemSearch*)AddonPtr.Address;
                 if (addon == null || !addon->IsVisible) return; // addon not visible/rendered
                 if (addon->ResultsList == null || addon->ResultsList->ListLength == 0) return; // no items in search

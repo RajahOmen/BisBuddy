@@ -37,9 +37,7 @@ using System.IO.Abstractions;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
-using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Text.Json.Serialization.Metadata;
 
 namespace BisBuddy;
 
@@ -130,6 +128,7 @@ public sealed partial class Plugin : IDalamudPlugin
                 builder.RegisterType<GearsetFactory>().As<IGearsetFactory>().SingleInstance();
                 builder.RegisterType<ItemAssignmentSolverFactory>().As<IItemAssignmentSolverFactory>().SingleInstance();
                 builder.RegisterType<MateriaFactory>().As<IMateriaFactory>().SingleInstance();
+                builder.RegisterType<MateriaGroupFactory>().As<IMateriaGroupFactory>().SingleInstance();
                 builder.RegisterType<ContextMenuEntryFactory>().As<IContextMenuEntryFactory>().SingleInstance();
 
                 // de/serialization
@@ -180,6 +179,7 @@ public sealed partial class Plugin : IDalamudPlugin
                 //builder.RegisterType<ItemTrackerTab>().Keyed<TabRenderer>(MainWindowTab.ItemTracker).InstancePerMatchingLifetimeScope(windowScopeTag);
                 builder.RegisterType<ConfigTab>().Keyed<TabRenderer<MainWindowTab>>(MainWindowTab.PluginConfig).InstancePerMatchingLifetimeScope(windowScopeTag);
                 builder.RegisterType<DebugTab>().Keyed<TabRenderer<MainWindowTab>>(MainWindowTab.PluginDebug).InstancePerMatchingLifetimeScope(windowScopeTag);
+                builder.RegisterType<MateriaCountsTab>().Keyed<TabRenderer<MainWindowTab>>(MainWindowTab.MateriaCounts).InstancePerMatchingLifetimeScope(windowScopeTag);
 
                 // debug tab tabs
                 builder.RegisterType<DebugItemRequirementsTab>().Keyed<TabRenderer<DebugToolTab>>(DebugToolTab.ItemRequirements).InstancePerMatchingLifetimeScope(windowScopeTag);

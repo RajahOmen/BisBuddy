@@ -20,6 +20,7 @@ namespace BisBuddy.Services.Configuration
     {
         private readonly ITypedLogger<ConfigurationService> logger;
         private readonly IFramework framework;
+        private readonly IConfigurationLoaderService configurationLoaderService;
         private readonly IQueueService queueService;
         private readonly IFileService fileService;
         private readonly IJsonSerializerService jsonSerializerService;
@@ -27,7 +28,7 @@ namespace BisBuddy.Services.Configuration
         public ConfigurationService(
             ITypedLogger<ConfigurationService> logger,
             IFramework framework,
-            IConfigurationLoaderService loadConfigurationService,
+            IConfigurationLoaderService configurationLoaderService,
             IQueueService queueService,
             IFileService fileService,
             IJsonSerializerService jsonSerializerService
@@ -35,10 +36,11 @@ namespace BisBuddy.Services.Configuration
         {
             this.logger = logger;
             this.framework = framework;
+            this.configurationLoaderService = configurationLoaderService;
             this.queueService = queueService;
             this.fileService = fileService;
             this.jsonSerializerService = jsonSerializerService;
-            configuration = loadConfigurationService.LoadConfig();
+            configuration = this.configurationLoaderService.LoadConfig();
             configuration.DefaultHighlightColor.OnColorChange += handleDefaultHighlightColorChange;
             configuration.UiTheme.PropertyChanged += handleUiThemePropertyChange;
         }
@@ -78,7 +80,7 @@ namespace BisBuddy.Services.Configuration
                     );
 
             propInfo.SetValue(configuration, newValue);
-            scheduleSave();
+            configurationLoaderService.ScheduleConfigSave(configuration);
             triggerConfigurationChange(affectsAssignments: affectsAssignments);
         }
 
@@ -222,34 +224,14 @@ namespace BisBuddy.Services.Configuration
 
         private void handleDefaultHighlightColorChange()
         {
-            scheduleSave();
+            configurationLoaderService.ScheduleConfigSave(configuration);
             triggerConfigurationChange(affectsAssignments: false);
         }
 
         private void handleUiThemePropertyChange(object? obj, PropertyChangedEventArgs args)
         {
-            scheduleSave();
+            configurationLoaderService.ScheduleConfigSave(configuration);
             triggerConfigurationChange(affectsAssignments: false);
-        }
-
-        private void saveConfig()
-        {
-            try
-            {
-                logger.Verbose($"Saving configuration file");
-                var configText = jsonSerializerService.Serialize(configuration);
-                fileService.WriteConfigString(configText);
-            }
-            catch (Exception ex)
-            {
-                logger.Error($"Error saving config file", ex);
-            }
-        }
-
-        public void scheduleSave()
-        {
-            logger.Verbose($"Enqueuing save of configuration file");
-            queueService.Enqueue("CONFIG_SAVE", saveConfig);
         }
 
         public Task StartAsync(CancellationToken cancellationToken)

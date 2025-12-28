@@ -35,6 +35,9 @@ namespace BisBuddy.Ui.Renderers
             RendererType rendererType
             ) where T : notnull
         {
+            if (itemToRender is null)
+                throw new ArgumentNullException($"This value can't be null!: {nameof(itemToRender)} = '{itemToRender}'");
+
             if (scopeCache.TryGetValue((itemToRender, rendererType), out var cachedScope))
                 return cachedScope.ResolveKeyed<IRenderer<T>>(rendererType);
 

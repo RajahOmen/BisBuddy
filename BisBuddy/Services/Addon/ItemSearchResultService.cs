@@ -6,8 +6,8 @@ using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Info;
 using FFXIVClientStructs.FFXIV.Component.GUI;
-using KamiToolKit.Nodes;
 using KamiToolKit;
+using KamiToolKit.Nodes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -57,7 +57,8 @@ namespace BisBuddy.Services.Addon
                 { // no variant needed for this selection, unmark and quit
                     unmarkNodes();
                     return;
-                };
+                }
+                ;
                 var addon = (AddonItemSearchResult*)AddonPtr.Address;
 
                 // addon not visible/rendered

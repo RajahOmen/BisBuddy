@@ -1,6 +1,5 @@
 using BisBuddy.Factories;
 using BisBuddy.Gear;
-using BisBuddy.Gear.Melds;
 using BisBuddy.Import;
 using BisBuddy.Items;
 using BisBuddy.Util;
@@ -144,10 +143,11 @@ namespace BisBuddy.Services.ImportGearset
                     .Intersect(currentItemJobAbbrevs)
                     .ToHashSet();
 
-            var itemMateria = new MateriaGroup(materiaNames
+            var itemMateria = materiaNames
                 .Select(itemDataService.GetItemIdByName)
                 .Where(id => id > 0)
-                .Select(id => materiaFactory.Create(id)));
+                .Select(id => materiaFactory.Create(id))
+                .ToList();
 
 
             var gearpiece = gearpieceFactory.Create(

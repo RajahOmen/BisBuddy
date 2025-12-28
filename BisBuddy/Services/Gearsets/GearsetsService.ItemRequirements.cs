@@ -13,14 +13,37 @@ namespace BisBuddy.Services.Gearsets
         private void updateItemRequirements()
         {
             var requirements = new Dictionary<uint, List<ItemRequirementOwned>>();
+            var itemCounts = inventoryItemsService.ItemInventoryQuantities.ToDictionary();
             foreach (var gearset in currentGearsets)
             {
                 foreach (var requirement in gearset.ItemRequirements(configurationService.HighlightUncollectedItemMateria))
                 {
-                    if (requirements.TryGetValue(requirement.ItemRequirement.ItemId, out var itemIdRequirements))
-                        itemIdRequirements.Add(requirement);
+                    var itemReq = requirement;
+                    if (requirement.ItemRequirement.RequirementType == RequirementType.Materia
+                        && requirement.ItemRequirement.CollectionStatus < CollectionStatusType.NotObtainablePartial
+                        && itemCounts.TryGetValue(requirement.ItemRequirement.ItemId, out var invCount)
+                        && invCount.Count > 0
+                        )
+                    {
+                        // we have materia in our inventory, make this obtainable and decrement inv count
+                        itemReq = requirement with
+                        {
+                            ItemRequirement = requirement.ItemRequirement with
+                            {
+                                CollectionStatus = CollectionStatusType.Obtainable
+                            }
+                        };
+                        // decrement, we're using this materia
+                        itemCounts[requirement.ItemRequirement.ItemId] = invCount with
+                        {
+                            Count = invCount.Count - 1
+                        };
+                    }
+
+                    if (requirements.TryGetValue(itemReq.ItemRequirement.ItemId, out var itemIdRequirements))
+                        itemIdRequirements.Add(itemReq);
                     else
-                        requirements[requirement.ItemRequirement.ItemId] = [requirement];
+                        requirements[itemReq.ItemRequirement.ItemId] = [itemReq];
                 }
             }
 

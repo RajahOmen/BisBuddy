@@ -93,5 +93,7 @@ namespace BisBuddy.Gear.Melds
                 .GetShortName()!;
             return $"{statAbbreviation} +{statStrength}";
         }
+
+        public int PercentChanceToAttach { get; set; } = 0;
     }
 }

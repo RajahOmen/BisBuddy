@@ -3,8 +3,8 @@ using BisBuddy.Util;
 using Dalamud.Game.Addon.Lifecycle;
 using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
 using FFXIVClientStructs.FFXIV.Component.GUI;
-using KamiToolKit.Nodes;
 using KamiToolKit;
+using KamiToolKit.Nodes;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -82,7 +82,8 @@ namespace BisBuddy.Services.Addon.ShopExchange
                     // remove highlight on all items if there are no items needed
                     unmarkNodes();
                     return;
-                };
+                }
+                ;
 
 
                 if (addon == null || !addon->IsVisible) return;
@@ -165,7 +166,8 @@ namespace BisBuddy.Services.Addon.ShopExchange
                 if (itemIdAtkValue.Type != ValueType.UInt)
                 {
                     throw new Exception($"Item id at index {i}/{AtkValueItemIdListStartingIndex + i} is a {itemIdAtkValue.Type}, not a UInt");
-                };
+                }
+                ;
                 var itemId = itemIdAtkValue.UInt;
                 var shieldOffset = shieldInAtkValues && i >= AddonShieldIndex
                     ? 1  // shield visible and idx after where shield goes

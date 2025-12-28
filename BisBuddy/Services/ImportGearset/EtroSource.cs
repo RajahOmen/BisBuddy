@@ -187,13 +187,13 @@ namespace BisBuddy.Services.ImportGearset
                 );
         }
 
-        private MateriaGroup parseMateria(
+        private List<Materia> parseMateria(
             JsonElement? materiaElement,
             string gearpieceIdStr,
             string gearpieceTypeStr
             )
         {
-            var materiaList = new MateriaGroup();
+            var materiaList = new List<Materia>();
             if (materiaElement == null)
                 return materiaList;
             var materiaProp = materiaElement.Value;

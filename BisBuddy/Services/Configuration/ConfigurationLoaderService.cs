@@ -1,14 +1,11 @@
 using BisBuddy.Gear;
 using BisBuddy.Items;
 using BisBuddy.Util;
-using Dalamud.Utility;
 using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Numerics;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 using JsonException = System.Text.Json.JsonException;
 
 namespace BisBuddy.Services.Configuration
@@ -17,13 +14,15 @@ namespace BisBuddy.Services.Configuration
         ITypedLogger<ConfigurationLoaderService> logger,
         IFileService fileService,
         IItemDataService itemDataService,
-        IJsonSerializerService jsonSerializerService
+        IJsonSerializerService jsonSerializerService,
+        IQueueService queueService
         ) : IConfigurationLoaderService
     {
         private readonly ITypedLogger<ConfigurationLoaderService> logger = logger;
         private readonly IFileService fileService = fileService;
         private readonly IItemDataService itemDataService = itemDataService;
         private readonly IJsonSerializerService jsonSerializerService = jsonSerializerService;
+        private readonly IQueueService queueService = queueService;
 
         public IConfigurationProperties LoadConfig()
         {
@@ -40,7 +39,9 @@ namespace BisBuddy.Services.Configuration
                 if (configVersion != Configuration.CurrentVersion)
                 {
                     logger.Warning($"Config version {configVersion} found, current {Configuration.CurrentVersion}. Attempting migration");
-                    return migrateOldConfig(configJson, configStream, configVersion);
+                    var newConfig = migrateOldConfig(configJson, configStream, configVersion);
+                    ScheduleConfigSave(newConfig);
+                    return newConfig;
                 }
                 return jsonSerializerService.Deserialize<Configuration>(configJson) ?? new Configuration();
             }
@@ -69,6 +70,7 @@ namespace BisBuddy.Services.Configuration
             var newConfig = new Configuration();
             for (var version = configVersion; version < Configuration.CurrentVersion; version++)
             {
+                logger.Debug($"Migrating config from version {version} to {version + 1}");
                 newConfig = version switch
                 {
                     1 => migrate1To2(configStream),
@@ -173,10 +175,32 @@ namespace BisBuddy.Services.Configuration
             config.CharactersData.Clear();
             return config;
         }
+
+        private void saveConfig(IConfigurationProperties configurationData)
+        {
+            try
+            {
+                logger.Verbose($"Saving configuration file");
+                var configText = jsonSerializerService.Serialize(configurationData);
+                fileService.WriteConfigString(configText);
+            }
+            catch (Exception ex)
+            {
+                logger.Error($"Error saving config file", ex);
+            }
+        }
+
+        public void ScheduleConfigSave(IConfigurationProperties configurationData)
+        {
+            logger.Verbose($"Enqueuing save of configuration file");
+            queueService.Enqueue("CONFIG_SAVE", () => saveConfig(configurationData));
+        }
     }
 
     public interface IConfigurationLoaderService
     {
         public IConfigurationProperties LoadConfig();
+
+        public void ScheduleConfigSave(IConfigurationProperties configurationData);
     }
 }

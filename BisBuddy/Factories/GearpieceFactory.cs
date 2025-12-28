@@ -4,22 +4,25 @@ using BisBuddy.Gear.Prerequisites;
 using BisBuddy.Items;
 using BisBuddy.Services;
 using System;
+using System.Collections.Generic;
 
 namespace BisBuddy.Factories
 {
     public class GearpieceFactory(
         ITypedLogger<GearpieceFactory> logger,
         ITypedLogger<Gearpiece> gearpieceLogger,
-        IItemDataService itemDataService
+        IItemDataService itemDataService,
+        IMateriaGroupFactory materiaGroupFactory
         ) : IGearpieceFactory
     {
         private readonly ITypedLogger<GearpieceFactory> logger = logger;
         private readonly ITypedLogger<Gearpiece> gearpieceLogger = gearpieceLogger;
         private readonly IItemDataService itemDataService = itemDataService;
+        private readonly IMateriaGroupFactory materiaGroupFactory = materiaGroupFactory;
 
         public Gearpiece Create(
             uint itemId,
-            MateriaGroup? itemMateria,
+            List<Materia>? itemMateria,
             bool isCollected = false,
             bool collectLock = false
             )
@@ -42,7 +45,7 @@ namespace BisBuddy.Factories
 
         public Gearpiece Create(
             uint itemId,
-            MateriaGroup? itemMateria,
+            List<Materia>? itemMateria,
             IPrerequisiteNode? prerequisiteTree,
             bool isCollected = false,
             bool collectLock = false,
@@ -63,13 +66,18 @@ namespace BisBuddy.Factories
                         collectLock
                         );
 
+                var itemMateriaGroup = materiaGroupFactory.Create(
+                    itemMateria ?? [],
+                    itemId
+                );
+
                 var newGearpiece = new Gearpiece(
                     gearpieceLogger,
                     itemId,
                     itemName,
                     gearpieceType,
                     prerequisiteTree,
-                    itemMateria,
+                    itemMateriaGroup,
                     isCollected,
                     collectLock
                     );
@@ -97,7 +105,7 @@ namespace BisBuddy.Factories
         /// <exception cref="ArgumentException">If the gearpiece could not be created due to invalid inputs</exception>
         public Gearpiece Create(
             uint itemId,
-            MateriaGroup? itemMateria,
+            List<Materia>? itemMateria,
             bool isCollected = false,
             bool collectLock = false
             );
@@ -115,7 +123,7 @@ namespace BisBuddy.Factories
         /// <exception cref="ArgumentException">If the gearpiece could not be created due to invalid inputs</exception>
         public Gearpiece Create(
             uint itemId,
-            MateriaGroup? itemMateria,
+            List<Materia>? itemMateria,
             IPrerequisiteNode? prerequisiteTree,
             bool isCollected = false,
             bool collectLock = false,

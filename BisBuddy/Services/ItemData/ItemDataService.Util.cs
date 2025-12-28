@@ -109,6 +109,20 @@ namespace BisBuddy.Items
             }
         }
 
+        public bool ItemIdIsHq(uint itemId) =>
+            itemId >= Constants.ItemIdHqOffset;
+
+        public int GetPercentChanceToAttach(uint materiaGrade, int overmeldSlotIdx, bool attachToHq)
+        {
+            if (!dataManager.GetExcelSheet<MateriaGrade>().TryGetRow(materiaGrade, out var materiaInfo))
+                return 0;
+
+            if (attachToHq)
+                return materiaInfo.OvermeldHQPercent[overmeldSlotIdx];
+            else
+                return materiaInfo.OvermeldNQPercent[overmeldSlotIdx];
+        }
+
         /// <summary>
         /// Returns if an item can have materia attached to it
         /// </summary>
@@ -139,11 +153,14 @@ namespace BisBuddy.Items
             return itemRow.Icon;
         }
 
-        public int GetItemMateriaSlotCount(uint itemId)
+        public (int Normal, int Advanced) GetItemMateriaSlotCount(uint itemId)
         {
             if (!tryGetItemRowById(itemId, out var itemRow))
                 throw new ArgumentException($"Invalid itemId {itemId}");
-            return itemRow.MateriaSlotCount;
+            var advancedCount = itemRow.IsAdvancedMeldingPermitted
+                ? 5 - itemRow.MateriaSlotCount
+                : 0;
+            return (itemRow.MateriaSlotCount, advancedCount);
         }
 
         /// <summary>   
