@@ -180,11 +180,11 @@ namespace BisBuddy.Services.ImportGearset
 
             var classJobId = gearsetJobOverride ?? 0;
             if (
-                gearsetJobOverride == null
-                && setElement.TryGetProperty("job", out var jobProp)
+                setElement.TryGetProperty("jobOverride", out var jobProp)
                 && jobProp.ValueKind == JsonValueKind.String
                 )
             {
+                logger.Debug($"Using jobOverride {jobProp.GetString()} from gearset");
                 classJobId = itemDataService.GetClassJobInfoByEnAbbreviation(jobProp.GetString() ?? "").ClassJobId;
             }
 
