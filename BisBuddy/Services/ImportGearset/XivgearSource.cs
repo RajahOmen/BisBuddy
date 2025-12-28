@@ -5,6 +5,7 @@ using BisBuddy.Import;
 using BisBuddy.Items;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -25,7 +26,7 @@ namespace BisBuddy.Services.ImportGearset
 
         private const string UriHost = "xivgear.app";
         private const string XivgearStandardApiBase = "https://api.xivgear.app/shortlink/{0}";
-        private const string XivgearStaticBisApiBase = "https://staticbis.xivgear.app/{0}/{1}.json";
+        private const string XivgearFulldataApiBase = "https://api.xivgear.app/fulldata/{0}";
         private const string XivgearSetIndexBase = "&onlySetIndex=";
         private const string StaticBisIdentifier = "bis|";
 
@@ -106,10 +107,8 @@ namespace BisBuddy.Services.ImportGearset
             // follows pattern ...path=bis|{job abbrev}|current
             if (page.StartsWith(StaticBisIdentifier))
             {
-                var pageParts = page.Split("|");
-                var jobAbbrev = pageParts[1];
-                var bisRelevance = pageParts[2];
-                return string.Format(XivgearStaticBisApiBase, jobAbbrev, bisRelevance);
+                var newPath = page.Replace("|", "/");
+                return string.Format(XivgearFulldataApiBase, newPath);
             }
             // follows pattern ...path=sl|{set uuid}
             else
