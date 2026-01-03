@@ -2,8 +2,7 @@
 <Project Sdk="Dalamud.NET.Sdk/14.0.1">
     <PropertyGroup>
         <TargetFramework>net10.0-windows</TargetFramework>
-        <Version>0.2.6.0</Version>
-        <Changelog>Fix some highlighting issues and some UI tweaks</Changelog>
+        <Version>0.2.6.1</Version>
         <Description>Gearing, simplified.</Description>
         <PackageProjectUrl>https://github.com/RajahOmen/BisBuddy</PackageProjectUrl>
         <RepoUrl>https://github.com/RajahOmen/BisBuddy</RepoUrl>
