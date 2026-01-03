@@ -1518,6 +1518,24 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to This tab helps with getting enough materia before advanced melding for your gearsets.
+        ///
+        ///{0} uses the melding success rate for each unmelded slot in selected gearsets
+        ///to calculate how many materia are needed to successfully fill every slot.
+        ///
+        ///Usage Instructions
+        ///1. Select the gearsets with gearpieces you want to meld
+        ///2. Set your desired meld confidence percent (currently {1}). A higher value
+        ///means more materia will be needed, but there will be a lower chance (currently {2})
+        ///that melding will fail and m [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string MateriaCountsHelpPopupText {
+            get {
+                return ResourceManager.GetString("MateriaCountsHelpPopupText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Inventory.
         /// </summary>
         public static string MateriaCountsInventoryHeader {
@@ -1545,7 +1563,8 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} chance that all selected slots are filled using the amount of materia listed
+        ///   Looks up a localized string similar to {0} chance that all selected slots are melded successfully using the amount of materia listed
+        ///Inversely, {1} chance more materia than listed will be needed to meld all selected slots
         ///CTRL+Click to insert number.
         /// </summary>
         public static string MateriaCountsMeldConfidenceTooltip {

@@ -8,6 +8,7 @@ using BisBuddy.Services.Configuration;
 using BisBuddy.Services.Gearsets;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
+using Dalamud.Interface.Components;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Plugin.Services;
@@ -193,7 +194,7 @@ public class MateriaCountsTab : TabRenderer<MainWindowTab>, IDisposable
     public void Draw()
     {
         using var _ = ImRaii.Child("##materia_quantity_info", Vector2.Zero, border: true);
-
+        
         drawHeader();
 
         ImGui.Spacing();
@@ -215,6 +216,45 @@ public class MateriaCountsTab : TabRenderer<MainWindowTab>, IDisposable
         }
 
         drawMateriaTable();
+
+        drawTabHelpInformation();
+    }
+
+    private void drawTabHelpInformation()
+    {
+        var max = ImGui.GetContentRegionMax();
+        var buttonSize = new Vector2(Math.Max(ImGui.GetTextLineHeight(), 30f));
+        var buttonOffset = buttonSize * 1.25f * ImGuiHelpers.GlobalScale;
+        var buttonPos = max - buttonOffset;
+        ImGui.SetCursorPos(buttonPos);
+        // this child is to force imgui to draw on top of the table (it otherwise does not)
+        using (ImRaii.Child($"##materia_counts_help_icon", Vector2.Zero))
+        using (ImRaii.PushStyle(ImGuiStyleVar.DisabledAlpha, 1.0f))
+        using (ImRaii.Disabled())
+            ImGuiComponents.IconButton(FontAwesomeIcon.Question, buttonSize);
+
+        if (!ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+            return;
+
+        var tooltipText = string.Format(
+            Resource.MateriaCountsHelpPopupText,
+            Resource.PluginDisplayName,
+            $"{meldConfidenceRate:P1}",
+            $"{1 - meldConfidenceRate:P1}"
+            );
+        var windowPos = ImGui.GetWindowPos();
+        var textSize = ImGui.CalcTextSize(tooltipText);
+        var windowPadding = ImGui.GetStyle().WindowPadding;
+        var tooltipPos = new Vector2(
+            buttonPos.X + buttonSize.X * ImGuiHelpers.GlobalScale - (textSize.X + (windowPadding.X * 2)),
+            buttonPos.Y - (textSize.Y + (windowPadding.Y * 3))
+            ) + windowPos;
+
+        ImGui.SetNextWindowPos(tooltipPos, ImGuiCond.Always);
+
+        using (ImRaii.PushStyle(ImGuiStyleVar.PopupBorderSize, 1f))
+        using (ImRaii.Tooltip())
+            ImGui.Text(tooltipText);
     }
 
     private void drawHeader()
@@ -233,7 +273,6 @@ public class MateriaCountsTab : TabRenderer<MainWindowTab>, IDisposable
         var meldPercent = meldConfidenceRate * 100;
         ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);
 
-        //using (ImRaii.PushColor(ImGuiCol.Text, textColor))
         using (ImRaii.PushColor(ImGuiCol.FrameBg, textColor with { W = 0.25f }))
         using (ImRaii.PushColor(ImGuiCol.FrameBgActive, textColor with { W = 0.35f }))
         using (ImRaii.PushColor(ImGuiCol.SliderGrab, textColor with { W = 0.85f }))
@@ -254,10 +293,9 @@ public class MateriaCountsTab : TabRenderer<MainWindowTab>, IDisposable
         if (ImGui.IsItemHovered())
             ImGui.SetTooltip(string.Format(
                 Resource.MateriaCountsMeldConfidenceTooltip,
-                $"{meldConfidenceRate:P1}"
+                $"{meldConfidenceRate:P1}",
+                $"{1 - meldConfidenceRate:P1}"
             ));
-
-        ImGui.Spacing();
 
         var comboPreview = (gearsetsToCount.Count, gearsetsService.CurrentGearsets.Count) switch
         {
