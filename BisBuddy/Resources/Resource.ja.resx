@@ -830,9 +830,11 @@ or to have a unique color to highlight items in</value>
     <comment>{0} - number of gearsets currently selected</comment>
   </data>
   <data name="MateriaCountsMeldConfidenceTooltip" xml:space="preserve">
-    <value>{0} chance that all selected slots are filled using the amount of materia listed
+    <value>{0} chance that all selected slots are melded successfully using the amount of materia listed
+Inversely, {1} chance more materia than listed will be needed to meld all selected slots
 CTRL+Click to insert number</value>
-    <comment>{0} - current percent confidence (i.e. 90.3%)</comment>
+    <comment>{0} - current percent confidence (i.e. 90.3%)
+{1} - inverse of percent confidence (i.e. 9.7%)</comment>
   </data>
   <data name="MateriaCountsMeldConfidenceSliderLabel" xml:space="preserve">
     <value>Meld Confidence</value>
@@ -858,5 +860,24 @@ Sets sharing gearpieces:
   <data name="MateriaCountsSearchInventory" xml:space="preserve">
     <value>Search in inventories for {0}</value>
     <comment>{0} - materia item name</comment>
+  </data>
+  <data name="MateriaCountsHelpPopupText" xml:space="preserve">
+    <value>This tab helps with getting enough materia before advanced melding for your gearsets.
+
+{0} uses the melding success rate for each unmelded slot in selected gearsets
+to calculate how many materia are needed to successfully fill every slot.
+
+Usage Instructions
+1. Select the gearsets with gearpieces you want to meld
+2. Set your desired meld confidence percent (currently {1}). A higher value
+means more materia will be needed, but there will be a lower chance (currently {2})
+that melding will fail and more materia will be required
+3. Collect the amount of materia reported in the needed column. As you collect materia, this 
+page will keep track of how much is in your personal inventory (excluding saddlebag/retainers)
+4. Meld the unmelded gearpieces in the selected gearsets. The table will update as melds
+are completed and materia is consumed.</value>
+    <comment>{0} - Plugin display name
+{1} - current percent confidence (i.e. 90.3%)
+{2} - inverse of percent confidence (i.e. 9.7%)</comment>
   </data>
 </root>
