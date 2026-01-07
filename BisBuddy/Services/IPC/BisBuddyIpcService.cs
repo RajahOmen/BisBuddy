@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
+using BisBuddy.Services.Configuration;
 using BisBuddy.Services.Gearsets;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Ipc;
@@ -10,20 +11,44 @@ using Microsoft.Extensions.Hosting;
 
 namespace BisBuddy.Services.IPC;
 
+/// <summary>
+/// Represents a BiS item with its highlight color.
+/// </summary>
+public record BisItemEntry(uint ItemId, Vector4 Color);
+
+/// <summary>
+/// Filter options for retrieving BiS items.
+/// </summary>
+public record BisItemFilter(
+    bool IncludePrereqs = true,
+    bool IncludeMateria = true,
+    bool IncludeCollected = false,
+    bool IncludeObtainable = true,
+    bool IncludeCollectedPrereqs = true
+);
+
 public class BisBuddyIpcService : IHostedService
 {
     private readonly IDalamudPluginInterface _pluginInterface;
     private readonly IGearsetsService _gearsetsService;
+    private readonly IConfigurationService _configurationService;
 
     private ICallGateProvider<bool>? _isInitialized;
     private ICallGateProvider<bool, bool>? _initialized;
-    private ICallGateProvider<List<uint>>? _getBisItems;
-    private ICallGateProvider<List<uint>, bool>? _bisItemsChanged;
 
-    public BisBuddyIpcService(IDalamudPluginInterface pluginInterface, IGearsetsService gearsetsService)
+    private ICallGateProvider<List<BisItemEntry>>? _getInventoryHighlightItems;
+    private ICallGateProvider<List<BisItemEntry>, bool>? _inventoryHighlightItemsChanged;
+
+    private ICallGateProvider<BisItemFilter, List<BisItemEntry>>? _getBisItemsFiltered;
+
+    public BisBuddyIpcService(
+        IDalamudPluginInterface pluginInterface,
+        IGearsetsService gearsetsService,
+        IConfigurationService configurationService)
     {
         _pluginInterface = pluginInterface;
         _gearsetsService = gearsetsService;
+        _configurationService = configurationService;
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
@@ -31,35 +56,86 @@ public class BisBuddyIpcService : IHostedService
         _isInitialized = _pluginInterface.GetIpcProvider<bool>("BisBuddy.IsInitialized");
         _isInitialized.RegisterFunc(() => true);
 
-        _getBisItems = _pluginInterface.GetIpcProvider<List<uint>>("BisBuddy.GetBisItems");
-        _getBisItems.RegisterFunc(GetBisItemsInternal);
-
-        _bisItemsChanged = _pluginInterface.GetIpcProvider<List<uint>, bool>("BisBuddy.BisItemsChanged");
-
         _initialized = _pluginInterface.GetIpcProvider<bool, bool>("BisBuddy.Initialized");
 
+        _getInventoryHighlightItems = _pluginInterface.GetIpcProvider<List<BisItemEntry>>("BisBuddy.GetInventoryHighlightItems");
+        _getInventoryHighlightItems.RegisterFunc(GetInventoryHighlightItemsInternal);
+
+        _inventoryHighlightItemsChanged = _pluginInterface.GetIpcProvider<List<BisItemEntry>, bool>("BisBuddy.InventoryHighlightItemsChanged");
+
+        _getBisItemsFiltered = _pluginInterface.GetIpcProvider<BisItemFilter, List<BisItemEntry>>("BisBuddy.GetBisItemsFiltered");
+        _getBisItemsFiltered.RegisterFunc(GetBisItemsFilteredInternal);
+
         _gearsetsService.OnGearsetsChange += OnGearsetsChanged;
+        _configurationService.OnConfigurationChange += OnConfigurationChanged;
 
         _initialized.SendMessage(true);
 
         return Task.CompletedTask;
     }
 
-    private List<uint> GetBisItemsInternal()
+    /// <summary>
+    /// Returns items filtered the same way as vanilla inventory highlighting.
+    /// Respects user's HighlightCollectedInInventory setting.
+    /// </summary>
+    private List<BisItemEntry> GetInventoryHighlightItemsInternal()
     {
-        return _gearsetsService.AllItemRequirements.Keys.ToList();
+        var filter = new BisItemFilter(
+            IncludePrereqs: true,
+            IncludeMateria: true,
+            IncludeCollected: _configurationService.HighlightCollectedInInventory,
+            IncludeObtainable: true,
+            IncludeCollectedPrereqs: true
+        );
+
+        return GetBisItemsFilteredInternal(filter);
+    }
+
+    /// <summary>
+    /// Returns items with consumer-specified filters.
+    /// Allows consumers to control exactly what items are returned.
+    /// </summary>
+    private List<BisItemEntry> GetBisItemsFilteredInternal(BisItemFilter filter)
+    {
+        var result = new List<BisItemEntry>();
+
+        foreach (var itemId in _gearsetsService.AllItemRequirements.Keys)
+        {
+            var color = _gearsetsService.GetRequirementColor(
+                itemId,
+                includePrereqs: filter.IncludePrereqs,
+                includeMateria: filter.IncludeMateria,
+                includeCollected: filter.IncludeCollected,
+                includeObtainable: filter.IncludeObtainable,
+                includeCollectedPrereqs: filter.IncludeCollectedPrereqs
+            );
+
+            if (color is not null)
+            {
+                result.Add(new BisItemEntry(itemId, color.BaseColor));
+            }
+        }
+
+        return result;
     }
 
     private void OnGearsetsChanged()
     {
-        _bisItemsChanged?.SendMessage(GetBisItemsInternal());
+        _inventoryHighlightItemsChanged?.SendMessage(GetInventoryHighlightItemsInternal());
+    }
+
+    private void OnConfigurationChanged(bool effectsAssignments)
+    {
+        _inventoryHighlightItemsChanged?.SendMessage(GetInventoryHighlightItemsInternal());
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
         _gearsetsService.OnGearsetsChange -= OnGearsetsChanged;
+        _configurationService.OnConfigurationChange -= OnConfigurationChanged;
         _isInitialized?.UnregisterFunc();
-        _getBisItems?.UnregisterFunc();
+        _getInventoryHighlightItems?.UnregisterFunc();
+        _getBisItemsFiltered?.UnregisterFunc();
         _initialized?.SendMessage(false);
         return Task.CompletedTask;
     }
