@@ -880,4 +880,10 @@ are completed and materia is consumed.</value>
 {1} - current percent confidence (i.e. 90.3%)
 {2} - inverse of percent confidence (i.e. 9.7%)</comment>
   </data>
+  <data name="AllowGearpiecesAsPrerequisitesCheckbox" xml:space="preserve">
+    <value>Assign Gearpieces as Prerequisites</value>
+  </data>
+  <data name="AllowGearpiecesAsPrerequisitesHelp" xml:space="preserve">
+    <value>If items assigned to a gearset as gearpieces can also be assigned to another as prerequisite items. Useful for when having BIS and prog sets for the same job at the same time.</value>
+  </data>
 </root>
