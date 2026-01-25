@@ -91,6 +91,13 @@ namespace BisBuddy.Ui.Renderers.Tabs.Config
                     configurationService.StrictMateriaMatching = strictMateriaMatching;
                 if (ImGui.IsItemHovered())
                     ImGui.SetTooltip(Resource.StrictMateriaMatchingHelp);
+
+                // ALLOW ASSIGNING GEARPIECES AS PREREQUISITES
+                var allowGearpiecesAsPrerequisites = configurationService.AllowGearpiecesAsPrerequisites;
+                if (ImGui.Checkbox(Resource.AllowGearpiecesAsPrerequisitesCheckbox, ref allowGearpiecesAsPrerequisites))
+                    configurationService.AllowGearpiecesAsPrerequisites = allowGearpiecesAsPrerequisites;
+                if (ImGui.IsItemHovered())
+                    ImGui.SetTooltip(Resource.AllowGearpiecesAsPrerequisitesHelp);
             }
         }
 

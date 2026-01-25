@@ -26,6 +26,7 @@ public class Configuration : IConfigurationProperties
     public bool AutoScanInventory { get; set; } = true;
     public bool PluginUpdateInventoryScan { get; set; } = true;
     public bool StrictMateriaMatching { get; set; } = true;
+    public bool AllowGearpiecesAsPrerequisites { get; set; } = true;
 
     public bool BrightListItemHighlighting { get; set; } = true;
     public HighlightColor DefaultHighlightColor { get; set; } = new(0.0f, 1.0f, 0.0f, 0.393f);
@@ -54,6 +55,7 @@ public interface IConfigurationProperties : IPluginConfiguration
     bool AutoScanInventory { get; set; }
     bool PluginUpdateInventoryScan { get; set; }
     bool StrictMateriaMatching { get; set; }
+    bool AllowGearpiecesAsPrerequisites { get; set; }
     bool BrightListItemHighlighting { get; set; }
     HighlightColor DefaultHighlightColor { get; }
     UiTheme UiTheme { get; set; }

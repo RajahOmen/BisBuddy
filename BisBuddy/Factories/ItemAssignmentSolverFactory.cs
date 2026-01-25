@@ -37,8 +37,7 @@ namespace BisBuddy.Factories
                 itemDataService,
                 materiaFactory,
                 materiaGroupFactory,
-                configurationService.StrictMateriaMatching,
-                configurationService.HighlightPrerequisiteMateria
+                configurationService
                 );
             LastCreatedSolver = solver;
             return solver;

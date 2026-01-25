@@ -88,6 +88,24 @@ namespace BisBuddy.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Assign Gearpieces as Prerequisites.
+        /// </summary>
+        public static string AllowGearpiecesAsPrerequisitesCheckbox {
+            get {
+                return ResourceManager.GetString("AllowGearpiecesAsPrerequisitesCheckbox", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If items assigned to a gearset as gearpieces can also be assigned to another as prerequisite items. Useful for when having BIS and prog sets for the same job at the same time..
+        /// </summary>
+        public static string AllowGearpiecesAsPrerequisitesHelp {
+            get {
+                return ResourceManager.GetString("AllowGearpiecesAsPrerequisitesHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Lock all as Collected.
         /// </summary>
         public static string AllUncollectedTooltip {

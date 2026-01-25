@@ -3,8 +3,10 @@ using BisBuddy.Gear;
 using BisBuddy.Gear.Prerequisites;
 using BisBuddy.Items;
 using BisBuddy.Services;
+using BisBuddy.Services.Configuration;
 using BisBuddy.Util;
 using LinearAssignment;
+using Lumina.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,15 +24,14 @@ namespace BisBuddy.ItemAssignment
         public SolveResult? PrerequisitesResult { get; private set; } = null;
 
         private readonly ITypedLogger<ItemAssigmentSolver> logger;
-        private readonly bool strictMateriaMatching;
-        private readonly bool assignPrerequisiteMateria;
+        private readonly IConfigurationProperties configuration;
         private readonly IItemDataService itemData;
         private readonly IEnumerable<Gearset> allGearsets;
         private readonly IEnumerable<Gearset> assignableGearsets;
         private readonly List<GearpieceAssignmentGroup> gearpieceGroups = [];
         private readonly List<PrerequisiteAssignmentGroup> prerequisiteGroups = [];
         private readonly List<InventoryItem> gearpieceCandidateItems;
-        private List<InventoryItem> prerequisiteCandidateItems;
+        private List<(InventoryItem Item, HashSet<Gearset> AssignedGearsetsAsGearpiece)> prerequisiteCandidateItems;
         private readonly List<Assignment> assignments = [];
         private readonly List<Gearpiece> assignedGearpieces = [];
         private readonly int[,] gearpieceEdges;
@@ -44,13 +45,11 @@ namespace BisBuddy.ItemAssignment
             IItemDataService itemData,
             IMateriaFactory materiaFactory,
             IMateriaGroupFactory materiaGroupFactory,
-            bool strictMateriaMatching,
-            bool assignPrerequisiteMateria
+            IConfigurationProperties configuration
             )
         {
             this.logger = logger;
-            this.strictMateriaMatching = strictMateriaMatching;
-            this.assignPrerequisiteMateria = assignPrerequisiteMateria;
+            this.configuration = configuration;
             this.itemData = itemData;
             this.allGearsets = allGearsets.Where(g => g.IsActive);
             this.assignableGearsets = assignableGearsets.Where(g => g.IsActive);
@@ -75,7 +74,7 @@ namespace BisBuddy.ItemAssignment
             gearpieceEdges = new int[gearpieceGroups.Count, gearpieceCandidateItems.Count];
 
             // set to all items, filter after gearpiece assignment
-            prerequisiteCandidateItems = inventoryItems;
+            prerequisiteCandidateItems = inventoryItems.Select(i => (i, new HashSet<Gearset>())).ToList();
         }
 
         private static void removeManuallyCollectedItems(IEnumerable<Gearset> gearsets, List<InventoryItem> inventoryItems)
@@ -191,7 +190,6 @@ namespace BisBuddy.ItemAssignment
                 logResult();
                 throw;
             }
-            // SUCCEEEDS
 
             // this removes candidate items from prereq list as well
             addGearpieceAssignments(gearpieceAssignments);
@@ -199,21 +197,19 @@ namespace BisBuddy.ItemAssignment
             // stage 2: assign gearpieces according to solution
             var assignableGearpieces = assignableGearsets.SelectMany(g => g.Gearpieces).ToList();
 
-            // FAILS BEFORE HERE
-
             logger.Info($"Making up to \"{assignments.Count}\" item assignments");
             var updatedGearpieces = ItemAssigner.MakeItemAssignments(assignments, assignableGearpieces, itemData);
 
             // stage 3: prepare prerequisite lists after gearpiece stage
             // group prerequisite items by gearpiece
             prerequisiteGroups.AddRange(groupPrerequisites(allGearsets));
-            // filter item list to only needed items
+            // filter item list to only needed itemsprerequisiteCandidateItems
             prerequisiteCandidateItems = prerequisiteCandidateItems
-                .Where(item => prerequisiteGroups.Any(g => g.NeedsItemId(item.ItemId)))
+                .Where(item => prerequisiteGroups.Any(g => g.NeedsItemId(item.Item.ItemId)))
                 .ToList();
 
             // stage 4: assign remaining valid items as prerequisites
-            var prerequisiteAssignments = solveAndAssignPrerequisites(assignPrerequisiteMateria);
+            var prerequisiteAssignments = solveAndAssignPrerequisites();
 
             GearpiecesResult = new()
             {
@@ -229,7 +225,7 @@ namespace BisBuddy.ItemAssignment
             {
                 Assignments = prerequisiteAssignments,
                 Edges = prerequisiteEdges ?? new int[0, 0],
-                CandidateItems = prerequisiteCandidateItems,
+                CandidateItems = prerequisiteCandidateItems.Select(i => i.Item).ToList(),
                 AssignmentGroups = prerequisiteGroups
                     .Select(g => (IAssignmentGroup)g)
                     .ToList()
@@ -256,7 +252,7 @@ namespace BisBuddy.ItemAssignment
                 }
         }
 
-        private int[] solveAndAssignPrerequisites(bool assignPrerequisiteMateria)
+        private int[] solveAndAssignPrerequisites()
         {
             // assignments: index = candidate item index
             //              value = prerequisite group index
@@ -267,12 +263,19 @@ namespace BisBuddy.ItemAssignment
             prerequisiteEdges = new int[prerequisiteGroups.Count, prerequisiteCandidateItems.Count];
             var assignments = new int[prerequisiteCandidateItems.Count];
 
-            var candidateItemList = new List<InventoryItem>(prerequisiteCandidateItems);
+            var candidateItemList = new List<(
+                InventoryItem Item,
+                HashSet<Gearset> AssignedGearsetsAsGearpiece
+                )>(prerequisiteCandidateItems);
 
             var itemCount = candidateItemList.Count;
             // n(n+1)/2 + buffer
             var maxLoops = (itemCount * (itemCount + 1) / 2) + 200;
             var loopCount = 0;
+
+            var oldAssignedGearsetsAsGearpieces = new List<
+                (InventoryItem Item, HashSet<Gearset> AssignedGearsetsAsGearpiece)
+                >();
             do
             {
                 // no more items to assign
@@ -280,9 +283,9 @@ namespace BisBuddy.ItemAssignment
                     break;
 
                 // pop first item id to be assigned in queue
-                var itemToAssign = candidateItemList[0];
+                var (itemToAssign, assignedGearsetsAsGearpiece) = candidateItemList[0];
                 candidateItemList.RemoveAt(0);
-                var itemIdx = prerequisiteCandidateItems.FindIndex(i => ReferenceEquals(itemToAssign, i));
+                var itemIdx = prerequisiteCandidateItems.FindIndex(i => ReferenceEquals(itemToAssign, i.Item));
 
                 // find prereq group with highest edge score for this item
                 var bestAssignScore = NoEdgeWeightValue;
@@ -295,6 +298,12 @@ namespace BisBuddy.ItemAssignment
                         itemToAssign.ItemId,
                         []
                     );
+                    if (
+                        assignScore != NoEdgeWeightValue
+                        && prereqGroup.Gearsets.Any(assignedGearsetsAsGearpiece.Contains)
+                        )
+                        assignScore = NoEdgeWeightValue;
+
 
                     if (loopCount < itemCount)
                         prerequisiteEdges[groupIdx, loopCount] = assignScore;
@@ -313,8 +322,11 @@ namespace BisBuddy.ItemAssignment
                     assignments[itemIdx] = bestGroupIdx;
 
                     // assign item. If assignment would shadow earlier-assigned items, re-add to assignment queue
-                    var oldAssignedItems = bestGroup.AssignItem(itemToAssign, itemData, assignPrerequisiteMateria);
-                    candidateItemList.AddRange(oldAssignedItems);
+                    var oldAssignedItems = bestGroup.AssignItem(itemToAssign, itemData, configuration.HighlightPrerequisiteMateria);
+                    var oldItemWithGearsets = oldAssignedItems.Select(i =>
+                        prerequisiteCandidateItems.FirstOrDefault(item => ReferenceEquals(item.Item, i))
+                    );
+                    candidateItemList.AddRange(oldItemWithGearsets);
                     logger.Verbose($"assigning item idx {itemIdx} to group idx {bestGroupIdx}");
                 }
             }
@@ -406,7 +418,7 @@ namespace BisBuddy.ItemAssignment
                         gearpiece,
                         gearset,
                         overallPrereqIdx,
-                        strictMateriaMatching
+                        configuration.StrictMateriaMatching
                         ));
                 }
             }
@@ -425,7 +437,7 @@ namespace BisBuddy.ItemAssignment
                 .Where(i => !gearpieceAssignments.Contains(i))
                 .ToList();
 
-            if (!strictMateriaMatching)
+            if (!configuration.StrictMateriaMatching)
             {
                 addUnassignedGearpieceGroups(unassignedGroupIndexes, gearpieceAssignments);
             }
@@ -456,7 +468,11 @@ namespace BisBuddy.ItemAssignment
                 assignedGearpieces.AddRange(gearpieceGroups[assignment].Gearpieces);
 
                 // remove items assigned from list of prereq candidate items
-                prerequisiteCandidateItems.Remove(candidate);
+                if (!configuration.AllowGearpiecesAsPrerequisites)
+                    prerequisiteCandidateItems.RemoveAll(i => ReferenceEquals(candidate, i.Item));
+                // add assigned gearsets to candidate's assigned gearsets as gearpiece list
+                else if (prerequisiteCandidateItems.TryGetFirst(i => ReferenceEquals(candidate, i.Item), out var prereqCandidate))
+                    prereqCandidate.AssignedGearsetsAsGearpiece.UnionWith(groupToAssign.Gearsets);
             }
 
             // assignments done, now add null assignements
@@ -513,68 +529,6 @@ namespace BisBuddy.ItemAssignment
                 }
             }
         }
-
-        //private void assignUnassignedPrerequisiteGroups(List<int> unassignedGroupIndexes, int[] prerequisiteAssignments)
-        //{
-        //    var unassignedGroupsCount = unassignedGroupIndexes.Count;
-        //    for (var i = unassignedGroupsCount - 1; i >= 0; i--)
-        //    {
-        //        var unassignedGroup = prerequisiteGroups[unassignedGroupIndexes[i]];
-        //        pluginLog.Verbose($"unassigned group item id: {unassignedGroup.ItemId}. Assigned item ids: {string.Join(", ", prerequisiteAssignments.Select(i => prerequisiteGroups[i].ItemId))}");
-
-        //        var validAssignedGroups = prerequisiteAssignments
-        //            .Select(assignIdx => prerequisiteGroups[assignIdx])
-        //            .Where(g => g.ItemId == unassignedGroup.ItemId);
-        //        //.OrderByDescending(g =>
-        //        //    g.DirectlyAssignedNodes
-        //        //        .SelectMany(assignments =>
-        //        //            assignments.Value
-        //        //                .Select(assignment =>
-        //        //                    unassignedGroup.CandidateEdgeWeight(assignment.Node.ItemId, []))
-        //        //                )
-        //        //        .Max()
-        //        //    );
-
-        //        return;
-
-        //        pluginLog.Verbose($"Valid assigned groups: {validAssignedGroups.Count()}");
-
-        //        // get gearset-prerequisite pairing
-        //        var unassignedPrereqGearsets = unassignedGroup
-        //            .Gearpieces
-        //            .Select(prereq => (prereq, unassignedGroup.Gearsets.First(set => set.Gearpieces.Where(g => g.PrerequisiteTree == prereq).Any())))
-        //            .ToDictionary();
-
-        //        foreach (var (unassignedGearpiece, gearset) in unassignedPrereqGearsets)
-        //        {
-        //            foreach (var validAssignedGroup in validAssignedGroups)
-        //            {
-        //                // can't assign to this group since it already has a prereq from this gearset in it
-        //                if (validAssignedGroup.Gearsets.Contains(gearset))
-        //                    continue;
-
-        //                pluginLog.Verbose($"{unassignedGearpiece.ItemName} valid group: {validAssignedGroup.ItemId}");
-
-        //                validAssignedGroup.Gearpieces.Add(unassignedGearpiece);
-        //                validAssignedGroup.Gearsets.Add(gearset);
-
-        //                var assignedItems = validAssignedGroup.DirectlyAssignedNodes.SelectMany(g => g.Value.Select(a => a.Item)).Distinct();
-        //                foreach (var item in assignedItems)
-        //                {
-        //                    unassignedGearpiece.PrerequisiteTree?.AssignItemId(ItemData.GetGameInventoryItemId(item));
-        //                }
-
-        //                unassignedGroup.Gearpieces.Remove(unassignedGearpiece);
-        //                break;
-        //            }
-        //        }
-
-        //        if (unassignedGroup.Gearpieces.Count == 0)
-        //        {
-        //            unassignedGroupIndexes.RemoveAt(i);
-        //        }
-        //    }
-        //}
     }
 
     public interface IItemAssignmentSolver

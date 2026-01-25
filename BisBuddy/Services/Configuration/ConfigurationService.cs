@@ -174,6 +174,12 @@ namespace BisBuddy.Services.Configuration
             set => updateConfigProperty(cfg => cfg.StrictMateriaMatching, value, affectsAssignments: true);
         }
 
+        public bool AllowGearpiecesAsPrerequisites
+        {
+            get => configuration.AllowGearpiecesAsPrerequisites;
+            set => updateConfigProperty(cfg => cfg.AllowGearpiecesAsPrerequisites, value, affectsAssignments: true);
+        }
+
         public bool BrightListItemHighlighting
         {
             get => configuration.BrightListItemHighlighting;
