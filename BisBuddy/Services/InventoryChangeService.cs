@@ -159,10 +159,7 @@ namespace BisBuddy.Services
                     ))
                     return;
 
-                var oldMateria = changedArgs.OldItemState.MateriaEntries.ToArray();
-                var newMateria = changedArgs.Item.MateriaEntries.ToArray();
-                if (changedArgs.OldItemState.ItemId == changedArgs.Item.ItemId
-                    && newMateria.SequenceEqual(oldMateria))
+                if (!itemChangeIsImportant(changedArgs.OldItemState, changedArgs.Item))
                 {
                     logger.Verbose($"Item changed, but no relevant changes detected, ignoring");
                     return;
@@ -176,6 +173,26 @@ namespace BisBuddy.Services
             {
                 logger.Error(ex, "Failed to handle ItemChanged");
             }
+        }
+
+        private bool itemChangeIsImportant(
+            GameInventoryItem oldItemState,
+            GameInventoryItem newItemState
+            )
+        {
+            if (oldItemState.ItemId != newItemState.ItemId)
+                return true;
+
+            if (oldItemState.Quantity != newItemState.Quantity)
+                return true;
+
+            if (oldItemState.IsHq != newItemState.IsHq)
+                return true;
+
+            if (!oldItemState.MateriaEntries.SequenceEqual(newItemState.MateriaEntries))
+                return true;
+
+            return false;
         }
 
         private void handleItemMoved(GameInventoryEvent type, InventoryEventArgs args)
