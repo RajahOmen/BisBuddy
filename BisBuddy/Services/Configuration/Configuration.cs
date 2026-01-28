@@ -25,7 +25,7 @@ public class Configuration : IConfigurationProperties
     public bool AutoCompleteItems { get; set; } = true;
     public bool AutoScanInventory { get; set; } = true;
     public bool PluginUpdateInventoryScan { get; set; } = true;
-    public bool StrictMateriaMatching { get; set; } = true;
+    public bool StrictMateriaMatching { get; set; } = false;
     public bool AllowGearpiecesAsPrerequisites { get; set; } = true;
 
     public bool BrightListItemHighlighting { get; set; } = true;
