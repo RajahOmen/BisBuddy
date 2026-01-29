@@ -31,7 +31,8 @@ namespace BisBuddy.Items
         private ExcelSheet<Item> ItemSheetEn { get; init; }
         private ExcelSheet<SpecialShop> ShopSheet { get; init; }
         private ExcelSheet<SheetMateria> Materia { get; init; }
-        private ExcelSheet<ClassJob> ClassJobEn { get; init; }
+        private ExcelSheet<ClassJob> ClassJobSheet { get; init; }
+        private ExcelSheet<ClassJob> ClassJobSheetEn { get; init; }
         public ILookup<uint, (uint ItemId, CofferSourceType SourceType)> ItemsCoffers
         {
             get
@@ -82,7 +83,8 @@ namespace BisBuddy.Items
             ItemSheetEn = dataManager.GetExcelSheet<Item>(language: ClientLanguage.English) ?? throw new ArgumentException("Item sheet not found");
             ShopSheet = dataManager.GetExcelSheet<SpecialShop>() ?? throw new InvalidOperationException("Special shop sheet not found");
             Materia = dataManager.GetExcelSheet<SheetMateria>() ?? throw new InvalidOperationException("Materia sheet not found");
-            ClassJobEn = dataManager.GetExcelSheet<ClassJob>() ?? throw new InvalidOperationException("ClassJob sheet not found");
+            ClassJobSheet = dataManager.GetExcelSheet<ClassJob>() ?? throw new InvalidOperationException("ClassJob sheet not found");
+            ClassJobSheetEn = dataManager.GetExcelSheet<ClassJob>(language: ClientLanguage.English) ?? throw new InvalidOperationException("ClassJob En sheet not found");
             NameToId = [];
             materiaItemIds = [];
         }
@@ -197,13 +199,14 @@ namespace BisBuddy.Items
         /// when shown with the game loaded in the provided <paramref name="language"/>
         /// </summary>
         /// <param name="abbrevation">The 3-letter localized job abbreviation string. Ex: (GLA, SMN, LTW)</param>
-        /// <param name="language">The language the provided abbreviation is in/param>
+        /// <param name="language"> The language to return the ClassJobInfo in</param>
         /// <returns>The <see cref="ClassJobInfo"/> for the matching job if one is found, else a default JobInfo object
         /// representing no job being found with a 0 JobId</returns>
-        public ClassJobInfo GetClassJobInfoByEnAbbreviation(string abbrevation, ClientLanguage language = ClientLanguage.English);
+        public ClassJobInfo GetClassJobInfoByEnAbbreviation(string abbrevation, ClientLanguage? language = null);
 
         /// <summary>
-        /// Retrieve the <see cref="ClassJobInfo"/> data for the job with the matching <paramref name="jobId"/>
+        /// Retrieve the <see cref="ClassJobInfo"/> data for the job with the matching <paramref name="jobId"/>,
+        /// in the current game language
         /// </summary>
         /// <param name="jobId">The row index of the job found in the ClassJob table</param>
         /// <returns>The <see cref="ClassJobInfo"/> for the matching job if one is found, else a default JobInfo object

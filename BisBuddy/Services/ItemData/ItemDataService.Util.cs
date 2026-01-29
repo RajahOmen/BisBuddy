@@ -547,20 +547,30 @@ namespace BisBuddy.Items
             return GearpieceType.None;
         }
 
-        public ClassJobInfo GetClassJobInfoByEnAbbreviation(string abbrevation, ClientLanguage language = ClientLanguage.English)
+        public ClassJobInfo GetClassJobInfoByEnAbbreviation(string abbrevation, ClientLanguage? language = null)
         {
-            var sheet = language == ClientLanguage.English
-                ? ClassJobEn
-                : dataManager.GetExcelSheet<ClassJob>(language);
-
-            foreach (var row in sheet)
+            foreach (var row in ClassJobSheetEn)
             {
-                if (row.Abbreviation.ExtractText().Equals(abbrevation, StringComparison.InvariantCultureIgnoreCase))
+                var rowAbbrev = row.Abbreviation.ExtractText();
+                if (rowAbbrev.Equals(abbrevation, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    var displayRow = row;
+
+                    // try to use localized version for name/abbreviation
+                    if (
+                        (language ?? dataManager.Language) != ClientLanguage.English
+                        && ClassJobSheet.TryGetRow(row.RowId, out var localLangRow)
+                    )
+                        displayRow = localLangRow;
+
+                    logger.Verbose($"name: {displayRow.Name.ExtractText()}, abbrev: {displayRow.Abbreviation.ExtractText()}");
+
                     return new(
                         classJobId: row.RowId,
-                        name: row.Name.ExtractText(),
-                        abbreviation: row.Abbreviation.ExtractText()
-                        );
+                        name: getTitleCaseClassJobName(row),
+                        abbreviation: displayRow.Abbreviation.ExtractText()
+                    );
+                }
             }
 
             return nullJobInfo;
@@ -568,21 +578,27 @@ namespace BisBuddy.Items
 
         public ClassJobInfo GetClassJobInfoById(uint jobId)
         {
-            if (jobId == 0 || !ClassJobEn.TryGetRow(jobId, out var row))
+            if (jobId == 0 || !ClassJobSheet.TryGetRow(jobId, out var row))
                 return nullJobInfo;
-
-            var titleCaseName = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(row.Name.ExtractText().ToLower());
 
             return new(
                 classJobId: row.RowId,
-                name: titleCaseName,
+                name: getTitleCaseClassJobName(row),
                 abbreviation: row.Abbreviation.ExtractText()
                 );
         }
 
+        private string getTitleCaseClassJobName(ClassJob classJobRow) =>
+            CultureInfo
+                .CurrentCulture
+                .TextInfo
+                .ToTitleCase(
+                    classJobRow.Name.ExtractText().ToLower(CultureInfo.CurrentCulture)
+                );
+
         private int classJobCount =>
             // +1 because "no job" is not included in the count
-            ClassJobEn.Count(c => !c.Name.ExtractText().IsNullOrEmpty()) + 1;
+            ClassJobSheetEn.Count(c => !c.Name.ExtractText().IsNullOrEmpty()) + 1;
 
         private ClassJobInfo nullJobInfo => new(
             classJobId: 0,
@@ -593,7 +609,7 @@ namespace BisBuddy.Items
 
         public IEnumerable<uint> FindClassJobIdUsers(IEnumerable<uint> itemIds)
         {
-            var allClassJobIds = ClassJobEn
+            var allClassJobIds = ClassJobSheetEn
                 .Where(job => !job.Name.IsEmpty)
                 .Select(job => job.RowId);
 
