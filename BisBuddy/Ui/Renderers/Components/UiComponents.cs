@@ -4,6 +4,7 @@ using BisBuddy.Services;
 using BisBuddy.Services.Configuration;
 using BisBuddy.Util;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using System;
@@ -105,14 +106,16 @@ namespace BisBuddy.Ui.Renderers.Components
                         spacing.X,
                         (selectableSize.Y - optionSize.Y) / 2
                         );
-                    ImGui.SetCursorPos(pos + textPosOffset);
-                    ImGui.Text(optionName);
-                    ImGui.SetCursorPos(pos);
+
                     if (ImGui.Selectable($"###draw_dropdown_{optionName}", optionSelected, ImGuiSelectableFlags.None, selectableSize))
                     {
                         newEnumValue = val;
                         selectionMade = true;
                     }
+                    var nextPos = ImGui.GetCursorPos();
+                    ImGui.SetCursorPos(pos + textPosOffset);
+                    ImGui.Text(optionName);
+                    ImGui.SetCursorPos(nextPos);
                 }
             }
 
@@ -181,7 +184,8 @@ namespace BisBuddy.Ui.Renderers.Components
             Vector2? size = null,
             ImGuiSelectableFlags flags = ImGuiSelectableFlags.None,
             Vector2? labelPosOffset = null,
-            Vector2? labelPosOffsetScaled = null
+            Vector2? labelPosOffsetScaled = null,
+            string? tooltip = null
             )
         {
             // strip any non-visible parts from being drawn
@@ -190,6 +194,16 @@ namespace BisBuddy.Ui.Renderers.Components
 
             var selectableSize = size ?? AutoAdjustSize;
             var selectablePos = ImGui.GetCursorPos();
+            var selectable = ImGui.Selectable(
+                label: $"###uicomponents_centered_selectable_{labelId}",
+                selected: selected,
+                flags: flags,
+                size: selectableSize
+                );
+            if (tooltip is string && ImGui.IsItemHovered())
+                using (ImRaii.PushFont(UiBuilder.DefaultFont))
+                    ImGui.SetTooltip(tooltip);
+            var nextPos = ImGui.GetCursorPos();
 
             var labelSize = ImGui.CalcTextSize(label);
             var labelOffset = (labelPosOffset ?? Vector2.Zero) + (labelPosOffsetScaled * ImGuiHelpers.GlobalScale ?? Vector2.Zero);
@@ -207,14 +221,9 @@ namespace BisBuddy.Ui.Renderers.Components
             ImGui.SetCursorPos(labelPos);
             ImGui.Text(labelText);
 
-            // return to selectable pos and place it
-            ImGui.SetCursorPos(selectablePos);
-            return ImGui.Selectable(
-                label: $"###uicomponents_centered_selectable_{labelId}",
-                selected: selected,
-                flags: flags,
-                size: selectableSize
-                );
+            // return to next pos
+            ImGui.SetCursorPos(nextPos);
+            return selectable;
         }
 
         public void MateriaSlot(
