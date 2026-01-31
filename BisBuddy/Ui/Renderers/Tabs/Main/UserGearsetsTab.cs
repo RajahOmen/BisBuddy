@@ -305,12 +305,6 @@ namespace BisBuddy.Ui.Renderers.Tabs.Main
                 // draw buttons to add, delete, or sort gearsets
                 var oldWindowPadding = ImGui.GetStyle().WindowPadding;
                 using (ImRaii.PushStyle(ImGuiStyleVar.CellPadding, Vector2.Zero))
-                //using (ImRaii.PushColor(ImGuiCol.Text, Vector4.One))
-                //using (ImRaii.PushColor(ImGuiCol.Header, Vector4.Zero))
-                //using (ImRaii.PushColor(ImGuiCol.HeaderActive, Vector4.Zero))
-                //using (ImRaii.PushColor(ImGuiCol.HeaderHovered, Vector4.Zero))
-                //using (ImRaii.PushStyle(ImGuiStyleVar.Alpha, 1))
-                //using (ImRaii.PushStyle(ImGuiStyleVar.DisabledAlpha, 1))
                 using (var table = ImRaii.Table("gearsets_selector_buttons_table", 5))
                 {
                     if (!table)
@@ -346,8 +340,6 @@ namespace BisBuddy.Ui.Renderers.Tabs.Main
                             tooltip: Resource.SyncInventoryTooltip
                             ))
                             gearsetsService.QueueUpdateFromInventory(saveChanges: true, manualUpdate: true);
-                    //if (ImGui.IsItemHovered())
-                    //    ImGui.SetTooltip(Resource.SyncInventoryTooltip);
 
                     ImGui.TableNextColumn();
 
