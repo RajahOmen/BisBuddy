@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
+using BisBuddy.Gear;
 using BisBuddy.Services.Configuration;
 using BisBuddy.Services.Gearsets;
 using Dalamud.Plugin;
@@ -27,6 +29,27 @@ public record BisItemFilter(
     bool IncludeCollectedPrereqs = true
 );
 
+/// <summary>
+/// Represents a registered gearset
+/// </summary>
+public record BisGearsetEntry(
+    string Id,
+    string Name,
+    uint ClassJobId,
+    string ClassJobName,
+    string ClassJobAbbreviation,
+    bool IsActive
+);
+
+/// <summary>
+/// Represents a single needed item within a resolved gearset.
+/// </summary>
+public record BisResolvedItem(
+    uint ItemId,
+    string RequirementType,
+    bool IsCollected
+);
+
 public class BisBuddyIpcService : IHostedService
 {
     private readonly IDalamudPluginInterface _pluginInterface;
@@ -40,6 +63,9 @@ public class BisBuddyIpcService : IHostedService
     private ICallGateProvider<List<BisItemEntry>, bool>? _inventoryHighlightItemsChanged;
 
     private ICallGateProvider<BisItemFilter, List<BisItemEntry>>? _getBisItemsFiltered;
+
+    private ICallGateProvider<List<BisGearsetEntry>>? _getRegisteredSets;
+    private ICallGateProvider<string, BisItemFilter, List<BisResolvedItem>>? _resolveSet;
 
     public BisBuddyIpcService(
         IDalamudPluginInterface pluginInterface,
@@ -66,12 +92,89 @@ public class BisBuddyIpcService : IHostedService
         _getBisItemsFiltered = _pluginInterface.GetIpcProvider<BisItemFilter, List<BisItemEntry>>("BisBuddy.GetBisItemsFiltered");
         _getBisItemsFiltered.RegisterFunc(GetBisItemsFilteredInternal);
 
+        _getRegisteredSets = _pluginInterface.GetIpcProvider<List<BisGearsetEntry>>("BisBuddy.GetRegisteredSets");
+        _getRegisteredSets.RegisterFunc(GetRegisteredSetsInternal);
+
+        _resolveSet = _pluginInterface.GetIpcProvider<string, BisItemFilter, List<BisResolvedItem>>("BisBuddy.ResolveSet");
+        _resolveSet.RegisterFunc(ResolveSetInternal);
+
         _gearsetsService.OnGearsetsChange += OnGearsetsChanged;
         _configurationService.OnConfigurationChange += OnConfigurationChanged;
 
         _initialized.SendMessage(true);
 
         return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Returns all registered gearsets with their id, name, and job info.
+    /// </summary>
+    private List<BisGearsetEntry> GetRegisteredSetsInternal()
+    {
+        return _gearsetsService.CurrentGearsets
+           .Select(g => new BisGearsetEntry(
+                Id: g.Id,
+                Name: g.Name,
+                ClassJobId: g.ClassJobInfo.ClassJobId,
+                ClassJobName: g.ClassJobInfo.Name,
+                ClassJobAbbreviation: g.ClassJobInfo.Abbreviation,
+                IsActive: g.IsActive
+            )).ToList();
+    }
+
+    /// <summary>
+    /// Resolves a specific gearset by ID and returns its needed items,
+    /// respecting the provided filter options.
+    /// </summary>
+    private List<BisResolvedItem> ResolveSetInternal(string setId, BisItemFilter filter)
+    {
+        var gearset = _gearsetsService.CurrentGearsets
+            .FirstOrDefault(g => g.Id == setId);
+
+        if (gearset is null)
+            return [];
+
+        var result = new List<BisResolvedItem>();
+
+        foreach (var req in gearset.ItemRequirements(includeUncollectedItemMateria: filter.IncludeMateria))
+        {
+            var itemReq = req.ItemRequirement;
+            var isCollected = itemReq.CollectionStatus >= CollectionStatusType.ObtainedPartial;
+
+            switch (itemReq.RequirementType)
+            {
+                case RequirementType.Gearpiece:
+                    if (!filter.IncludeCollected && isCollected)
+                        continue;
+                    break;
+
+                case RequirementType.Materia:
+                    if (!filter.IncludeMateria)
+                        continue;
+                    if (!filter.IncludeCollected && isCollected)
+                        continue;
+                    break;
+
+                case RequirementType.Prerequisite:
+                    if (!filter.IncludePrereqs)
+                        continue;
+                    if (!filter.IncludeCollectedPrereqs && isCollected)
+                        continue;
+                    break;
+            }
+
+            if (!filter.IncludeObtainable
+                && itemReq.CollectionStatus == CollectionStatusType.Obtainable)
+                continue;
+
+            result.Add(new BisResolvedItem(
+                ItemId: itemReq.ItemId,
+                RequirementType: itemReq.RequirementType.ToString(),
+                IsCollected: isCollected
+            ));
+        }
+
+        return result;
     }
 
     /// <summary>
@@ -136,6 +239,8 @@ public class BisBuddyIpcService : IHostedService
         _isInitialized?.UnregisterFunc();
         _getInventoryHighlightItems?.UnregisterFunc();
         _getBisItemsFiltered?.UnregisterFunc();
+        _getRegisteredSets?.UnregisterFunc();
+        _resolveSet?.UnregisterFunc();
         _initialized?.SendMessage(false);
         return Task.CompletedTask;
     }
