@@ -278,7 +278,7 @@ public class MateriaCountsTab : TabRenderer<MainWindowTab>, IDisposable
         using (ImRaii.PushColor(ImGuiCol.SliderGrab, textColor with { W = 0.85f }))
         using (ImRaii.PushColor(ImGuiCol.SliderGrabActive, textColor with { W = 1f }))
             if (ImGui.SliderDouble(
-                "",
+                "###meld_percent_chance_bar",
                 ref meldPercent,
                 vMin: 1,
                 vMax: 99,
@@ -378,7 +378,11 @@ public class MateriaCountsTab : TabRenderer<MainWindowTab>, IDisposable
 
     private void drawMateriaTable()
     {
-        using var table = ImRaii.Table("##materia_quantities_tableasdas", 6, ImGuiTableFlags.BordersInner | ImGuiTableFlags.PadOuterX | ImGuiTableFlags.RowBg | ImGuiTableFlags.ScrollY | ImGuiTableFlags.Sortable);
+        using var table = ImRaii.Table(
+            "##materia_quantities_tableasdas",
+            6,
+            ImGuiTableFlags.BordersInner | ImGuiTableFlags.PadOuterX | ImGuiTableFlags.RowBg | ImGuiTableFlags.ScrollY | ImGuiTableFlags.Sortable | ImGuiTableFlags.SizingStretchProp
+            );
         if (!table)
             return;
 
