@@ -38,6 +38,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Text.Json.Serialization;
+using BisBuddy.Services.IPC;
 
 namespace BisBuddy;
 
@@ -241,6 +242,9 @@ public sealed partial class Plugin : IDalamudPlugin
             {
                 // manages windows
                 builder.RegisterType<WindowService>().AsImplementedInterfaces().SingleInstance();
+
+                // manages the IPC service
+                builder.RegisterType<BisBuddyIpcService>().AsImplementedInterfaces().SingleInstance();
 
                 // manage current gearsets
                 builder.RegisterType<GearsetsService>().AsImplementedInterfaces().SingleInstance();
