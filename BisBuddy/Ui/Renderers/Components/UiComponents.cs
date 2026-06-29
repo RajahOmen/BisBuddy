@@ -267,7 +267,7 @@ namespace BisBuddy.Ui.Renderers.Components
 
         public static void SetSolidTooltip(ImU8String text)
         {
-            using (ImRaii.Enabled())
+            using (ImRaii.PushStyle(ImGuiStyleVar.DisabledAlpha, 1.0f))
             using (ImRaii.PushStyle(ImGuiStyleVar.Alpha, 1.0f))
             {
                 ImGui.SetTooltip(text);
