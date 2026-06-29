@@ -115,6 +115,10 @@ namespace BisBuddy.Services.Addon.Containers
                     includeCollectedPrereqs: true,
                     includeObtainable: true
                     );
+                if (itemColor is null && configurationService.HighlightOptionalUpgrades)
+                {
+                    itemColor = optionalUpgradeService.GetUpgradeColor(item.ItemId);
+                }
 
                 if (itemColor is not null)
                     neededItemColors.Add(i, itemColor);

@@ -45,6 +45,11 @@ namespace BisBuddy.Services.Addon
                 {
                     var lootItem = addon->Items[itemIdx];
                     var itemColor = gearsetsService.GetRequirementColor(lootItem.ItemId);
+                    
+                    if (itemColor is null && configurationService.HighlightOptionalUpgrades)
+                    {
+                        itemColor = optionalUpgradeService.GetUpgradeColor(lootItem.ItemId);
+                    }
 
                     if (itemColor is not null)
                         itemIndexesToHighlight.Add(itemIdx, itemColor);

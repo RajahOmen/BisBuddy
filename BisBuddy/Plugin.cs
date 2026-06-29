@@ -254,6 +254,9 @@ public sealed partial class Plugin : IDalamudPlugin
                 // plugin configuration
                 builder.RegisterType<ConfigurationService>().AsImplementedInterfaces().SingleInstance();
 
+                // optional upgrades
+                builder.RegisterType<OptionalUpgradeService>().AsImplementedInterfaces().SingleInstance();
+
                 // commands
                 builder.RegisterType<CommandService>().AsImplementedInterfaces().SingleInstance();
 

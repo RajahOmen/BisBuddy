@@ -22,6 +22,7 @@ public class Configuration : IConfigurationProperties
     public bool HighlightCollectedInInventory { get; set; } = true;
     public bool HighlightMarketboard { get; set; } = true;
     public bool AnnotateTooltips { get; set; } = true;
+    public bool HighlightOptionalUpgrades { get; set; } = true;
     public bool AutoCompleteItems { get; set; } = true;
     public bool AutoScanInventory { get; set; } = true;
     public bool PluginUpdateInventoryScan { get; set; } = true;
@@ -30,6 +31,7 @@ public class Configuration : IConfigurationProperties
 
     public bool BrightListItemHighlighting { get; set; } = true;
     public HighlightColor DefaultHighlightColor { get; set; } = new(0.0f, 1.0f, 0.0f, 0.393f);
+    public HighlightColor OptionalUpgradeColor { get; set; } = new(0.0f, 0.5f, 1.0f, 0.393f); // Blueish
     public UiTheme UiTheme { get; set; } = new();
 
     // DEBUGGING
@@ -51,6 +53,7 @@ public interface IConfigurationProperties : IPluginConfiguration
     bool HighlightCollectedInInventory { get; set; }
     bool HighlightMarketboard { get; set; }
     bool AnnotateTooltips { get; set; }
+    bool HighlightOptionalUpgrades { get; set; }
     bool AutoCompleteItems { get; set; }
     bool AutoScanInventory { get; set; }
     bool PluginUpdateInventoryScan { get; set; }
@@ -58,6 +61,7 @@ public interface IConfigurationProperties : IPluginConfiguration
     bool AllowGearpiecesAsPrerequisites { get; set; }
     bool BrightListItemHighlighting { get; set; }
     HighlightColor DefaultHighlightColor { get; }
+    HighlightColor OptionalUpgradeColor { get; set; }
     UiTheme UiTheme { get; set; }
 
     // DEBUGGING

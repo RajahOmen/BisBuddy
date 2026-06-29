@@ -58,6 +58,7 @@ namespace BisBuddy.Services.Addon
 
         // list of gearset names that need the currently hovered item
         private List<(Gearset gearset, int countNeeded)> neededGearsets = [];
+        private bool isOptionalUpgrade = false;
 
         // Doesn't really use a node color, use this as a standin
         private static readonly HighlightColor TextNodeColor = new(0.0f, 0.0f, 0.0f, 1.0f);
@@ -79,6 +80,7 @@ namespace BisBuddy.Services.Addon
             gearsetsService.OnGearsetsChange -= handleManualUpdate;
             gameGui.HoveredItemChanged -= handleHoveredItemChanged;
             neededGearsets = [];
+            isOptionalUpgrade = false;
         }
 
         protected override bool isEnabledFromConfig
@@ -114,7 +116,7 @@ namespace BisBuddy.Services.Addon
                     return;
 
                 // update node visibility
-                if (neededGearsets.Count == 0)
+                if (neededGearsets.Count == 0 && !isOptionalUpgrade)
                 {
                     setNodeVisibility(false);
                     return;
@@ -157,7 +159,15 @@ namespace BisBuddy.Services.Addon
                 ? CustomNodeMaxGearsetNameLength
                 : CustomNodeGearsetNameLengthShortList;
 
-            // add gearset names to output string
+            if (isOptionalUpgrade && neededGearsets.Count == 0)
+            {
+                startStr = "[Upgrade]";
+                outputStr = startStr;
+                neededStrings = [(startStr, string.Empty, string.Empty)];
+            }
+            else
+            {
+                // add gearset names to output string
             for (var i = 0; i < neededGearsets.Count; i++)
             {
                 var fullGearsetName = neededGearsets[i].gearset.Name;
@@ -196,6 +206,7 @@ namespace BisBuddy.Services.Addon
                     neededStrings.Add((string.Empty, string.Empty, $"+{neededGearsets.Count - i}{endStr}"));
                     break;
                 }
+            }
             }
 
             using var outputBuilder = new RentedSeStringBuilder();
@@ -254,15 +265,22 @@ namespace BisBuddy.Services.Addon
                 includeCollectedPrereqs: isInternalItem
                 );
 
-            if (itemRequirements is null || itemRequirements.Count == 0)
+            var newIsOptionalUpgrade = false;
+            if (configurationService.HighlightOptionalUpgrades)
             {
-                if (neededGearsets.Count == 0)
+                newIsOptionalUpgrade = optionalUpgradeService.GetUpgradeColor(itemId) is not null;
+            }
+
+            if ((itemRequirements is null || itemRequirements.Count == 0) && !newIsOptionalUpgrade)
+            {
+                if (neededGearsets.Count == 0 && isOptionalUpgrade == false)
                     return false;
                 neededGearsets = [];
+                isOptionalUpgrade = false;
                 return true;
             }
 
-            var newNeededGearsets = itemRequirements
+            var newNeededGearsets = (itemRequirements ?? [])
                 .GroupBy(requirement => requirement.Gearset)
                 .Select(group => (Gearset: group.Key, countNeeded: group.Count()))
                 .ToList();
@@ -270,10 +288,12 @@ namespace BisBuddy.Services.Addon
             if (
                 newNeededGearsets.Count == neededGearsets.Count
                 && newNeededGearsets.SequenceEqual(neededGearsets)
+                && isOptionalUpgrade == newIsOptionalUpgrade
                 )
                 return false;
 
             neededGearsets = newNeededGearsets;
+            isOptionalUpgrade = newIsOptionalUpgrade;
             return true;
         }
 
