@@ -25,10 +25,8 @@ namespace BisBuddy.Services.ImportGearset
         public ImportGearsetSourceType SourceType => ImportGearsetSourceType.Xivgear;
 
         private const string UriHost = "xivgear.app";
-        private const string XivgearStandardApiBase = "https://api.xivgear.app/shortlink/{0}";
-        private const string XivgearFulldataApiBase = "https://api.xivgear.app/fulldata/{0}";
+        private const string XivgearApiPathBase = "https://api.xivgear.app/basedata/";
         private const string XivgearSetIndexBase = "&onlySetIndex=";
-        private const string StaticBisIdentifier = "bis|";
 
         private readonly ITypedLogger<XivgearSource> logger = logger;
         private readonly HttpClient httpClient = httpClient;
@@ -39,19 +37,28 @@ namespace BisBuddy.Services.ImportGearset
 
         public async Task<List<Gearset>> ImportGearsets(string importString)
         {
-            var apiUrl = safeUrl(importString) ??
-                throw new GearsetImportException(GearsetImportStatusType.InvalidInput, message: "Invalid URL");
+            Uri importUri;
+            try
+            {
+                if (!importString.Contains(UriHost))
+                    throw new ArgumentException("Not a XIVGear URL", nameof(importString));
+                var query = HttpUtility.ParseQueryString(string.Empty);
+                query["url"] = importString;
+
+                importUri = new UriBuilder(XivgearApiPathBase)
+                {
+                    Query = query.ToString()
+                }.Uri;
+            }
+            catch (Exception ex)
+            {
+                throw new GearsetImportException(GearsetImportStatusType.InvalidInput, message: $"Invalid URL: {ex.Message}");
+            }
 
             try
             {
-                // query can limit what gearset is displayed, so only import that one if the query term is provided
-                var onlyImportSetIdx = importString.Contains(XivgearSetIndexBase)
-                    ? int.Parse(importString.Split(XivgearSetIndexBase)[1])
-                    : -1;
-
-                var gearsets = new List<Gearset>();
-                using var client = new HttpClient();
-                var response = await httpClient.GetAsync(apiUrl);
+                logger.Verbose($"Requesting set info from '{importUri}'");
+                var response = await httpClient.GetAsync(importUri);
                 response.EnsureSuccessStatusCode();
 
                 var jsonString = await response.Content.ReadAsStringAsync();
@@ -61,11 +68,12 @@ namespace BisBuddy.Services.ImportGearset
 
                 using var jsonDoc = JsonDocument.Parse(jsonString);
                 var jsonRootElement = jsonDoc.RootElement;
+                var gearsets = new List<Gearset>();
 
                 // page has multiple gearsets on it, handle appropriately
                 if (jsonRootElement.TryGetProperty("sets", out var setsElement))
                 {
-                    gearsets = parseMultipleGearsets(setsElement, jsonRootElement, importString, onlyImportSetIdx);
+                    gearsets = parseMultipleGearsets(setsElement, jsonRootElement, importString);
                 }
                 // one gearset page
                 else if (jsonRootElement.TryGetProperty("items", out var items))
@@ -83,7 +91,7 @@ namespace BisBuddy.Services.ImportGearset
             }
             catch (HttpRequestException ex)
             {
-                throw new GearsetImportException(GearsetImportStatusType.InvalidInput, $"apiUrl: {apiUrl}, {ex.Message}");
+                throw new GearsetImportException(GearsetImportStatusType.InvalidInput, $"importString: {importUri}, importUri: {importUri}, {ex.Message}");
             }
             catch (Exception ex) when (ex is JsonException || ex is ArgumentException || ex is InvalidOperationException)
             {
@@ -91,39 +99,10 @@ namespace BisBuddy.Services.ImportGearset
             }
         }
 
-        private static string? safeUrl(string url)
-        {
-            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
-                return null;
-
-            if (uri.Host != UriHost)
-                return null;
-
-            // get relevant part of query string
-            var page = HttpUtility.ParseQueryString(uri.Query).Get("page");
-            if (string.IsNullOrEmpty(page) || !page.Contains('|'))
-                return null;
-
-            // follows pattern ...path=bis|{job abbrev}|current
-            if (page.StartsWith(StaticBisIdentifier))
-            {
-                var newPath = page.Replace("|", "/");
-                return string.Format(XivgearFulldataApiBase, newPath);
-            }
-            // follows pattern ...path=sl|{set uuid}
-            else
-            {
-                // Split the string and return the part after '|' appended to base
-                var xivgearSetUuid = page.Split('|')[1].Split('&')[0];
-                return string.Format(XivgearStandardApiBase, xivgearSetUuid);
-            }
-        }
-
         private List<Gearset> parseMultipleGearsets(
             JsonElement setsElement,
             JsonElement rootElement,
-            string importString,
-            int onlyImportSetIdx
+            string importString
             )
         {
             var gearsets = new List<Gearset>();
@@ -133,9 +112,6 @@ namespace BisBuddy.Services.ImportGearset
                 try
                 {
                     setIdx++;
-                    // importing a specific set, ignore the rest
-                    if (onlyImportSetIdx >= 0 && setIdx != onlyImportSetIdx)
-                        continue;
 
                     uint? classJobId = null;
                     if (
