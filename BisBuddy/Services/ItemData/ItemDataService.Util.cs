@@ -255,7 +255,12 @@ namespace BisBuddy.Items
 
         public IPrerequisiteNode? BuildGearpiecePrerequisiteTree(uint itemId, bool isCollected = false, bool isManuallyCollected = false)
         {
-            var unitPrerequisiteGroup = buildPrerequisites(itemId, isCollected: isCollected, isManuallyCollected: isManuallyCollected);
+            var unitPrerequisiteGroup = buildPrerequisites(
+                itemId,
+                isCollected: isCollected,
+                isManuallyCollected: isManuallyCollected,
+                parentItemIds: new HashSet<uint>()
+            );
 
             if (unitPrerequisiteGroup.GetType() != typeof(PrerequisiteAtomNode))
                 throw new Exception($"Item id \"{itemId}\" returned non-unit prereqs group (\"{unitPrerequisiteGroup.GetType().Name}\")");
@@ -272,13 +277,18 @@ namespace BisBuddy.Items
             return unitPrerequisiteGroup.PrerequisiteTree[0];
         }
 
-        private IPrerequisiteNode buildPrerequisites(uint itemId, bool isCollected, bool isManuallyCollected, int depth = 8)
+        private IPrerequisiteNode buildPrerequisites(uint itemId, bool isCollected, bool isManuallyCollected, IReadOnlySet<uint> parentItemIds, int depth = 8)
         {
             var itemName = GetItemNameById(itemId);
             var group = new PrerequisiteAtomNode(itemId, itemName, [], PrerequisiteNodeSourceType.Item, isCollected, isManuallyCollected);
 
             if (depth <= 0)
                 return group;
+
+            var newParentItemIds = new HashSet<uint>(parentItemIds)
+            {
+                itemId
+            };
 
             // build list of prerequisites from supplementals data
             IPrerequisiteNode supplementalTree;
@@ -287,13 +297,19 @@ namespace BisBuddy.Items
 
             if (supplementalPrereqs.Count() == 1)
             {
-                supplementalTree = buildPrerequisites(supplementalPrereqs.First().ItemId, isCollected, isManuallyCollected, depth - 1);
+                supplementalTree = buildPrerequisites(
+                    supplementalPrereqs.First().ItemId,
+                    isCollected,
+                    isManuallyCollected,
+                    newParentItemIds,
+                    depth - 1
+                    );
                 supplementalTree.SourceType = PrerequisiteNodeSourceType.Loot;
             }
             else if (supplementalPrereqs.Count() > 1)
             {
                 var prereqs = ItemsCoffers[itemId]
-                    .Select(entry => buildPrerequisites(entry.ItemId, isCollected, isManuallyCollected, depth - 1))
+                    .Select(entry => buildPrerequisites(entry.ItemId, isCollected, isManuallyCollected, newParentItemIds, depth - 1))
                     .ToList();
 
                 supplementalTree = new PrerequisiteOrNode(
@@ -309,7 +325,7 @@ namespace BisBuddy.Items
             }
 
             // build list of prerequisites from shops/exchanges data
-            IPrerequisiteNode exchangesTree;
+            IPrerequisiteNode exchangesTree = new PrerequisiteOrNode(itemId, itemName, [], PrerequisiteNodeSourceType.Shop);
             var exchangesPrereqs = ItemsPrerequisites[itemId];
             var hasExchangesPrereqs = exchangesPrereqs.Any();
 
@@ -319,15 +335,19 @@ namespace BisBuddy.Items
                 var shopCosts = exchangesPrereqs.First().ItemIds;
 
                 // shop only is requesting one item to exchange
-                if (shopCosts.Count == 1)
+                if (newParentItemIds.IsSupersetOf(shopCosts))
                 {
-                    exchangesTree = buildPrerequisites(shopCosts.First(), isCollected, isManuallyCollected, depth - 1);
+                    hasExchangesPrereqs = false;
+                }
+                else if (shopCosts.Count == 1)
+                {
+                    exchangesTree = buildPrerequisites(shopCosts.First(), isCollected, isManuallyCollected, newParentItemIds, depth - 1);
                     exchangesTree.SourceType = PrerequisiteNodeSourceType.Shop;
                 }
                 else // shop is requesting more than one item to exchange
                 {
                     var prereqTree = shopCosts
-                        .Select(id => buildPrerequisites(id, isCollected, isManuallyCollected, depth - 1))
+                        .Select(id => buildPrerequisites(id, isCollected, isManuallyCollected, newParentItemIds, depth - 1))
                         .ToList();
 
                     exchangesTree = new PrerequisiteAndNode(
@@ -343,13 +363,14 @@ namespace BisBuddy.Items
             {
                 // build OR list of ANDs. Ex: OR(AND(A, B, C), AND(D, E), ATOM())
                 var prereqs = exchangesPrereqs
+                    .Where(entries => !newParentItemIds.IsSupersetOf(entries.ItemIds))
                     .Select(entries =>
                     {
                         var shopCostIds = entries.ItemIds;
                         // shop costs one items
                         if (shopCostIds.Count == 1)
                         {
-                            var prereq = buildPrerequisites(shopCostIds.First(), isCollected, isManuallyCollected, depth - 1);
+                            var prereq = buildPrerequisites(shopCostIds.First(), isCollected, isManuallyCollected, newParentItemIds, depth - 1);
                             prereq.SourceType = PrerequisiteNodeSourceType.Shop;
                             return prereq;
                         }
@@ -358,21 +379,24 @@ namespace BisBuddy.Items
                         return new PrerequisiteAndNode(
                             itemId,
                             itemName,
-                            shopCostIds.Select(id => buildPrerequisites(id, isCollected, isManuallyCollected, depth - 1)).ToList(),
+                            shopCostIds.Select(id => buildPrerequisites(id, isCollected, isManuallyCollected, newParentItemIds, depth - 1)).ToList(),
                             PrerequisiteNodeSourceType.Shop
                             );
                     }).ToList();
 
-                exchangesTree = new PrerequisiteOrNode(
-                    itemId,
-                    itemName,
-                    prereqs,
-                    PrerequisiteNodeSourceType.Shop
+                if (prereqs.Count > 0)
+                {
+                    exchangesTree = new PrerequisiteOrNode(
+                        itemId,
+                        itemName,
+                        prereqs,
+                        PrerequisiteNodeSourceType.Shop
                     );
-            }
-            else
-            {
-                exchangesTree = new PrerequisiteOrNode(itemId, itemName, [], PrerequisiteNodeSourceType.Shop);
+                }
+                else
+                {
+                    hasExchangesPrereqs = false;
+                }
             }
 
             // build resulting group
