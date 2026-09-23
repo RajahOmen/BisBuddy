@@ -37,7 +37,7 @@ namespace BisBuddy.ItemAssignment
         private List<Materia> materiaList = [];
         public readonly HashSet<Gearset> Gearsets = [];
 
-        public Dictionary<Gearpiece, HashSet<(IPrerequisiteNode Node, InventoryItem Item)>> DirectlyAssignedNodes = [];
+        public Dictionary<Gearpiece, HashSet<(PrerequisiteNode Node, InventoryItem Item)>> DirectlyAssignedNodes = [];
 
         public List<Materia> MateriaList
         {

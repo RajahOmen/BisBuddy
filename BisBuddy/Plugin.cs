@@ -209,7 +209,7 @@ public sealed partial class Plugin : IDalamudPlugin
                     typeof(GearpieceContextMenu),
                     typeof(GearsetContextMenu),
                     typeof(MateriaContextMenu),
-                    typeof(PrerequisiteAtomNodeContextMenu),
+                    typeof(PrerequisiteNodeContextMenu),
                     ];
 
                 foreach (var renderer in renderers)

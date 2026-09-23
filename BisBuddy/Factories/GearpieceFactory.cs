@@ -27,6 +27,7 @@ namespace BisBuddy.Factories
             bool collectLock = false
             )
         {
+            logger.Verbose($"Creating new gearpiece for item id {itemId}");
             var prerequisiteTree = itemDataService.BuildGearpiecePrerequisiteTree(
                 itemId,
                 isCollected,
@@ -39,14 +40,14 @@ namespace BisBuddy.Factories
                 prerequisiteTree,
                 isCollected,
                 collectLock,
-                false
+                extendTree: false
                 );
         }
 
         public Gearpiece Create(
             uint itemId,
             List<Materia>? itemMateria,
-            IPrerequisiteNode? prerequisiteTree,
+            PrerequisiteNode? prerequisiteTree,
             bool isCollected = false,
             bool collectLock = false,
             bool extendTree = true
@@ -58,13 +59,10 @@ namespace BisBuddy.Factories
                 var gearpieceType = itemDataService.GetItemGearpieceType(itemId);
 
                 // extend prereq tree with new data that didn't exist last population
-                if (extendTree)
-                    prerequisiteTree = itemDataService.ExtendItemPrerequisites(
-                        itemId,
-                        prerequisiteTree,
-                        isCollected,
-                        collectLock
-                        );
+                if (extendTree && prerequisiteTree is not null)
+                    itemDataService.ExtendItemPrerequisites(
+                       prerequisiteTree
+                    );
 
                 var itemMateriaGroup = materiaGroupFactory.Create(
                     itemMateria ?? [],
@@ -124,7 +122,7 @@ namespace BisBuddy.Factories
         public Gearpiece Create(
             uint itemId,
             List<Materia>? itemMateria,
-            IPrerequisiteNode? prerequisiteTree,
+            PrerequisiteNode? prerequisiteTree,
             bool isCollected = false,
             bool collectLock = false,
             bool extendTree = true

@@ -242,7 +242,7 @@ namespace BisBuddy.ItemAssignment
                     if (gearpiece.IsCollected)
                         continue;
 
-                    if (gearpiece.PrerequisiteTree is not IPrerequisiteNode node)
+                    if (gearpiece.PrerequisiteTree is not PrerequisiteNode node)
                         continue;
 
                     if (node.CollectLock)

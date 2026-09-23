@@ -26,7 +26,7 @@ public class PrerequisiteNodeComponentRenderer(
     IAttributeService attributeService,
     IItemDataService itemDataService,
     IDebugService debugService
-    ) : ComponentRendererBase<IPrerequisiteNode>
+    ) : ComponentRendererBase<PrerequisiteNode>
 {
     private readonly ITypedLogger<PrerequisiteNodeComponentRenderer> logger = logger;
     private readonly IConfigurationService configurationService = configurationService;
@@ -35,14 +35,14 @@ public class PrerequisiteNodeComponentRenderer(
     private readonly IAttributeService attributeService = attributeService;
     private readonly IItemDataService itemDataService = itemDataService;
     private readonly IDebugService debugService = debugService;
-    private IPrerequisiteNode? prerequisiteNode;
+    private PrerequisiteNode? prerequisiteNode;
 
-    private HashSet<PrerequisiteOrNode> prereqsDrawn = [];
+    private HashSet<PrerequisiteNode> prereqsDrawn = [];
 
     private UiTheme uiTheme =>
         configurationService.UiTheme;
 
-    public override void Initialize(IPrerequisiteNode renderableComponent) =>
+    public override void Initialize(PrerequisiteNode renderableComponent) =>
         prerequisiteNode = renderableComponent;
 
     public override void Draw()
@@ -54,25 +54,12 @@ public class PrerequisiteNodeComponentRenderer(
         }
 
         var actions = new List<Action>();
-        drawPrerequisiteTree(prerequisiteNode, actions);
+        drawAtomNode(prerequisiteNode, actions, drawSelf: false);
         foreach (var action in actions)
             action();
     }
 
-    private void drawPrerequisiteTree(IPrerequisiteNode prerequisiteNode, List<Action> actions, int parentCount = 1)
-    {
-        var nodeType = prerequisiteNode.GetType();
-        if (nodeType == typeof(PrerequisiteOrNode))
-            drawOrNode((PrerequisiteOrNode)prerequisiteNode, actions, parentCount);
-        else if (nodeType == typeof(PrerequisiteAndNode))
-            drawAndNode((PrerequisiteAndNode)prerequisiteNode, actions, parentCount);
-        else if (nodeType == typeof(PrerequisiteAtomNode))
-            drawAtomNode((PrerequisiteAtomNode)prerequisiteNode, actions, parentCount);
-        else
-            logger.Error($"Cannot render {nameof(IPrerequisiteNode)} type \"{prerequisiteNode.GetType()}\"");
-    }
-
-    private void drawOrNode(PrerequisiteOrNode node, List<Action> actions, int parentCount = 1)
+    private void drawOrChildren(PrerequisiteNode node, List<Action> actions, int parentCount = 1)
     {
         using var tabBar = ImRaii.TabBar($"###or_item_prerequisites_{node.GetHashCode()}");
         if (!tabBar)
@@ -121,7 +108,7 @@ public class PrerequisiteNodeComponentRenderer(
 
                 try
                 {
-                    drawPrerequisiteTree(prereqNode, actions, parentCount);
+                    drawAtomNode(prereqNode, actions, parentCount);
                 }
                 catch (Exception ex)
                 {
@@ -168,7 +155,7 @@ public class PrerequisiteNodeComponentRenderer(
         }
     }
 
-    private void drawAndNode(PrerequisiteAndNode node, List<Action> actions, int parentCount = 1)
+    private void drawAndChildren(PrerequisiteNode node, List<Action> actions, int parentCount = 1)
     {
         var groupedPrereqs = node.Groups();
 
@@ -176,50 +163,67 @@ public class PrerequisiteNodeComponentRenderer(
         {
             using var _ = ImRaii.PushId(i);
             var prereq = groupedPrereqs[i];
-            drawPrerequisiteTree(prereq.Node, actions, prereq.Count * parentCount);
+            drawAtomNode(prereq.Node, actions, prereq.Count * parentCount);
         }
     }
 
-    private void drawAtomNode(PrerequisiteAtomNode node, List<Action> actions, int parentCount = 1)
+    private void drawAtomNode(PrerequisiteNode node, List<Action> actions, int parentCount = 1, bool drawSelf = true)
     {
-        var countLabel = parentCount == 1
+        var (textColor, gameIcon) = uiTheme.GetCollectionStatusTheme(node.CollectionStatus);
+
+        drawSelf &= node.GroupType != ChildGroupType.And;
+        drawSelf = true;
+        if (drawSelf)
+        {
+            var countLabel = parentCount == 1
             ? ""
             : $"{parentCount}x ";
 
-        var (textColor, gameIcon) = uiTheme.GetCollectionStatusTheme(node.CollectionStatus);
 
-        using (ImRaii.PushColor(ImGuiCol.Text, textColor))
-        using (ImRaii.PushColor(ImGuiCol.CheckMark, textColor))
-        {
-            var collected = node.IsCollected;
-            using (ImRaii.Disabled(!node.CollectLock))
+            using (ImRaii.PushColor(ImGuiCol.Text, textColor))
+            using (ImRaii.PushColor(ImGuiCol.CheckMark, textColor))
             {
-                if (drawPrerequisiteButton(node, parentCount))
+                var collected = node.IsCollected;
+                using (ImRaii.Disabled(!node.CollectLock))
                 {
-                    actions.Add(() => node.SetIsCollectedLocked(!node.IsCollected));
+                    if (drawPrerequisiteButton(node, parentCount))
+                    {
+                        actions.Add(() => node.SetIsCollectedLocked(!node.IsCollected));
+                    }
                 }
             }
         }
 
-        if (node.PrerequisiteTree.Count > 1)
-            throw new Exception($"item {node.ItemName} has too many prerequisites ({node.PrerequisiteTree})");
 
-        if (node.PrerequisiteTree.Count == 1 && !node.IsCollected)
+        if (node.PrerequisiteTree.Count > 0 && !node.IsCollected)
         {
             // draw a L shape for parent-child relationship
-            var drawList = ImGui.GetWindowDrawList();
-            var curLoc = ImGui.GetCursorScreenPos();
-            var col = ImGui.GetColorU32(textColor);
-            var halfButtonHeight = ImGui.CalcTextSize("HI").Y / 2 + ImGui.GetStyle().FramePadding.Y;
-            drawList.AddLine(curLoc + new Vector2(10, 0), curLoc + new Vector2(10, halfButtonHeight), col, 2);
-            drawList.AddLine(curLoc + new Vector2(10, halfButtonHeight), curLoc + new Vector2(20, halfButtonHeight), col, 2);
+            if (drawSelf)
+            {
+                var drawList = ImGui.GetWindowDrawList();
+                var curLoc = ImGui.GetCursorScreenPos();
+                var col = ImGui.GetColorU32(textColor);
+                var halfButtonHeight = ImGui.CalcTextSize("HI").Y / 2 + ImGui.GetStyle().FramePadding.Y;
+                drawList.AddLine(curLoc + new Vector2(10, 0), curLoc + new Vector2(10, halfButtonHeight), col, 2);
+                drawList.AddLine(curLoc + new Vector2(10, halfButtonHeight), curLoc + new Vector2(20, halfButtonHeight), col, 2);
+            }
 
-            using (ImRaii.PushIndent(25.0f, scaled: false))
-                drawPrerequisiteTree(node.PrerequisiteTree[0], actions, parentCount);
+            using (ImRaii.PushIndent(25.0f, scaled: false, condition: drawSelf))
+            {
+                switch (node.GroupType)
+                {
+                    case ChildGroupType.And:
+                        drawAndChildren(node, actions, parentCount);
+                        break;
+                    case ChildGroupType.Or:
+                        drawOrChildren(node, actions, parentCount);
+                        break;
+                }
+            }
         }
     }
 
-    private bool drawPrerequisiteButton(PrerequisiteAtomNode node, int count)
+    private bool drawPrerequisiteButton(PrerequisiteNode node, int count)
     {
         var collectionStatusTheme = uiTheme.GetCollectionStatusTheme(node.CollectionStatus);
 

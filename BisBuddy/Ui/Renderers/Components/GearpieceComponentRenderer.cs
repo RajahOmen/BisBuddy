@@ -398,7 +398,7 @@ namespace BisBuddy.Ui.Renderers.Components
 
         private void drawPrerequisites(ImDrawListPtr drawList, ImDrawListSplitterPtr splitter)
         {
-            if (gearpiece?.PrerequisiteTree is IPrerequisiteNode node)
+            if (gearpiece?.PrerequisiteTree is PrerequisiteNode node)
             {
                 Vector4 prereqButtonTextColor;
                 if (gearpiece.IsCollected)

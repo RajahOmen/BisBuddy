@@ -7,24 +7,24 @@ using System.Collections.Generic;
 
 namespace BisBuddy.Ui.Renderers.ContextMenus
 {
-    public class PrerequisiteAtomNodeContextMenu(
-        ITypedLogger<PrerequisiteAtomNodeContextMenu> logger,
+    public class PrerequisiteNodeContextMenu(
+        ITypedLogger<PrerequisiteNodeContextMenu> logger,
         IContextMenuEntryFactory factory,
         IItemFinderService itemFinderService
-        ) : ContextMenuBase<PrerequisiteAtomNode, PrerequisiteAtomNodeContextMenu>(logger, factory)
+        ) : ContextMenuBase<PrerequisiteNode, PrerequisiteNodeContextMenu>(logger, factory)
     {
         private readonly IItemFinderService itemFinderService = itemFinderService;
 
-        protected override List<ContextMenuEntry> buildMenuEntries(PrerequisiteAtomNode newComponent)
+        protected override List<ContextMenuEntry> buildMenuEntries(PrerequisiteNode newComponent)
         {
-            if (newComponent is not PrerequisiteAtomNode materia)
+            if (newComponent is not PrerequisiteNode node)
                 return [];
 
             return [
                 factory.Create(
                     entryName: Resource.ContextMenuSearchInventory,
                     icon: FontAwesomeIcon.Search,
-                    onClick: () => itemFinderService.SearchForItem(materia.ItemId)),
+                    onClick: () => itemFinderService.SearchForItem(node.ItemId)),
                 ];
         }
     }
