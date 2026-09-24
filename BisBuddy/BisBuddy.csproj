@@ -53,8 +53,8 @@ Automatically syncs gearsets with player inventory</Description>
 	    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.1" />
         <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="10.0.1" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.1" />
-        <PackageReference Include="SixLabors.ImageSharp" Version="4.1.2" />
         <PackageReference Include="TestableIO.System.IO.Abstractions.Wrappers" Version="22.1.0" />
+        <PackageReference Include="Wacton.Unicolour" Version="8.0.0" />
     </ItemGroup>
 
     <ItemGroup>

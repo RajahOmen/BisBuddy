@@ -136,15 +136,6 @@
         "resolved": "10.0.1",
         "contentHash": "HqAEbtoAhgvH53c54IV5e4vQ60PYvl7Z/WIHsbet+UGGE7n+7dwVNXw1mb9LZlWbsxnupCevvtgIne5P//ZKpQ=="
       },
-      "SixLabors.ImageSharp": {
-        "type": "Direct",
-        "requested": "[4.1.2, )",
-        "resolved": "4.1.2",
-        "contentHash": "AQ0oouhH/6qmXJC70/k50iVt7SiZRjCgd4tXXiC5ZrB5CvyBwA81HTqb5twcXz8CvTAFxUNV0TAcL83OhyRA1g==",
-        "dependencies": {
-          "System.IO.Hashing": "8.0.0"
-        }
-      },
       "TestableIO.System.IO.Abstractions.Wrappers": {
         "type": "Direct",
         "requested": "[22.1.0, )",
@@ -153,6 +144,12 @@
         "dependencies": {
           "Testably.Abstractions.FileSystem.Interface": "10.0.0"
         }
+      },
+      "Wacton.Unicolour": {
+        "type": "Direct",
+        "requested": "[8.0.0, )",
+        "resolved": "8.0.0",
+        "contentHash": "BOTEJsSzwVGM4ovknAtOwY0SlfHQ2C4rjEhVPX6JeshVYzxr3iJiDHH4e+jX0iSujgqHuByOudIrXiHMgQabWA=="
       },
       "BCnEncoder.Net": {
         "type": "Transitive",
@@ -436,11 +433,6 @@
         "type": "Transitive",
         "resolved": "10.0.1",
         "contentHash": "xfaHEHVDkMOOZR5S6ZGezD0+vekdH1Nx/9Ih8/rOqOGSOk1fxiN3u94bYkBW/wigj0Uw2Wt3vvRj9mtYdgwEjw=="
-      },
-      "System.IO.Hashing": {
-        "type": "Transitive",
-        "resolved": "8.0.0",
-        "contentHash": "ne1843evDugl0md7Fjzy6QjJrzsjh46ZKbhf8GwBXb5f/gw97J4bxMs0NQKifDuThh/f0bZ0e62NPl1jzTuRqA=="
       },
       "Testably.Abstractions.FileSystem.Interface": {
         "type": "Transitive",
