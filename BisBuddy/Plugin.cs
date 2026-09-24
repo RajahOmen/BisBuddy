@@ -39,6 +39,7 @@ using System.Net.Http;
 using System.Reflection;
 using System.Text.Json.Serialization;
 using BisBuddy.Services.IPC;
+using KamiToolKit.Extensions;
 
 namespace BisBuddy;
 
@@ -295,26 +296,33 @@ public sealed partial class Plugin : IDalamudPlugin
         logger.Info($"Initialization complete, starting...");
         try
         {
-            var resolvedPluginInterface = host.Services.GetRequiredService<IDalamudPluginInterface>();
-            KamiToolKitLibrary.Initialize(resolvedPluginInterface);
-            host.Start();
-            logger.Info($"Started successfully");
-
-#if DEBUG
-            var commandService = host.Services.GetRequiredService<ICommandService>();
-            commandService.ExecuteCommand("/bis", "d");
-#endif
+            startPlugin();
         }
         catch (Exception ex)
         {
             logger.Fatal(ex, $"Failed to start");
             Dispose();
+            // bubble exception up to fail plugin load
+            throw;
         }
+        logger.Info($"Started successfully");
+    }
+
+    private void startPlugin()
+    {
+        var resolvedPluginInterface = host.Services.GetRequiredService<IDalamudPluginInterface>();
+        KamiToolKitLibrary.Initialize(resolvedPluginInterface);
+        host.Start();
+
+#if DEBUG
+        var commandService = host.Services.GetRequiredService<ICommandService>();
+        commandService.ExecuteCommand("/bis", "d");
+#endif
     }
 
     private static Func<IComponentContext, Func<T>> resolveWithScopeTagged<T>(object scopeTag) where T : notnull
     {
-        return (IComponentContext context) =>
+        return context =>
         {
             var lifetime = context.Resolve<ILifetimeScope>();
             return () =>
@@ -325,12 +333,34 @@ public sealed partial class Plugin : IDalamudPlugin
         };
     }
 
+    private void stopAndDispose()
+    {
+        KamiToolKitLibrary.Dispose();
+        host.StopAsync().GetAwaiter().GetResult();
+        host.Dispose();
+    }
+
     public void Dispose()
     {
         logger.Info($"Teardown start");
-        host.StopAsync().GetAwaiter().GetResult();
-        host.Dispose();
-        KamiToolKitLibrary.Dispose();
-        logger.Info($"Teardown finish");
+        if (MainThreadSafety.TryAssertMainThread()) // NOT on main thread, must be in order to dispose properly
+        {
+            IFramework? framework = null;
+            try
+            {
+                framework = host.Services.GetRequiredService<IFramework>();
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, $"Error retrieving {nameof(IFramework)} service for scheduling main-thread dispose, trying off main thread (dangerous!)");
+                stopAndDispose();
+            }
+            framework?.RunOnFrameworkThread(stopAndDispose).Wait();
+        }
+        else // already on main thread
+        {
+            stopAndDispose();
+        }
+        logger.Info("Teardown finish");
     }
 }
