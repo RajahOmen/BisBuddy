@@ -37,7 +37,7 @@ namespace BisBuddy.ItemAssignment
         private List<Materia> materiaList = [];
         public readonly HashSet<Gearset> Gearsets = [];
 
-        public Dictionary<Gearpiece, HashSet<(IPrerequisiteNode Node, InventoryItem Item)>> DirectlyAssignedNodes = [];
+        public Dictionary<Gearpiece, HashSet<(PrerequisiteNode Node, InventoryItem Item)>> DirectlyAssignedNodes = [];
 
         public List<Materia> MateriaList
         {
@@ -62,7 +62,7 @@ namespace BisBuddy.ItemAssignment
             ItemId = gearpiece.ItemId;
             Gearpieces = [gearpiece];
             Gearsets = [gearset];
-            MateriaList = new List<Materia>(gearpiece.ItemMateria);
+            MateriaList = [.. gearpiece.ItemMateria];
             minGearpieceIdx = gearpieceIdx;
             StrictMateriaMatching = strictMateriaMatching;
 
@@ -87,16 +87,16 @@ namespace BisBuddy.ItemAssignment
             if (Gearpieces.Count == 0)
                 return [];
 
-            List<InventoryItem> shadowedAssignments = [];
+            HashSet<InventoryItem> shadowedAssignments = [];
 
             foreach (var gearpiece in Gearpieces)
             {
-                if (gearpiece.PrerequisiteTree == null)
+                if (gearpiece.PrerequisiteTree is null)
                     continue;
 
                 var nodeAssigned = gearpiece.PrerequisiteTree.AssignItemId(item.ItemId);
 
-                if (nodeAssigned == null)
+                if (nodeAssigned is null)
                     continue;
 
                 if (assignPrerequisiteMateria && itemData.ItemIsMeldable(item.ItemId))
@@ -121,14 +121,16 @@ namespace BisBuddy.ItemAssignment
                     .Except(childAssignments)
                     .ToHashSet();
 
-                shadowedAssignments.AddRange(childAssignments.Select(assign => assign.Item));
+
+                foreach (var childAssignment in childAssignments)
+                    shadowedAssignments.Add(childAssignment.Item);
             }
 
             // remake needed dictionary after item assignment(s)
             neededItemIds.Clear();
             Gearpieces.ForEach(gearpiece => gearpiece.PrerequisiteTree?.AddNeededItemIds(neededItemIds));
 
-            return shadowedAssignments;
+            return shadowedAssignments.ToList();
         }
 
         public bool AddMatchingGearpiece(Gearpiece gearpiece, Gearset gearset)
@@ -161,7 +163,7 @@ namespace BisBuddy.ItemAssignment
 
             // gearpiece has MORE Materia required than on current group, overwrite
             if (gearpiece.ItemMateria.Count > MateriaList.Count)
-                MateriaList = new List<Materia>(gearpiece.ItemMateria);
+                MateriaList = [.. gearpiece.ItemMateria];
 
             return true;
         }

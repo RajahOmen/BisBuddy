@@ -82,7 +82,9 @@ namespace BisBuddy.Ui.Renderers.Components
 
             var (textColor, gameIcon) = uiTheme.GetCollectionStatusTheme(gearpiece.CollectionStatus);
 
-            var hasSubItems = gearpiece.ItemMateria.Any() || gearpiece.PrerequisiteTree != null;
+            var hasMateria = gearpiece.ItemMateria.Count > 0;
+            var hasPrerequisites = gearpiece.PrerequisiteTree?.HasPrerequisites ?? false;
+            var hasSubItems = hasMateria || hasPrerequisites;
             var startPos = ImGui.GetCursorScreenPos();
 
             var windowDrawList = ImGui.GetWindowDrawList();
@@ -99,39 +101,41 @@ namespace BisBuddy.Ui.Renderers.Components
             using (ImRaii.PushColor(ImGuiCol.Button, new Vector4(0, 0, 0, 0)))
             {
                 drawGearpieceButton();
-                if (isExpanded && hasSubItems)
+                if (isExpanded)
                 {
-                    var contentRegion = ImGui.GetContentRegionAvail();
-                    var currentPos = ImGui.GetCursorPos();
-                    var itemSpacing = ImGui.GetStyle().ItemSpacing;
-                    var padding = itemSpacing.X + internalThickOffset;
-                    var padSize = new Vector2(padding, padding);
-                    var tableSize = new Vector2(contentRegion.X - padding * 2, 0);
-                    ImGui.SetCursorPosX(currentPos.X + padding);
-                    ImGui.SetCursorPosY(currentPos.Y + itemSpacing.Y);
-                    using (ImRaii.PushColor(ImGuiCol.Text, new Vector4(1.0f, 1.0f, 1.0f, 1.0f)))
-                    using (ImRaii.PushStyle(ImGuiStyleVar.CellPadding, itemSpacing))
-                    using (var table = ImRaii.Table("###gearpiece_details_table", 1, ImGuiTableFlags.None, tableSize))
+                    if (hasSubItems)
                     {
-                        if (table)
+                        var contentRegion = ImGui.GetContentRegionAvail();
+                        var currentPos = ImGui.GetCursorPos();
+                        var itemSpacing = ImGui.GetStyle().ItemSpacing;
+                        var padding = itemSpacing.X + internalThickOffset;
+                        var padSize = new Vector2(padding, padding);
+                        var tableSize = new Vector2(contentRegion.X - padding * 2, 0);
+                        ImGui.SetCursorPosX(currentPos.X + padding);
+                        ImGui.SetCursorPosY(currentPos.Y + itemSpacing.Y);
+                        using (ImRaii.PushColor(ImGuiCol.Text, new Vector4(1.0f, 1.0f, 1.0f, 1.0f)))
+                        using (ImRaii.PushStyle(ImGuiStyleVar.CellPadding, itemSpacing))
+                        using (var table = ImRaii.Table("###gearpiece_details_table", 1, ImGuiTableFlags.None, tableSize))
                         {
-                            if (gearpiece.ItemMateria.Count > 0)
+                            if (table)
                             {
-                                ImGui.TableNextRow();
-                                ImGui.TableNextColumn();
-                                drawMateriaGroup();
+                                if (hasMateria)
+                                {
+                                    ImGui.TableNextRow();
+                                    ImGui.TableNextColumn();
+                                    drawMateriaGroup();
+                                }
+                                if (hasPrerequisites)
+                                {
+                                    ImGui.TableNextRow();
+                                    ImGui.TableNextColumn();
+                                    drawPrerequisites(windowDrawList, splitter);
+                                }
+                                ImGui.SetCursorPosY(ImGui.GetCursorPosY() + internalThickOffset);
                             }
-                            if (gearpiece.PrerequisiteTree != null)
-                            {
-                                ImGui.TableNextRow();
-                                ImGui.TableNextColumn();
-                                drawPrerequisites(windowDrawList, splitter);
-                            }
-                            ImGui.Spacing();
-                            ImGui.SetCursorPosY(ImGui.GetCursorPosY() + internalThickOffset);
                         }
                     }
-
+                    ImGui.Spacing();
                 }
             }
 
@@ -144,7 +148,7 @@ namespace BisBuddy.Ui.Renderers.Components
                 topLeftPos += outerThicknessOffset;
                 splitter.SetCurrentChannel(windowDrawList, 0);
                 var col = ImGui.GetColorU32(uiTheme.ButtonColor);
-                windowDrawList.AddRect(topLeftPos, botRightPos, col, CornerRound, ImDrawFlags.Closed, outlineThickness);
+                windowDrawList.AddRect(topLeftPos, botRightPos, col, CornerRound, ImDrawFlags.RoundCornersAll, outlineThickness);
             }
 
             splitter.Merge(windowDrawList);
@@ -398,7 +402,7 @@ namespace BisBuddy.Ui.Renderers.Components
 
         private void drawPrerequisites(ImDrawListPtr drawList, ImDrawListSplitterPtr splitter)
         {
-            if (gearpiece?.PrerequisiteTree is IPrerequisiteNode node)
+            if (gearpiece?.PrerequisiteTree is PrerequisiteNode node)
             {
                 Vector4 prereqButtonTextColor;
                 if (gearpiece.IsCollected)

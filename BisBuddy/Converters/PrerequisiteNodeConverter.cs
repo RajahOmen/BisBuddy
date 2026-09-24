@@ -1,47 +1,87 @@
 using BisBuddy.Gear.Prerequisites;
+using BisBuddy.Items;
 using System;
+using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace BisBuddy.Converters
 {
-    internal class PrerequisiteNodeConverter : JsonConverter<IPrerequisiteNode>
+    internal class PrerequisiteNodeConverter(IItemDataService itemData) : JsonConverter<PrerequisiteNode>
     {
-        public const string TypeDescriminatorPropertyName = "$type";
+        private readonly IItemDataService itemData = itemData;
 
-        public override IPrerequisiteNode? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        public override PrerequisiteNode? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             if (reader.TokenType != JsonTokenType.StartObject)
-                throw new JsonException("Expected StartObject for PrerequisiteNode");
+                throw new JsonException($"Expected StartObject for {nameof(PrerequisiteNode)}");
 
-            using var document = JsonDocument.ParseValue(ref reader);
-            var rootNode = document.RootElement;
+            uint? itemId = null;
+            string? itemName = null;
+            string? nodeId = null;
+            List<PrerequisiteAndGroup>? completePrerequisiteTree = null;
+            bool? isCollected = null;
+            bool? collectLock = null;
 
-            if (!rootNode.TryGetProperty(TypeDescriminatorPropertyName, out var typeDescriminator))
-                throw new JsonException("PrerequisiteNode with no derived type parameter found");
-
-            if (typeDescriminator.ValueKind != JsonValueKind.String)
-                throw new JsonException($"PrerequisiteNode with invalid derived type parameter \"{typeDescriminator}\" found");
-
-            return typeDescriminator.GetString() switch
+            while (reader.Read())
             {
-                PrerequisiteAndNodeConverter.TypeDescriminatorValue => JsonSerializer.Deserialize<PrerequisiteAndNode>(document, options),
-                PrerequisiteAtomNodeConverter.TypeDescriminatorValue => JsonSerializer.Deserialize<PrerequisiteAtomNode>(document, options),
-                PrerequisiteOrNodeConverter.TypeDescriminatorValue => JsonSerializer.Deserialize<PrerequisiteOrNode>(document, options),
-                _ => throw new JsonException($"PrerequisiteNode with invalid derived type parameter \"{typeDescriminator}\" found")
-            };
+                if (reader.TokenType == JsonTokenType.EndObject)
+                    break;
+
+                var propertyName = reader.GetString();
+                reader.Read();
+
+                switch (propertyName)
+                {
+                    case nameof(PrerequisiteNode.ItemId):
+                        itemId = reader.GetUInt32();
+                        itemName = itemData.GetItemNameById(reader.GetUInt32());
+                        break;
+                    case nameof(PrerequisiteNode.NodeId):
+                        nodeId = reader.GetString();
+                        break;
+                    case nameof(PrerequisiteNode.IsCollected):
+                        isCollected = reader.GetBoolean();
+                        break;
+                    case nameof(PrerequisiteNode.CollectLock):
+                        collectLock = reader.GetBoolean();
+                        break;
+                    case nameof(PrerequisiteNode.CompletePrerequisiteTree):
+                        completePrerequisiteTree = JsonSerializer.Deserialize<List<PrerequisiteAndGroup>>(ref reader, options);
+                        break;
+                    default:
+                        reader.TrySkip();
+                        break;
+                }
+            }
+
+
+            return new PrerequisiteNode(
+                itemId: itemId ?? throw new JsonException($"No itemId found for {nameof(PrerequisiteNode)}"),
+                itemName: itemName ?? throw new JsonException($"No itemName found for {nameof(PrerequisiteNode)}"),
+                completePrerequisiteTree: completePrerequisiteTree,
+                isCollected: isCollected ?? false,
+                collectLock: collectLock ?? false,
+                nodeId: nodeId ?? throw new JsonException($"No nodeId found for {nameof(PrerequisiteNode)}")
+                );
         }
 
-        public override void Write(Utf8JsonWriter writer, IPrerequisiteNode value, JsonSerializerOptions options)
+        public override void Write(Utf8JsonWriter writer, PrerequisiteNode value, JsonSerializerOptions options)
         {
-            if (value is PrerequisiteAndNode andNode)
-                JsonSerializer.Serialize(writer, andNode, options);
-            else if (value is PrerequisiteAtomNode atomNode)
-                JsonSerializer.Serialize(writer, atomNode, options);
-            else if (value is PrerequisiteOrNode orNode)
-                JsonSerializer.Serialize(writer, orNode, options);
-            else
-                throw new JsonException($"Prerequisite node of unknown type: \"{value.GetType()}\"");
+            writer.WriteStartObject();
+
+            writer.WriteString(nameof(PrerequisiteNode.NodeId), value.NodeId);
+            writer.WriteNumber(nameof(PrerequisiteNode.ItemId), value.ItemId);
+            writer.WriteBoolean(nameof(PrerequisiteNode.IsCollected), value.IsCollected);
+            writer.WriteBoolean(nameof(PrerequisiteNode.CollectLock), value.CollectLock);
+
+            writer.WritePropertyName(nameof(PrerequisiteNode.CompletePrerequisiteTree));
+            writer.WriteStartArray();
+            foreach (var group in value.CompletePrerequisiteTree)
+                JsonSerializer.Serialize(writer, group, options);
+            writer.WriteEndArray();
+
+            writer.WriteEndObject();
         }
     }
 }

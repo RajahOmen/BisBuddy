@@ -1,3 +1,4 @@
+using BisBuddy.Gear;
 using BisBuddy.Gear.Prerequisites;
 using BisBuddy.Items;
 using BisBuddy.Resources;
@@ -15,6 +16,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Numerics;
+using System.Security.Cryptography;
 
 namespace BisBuddy.Ui.Renderers.Components;
 
@@ -26,7 +28,7 @@ public class PrerequisiteNodeComponentRenderer(
     IAttributeService attributeService,
     IItemDataService itemDataService,
     IDebugService debugService
-    ) : ComponentRendererBase<IPrerequisiteNode>
+    ) : ComponentRendererBase<PrerequisiteNode>
 {
     private readonly ITypedLogger<PrerequisiteNodeComponentRenderer> logger = logger;
     private readonly IConfigurationService configurationService = configurationService;
@@ -35,14 +37,15 @@ public class PrerequisiteNodeComponentRenderer(
     private readonly IAttributeService attributeService = attributeService;
     private readonly IItemDataService itemDataService = itemDataService;
     private readonly IDebugService debugService = debugService;
-    private IPrerequisiteNode? prerequisiteNode;
+    private PrerequisiteNode? prerequisiteNode;
+    private const float ButtonHeightMultiplier = 1.3f;
 
-    private HashSet<PrerequisiteOrNode> prereqsDrawn = [];
+    private readonly HashSet<PrerequisiteNode> prereqsDrawn = [];
 
     private UiTheme uiTheme =>
         configurationService.UiTheme;
 
-    public override void Initialize(IPrerequisiteNode renderableComponent) =>
+    public override void Initialize(PrerequisiteNode renderableComponent) =>
         prerequisiteNode = renderableComponent;
 
     public override void Draw()
@@ -55,73 +58,139 @@ public class PrerequisiteNodeComponentRenderer(
 
         var actions = new List<Action>();
         drawPrerequisiteTree(prerequisiteNode, actions);
+
+        if (actions.Count > 0)
+            logger.Debug($"old node state before {actions.Count} action(s) ({prerequisiteNode.NodeId}):\n{prerequisiteNode}");
+
         foreach (var action in actions)
             action();
-    }
 
-    private void drawPrerequisiteTree(IPrerequisiteNode prerequisiteNode, List<Action> actions, int parentCount = 1)
-    {
-        var nodeType = prerequisiteNode.GetType();
-        if (nodeType == typeof(PrerequisiteOrNode))
-            drawOrNode((PrerequisiteOrNode)prerequisiteNode, actions, parentCount);
-        else if (nodeType == typeof(PrerequisiteAndNode))
-            drawAndNode((PrerequisiteAndNode)prerequisiteNode, actions, parentCount);
-        else if (nodeType == typeof(PrerequisiteAtomNode))
-            drawAtomNode((PrerequisiteAtomNode)prerequisiteNode, actions, parentCount);
-        else
-            logger.Error($"Cannot render {nameof(IPrerequisiteNode)} type \"{prerequisiteNode.GetType()}\"");
-    }
-
-    private void drawOrNode(PrerequisiteOrNode node, List<Action> actions, int parentCount = 1)
-    {
-        using var tabBar = ImRaii.TabBar($"###or_item_prerequisites_{node.GetHashCode()}");
-        if (!tabBar)
-            return;
-
-
-        int? tabIdxDefaultActive = null;
-        if (!prereqsDrawn.Contains(node))
+        if (actions.Count > 0)
         {
-            tabIdxDefaultActive = node.CompletePrerequisiteTree
-                .Index()
-                .FirstOrNull(entry => entry.Item.IsActive)?.Index ?? -1;
+
+            logger.Debug($"new node state after {actions.Count} action(s) ({prerequisiteNode.NodeId}):\n{prerequisiteNode}");
+
+            foreach (var group in prerequisiteNode.CompletePrerequisiteTree)
+                logger.Verbose($"Group groups! PrerequisiteAndGroup:\n{group}]\nACTUAL GROUPS:\n{string.Join("\n", group.Groups.Select(g => $"group x{g.Count}, nodeid ({g.Node.NodeId})\n{g.Node.ToString().Replace("\n", "\n  ")}"))}");
         }
+    }
 
-        prereqsDrawn.Add(node);
-        var prereqCount = node.CompletePrerequisiteTree.Count;
+    private bool drawPrerequisiteTree(
+        PrerequisiteNode node,
+        List<Action> actions,
+        int parentCount = 1
+        )
+    {
+        var prerequisiteTree = node.CompletePrerequisiteTree;
+        if (prerequisiteTree.Count <= 0)
+            return false;
 
-        for (var i = 0; i < prereqCount; i++)
+        // only one option, dont need to draw a tab bar
+        if (prerequisiteTree.Count == 1)
         {
-            var (prereqNode, prereqIsActive) = node.CompletePrerequisiteTree[i];
+            drawPrerequisiteAndGroup(
+                andGroup: prerequisiteTree[0],
+                actions: actions,
+                parentCount: parentCount
+            );
+            var lastGroupNode = prerequisiteTree[0].Groups[^1].Node;
+            return lastGroupNode.IsCollected || !lastGroupNode.HasPrerequisites;
+        }
+        else
+        {
+            // make a tab bar to show different options of how to retrieve item
+            using var tabBar = ImRaii.TabBar($"###or_item_prerequisites_{prerequisiteTree.GetHashCode()}");
+            if (!tabBar)
+                return false;
 
-            var (textColor, gameIcon) = uiTheme.GetCollectionStatusTheme(prereqNode.CollectionStatus);
 
-            var tabSelected = prereqCount <= 1 || i == tabIdxDefaultActive;
-            var flags = tabSelected
-                ? ImGuiTabItemFlags.SetSelected
-                : ImGuiTabItemFlags.None;
-
-            var tabName = $"Source {i + 1} ({prereqNode.SourceType})";
-
-            using (ImRaii.PushId(i))
-            using (ImRaii.PushColor(ImGuiCol.Text, textColor))
+            int? tabIdxDefaultActive = null;
+            if (!prereqsDrawn.Contains(node))
             {
-                using (ImRaii.PushStyle(ImGuiStyleVar.DisabledAlpha, 0.5f, !prereqIsActive))
-                using (ImRaii.Enabled())
-                using (ImRaii.Disabled(!prereqIsActive))
-                using (var tabItem = ImRaii.TabItem($"{tabName}##or_node_tab_item_{i}", flags))
+                tabIdxDefaultActive = prerequisiteTree
+                    .Index()
+                    .FirstOrNull(entry => entry.Item.IsActive)?.Index ?? -1;
+            }
+
+            prereqsDrawn.Add(node);
+            var prereqCount = prerequisiteTree.Count;
+
+            var lastWasCollected = false;
+            for (var i = 0; i < prereqCount; i++)
+            {
+                var prereqGroup = prerequisiteTree[i];
+
+                var (textColor, gameIcon) = uiTheme.GetCollectionStatusTheme(prereqGroup.CollectionStatus);
+
+                var tabSelected = prereqCount <= 1 || i == tabIdxDefaultActive;
+                var flags = tabSelected
+                    ? ImGuiTabItemFlags.SetSelected
+                    : ImGuiTabItemFlags.None;
+
+                var tabName = $"Source {i + 1} ({prereqGroup.SourceType})";
+
+                using (ImRaii.PushId(i))
+                using (ImRaii.PushColor(ImGuiCol.Text, textColor))
                 {
-                    if (!prereqIsActive && ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
-                        using (ImRaii.Enabled())
+                    using (ImRaii.PushStyle(ImGuiStyleVar.DisabledAlpha, 0.5f, !prereqGroup.IsActive))
+                    using (ImRaii.Enabled())
+                    using (ImRaii.Disabled(!prereqGroup.IsActive))
+                    using (var tabItem = ImRaii.TabItem($"{tabName}##or_node_tab_item_{i}", flags))
+                    {
+                        if (!prereqGroup.IsActive && ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
                             UiComponents.SetSolidTooltip(string.Format(Resource.DisabledPrerequisiteTooltip, tabName));
 
-                    if (!tabItem)
-                        continue;
+                        if (!tabItem)
+                            continue;
+                    }
+
+                    try
+                    {
+                        drawPrerequisiteAndGroup(
+                            andGroup: prereqGroup,
+                            actions: actions,
+                            parentCount: parentCount
+                        );
+                        var lastGroupNode = prereqGroup.Groups[^1].Node;
+                        lastWasCollected = lastGroupNode.IsCollected || !lastGroupNode.HasPrerequisites;
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.Error(ex, "Error drawing nested prereq");
+                    }
                 }
 
+            }
+
+            if (prereqCount <= 1)
+                return lastWasCollected;
+
+            var toggleTabFlags = tabIdxDefaultActive == -1
+                ? ImGuiTabItemFlags.SetSelected
+                : ImGuiTabItemFlags.None;
+            using (ImRaii.Enabled())
+            using (var tabItem = ImRaii.TabItem($"{Resource.PrerequisiteOrNodeSettingsTabName}##or_node_tab_item", toggleTabFlags))
+            {
+                if (!tabItem)
+                    return lastWasCollected;
                 try
                 {
-                    drawPrerequisiteTree(prereqNode, actions, parentCount);
+                    using (ImRaii.PushIndent(5f))
+                    {
+                        foreach (var (idx, prereqGroup) in prerequisiteTree.Index())
+                        {
+                            var active = prereqGroup.IsActive;
+                            if (ImGui.Checkbox($"Include Source {idx + 1} ({Enum.GetName(prereqGroup.SourceType)})##or_node_toggle_option_{idx}", ref active))
+                            {
+                                actions.Add(() => node.SetPrerequisiteGroupActiveStatus(idx, !prereqGroup.IsActive));
+                            }
+                            if (ImGui.IsItemHovered())
+                            {
+                                UiComponents.SetSolidTooltip(Resource.PrerequisiteOrNodeToggleTooltip);
+                            }
+                        }
+                    }
+
                 }
                 catch (Exception ex)
                 {
@@ -129,64 +198,40 @@ public class PrerequisiteNodeComponentRenderer(
                 }
             }
 
-        }
-
-        if (prereqCount <= 1)
-            return;
-
-        var toggleTabFlags = tabIdxDefaultActive == -1
-            ? ImGuiTabItemFlags.SetSelected
-            : ImGuiTabItemFlags.None;
-        using (ImRaii.Enabled())
-        using (var tabItem = ImRaii.TabItem($"{Resource.PrerequisiteOrNodeSettingsTabName}##or_node_tab_item", toggleTabFlags))
-        {
-            if (!tabItem)
-                return;
-            try
-            {
-                using (ImRaii.PushIndent(5f))
-                {
-                    foreach (var (idx, (prereqNode, prereqIsActive)) in node.CompletePrerequisiteTree.Index())
-                    {
-                        var active = prereqIsActive;
-                        if (ImGui.Checkbox($"Include Source {idx + 1} ({prereqNode.SourceType})##or_node_toggle_option_{idx}", ref active))
-                        {
-                            actions.Add(() => node.SetPrerequisiteActiveStatus(prereqNode, !prereqIsActive));
-                        }
-                        if (ImGui.IsItemHovered())
-                        {
-                            UiComponents.SetSolidTooltip(Resource.PrerequisiteOrNodeToggleTooltip);
-                        }
-                    }
-                }
-
-            }
-            catch (Exception ex)
-            {
-                logger.Error(ex, "Error drawing nested prereq");
-            }
+            return lastWasCollected;
         }
     }
 
-    private void drawAndNode(PrerequisiteAndNode node, List<Action> actions, int parentCount = 1)
+    private void drawPrerequisiteAndGroup(
+        PrerequisiteAndGroup andGroup,
+        List<Action> actions,
+        int parentCount = 1
+    )
     {
-        var groupedPrereqs = node.Groups();
-
-        for (var i = 0; i < groupedPrereqs.Count; i++)
+        for (var i = 0; i < andGroup.Groups.Count; i++)
         {
             using var _ = ImRaii.PushId(i);
-            var prereq = groupedPrereqs[i];
-            drawPrerequisiteTree(prereq.Node, actions, prereq.Count * parentCount);
+            var prereq = andGroup.Groups[i];
+            drawPrerequisiteNode(
+                node: prereq.Node,
+                actions: actions,
+                parentCount: prereq.Count * parentCount
+            );
         }
     }
 
-    private void drawAtomNode(PrerequisiteAtomNode node, List<Action> actions, int parentCount = 1)
+    private void drawPrerequisiteNode(
+        PrerequisiteNode node,
+        List<Action> actions,
+        int parentCount = 1
+        )
     {
-        var countLabel = parentCount == 1
-            ? ""
-            : $"{parentCount}x ";
-
         var (textColor, gameIcon) = uiTheme.GetCollectionStatusTheme(node.CollectionStatus);
+
+        var countLabel = parentCount == 1
+        ? ""
+        : $"{parentCount}x ";
+
 
         using (ImRaii.PushColor(ImGuiCol.Text, textColor))
         using (ImRaii.PushColor(ImGuiCol.CheckMark, textColor))
@@ -196,30 +241,42 @@ public class PrerequisiteNodeComponentRenderer(
             {
                 if (drawPrerequisiteButton(node, parentCount))
                 {
-                    actions.Add(() => node.SetIsCollectedLocked(!node.IsCollected));
+                    actions.Add(() => {
+                        logger.Verbose($"{(!node.IsCollected ? "collecting" : "uncollecting")} node ({node.NodeId})\n{node}");
+                        node.SetIsCollectedLocked(!node.IsCollected);
+                    });
                 }
             }
         }
 
-        if (node.PrerequisiteTree.Count > 1)
-            throw new Exception($"item {node.ItemName} has too many prerequisites ({node.PrerequisiteTree})");
 
-        if (node.PrerequisiteTree.Count == 1 && !node.IsCollected)
+        if (node.CompletePrerequisiteTree.Count > 0 && !node.IsCollected)
         {
             // draw a L shape for parent-child relationship
             var drawList = ImGui.GetWindowDrawList();
             var curLoc = ImGui.GetCursorScreenPos();
-            var col = ImGui.GetColorU32(textColor);
-            var halfButtonHeight = ImGui.CalcTextSize("HI").Y / 2 + ImGui.GetStyle().FramePadding.Y;
-            drawList.AddLine(curLoc + new Vector2(10, 0), curLoc + new Vector2(10, halfButtonHeight), col, 2);
-            drawList.AddLine(curLoc + new Vector2(10, halfButtonHeight), curLoc + new Vector2(20, halfButtonHeight), col, 2);
+            var col = ImGui.GetColorU32(textColor with { W = textColor.W * 0.4f});
+            var lineStartLoc = ImGui.GetCursorScreenPos() + new Vector2(10, - (ImGui.GetStyle().ItemSpacing.Y / 2));
+            var halfButtonHeight = ImGui.GetTextLineHeightWithSpacing() * ButtonHeightMultiplier / 2;
 
+            var lastCollectedOrLeaf = false;
             using (ImRaii.PushIndent(25.0f, scaled: false))
-                drawPrerequisiteTree(node.PrerequisiteTree[0], actions, parentCount);
+            {
+                lastCollectedOrLeaf = drawPrerequisiteTree(
+                    node: node,
+                    actions: actions,
+                    parentCount: parentCount
+                );
+            }
+
+            var lineHeight = ImGui.GetCursorScreenPos().Y - lineStartLoc.Y - ImGui.GetStyle().ItemSpacing.Y - halfButtonHeight;
+            var lineWidth = lastCollectedOrLeaf ? 10 : 25;
+            drawList.AddLine(lineStartLoc, lineStartLoc + new Vector2(0, lineHeight), col, 2);
+            drawList.AddLine(lineStartLoc + new Vector2(0, lineHeight), lineStartLoc + new Vector2(lineWidth, lineHeight), col, 2);
         }
     }
 
-    private bool drawPrerequisiteButton(PrerequisiteAtomNode node, int count)
+    private bool drawPrerequisiteButton(PrerequisiteNode node, int count)
     {
         var collectionStatusTheme = uiTheme.GetCollectionStatusTheme(node.CollectionStatus);
 
@@ -233,7 +290,7 @@ public class PrerequisiteNodeComponentRenderer(
         {
             var buttonSize = new Vector2(
                 x: ImGui.GetContentRegionAvail().X,
-                y: ImGui.GetTextLineHeightWithSpacing() * 1.3f
+                y: ImGui.GetTextLineHeightWithSpacing() * ButtonHeightMultiplier
             );
 
             var buttonPos = ImGui.GetCursorPos();

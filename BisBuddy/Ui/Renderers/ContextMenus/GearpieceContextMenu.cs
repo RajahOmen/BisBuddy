@@ -49,7 +49,7 @@ namespace BisBuddy.Ui.Renderers.ContextMenus
                     entryName: Resource.ContextMenuSearchInventory,
                     icon: FontAwesomeIcon.Search,
                     onClick: () => itemFinderService.SearchForItem(gearpiece.ItemId))
-                ];
+            ];
         }
     }
 }

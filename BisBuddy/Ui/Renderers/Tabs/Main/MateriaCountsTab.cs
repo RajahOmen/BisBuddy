@@ -13,13 +13,12 @@ using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.ColorSpaces.Companding;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Numerics;
+using Wacton.Unicolour;
 
 namespace BisBuddy.Ui.Renderers.Tabs.Main;
 
@@ -44,6 +43,9 @@ public class MateriaCountsTab : TabRenderer<MainWindowTab>, IDisposable
     private HashSet<Gearset> gearsetsToCount;
     private List<HashSet<Gearset>> gearsetsWithOverlap = [];
     private bool listDirty = true;
+
+    private Unicolour obtainedColor = null!;
+    private Unicolour unobtainedColor = null!;
 
 
     public MateriaCountsTab(
@@ -71,6 +73,8 @@ public class MateriaCountsTab : TabRenderer<MainWindowTab>, IDisposable
             .ToHashSet();
         calculateMateriaRequiredCounts();
         calculateGearsetsWithOverlap();
+        calculateUnicolours();
+        this.configurationService.OnConfigurationChange += handleConfigurationChange;
         this.gearsetsService.OnGearsetsChange += handleGearsetsChange;
     }
 
@@ -88,6 +92,34 @@ public class MateriaCountsTab : TabRenderer<MainWindowTab>, IDisposable
     public void Dispose()
     {
         this.gearsetsService.OnGearsetsChange -= handleGearsetsChange;
+        this.configurationService.OnConfigurationChange -= handleConfigurationChange;
+    }
+
+    private void calculateUnicolours()
+    {
+        var uiTheme = configurationService.UiTheme;
+        var unobtained = uiTheme.UnobtainedTextColor;
+        var obtained = uiTheme.ObtainedCompleteTextColor;
+
+        unobtainedColor = new Unicolour(
+            ColourSpace.Rgb,
+            unobtained.X,
+            unobtained.Y,
+            unobtained.Z,
+            unobtained.W
+        );
+        obtainedColor = new Unicolour(
+            ColourSpace.Rgb,
+            obtained.X,
+            obtained.Y,
+            obtained.Z,
+            obtained.W
+        );
+    }
+
+    private void handleConfigurationChange(bool affectsAssignments)
+    {
+        calculateUnicolours();
     }
 
     private void handleGearsetsChange()
@@ -261,12 +293,18 @@ public class MateriaCountsTab : TabRenderer<MainWindowTab>, IDisposable
     {
         var uiTheme = configurationService.UiTheme;
 
-        var unobtainedColor = uiTheme.UnobtainedTextColor;
-        var obtainedColor = uiTheme.ObtainedCompleteTextColor;
-        SRgbCompanding.Expand(ref unobtainedColor);
-        SRgbCompanding.Expand(ref obtainedColor);
-        var textColor = Vector4.Lerp(unobtainedColor, obtainedColor, (float)meldConfidenceRate);
-        SRgbCompanding.Compress(ref textColor);
+        // todo: find something faster for this
+        var result = unobtainedColor.Mix(
+            obtainedColor,
+            ColourSpace.Oklab,
+            meldConfidenceRate
+        );
+        var textColor = new Vector4(
+            (float)result.Rgb.R,
+            (float)result.Rgb.G,
+            (float)result.Rgb.B,
+            (float)result.Alpha.A
+        );
 
         using var padding = ImRaii.PushStyle(ImGuiStyleVar.FramePadding, new Vector2(10f, 5f) * ImGuiHelpers.GlobalScale);
 

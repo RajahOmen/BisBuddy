@@ -157,17 +157,16 @@ namespace BisBuddy.Items
         /// <param name="isCollected">If the config has this node set as collected</param>
         /// <param name="collectLock">If the config has this node's collect state as locked</param>
         /// <returns>The most up-to-date PrerequisiteNode. Could be the unmodified original if no changes were made</returns>
-        public IPrerequisiteNode? ExtendItemPrerequisites(
-            uint itemId,
-            IPrerequisiteNode? oldPrerequisiteNode,
-            bool isCollected,
-            bool collectLock
+        public void ExtendItemPrerequisites(
+            PrerequisiteNode? oldPrerequisiteNode,
+            int maxDepth = 8
             );
 
-        public IPrerequisiteNode? BuildGearpiecePrerequisiteTree(
+        public PrerequisiteNode? BuildGearpiecePrerequisiteTree(
             uint itemId,
             bool isCollected = false,
-            bool collectLock = false
+            bool collectLock = false,
+            int maxDepth = 8
             );
 
         /// <summary>

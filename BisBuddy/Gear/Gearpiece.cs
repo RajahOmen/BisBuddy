@@ -1,6 +1,7 @@
 using BisBuddy.Gear.Melds;
 using BisBuddy.Gear.Prerequisites;
 using BisBuddy.Services;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -16,7 +17,7 @@ namespace BisBuddy.Gear
         public uint ItemId { get; set; }
         public string ItemName { get; set; }
         public GearpieceType GearpieceType { get; set; }
-        public IPrerequisiteNode? PrerequisiteTree { get; set; }
+        public PrerequisiteNode? PrerequisiteTree { get; set; }
         public bool IsCollected
         {
             get => isCollected;
@@ -29,9 +30,7 @@ namespace BisBuddy.Gear
                 }
 
                 isCollected = value;
-
-                if (PrerequisiteTree is not null)
-                    PrerequisiteTree.IsCollected = value;
+                PrerequisiteTree?.IsCollected = value;
 
                 handleIsCollectedChange();
             }
@@ -44,8 +43,7 @@ namespace BisBuddy.Gear
                 foreach (var materia in ItemMateria)
                     materia.CollectLock = value;
 
-                if (PrerequisiteTree is not null)
-                    PrerequisiteTree.CollectLock = value;
+                PrerequisiteTree?.CollectLock = value;
 
                 if (value == collectLock)
                     return;
@@ -63,7 +61,7 @@ namespace BisBuddy.Gear
             uint itemId,
             string itemName,
             GearpieceType gearpieceType,
-            IPrerequisiteNode? prerequisiteTree,
+            PrerequisiteNode? prerequisiteTree,
             MateriaGroup itemMateria,
             bool isCollected = false,
             bool collectLock = false
@@ -78,7 +76,7 @@ namespace BisBuddy.Gear
             this.collectLock = collectLock;
             ItemMateria = itemMateria;
 
-            if (PrerequisiteTree is IPrerequisiteNode node)
+            if (PrerequisiteTree is PrerequisiteNode node)
                 node.OnPrerequisiteChange += triggerGearpieceChange;
 
             ItemMateria.OnMateriaGroupChange += triggerGearpieceChange;
@@ -105,7 +103,7 @@ namespace BisBuddy.Gear
                     return ItemMateria.All(m => m.CollectionStatus == CollectionStatusType.ObtainedComplete)
                         ? CollectionStatusType.ObtainedComplete
                         : CollectionStatusType.ObtainedPartial;
-                if (PrerequisiteTree is not IPrerequisiteNode tree)
+                if (PrerequisiteTree is not PrerequisiteNode tree)
                     return CollectionStatusType.NotObtainable;
                 if (tree.CollectionStatus >= CollectionStatusType.Obtainable)
                     return CollectionStatusType.Obtainable;
@@ -160,12 +158,12 @@ namespace BisBuddy.Gear
 
             if (!IsCollected && PrerequisiteTree is not null)
             {
-                var prerequisiteRequirements = PrerequisiteTree.GetItemRequirements();
-                foreach (var requirement in prerequisiteRequirements)
-                    yield return new(
-                        requirement,
-                        parentGearset,
-                        this
+                foreach (var prereq in PrerequisiteTree.ActivePrerequisiteNodes)
+                    foreach (var req in prereq.GetItemRequirements())
+                        yield return new(
+                            req,
+                            parentGearset,
+                            this
                         );
             }
         }

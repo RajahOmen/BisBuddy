@@ -10,6 +10,7 @@ using Lumina.Excel;
 using Lumina.Excel.Sheets;
 using Lumina.Text.ReadOnly;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -163,269 +164,214 @@ namespace BisBuddy.Items
             return (itemRow.MateriaSlotCount, advancedCount);
         }
 
-        /// <summary>   
-        /// Extends the given PrerequisiteNode with new leaves at the node's direct child level according to current
-        /// data. Used on config loading to automatically add new prerequisite information that wasn't available when the gearset
-        /// was being added. Will never remove prerequisites, only add. It will also retain state for old nodes that already
-        /// exist in the tree.
-        /// </summary>
-        /// <param name="itemId">The id of the item to extend prerequisites for</param>
-        /// <param name="oldPrerequisiteNode">The old tree of prerequisites for this item</param>
-        /// <param name="isCollected">If the config has this node set as collected</param>
-        /// <param name="isManuallyCollected">If the config has this node set as manually collected</param>
-        /// <returns>The most up-to-date PrerequisiteNode. Could be the unmodified original if no changes were made</returns>
-        public IPrerequisiteNode? ExtendItemPrerequisites(uint itemId, IPrerequisiteNode? oldPrerequisiteNode, bool isCollected, bool isManuallyCollected)
+        public void ExtendItemPrerequisites(
+            PrerequisiteNode? oldPrerequisiteNode,
+            int maxDepth = 8
+            )
         {
+            if (oldPrerequisiteNode is not null)
+                logger.Verbose($"Explicitly called extend for node: {oldPrerequisiteNode.ItemName} ({oldPrerequisiteNode.NodeId})...");
+            extendPrerequisiteNode(oldPrerequisiteNode, depth: maxDepth);
+            return;
+        }
 
-            // retrieve what current data has for this item
-            var newPrerequisiteNode = BuildGearpiecePrerequisiteTree(itemId, isCollected, isManuallyCollected);
+        public PrerequisiteNode BuildGearpiecePrerequisiteTree(
+            uint itemId,
+            bool isCollected = false,
+            bool isManuallyCollected = false,
+            int maxDepth = 8
+            )
+        {
+            var itemNode = buildPrerequisites(
+                itemId,
+                isCollected: isCollected,
+                isManuallyCollected: isManuallyCollected,
+                parentItemIds: new HashSet<uint>(),
+                depth: maxDepth
+            );
+            return itemNode;
+        }
 
-            // didn't have anything previously, return whatever we have now
-            if (oldPrerequisiteNode == null)
-                return newPrerequisiteNode;
+        private PrerequisiteNode buildPrerequisites(uint itemId, bool isCollected, bool isManuallyCollected, IReadOnlySet<uint> parentItemIds, int depth = 8)
+        {
+            var itemNode = new PrerequisiteNode(
+                itemId: itemId,
+                itemName: GetItemNameById(itemId),
+                completePrerequisiteTree: null,
+                isCollected: isCollected,
+                collectLock: isManuallyCollected,
+                isMeldable: ItemIsMeldable(itemId)
+            );
+            extendPrerequisiteNode(
+                prerequisiteNode: itemNode,
+                depth: depth
+            );
+            return itemNode;
+        }
 
-            // somehow new data has no prerequisites, return what we had before
-            if (newPrerequisiteNode == null)
-                return oldPrerequisiteNode;
+        private void extendPrerequisiteNode(
+            PrerequisiteNode? prerequisiteNode,
+            int depth = 8
+        )
+        {
+            if (depth <= 0 || prerequisiteNode is null)
+                return;
 
-            // only want to add possibly-new alternatives, can only be when new is an OR node
-            if (newPrerequisiteNode is not PrerequisiteOrNode)
-                return oldPrerequisiteNode;
+            logger.Verbose($"Extending prerequisite node {prerequisiteNode.ItemName} ({prerequisiteNode.NodeId}) with max depth {depth}...\n{prerequisiteNode}");
 
-            // a new OR layer should be added
-            if (oldPrerequisiteNode is not PrerequisiteOrNode)
+            var nodesToPopulate = new List<(PrerequisiteNode node, HashSet<uint> parentItemIds, int depth)>() { (prerequisiteNode, [], 1) };
+            var maxIterations = 1000;
+            var i = 0;
+            while (nodesToPopulate.Count > 0 && i++ < maxIterations)
             {
-                // find node matching the old node in the new or node
-                var oldNodeIndex = newPrerequisiteNode
-                    .PrerequisiteTree
-                    .FindIndex(node =>
-                        node.GetType() == oldPrerequisiteNode.GetType()
-                        && sameItemRequirements(node, oldPrerequisiteNode)
-                    );
+                var (node, nodeParentIds, nodeDepth) = nodesToPopulate.First();
+                nodesToPopulate.RemoveAt(0);
+                var logPrefix = new string(' ', nodeDepth * 4);
+                var nodeParentIdsStr = string.Join(", ", nodeParentIds);
 
-                logger.Debug($"New alternative found for \"{itemId}\", added as new {nameof(PrerequisiteOrNode)} layer (idx: {oldNodeIndex})");
+                logger.Verbose($"{logPrefix[..^2]}============= depth = {nodeDepth}");
+                logger.Verbose($"{logPrefix}Finding children for node ({node.NodeId}):\n{node}");
 
-                // add to new node. If no index found, insert at start
-                if (oldNodeIndex >= 0)
-                    newPrerequisiteNode.ReplaceNode(oldNodeIndex, oldPrerequisiteNode);
-                else
-                    newPrerequisiteNode.InsertNode(0, oldPrerequisiteNode);
-
-                return newPrerequisiteNode;
-            }
-            else // compare OR contents, add any new contents to old OR node
-            {
-                foreach (var newChildNode in newPrerequisiteNode.PrerequisiteTree)
+                if (nodeDepth >= depth)
                 {
-                    var newChildNodeItemIds = newChildNode
-                        .GetItemRequirements(includeDisabledNodes: true)
-                        .Select(req => req.ItemId);
+                    logger.Verbose($"{logPrefix}Max depth reached: {nodeDepth} >= {depth}");
+                    continue;
+                }
 
-                    // add nodes that exist in new tree to old tree
-                    var existsInOldNode = ((PrerequisiteOrNode)oldPrerequisiteNode)
-                        .CompletePrerequisiteTree
-                        .Any(entry =>
-                            entry.Node.GetItemRequirements(includeDisabledNodes: true).Select(req => req.ItemId).SequenceEqual(newChildNodeItemIds)
-                            && entry.Node.GetType() == newChildNode.GetType()
+                // find prerequisite sources from gear coffers
+                var supplementalSources = ItemsCoffers[node.ItemId];
+                var supplementalNodes = new List<PrerequisiteNode>();
+                logger.Verbose($"{logPrefix}Searching through {supplementalSources.Count()} ({node.ItemId}) supplemental sources");
+                foreach (var (sourceItemId, sourceType) in supplementalSources)
+                {
+                    if (nodeParentIds.Contains(sourceItemId))
+                    {
+                        logger.Verbose($"{logPrefix}skipping {sourceItemId}, in [{nodeParentIdsStr}]");
+                        continue;
+                    }
+
+                    var supNode = new PrerequisiteNode(
+                        itemId: sourceItemId,
+                        itemName: GetItemNameById(sourceItemId),
+                        completePrerequisiteTree: null,
+                        isCollected: prerequisiteNode.IsCollected,
+                        collectLock: prerequisiteNode.CollectLock,
+                        isMeldable: ItemIsMeldable(sourceItemId)
+                    );
+                    logger.Verbose($"{logPrefix}Supplemental source {supNode.ItemName} ({supNode.ItemId})");
+
+                    supplementalNodes.Add(supNode);
+                }
+
+                // find prerequisite sources from NPC shops
+                var exchangeSources = ItemsPrerequisites[node.ItemId];
+                var exchangeCostLists = new List<List<PrerequisiteNode>>();
+                logger.Verbose($"{logPrefix}Searching through {exchangeSources.Count()} ({node.ItemId}) exchange sources");
+                foreach (var (shopCosts, sourceShopId) in exchangeSources)
+                {
+                    var shopCostsStr = string.Join(", ", shopCosts);
+                    if (nodeParentIds.IsSupersetOf(shopCosts) || shopCosts.Count == 0)
+                    {
+                        logger.Verbose($"{logPrefix}skipping [{shopCostsStr}], all in [{nodeParentIdsStr}]");
+                        continue;
+                    }
+
+                    var costNodes = new List<PrerequisiteNode>();
+                    logger.Verbose($"{logPrefix}Shop with costs ({shopCosts.Count}) [{shopCostsStr}]");
+                    foreach (var costItemId in shopCosts)
+                    {
+                        var costNode = new PrerequisiteNode(
+                            itemId: costItemId,
+                            itemName: GetItemNameById(costItemId),
+                            completePrerequisiteTree: null,
+                            isCollected: prerequisiteNode.IsCollected,
+                            collectLock: prerequisiteNode.CollectLock,
+                            isMeldable: ItemIsMeldable(costItemId)
                         );
-
-                    if (!existsInOldNode)
-                    {
-                        logger.Debug($"New alternative found for \"{itemId}\", added to existing {nameof(PrerequisiteOrNode)} layer");
-                        logger.Debug($"NEW: {string.Join(", ", newChildNodeItemIds)}");
-                        foreach (var node in ((PrerequisiteOrNode)oldPrerequisiteNode).CompletePrerequisiteTree)
-                        {
-                            logger.Debug($"OLD: {string.Join(", ", node.Node.GetItemRequirements(includeDisabledNodes: true).Select(r => r.ItemId))}");
-                        }
-                        oldPrerequisiteNode.AddNode(newChildNode);
+                        logger.Verbose($"{logPrefix}Supplemental source {costNode.ItemName} ({costNode.ItemId})");
+                        costNodes.Add(costNode);
                     }
-
+                    exchangeCostLists.Add(costNodes);
                 }
-                return oldPrerequisiteNode;
-            }
-        }
 
-        private static bool sameItemRequirements(IPrerequisiteNode node1, IPrerequisiteNode node2)
-        {
-            var items1 = node1.GetItemRequirements(includeDisabledNodes: true);
-            var items2 = node2.GetItemRequirements(includeDisabledNodes: true);
+                List<PrerequisiteAndGroup> newPrereqGroups = [];
 
-            return items1.Count() == items2.Count() && !items1.Except(items2).Any();
-        }
-
-        public IPrerequisiteNode? BuildGearpiecePrerequisiteTree(uint itemId, bool isCollected = false, bool isManuallyCollected = false)
-        {
-            var unitPrerequisiteGroup = buildPrerequisites(itemId, isCollected: isCollected, isManuallyCollected: isManuallyCollected);
-
-            if (unitPrerequisiteGroup.GetType() != typeof(PrerequisiteAtomNode))
-                throw new Exception($"Item id \"{itemId}\" returned non-unit prereqs group (\"{unitPrerequisiteGroup.GetType().Name}\")");
-
-            // Unit type prerequisite groups should only
-            if (unitPrerequisiteGroup.PrerequisiteTree.Count > 1)
-                throw new Exception($"Item id \"{itemId}\" returned unit prereqs with \"{unitPrerequisiteGroup.PrerequisiteTree.Count}\" prerequisites");
-
-            // no prereqs to unwrap to, don't want empty unit prereq group for gearpiece
-            if (unitPrerequisiteGroup.PrerequisiteTree.Count == 0)
-                return null;
-
-            // unwrap highest layer, the geapiece itself acts as the upper unit prereq group
-            return unitPrerequisiteGroup.PrerequisiteTree[0];
-        }
-
-        private IPrerequisiteNode buildPrerequisites(uint itemId, bool isCollected, bool isManuallyCollected, int depth = 8)
-        {
-            var itemName = GetItemNameById(itemId);
-            var group = new PrerequisiteAtomNode(itemId, itemName, [], PrerequisiteNodeSourceType.Item, isCollected, isManuallyCollected);
-
-            if (depth <= 0)
-                return group;
-
-            // build list of prerequisites from supplementals data
-            IPrerequisiteNode supplementalTree;
-            var supplementalPrereqs = ItemsCoffers[itemId];
-            var hasSupplementalPrereqs = supplementalPrereqs.Any();
-
-            if (supplementalPrereqs.Count() == 1)
-            {
-                supplementalTree = buildPrerequisites(supplementalPrereqs.First().ItemId, isCollected, isManuallyCollected, depth - 1);
-                supplementalTree.SourceType = PrerequisiteNodeSourceType.Loot;
-            }
-            else if (supplementalPrereqs.Count() > 1)
-            {
-                var prereqs = ItemsCoffers[itemId]
-                    .Select(entry => buildPrerequisites(entry.ItemId, isCollected, isManuallyCollected, depth - 1))
-                    .ToList();
-
-                supplementalTree = new PrerequisiteOrNode(
-                    itemId,
-                    itemName,
-                    prereqs,
-                    PrerequisiteNodeSourceType.Loot
-                    );
-            }
-            else
-            {
-                supplementalTree = new PrerequisiteOrNode(itemId, itemName, [], PrerequisiteNodeSourceType.Loot);
-            }
-
-            // build list of prerequisites from shops/exchanges data
-            IPrerequisiteNode exchangesTree;
-            var exchangesPrereqs = ItemsPrerequisites[itemId];
-            var hasExchangesPrereqs = exchangesPrereqs.Any();
-
-            // only exchangable at one shop listing
-            if (exchangesPrereqs.Count() == 1)
-            {
-                var shopCosts = exchangesPrereqs.First().ItemIds;
-
-                // shop only is requesting one item to exchange
-                if (shopCosts.Count == 1)
+                // build node to match prerequisites
+                logger.Verbose($"{logPrefix}{supplementalNodes.Count} supplemental nodes, {exchangeCostLists.Count} exchange cost lists");
+                foreach (var supNode in supplementalNodes)
                 {
-                    exchangesTree = buildPrerequisites(shopCosts.First(), isCollected, isManuallyCollected, depth - 1);
-                    exchangesTree.SourceType = PrerequisiteNodeSourceType.Shop;
+                    newPrereqGroups.Add(new PrerequisiteAndGroup(
+                        prerequisites: [supNode],
+                        sourceType: PrerequisiteNodeSourceType.Loot
+                    ));
                 }
-                else // shop is requesting more than one item to exchange
+
+                foreach (var exchangeCosts in exchangeCostLists)
                 {
-                    var prereqTree = shopCosts
-                        .Select(id => buildPrerequisites(id, isCollected, isManuallyCollected, depth - 1))
-                        .ToList();
-
-                    exchangesTree = new PrerequisiteAndNode(
-                        itemId,
-                        itemName,
-                        prereqTree,
-                        PrerequisiteNodeSourceType.Shop
-                        );
+                    newPrereqGroups.Add(new PrerequisiteAndGroup(
+                        prerequisites: exchangeCosts,
+                        sourceType: PrerequisiteNodeSourceType.Shop
+                    ));
                 }
 
-            }
-            else if (exchangesPrereqs.Count() > 1) // exchangable at more than 1 shop listing
-            {
-                // build OR list of ANDs. Ex: OR(AND(A, B, C), AND(D, E), ATOM())
-                var prereqs = exchangesPrereqs
-                    .Select(entries =>
+                if (newPrereqGroups.Count == 0)
+                {
+                    if (node.CompletePrerequisiteTree.Count > 0)
+                        logger.Verbose($"{logPrefix}Somehow, no new prerequisites but has {node.CompletePrerequisiteTree.Count} old, trying to extend old");
+                    else
+                        logger.Verbose($"{logPrefix}No prerequisites, not extending at all");
+                }
+                else
+                {
+                    if (node.CompletePrerequisiteTree.Count > 0)
                     {
-                        var shopCostIds = entries.ItemIds;
-                        // shop costs one items
-                        if (shopCostIds.Count == 1)
+                        logger.Verbose($"{logPrefix}Previous nodes in tree, have to extend logic");
+                        var prevTreeStr = string.Join(", ", node.CompletePrerequisiteTree.Select(g => $"{Enum.GetName(g.SourceType)}{g.Prerequisites.Count}"));
+                        var newTreeStr = string.Join(", ", newPrereqGroups.Select(g => $"{Enum.GetName(g.SourceType)}{g.Prerequisites.Count}"));
+                        logger.Verbose($"{logPrefix}Previous tree: [{prevTreeStr}] New Tree: [{newTreeStr}]");
+
+                        var oldGroups = node.CompletePrerequisiteTree;
+                        List<PrerequisiteAndGroup> oldNewGroups = [.. newPrereqGroups];
+
+                        foreach (var newGroup in oldNewGroups)
                         {
-                            var prereq = buildPrerequisites(shopCostIds.First(), isCollected, isManuallyCollected, depth - 1);
-                            prereq.SourceType = PrerequisiteNodeSourceType.Shop;
-                            return prereq;
+                            logger.Verbose($"{logPrefix}Checking old groups for match to new group:\n{newGroup}");
+                            if (oldGroups.Any(g => g.Equals(newGroup)))
+                            {
+                                logger.Verbose($"{logPrefix}Group found in old group, ignoring");
+                                newPrereqGroups.Remove(newGroup);
+                            }
+                            else
+                            {
+                                logger.Verbose($"{logPrefix}New group found, extending as new OR");
+                            }
                         }
+                    }
 
-                        // Shop costs multiple items
-                        return new PrerequisiteAndNode(
-                            itemId,
-                            itemName,
-                            shopCostIds.Select(id => buildPrerequisites(id, isCollected, isManuallyCollected, depth - 1)).ToList(),
-                            PrerequisiteNodeSourceType.Shop
-                            );
-                    }).ToList();
+                    logger.Verbose($"{logPrefix}adding {newPrereqGroups.Count} groups to prerequisite tree");
+                    foreach (var newGroup in newPrereqGroups)
+                    {
+                        logger.Verbose($"{logPrefix}Adding group to tree:\n{newGroup}");
 
-                exchangesTree = new PrerequisiteOrNode(
-                    itemId,
-                    itemName,
-                    prereqs,
-                    PrerequisiteNodeSourceType.Shop
-                    );
+                        node.AddGroup(newGroup);
+                    }
+                }
+
+                logger.Verbose($"{logPrefix}adding {node.CompletePrerequisiteNodes.Count()} prereq nodes to populate list");
+                foreach (var prereq in node.CompletePrerequisiteNodes)
+                {
+                    nodesToPopulate.Add((prereq, [.. nodeParentIds, node.ItemId], nodeDepth + 1));
+                }
             }
+
+
+            if (i >= maxIterations)
+                logger.Warning($"Warning: extend prerequisite for item {prerequisiteNode.ItemName} hit max iterations, this shouldn't happen");
             else
-            {
-                exchangesTree = new PrerequisiteOrNode(itemId, itemName, [], PrerequisiteNodeSourceType.Shop);
-            }
+                logger.Verbose($"Extend complete after {i} loops");
 
-            // build resulting group
-            if (
-                hasSupplementalPrereqs
-                && hasExchangesPrereqs
-                )
-            {
-
-                // try to compact the tree, if possible
-                var compositeTree = new List<IPrerequisiteNode>();
-                if (supplementalTree is PrerequisiteOrNode)
-                    foreach (var suppPrereq in supplementalTree.PrerequisiteTree)
-                    {
-                        suppPrereq.SourceType = supplementalTree.SourceType;
-                        compositeTree.Add(suppPrereq);
-                    }
-                else
-                    compositeTree.Add(supplementalTree);
-
-                if (exchangesTree is PrerequisiteOrNode)
-                    foreach (var excPrereq in exchangesTree.PrerequisiteTree)
-                    {
-                        excPrereq.SourceType = exchangesTree.SourceType;
-                        compositeTree.Add(excPrereq);
-                    }
-                else
-                    compositeTree.Add(exchangesTree);
-
-                // exchangesTree of both shop/exchange sources and supplemental sources
-                var compoundGroup = new PrerequisiteOrNode(
-                    itemId,
-                    itemName,
-                    compositeTree,
-                    PrerequisiteNodeSourceType.Compound
-                    );
-
-                group.PrerequisiteTree = [compoundGroup];
-            }
-            else if (hasSupplementalPrereqs)
-            {
-                // only from supplementals
-                group.PrerequisiteTree = [supplementalTree];
-            }
-            else if (hasExchangesPrereqs)
-            {
-                var exchangeNames = exchangesPrereqs.SelectMany(prereqs => prereqs.ItemIds).Select(GetItemNameById);
-                var prereqNames = exchangesTree.PrerequisiteTree.SelectMany(prereq => prereq.PrerequisiteTree).Select(p => p.ItemName);
-                // only from shops/exchanges
-                group.PrerequisiteTree = [exchangesTree];
-            }
-
-            return group;
+            logger.Debug($"Extended node result:\n{prerequisiteNode}");
+            return;
         }
 
         public MateriaDetails GetMateriaInfo(uint materiaItemId)
