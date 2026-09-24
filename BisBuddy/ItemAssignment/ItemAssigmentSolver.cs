@@ -327,7 +327,7 @@ namespace BisBuddy.ItemAssignment
                         prerequisiteCandidateItems.FirstOrDefault(item => ReferenceEquals(item.Item, i))
                     );
                     candidateItemList.AddRange(oldItemWithGearsets);
-                    logger.Verbose($"assigning item idx {itemIdx} to group idx {bestGroupIdx}");
+                    logger.Verbose($"assigning item idx {itemIdx} to group idx {bestGroupIdx} ({itemToAssign.ItemId} => {prerequisiteGroups[bestGroupIdx].ItemId} ({prerequisiteGroups[bestGroupIdx].Gearpieces[0].ItemName}))");
                 }
             }
             while (loopCount++ < maxLoops);
@@ -399,7 +399,7 @@ namespace BisBuddy.ItemAssignment
                         continue;
 
                     // has no prerequisites to potentially assign
-                    if (gearpiece.PrerequisiteTree?.CompletePrerequisiteNodes.Any() != true)
+                    if (gearpiece.PrerequisiteTree?.HasPrerequisites != true)
                         continue;
 
                     // already assigned in gearpiece assignment solution, don't add this to any group

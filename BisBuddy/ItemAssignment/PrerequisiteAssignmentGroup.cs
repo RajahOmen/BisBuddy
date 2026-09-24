@@ -87,7 +87,7 @@ namespace BisBuddy.ItemAssignment
             if (Gearpieces.Count == 0)
                 return [];
 
-            List<InventoryItem> shadowedAssignments = [];
+            HashSet<InventoryItem> shadowedAssignments = [];
 
             foreach (var gearpiece in Gearpieces)
             {
@@ -121,14 +121,16 @@ namespace BisBuddy.ItemAssignment
                     .Except(childAssignments)
                     .ToHashSet();
 
-                shadowedAssignments.AddRange(childAssignments.Select(assign => assign.Item));
+
+                foreach (var childAssignment in childAssignments)
+                    shadowedAssignments.Add(childAssignment.Item);
             }
 
             // remake needed dictionary after item assignment(s)
             neededItemIds.Clear();
             Gearpieces.ForEach(gearpiece => gearpiece.PrerequisiteTree?.AddNeededItemIds(neededItemIds));
 
-            return shadowedAssignments;
+            return shadowedAssignments.ToList();
         }
 
         public bool AddMatchingGearpiece(Gearpiece gearpiece, Gearset gearset)

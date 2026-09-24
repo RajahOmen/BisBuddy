@@ -27,6 +27,8 @@ namespace BisBuddy.Gear.Prerequisites
         private bool collectLock = false;
         private bool isCollected = false;
 
+        public bool HasPrerequisites => CompletePrerequisiteNodes.Any();
+
         public bool IsCollected
         {
             get => isCollected;
@@ -89,6 +91,15 @@ namespace BisBuddy.Gear.Prerequisites
         }
         public void SetIsCollectedLocked(bool toCollect)
         {
+            foreach (var prereq in CompletePrerequisiteNodes)
+            {
+                prereq.SetIsCollectedLocked(toCollect);
+            }
+            foreach (var group in CompletePrerequisiteTree)
+            {
+                group.ParentCollected = toCollect;
+            }
+
             if (IsCollected == toCollect && CollectLock)
                 return;
 
@@ -96,14 +107,7 @@ namespace BisBuddy.Gear.Prerequisites
                 CollectLock = true;
 
             isCollected = toCollect;
-            foreach (var group in CompletePrerequisiteTree)
-            {
-                group.ParentCollected = toCollect;
-            }
-            foreach (var prereq in CompletePrerequisiteNodes)
-            {
-                prereq.SetIsCollectedLocked(toCollect);
-            }
+
             triggerPrerequisiteChange();
         }
         public HashSet<string> ChildNodeIds => [
@@ -360,6 +364,14 @@ namespace BisBuddy.Gear.Prerequisites
             }
 
             return null;
+        }
+
+        public int MaxUncollectedDepth(int depth = 0)
+        {
+            if (IsCollected || !HasPrerequisites)
+                return depth;
+
+            return CompletePrerequisiteNodes.Max(p => p.MaxUncollectedDepth(depth + 1));
         }
 
         public List<uint> CollectLockItemIds()

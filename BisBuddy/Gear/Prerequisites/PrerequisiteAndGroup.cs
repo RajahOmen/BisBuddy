@@ -79,6 +79,7 @@ namespace BisBuddy.Gear.Prerequisites
         {
             return Prerequisites
                 .OrderBy(p => p.CollectionStatus)
+                .ThenBy(p => p.MaxUncollectedDepth())
                 .ThenBy(p => p.ItemId)
                 .GroupBy(p => $"{p.ItemId} | {p.CollectionStatus} | {p.CollectLock}")
                 .Select(g => (g.First(), g.Count()))

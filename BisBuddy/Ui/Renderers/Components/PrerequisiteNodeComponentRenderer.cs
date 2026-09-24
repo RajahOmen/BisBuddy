@@ -94,7 +94,7 @@ public class PrerequisiteNodeComponentRenderer(
                 parentCount: parentCount
             );
             var lastGroupNode = prerequisiteTree[0].Groups[^1].Node;
-            return lastGroupNode.IsCollected || !lastGroupNode.CompletePrerequisiteNodes.Any();
+            return lastGroupNode.IsCollected || !lastGroupNode.HasPrerequisites;
         }
         else
         {
@@ -152,7 +152,7 @@ public class PrerequisiteNodeComponentRenderer(
                             parentCount: parentCount
                         );
                         var lastGroupNode = prereqGroup.Groups[^1].Node;
-                        lastWasCollected = lastGroupNode.IsCollected && lastGroupNode.CompletePrerequisiteNodes.Any();
+                        lastWasCollected = lastGroupNode.IsCollected || !lastGroupNode.HasPrerequisites;
                     }
                     catch (Exception ex)
                     {
@@ -259,10 +259,10 @@ public class PrerequisiteNodeComponentRenderer(
             var lineStartLoc = ImGui.GetCursorScreenPos() + new Vector2(10, - (ImGui.GetStyle().ItemSpacing.Y / 2));
             var halfButtonHeight = ImGui.GetTextLineHeightWithSpacing() * ButtonHeightMultiplier / 2;
 
-            var lastCollected = false;
+            var lastCollectedOrLeaf = false;
             using (ImRaii.PushIndent(25.0f, scaled: false))
             {
-                lastCollected = drawPrerequisiteTree(
+                lastCollectedOrLeaf = drawPrerequisiteTree(
                     node: node,
                     actions: actions,
                     parentCount: parentCount
@@ -270,7 +270,7 @@ public class PrerequisiteNodeComponentRenderer(
             }
 
             var lineHeight = ImGui.GetCursorScreenPos().Y - lineStartLoc.Y - ImGui.GetStyle().ItemSpacing.Y - halfButtonHeight;
-            var lineWidth = lastCollected ? 10 : 25;
+            var lineWidth = lastCollectedOrLeaf ? 10 : 25;
             drawList.AddLine(lineStartLoc, lineStartLoc + new Vector2(0, lineHeight), col, 2);
             drawList.AddLine(lineStartLoc + new Vector2(0, lineHeight), lineStartLoc + new Vector2(lineWidth, lineHeight), col, 2);
         }
