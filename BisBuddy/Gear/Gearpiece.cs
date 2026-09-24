@@ -1,6 +1,7 @@
 using BisBuddy.Gear.Melds;
 using BisBuddy.Gear.Prerequisites;
 using BisBuddy.Services;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -157,12 +158,12 @@ namespace BisBuddy.Gear
 
             if (!IsCollected && PrerequisiteTree is not null)
             {
-                var prerequisiteRequirements = PrerequisiteTree.GetItemRequirements();
-                foreach (var requirement in prerequisiteRequirements)
-                    yield return new(
-                        requirement,
-                        parentGearset,
-                        this
+                foreach (var prereq in PrerequisiteTree.ActivePrerequisiteNodes)
+                    foreach (var req in prereq.GetItemRequirements())
+                        yield return new(
+                            req,
+                            parentGearset,
+                            this
                         );
             }
         }

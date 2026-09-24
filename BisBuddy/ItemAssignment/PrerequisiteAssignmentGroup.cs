@@ -62,7 +62,7 @@ namespace BisBuddy.ItemAssignment
             ItemId = gearpiece.ItemId;
             Gearpieces = [gearpiece];
             Gearsets = [gearset];
-            MateriaList = new List<Materia>(gearpiece.ItemMateria);
+            MateriaList = [.. gearpiece.ItemMateria];
             minGearpieceIdx = gearpieceIdx;
             StrictMateriaMatching = strictMateriaMatching;
 
@@ -91,12 +91,12 @@ namespace BisBuddy.ItemAssignment
 
             foreach (var gearpiece in Gearpieces)
             {
-                if (gearpiece.PrerequisiteTree == null)
+                if (gearpiece.PrerequisiteTree is null)
                     continue;
 
                 var nodeAssigned = gearpiece.PrerequisiteTree.AssignItemId(item.ItemId);
 
-                if (nodeAssigned == null)
+                if (nodeAssigned is null)
                     continue;
 
                 if (assignPrerequisiteMateria && itemData.ItemIsMeldable(item.ItemId))
@@ -161,7 +161,7 @@ namespace BisBuddy.ItemAssignment
 
             // gearpiece has MORE Materia required than on current group, overwrite
             if (gearpiece.ItemMateria.Count > MateriaList.Count)
-                MateriaList = new List<Materia>(gearpiece.ItemMateria);
+                MateriaList = [.. gearpiece.ItemMateria];
 
             return true;
         }

@@ -6,48 +6,20 @@ namespace BisBuddy.Gear.Prerequisites
 {
     public delegate void PrerequisiteChangeHandler();
 
-    public interface IPrerequisiteNode : ICollectableItem
-    {
-        public string NodeId { get; }
-        public uint ItemId { get; set; }
-        public string ItemName { get; set; }
-        public IReadOnlyList<PrerequisiteNode> PrerequisiteTree { get; }
-        public HashSet<string> ChildNodeIds { get; }
-        public PrerequisiteNodeSourceType SourceType { get; set; }
-
-        public event PrerequisiteChangeHandler? OnPrerequisiteChange;
-        public IEnumerable<ItemRequirement> GetItemRequirements(bool includeDisabledNodes = false);
-        public void AddNode(PrerequisiteNode newNode);
-        public void ReplaceNode(int index, PrerequisiteNode newNode);
-        public void InsertNode(int index, PrerequisiteNode newNode);
-        public int MinRemainingItems(uint? newItemId = null);
-        public void AddNeededItemIds(Dictionary<uint, (int MinDepth, int Count)> neededCounts, int startDepth = 0);
-        public PrerequisiteNode? AssignItemId(uint itemId);
-        public List<uint> CollectLockItemIds();
-        public int PrerequisiteCount();
-        public HashSet<string> MeldableItemNames();
-        public string GroupKey();
-    }
-
     public class PrerequisiteNode
     {
-        private readonly List<(PrerequisiteNode Node, bool IsActive)> completePrerequisiteTree;
-        private List<PrerequisiteNode> activePrerequisiteTree;
+        private readonly List<PrerequisiteAndGroup> completePrerequisiteTree;
+        private List<PrerequisiteAndGroup> activePrerequisiteTree;
 
         public string NodeId { get; init; }
         public uint ItemId { get; set; }
         public string ItemName { get; set; }
         public bool IsMeldable { get; set; } = false;
-        public ChildGroupType GroupType {
-            get => completePrerequisiteTree.Count > 0 ? field : ChildGroupType.Unit;
-            set;
-        }
-        public PrerequisiteNodeSourceType SourceType { get; set; }
-        public IReadOnlyList<PrerequisiteNode> PrerequisiteTree
+        public IReadOnlyList<PrerequisiteAndGroup> ActivePrerequisiteTree
         {
             get => activePrerequisiteTree;
         }
-        public IReadOnlyList<(PrerequisiteNode Node, bool IsActive)> CompletePrerequisiteTree
+        public IReadOnlyList<PrerequisiteAndGroup> CompletePrerequisiteTree
         {
             get => completePrerequisiteTree;
         }
@@ -57,20 +29,22 @@ namespace BisBuddy.Gear.Prerequisites
 
         public bool IsCollected
         {
-            get => isCollected || GroupType switch
-            {
-                ChildGroupType.Or => PrerequisiteTree.Any(p => p.IsCollected),
-                ChildGroupType.And => PrerequisiteTree.All(p => p.IsCollected),
-                _ => false,
-            };
+            get => isCollected;
             set
             {
-                foreach (var (prereq, _) in completePrerequisiteTree)
-                    if (!prereq.CollectLock)
-                        prereq.IsCollected = value;
+                foreach (var group in CompletePrerequisiteTree)
+                {
+                    foreach (var prereq in group)
+                        if (!prereq.CollectLock)
+                            prereq.IsCollected = value;
+                    group.ParentCollected = value;
+                }
+
+                if (isCollected == value)
+                    return;
 
                 if (CollectLock)
-                    throw new InvalidOperationException($"Cannot {(value ? "collect" : "uncollect")} {Enum.GetName(GroupType)} prereq {ItemId}, is locked.");
+                    throw new InvalidOperationException($"Cannot {(value ? "collect" : "uncollect")} prereq {ItemId}, is locked.");
 
                 isCollected = value;
 
@@ -83,31 +57,28 @@ namespace BisBuddy.Gear.Prerequisites
 
         public bool CollectLock
         {
-            get 
+            get
             {
                 if (collectLock)
                     return true;
 
-                switch (GroupType)
+                if (ActivePrerequisiteTree.Count == 0)
+                    return false;
+
+                foreach (var group in ActivePrerequisiteTree)
                 {
-                    case ChildGroupType.Or:
-                        foreach (var p in PrerequisiteTree)
-                        {
-                            if (!p.CollectLock)
-                                return false;
-                            if (p.IsCollected)
-                                return true;
-                        }
-                        return true;
-                    case ChildGroupType.And:
-                    default:
-                        return PrerequisiteTree.Any(p => p.CollectLock);
+                    // one group entirely unlocked, possible to change IsCollected by only modifying this group
+                    if (group.All(n => !n.CollectLock))
+                        return false;
                 }
+                return true;
             }
             set
             {
-                foreach (var (prereq, _) in completePrerequisiteTree)
+                foreach (var prereq in CompletePrerequisiteNodes)
+                {
                     prereq.CollectLock = value;
+                }
 
                 if (value == collectLock)
                     return;
@@ -125,11 +96,21 @@ namespace BisBuddy.Gear.Prerequisites
                 CollectLock = true;
 
             isCollected = toCollect;
-            foreach (var prereq in PrerequisiteTree)
+            foreach (var group in CompletePrerequisiteTree)
+            {
+                group.ParentCollected = toCollect;
+            }
+            foreach (var prereq in CompletePrerequisiteNodes)
+            {
                 prereq.SetIsCollectedLocked(toCollect);
+            }
             triggerPrerequisiteChange();
         }
-        public HashSet<string> ChildNodeIds => [.. PrerequisiteTree.Select(p => p.NodeId), .. PrerequisiteTree.SelectMany(p => p.ChildNodeIds)];
+        public HashSet<string> ChildNodeIds => [
+            .. ActivePrerequisiteTree
+                .SelectMany(p => p)
+                .SelectMany(n => new HashSet<string>(n.ChildNodeIds) { n.NodeId })
+        ];
         public CollectionStatusType CollectionStatus
         {
             get
@@ -137,28 +118,18 @@ namespace BisBuddy.Gear.Prerequisites
                 if (IsCollected)
                     return CollectionStatusType.ObtainedComplete;
 
-                if (PrerequisiteTree.Count == 0)
+                if (ActivePrerequisiteTree.Count == 0)
                     return CollectionStatusType.NotObtainable;
 
-                var (obtainable, anyPartial) = GroupType switch
+                var anyPartial = false;
+                foreach (var group in ActivePrerequisiteTree)
                 {
-                    ChildGroupType.Or => PrerequisiteTree
-                        .Select(p => p.CollectionStatus)
-                        .Aggregate((AnyObtainable: false, AnyPartial: false), (acc, status) => (
-                            acc.AnyObtainable || status >= CollectionStatusType.Obtainable,
-                            acc.AnyPartial || status >= CollectionStatusType.NotObtainablePartial
-                        )),
-                    ChildGroupType.And => PrerequisiteTree
-                        .Select(p => p.CollectionStatus)
-                        .Aggregate((AllObtainable: true, AnyPartial: false), (acc, status) => (
-                            acc.AllObtainable && status >= CollectionStatusType.Obtainable,
-                            acc.AnyPartial || status >= CollectionStatusType.NotObtainablePartial
-                        )),
-                    _ => (false, false)
-                };
+                    var groupStatus = group.CollectionStatus;
+                    if (groupStatus >= CollectionStatusType.Obtainable)
+                        return CollectionStatusType.Obtainable;
+                    anyPartial |= groupStatus >= CollectionStatusType.NotObtainablePartial;
+                }
 
-                if (obtainable)
-                    return CollectionStatusType.Obtainable;
                 if (anyPartial)
                     return CollectionStatusType.NotObtainablePartial;
                 return CollectionStatusType.NotObtainable;
@@ -168,41 +139,39 @@ namespace BisBuddy.Gear.Prerequisites
         public PrerequisiteNode(
             uint itemId,
             string itemName,
-            List<PrerequisiteNode>? prerequisiteTree,
-            ChildGroupType groupType,
-            PrerequisiteNodeSourceType sourceType,
+            List<PrerequisiteAndGroup>? completePrerequisiteTree,
             bool isCollected = false,
             bool collectLock = false,
             bool isMeldable = false,
-            string? nodeId = null,
-            bool isActive = true,
-            List<int>? disabledPrereqs = null
+            string? nodeId = null
             )
         {
             NodeId = nodeId ?? Guid.NewGuid().ToString();
             ItemId = itemId;
             ItemName = itemName;
-            SourceType = sourceType;
             IsMeldable = isMeldable;
             this.isCollected = isCollected;
             this.collectLock = collectLock;
 
-            var newTree = prerequisiteTree ?? [];
-            var newDisabled = disabledPrereqs ?? [];
-            this.completePrerequisiteTree = newTree
-                .Select((node, idx) => (node, !newDisabled.Contains(idx)))
-                .ToList();
-            this.activePrerequisiteTree = completePrerequisiteTree
-                .Where(entry => entry.IsActive)
-                .Select(entry => entry.Node)
-                .ToList();
-            GroupType = groupType;
+            var newTree = completePrerequisiteTree ?? [];
+            this.completePrerequisiteTree = newTree;
+            this.activePrerequisiteTree = getActivePrerequisites();
 
-            foreach (var (prereq, _) in this.completePrerequisiteTree)
-                prereq.OnPrerequisiteChange += handlePrereqChange;
+            foreach (var group in CompletePrerequisiteTree)
+            {
+                group.ParentCollected = isCollected;
+                foreach (var prereq in group)
+                {
+                    prereq.OnPrerequisiteChange += handlePrereqChange;
+                }
+            }
         }
 
         public event PrerequisiteChangeHandler? OnPrerequisiteChange;
+
+
+        private List<PrerequisiteAndGroup> getActivePrerequisites() =>
+            [.. completePrerequisiteTree.Where(g => g.IsActive)];
 
         public IEnumerable<ItemRequirement> GetItemRequirements(bool includeDisabledNodes = false)
         {
@@ -215,37 +184,53 @@ namespace BisBuddy.Gear.Prerequisites
 
             if (includeDisabledNodes)
             {
-                foreach (var (prereq, _) in CompletePrerequisiteTree)
+                foreach (var prereq in CompletePrerequisiteNodes)
                     foreach (var requirement in prereq.GetItemRequirements(includeDisabledNodes))
                         yield return requirement;
             }
             else
             {
-                foreach (var prereq in PrerequisiteTree)
+                foreach (var prereq in ActivePrerequisiteNodes)
                     foreach (var requirement in prereq.GetItemRequirements(includeDisabledNodes))
                         yield return requirement;
             }
         }
 
-        public void SetPrerequisiteActiveStatus(PrerequisiteNode prereq, bool isActive)
+        public IEnumerable<PrerequisiteNode> CompletePrerequisiteNodes
         {
-            var matches = completePrerequisiteTree.Index().Where(entry => entry.Item.Node == prereq);
-            if (!matches.Any())
-                throw new ArgumentException("Prerequisite node not found in this OR group", prereq.ItemName);
+            get
+            {
+                foreach (var group in completePrerequisiteTree)
+                    foreach (var node in group)
+                        yield return node;
+            }
+        }
 
-            if (matches.Count() > 1)
-                throw new InvalidOperationException($"Multiple matching prerequisite nodes found in this OR group (\"{prereq.ItemName}\")");
+        public IEnumerable<PrerequisiteNode> ActivePrerequisiteNodes
+        {
+            get
+            {
+                foreach (var group in activePrerequisiteTree)
+                    foreach (var node in group)
+                        yield return node;
+            }
+        }
 
-            var (idx, completeNode) = matches.First();
-            var oldIsActive = completeNode.IsActive;
-            if (isActive == oldIsActive)
+        public void SetPrerequisiteGroupActiveStatus(int groupIdx, bool isActive)
+        {
+            ArgumentOutOfRangeException.ThrowIfNegative(groupIdx, nameof(groupIdx));
+            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(groupIdx, CompletePrerequisiteTree.Count, nameof(groupIdx));
+
+            var group = CompletePrerequisiteTree[groupIdx];
+            if (CompletePrerequisiteTree[groupIdx].IsActive == isActive)
                 return;
 
-            completePrerequisiteTree[idx] = (completeNode.Node, isActive);
-            activePrerequisiteTree = completePrerequisiteTree
-                .Where(entry => entry.IsActive)
-                .Select(entry => entry.Node)
-                .ToList();
+            if (!isActive)
+                activePrerequisiteTree.Remove(group);
+            else
+                activePrerequisiteTree.Add(group);
+
+            group.IsActive = isActive;
 
             triggerPrerequisiteChange();
         }
@@ -253,65 +238,47 @@ namespace BisBuddy.Gear.Prerequisites
         private void handlePrereqChange() =>
             triggerPrerequisiteChange();
 
-        public void AddNode(PrerequisiteNode node) =>
-            InsertNode(PrerequisiteTree.Count, node);
-
         public void RemoveAllNodes()
         {
-            foreach (var (node, isActive) in completePrerequisiteTree)
+            foreach (var prereq in CompletePrerequisiteNodes)
             {
-                node.OnPrerequisiteChange -= OnPrerequisiteChange;
+                prereq.OnPrerequisiteChange -= OnPrerequisiteChange;
             }
             completePrerequisiteTree.Clear();
             activePrerequisiteTree.Clear();
         }
 
-        public void ReplaceNode(int index, PrerequisiteNode newNode)
+        public void ReplaceGroup(int groupIdx, PrerequisiteAndGroup newGroup)
         {
-            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(index, PrerequisiteTree.Count);
+            ArgumentOutOfRangeException.ThrowIfNegative(groupIdx, nameof(groupIdx));
+            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(groupIdx, completePrerequisiteTree.Count, nameof(groupIdx));
 
-            var oldNode = PrerequisiteTree[index];
+            var oldGroup = completePrerequisiteTree[groupIdx];
 
-            var matches = completePrerequisiteTree.Index().Where(entry => entry.Item.Node == oldNode);
-            if (!matches.Any() || matches.Count() > 1)
-                throw new InvalidOperationException($"Invalid match count {matches.Count()} for replacing node");
+            foreach (var node in newGroup)
+                node.OnPrerequisiteChange += handlePrereqChange;
 
-            var (completeIdx, completeNode) = matches.First();
+            foreach (var node in oldGroup)
+                node.OnPrerequisiteChange -= handlePrereqChange;
 
-            activePrerequisiteTree[index] = newNode;
-
-            completePrerequisiteTree.Add((newNode, completeNode.IsActive));
-            completePrerequisiteTree.Remove((oldNode, completeNode.IsActive));
-
-            oldNode.OnPrerequisiteChange -= handlePrereqChange;
-            newNode.OnPrerequisiteChange += handlePrereqChange;
+            completePrerequisiteTree[groupIdx] = newGroup;
+            activePrerequisiteTree = getActivePrerequisites();
         }
 
-        public void InsertNode(int index, PrerequisiteNode node)
+        public void InsertGroup(int groupIdx, PrerequisiteAndGroup newGroup)
         {
-            ArgumentOutOfRangeException.ThrowIfGreaterThan(index, PrerequisiteTree.Count);
+            ArgumentOutOfRangeException.ThrowIfNegative(groupIdx, nameof(groupIdx));
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(groupIdx, completePrerequisiteTree.Count, nameof(groupIdx));
 
-            int completeIdx;
-            if (index < PrerequisiteTree.Count)
-            {
-                var prevNodeAtIdx = activePrerequisiteTree[index];
-                completeIdx = completePrerequisiteTree
-                    .Index()
-                    .Where(entry => entry.Item.Node == prevNodeAtIdx)
-                    .Select(entry => entry.Index)
-                    .First();
-            }
-            else
-            {
-                completeIdx = completePrerequisiteTree.Count;
-            }
+            foreach (var node in newGroup)
+                node.OnPrerequisiteChange += handlePrereqChange;
 
-
-            activePrerequisiteTree.Insert(index, node);
-            completePrerequisiteTree.Insert(completeIdx, (node, true));
-
-            node.OnPrerequisiteChange += handlePrereqChange;
+            completePrerequisiteTree.Insert(groupIdx, newGroup);
+            activePrerequisiteTree = getActivePrerequisites();
         }
+
+        public void AddGroup(PrerequisiteAndGroup newGroup) =>
+            InsertGroup(completePrerequisiteTree.Count, newGroup);
 
         public int MinRemainingItems(uint? newItemId = null)
         {
@@ -323,39 +290,35 @@ namespace BisBuddy.Gear.Prerequisites
             if (newItemId == ItemId)
                 return 0;
 
-            if (PrerequisiteTree.Count == 0)
+            if (ActivePrerequisiteTree.Count == 0)
                 return 1;
 
-            switch (GroupType)
+            foreach (var group in ActivePrerequisiteTree)
             {
-                case ChildGroupType.Or:
-                    // only need one, pick min needed
-                    remainingItems = PrerequisiteTree.Min(p => p.MinRemainingItems(newItemId) as int?) ?? 0;
-                    break;
-                case ChildGroupType.And:
-                    // is new item still available to use for this loop
-                    var itemAvailable = newItemId != null;
-                    foreach (var prereq in PrerequisiteTree)
+                var itemAvailable = newItemId != null;
+                var groupRemainingItems = 0;
+                foreach (var prereq in group)
+                {
+                    // calculate how many items remaining with no item provided
+                    var minNoItem = prereq.MinRemainingItems();
+                    if (!itemAvailable)
                     {
-                        // calculate how many items remaining with no item provided
-                        var minNoItem = prereq.MinRemainingItems();
-                        if (!itemAvailable)
-                        {
-                            remainingItems += minNoItem;
-                            continue;
-                        }
-
-                        // calculate how many items remaining with provided item
-                        var minWithItem = prereq.MinRemainingItems(newItemId);
-                        if (minNoItem != minWithItem)
-                            // if not equal, then must be able to use this item for this prereq
-                            // and no longer be able to be used for future prereqs in node
-                            itemAvailable = false;
-
-                        remainingItems += minWithItem;
+                        groupRemainingItems += minNoItem;
+                        continue;
                     }
-                    break;
+
+                    // calculate how many items remaining with provided item
+                    var minWithItem = prereq.MinRemainingItems(newItemId);
+                    if (minNoItem != minWithItem)
+                        // if not equal, then must be able to use this item for this prereq
+                        // and no longer be able to be used for future prereqs in node
+                        itemAvailable = false;
+
+                    groupRemainingItems += minWithItem;
+                }
+                remainingItems = Math.Min(groupRemainingItems, remainingItems);
             }
+
             return remainingItems;
         }
 
@@ -369,13 +332,13 @@ namespace BisBuddy.Gear.Prerequisites
             else
                 neededCounts[ItemId] = (startDepth, 1);
 
-            foreach (var prereq in PrerequisiteTree)
+            foreach (var prereq in CompletePrerequisiteNodes)
                 prereq.AddNeededItemIds(neededCounts, startDepth + 1);
         }
 
         public int PrerequisiteCount()
         {
-            return 1 + PrerequisiteTree.Sum(p => p.PrerequisiteCount());
+            return 1 + ActivePrerequisiteTree.SelectMany(g => g).Sum(p => p.PrerequisiteCount());
         }
 
         public PrerequisiteNode? AssignItemId(uint itemId)
@@ -389,10 +352,10 @@ namespace BisBuddy.Gear.Prerequisites
                 return this;
             }
 
-            foreach (var prereq in PrerequisiteTree)
+            foreach (var prereq in CompletePrerequisiteNodes)
             {
                 var assignResult = prereq.AssignItemId(itemId);
-                if (assignResult != null)
+                if (assignResult is not null)
                     return assignResult;
             }
 
@@ -404,14 +367,16 @@ namespace BisBuddy.Gear.Prerequisites
             if (CollectLock)
                 return [ItemId];
 
-            return PrerequisiteTree
+            return ActivePrerequisiteTree
+                .SelectMany(g => g)
                 .SelectMany(p => p.CollectLockItemIds())
                 .ToList();
         }
 
         public HashSet<string> MeldableItemNames()
         {
-            var prereqNames = PrerequisiteTree
+            var prereqNames = ActivePrerequisiteTree
+                .SelectMany(g => g)
                 .SelectMany(p => p.MeldableItemNames())
                 .ToHashSet();
 
@@ -422,39 +387,30 @@ namespace BisBuddy.Gear.Prerequisites
         }
 
 
-        public List<(PrerequisiteNode Node, int Count)> Groups()
-        {
-            return PrerequisiteTree
-                .GroupBy(p => p.GroupKey())
-                .Select(g => (g.First(), g.Count()))
-                .OrderBy(g => g.Item1.CollectionStatus)
-                .ToList();
-        }
-
-
-        public string GroupKey()
-        {
-            return $"""
-                {Enum.GetName(GroupType)} {ItemId} {IsCollected} {CollectLock} {SourceType}
-                {string.Join(" ", PrerequisiteTree.Select(p => p.GroupKey()))}
-                """;
-        }
-
         public override string ToString()
         {
-            var childrenStr = PrerequisiteTree.Count > 0
-                ? (
-                    $" [{PrerequisiteTree.Count}] =>\n    " +
+            var childrenStr = "";
+            if (CompletePrerequisiteTree.Count > 0)
+            {
+                childrenStr = (
+                    $" [{CompletePrerequisiteTree.Count}] =>\n  OR " +
                     string.Join(
-                        "\n    ",
-                        CompletePrerequisiteTree.Select(p =>
-                            $"{p.Node.ToString().Replace("\n", "\n    ")}" +
-                            $"{(p.IsActive ? "" : "[Inactive]")}"
-                        )
+                        "\n  OR ",
+                        CompletePrerequisiteTree.Select(g => g.ToString().Replace("\n", "\n  "))
                     )
-                ) : "";
+                );
+            }
             var collectLockStr = CollectLock ? " (L)" : "";
-            return $"[{ItemName} ({ItemId})] [{Enum.GetName(GroupType)}] [{Enum.GetName(SourceType)}] [{Enum.GetName(CollectionStatus)}{collectLockStr}] [{NodeId[..10]}..]{childrenStr}";
+            return $"[{ItemName} ({ItemId})] [{Enum.GetName(CollectionStatus)}{collectLockStr}] [{(IsCollected ? "C" : "U")}] [{NodeId[..10]}..]{childrenStr}";
         }
+
+        public PrerequisiteNode Clone() => new(
+            itemId: ItemId,
+            itemName: ItemName,
+            completePrerequisiteTree: [.. completePrerequisiteTree.Select(g => g.Clone())],
+            isCollected: isCollected,
+            collectLock: collectLock,
+            isMeldable: IsMeldable
+        );
     }
 }

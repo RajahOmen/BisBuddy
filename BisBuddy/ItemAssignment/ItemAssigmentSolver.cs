@@ -399,7 +399,7 @@ namespace BisBuddy.ItemAssignment
                         continue;
 
                     // has no prerequisites to potentially assign
-                    if (gearpiece.PrerequisiteTree == null)
+                    if (gearpiece.PrerequisiteTree?.CompletePrerequisiteNodes.Any() != true)
                         continue;
 
                     // already assigned in gearpiece assignment solution, don't add this to any group
