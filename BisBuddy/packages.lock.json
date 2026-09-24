@@ -70,8 +70,8 @@
       "LuminaSupplemental.Excel": {
         "type": "Direct",
         "requested": "[*, )",
-        "resolved": "4.2.4",
-        "contentHash": "eF9vRWo6R+XFh8C01HOW95WKxd0Es3pcOmWcg5YcT+oQb6fpmRFzg/3Z4XcMxuZdNhFJmVzOjPd8CT2pVwNC+A==",
+        "resolved": "5.1.5",
+        "contentHash": "32kzvAN80hfbMXrYBbS1cApUz20glevUSO6z6IdGcP1AIY/pxD0V1n8Oq7c2YWJ9UCYYyqqTj7WnHpyvfFpOlA==",
         "dependencies": {
           "CSVFile": "3.2.1",
           "CsvHelper": "30.0.1",
@@ -135,6 +135,15 @@
         "requested": "[10.0.1, )",
         "resolved": "10.0.1",
         "contentHash": "HqAEbtoAhgvH53c54IV5e4vQ60PYvl7Z/WIHsbet+UGGE7n+7dwVNXw1mb9LZlWbsxnupCevvtgIne5P//ZKpQ=="
+      },
+      "SixLabors.ImageSharp": {
+        "type": "Direct",
+        "requested": "[4.1.2, )",
+        "resolved": "4.1.2",
+        "contentHash": "AQ0oouhH/6qmXJC70/k50iVt7SiZRjCgd4tXXiC5ZrB5CvyBwA81HTqb5twcXz8CvTAFxUNV0TAcL83OhyRA1g==",
+        "dependencies": {
+          "System.IO.Hashing": "8.0.0"
+        }
       },
       "TestableIO.System.IO.Abstractions.Wrappers": {
         "type": "Direct",
@@ -418,11 +427,6 @@
         "resolved": "10.0.1",
         "contentHash": "DO8XrJkp5x4PddDuc/CH37yDBCs9BYN6ijlKyR3vMb55BP1Vwh90vOX8bNfnKxr5B2qEI3D8bvbY1fFbDveDHQ=="
       },
-      "SixLabors.ImageSharp": {
-        "type": "Transitive",
-        "resolved": "3.1.12",
-        "contentHash": "iAg6zifihXEFS/t7fiHhZBGAdCp3FavsF4i2ZIDp0JfeYeDVzvmlbY1CNhhIKimaIzrzSi5M/NBFcWvZT2rB/A=="
-      },
       "Sylvan.Data.Csv": {
         "type": "Transitive",
         "resolved": "1.4.3",
@@ -433,16 +437,18 @@
         "resolved": "10.0.1",
         "contentHash": "xfaHEHVDkMOOZR5S6ZGezD0+vekdH1Nx/9Ih8/rOqOGSOk1fxiN3u94bYkBW/wigj0Uw2Wt3vvRj9mtYdgwEjw=="
       },
+      "System.IO.Hashing": {
+        "type": "Transitive",
+        "resolved": "8.0.0",
+        "contentHash": "ne1843evDugl0md7Fjzy6QjJrzsjh46ZKbhf8GwBXb5f/gw97J4bxMs0NQKifDuThh/f0bZ0e62NPl1jzTuRqA=="
+      },
       "Testably.Abstractions.FileSystem.Interface": {
         "type": "Transitive",
         "resolved": "10.0.0",
         "contentHash": "tZOXFLGjkh8TxgMgKeEcM2HAlz9DwndGl6TFLo6ISHcszFX3FkuPMrtVbmqVjhooWNXrgJ/a9cH9ym5MZL1LAg=="
       },
       "kamitoolkit": {
-        "type": "Project",
-        "dependencies": {
-          "SixLabors.ImageSharp": "[3.1.12, )"
-        }
+        "type": "Project"
       }
     }
   }

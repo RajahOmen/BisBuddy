@@ -6,11 +6,10 @@ using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Info;
 using FFXIVClientStructs.FFXIV.Component.GUI;
-using KamiToolKit;
+using KamiToolKit.BaseTypes;
 using KamiToolKit.Nodes;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using static FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentList;
 
 namespace BisBuddy.Services.Addon

@@ -40,6 +40,7 @@ using System.Reflection;
 using System.Text.Json.Serialization;
 using BisBuddy.Services.IPC;
 using KamiToolKit.Extensions;
+using Dalamud.Utility;
 
 namespace BisBuddy;
 
@@ -311,7 +312,7 @@ public sealed partial class Plugin : IDalamudPlugin
     private void startPlugin()
     {
         var resolvedPluginInterface = host.Services.GetRequiredService<IDalamudPluginInterface>();
-        KamiToolKitLibrary.Initialize(resolvedPluginInterface);
+        KamiToolKitLibrary.InitializeAsync(resolvedPluginInterface).WaitSafely();
         host.Start();
 
 #if DEBUG
@@ -343,7 +344,7 @@ public sealed partial class Plugin : IDalamudPlugin
     public void Dispose()
     {
         logger.Info($"Teardown start");
-        if (MainThreadSafety.TryAssertMainThread()) // NOT on main thread, must be in order to dispose properly
+        if (!ThreadSafety.IsMainThread) // NOT on main thread, must be in order to dispose properly
         {
             IFramework? framework = null;
             try

@@ -14,7 +14,7 @@ using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.ColorSpaces.Companding;
+using SixLabors.ImageSharp.ColorProfiles.Companding;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -263,10 +263,10 @@ public class MateriaCountsTab : TabRenderer<MainWindowTab>, IDisposable
 
         var unobtainedColor = uiTheme.UnobtainedTextColor;
         var obtainedColor = uiTheme.ObtainedCompleteTextColor;
-        SRgbCompanding.Expand(ref unobtainedColor);
-        SRgbCompanding.Expand(ref obtainedColor);
+        SRgbCompanding.Expand(unobtainedColor);
+        SRgbCompanding.Expand(obtainedColor);
         var textColor = Vector4.Lerp(unobtainedColor, obtainedColor, (float)meldConfidenceRate);
-        SRgbCompanding.Compress(ref textColor);
+        SRgbCompanding.Compress(textColor);
 
         using var padding = ImRaii.PushStyle(ImGuiStyleVar.FramePadding, new Vector2(10f, 5f) * ImGuiHelpers.GlobalScale);
 
