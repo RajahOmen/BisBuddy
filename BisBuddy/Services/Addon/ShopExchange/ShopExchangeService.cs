@@ -119,7 +119,7 @@ namespace BisBuddy.Services.Addon.ShopExchange
             }
             catch (Exception ex)
             {
-                Log.Warning(ex, "Error in handlePreDraw");
+                logger.Error(ex, $"Error in handlePreDraw");
             }
         }
 
@@ -130,9 +130,13 @@ namespace BisBuddy.Services.Addon.ShopExchange
             var shopItemCount = atkValues[AtkValueItemCountIndex].Int;
             var maxItemIndex = AtkValueItemIdListStartingIndex + shopItemCount;
 
-            if (atkValues.Length <= maxItemIndex)
+            if (shopItemCount <= 0 || atkValues.Length <= maxItemIndex)
             {
-                throw new Exception($"{AddonName} AtkValue list is too short ({atkValues.Length}, {maxItemIndex})");
+
+                if (atkValues.Length <= maxItemIndex)
+                {
+                    throw new Exception($"{AddonName} AtkValue list is too short ({atkValues.Length}, {maxItemIndex})");
+                }
             }
 
             // handle INDENTED shields
@@ -154,6 +158,11 @@ namespace BisBuddy.Services.Addon.ShopExchange
                     endOfItemIdList.UInt,
                     includeObtainable: true
                     );
+                if (shopItemColor is null && configurationService.HighlightOptionalUpgrades)
+                {
+                    shopItemColor = optionalUpgradeService.GetUpgradeColor(endOfItemIdList.UInt);
+                }
+
                 if (shopItemColor is not null)
                     neededShopItemIndexColors.Add(AddonShieldIndex, shopItemColor);
             }
@@ -168,6 +177,9 @@ namespace BisBuddy.Services.Addon.ShopExchange
                 }
                 ;
                 var itemId = itemIdAtkValue.UInt;
+                if (itemId > 1000000) itemId %= 1000000;
+                else if (itemId > 500000) itemId %= 500000;
+
                 var shieldOffset = shieldInAtkValues && i >= AddonShieldIndex
                     ? 1  // shield visible and idx after where shield goes
                     : 0; // either shield not visible or before where shield goes
@@ -176,6 +188,10 @@ namespace BisBuddy.Services.Addon.ShopExchange
                     itemId,
                     includeObtainable: true
                     );
+                if (itemColor is null && configurationService.HighlightOptionalUpgrades)
+                {
+                    itemColor = optionalUpgradeService.GetUpgradeColor(itemId);
+                }
 
                 if (itemColor is not null)
                 {
@@ -197,13 +213,18 @@ namespace BisBuddy.Services.Addon.ShopExchange
             */
 
             if (atkValues.Length <= AtkValueFilteredItemsListStartingIndex)
+            {
                 return -1;
+            }
 
             // not visible
             if (
                 atkValues[index + AtkValueFilteredItemsListStartingIndex].Int
                 > AtkValueFilteredItemsListVisibleMaxValue
-                ) return -1;
+                )
+            {
+                return -1;
+            }
 
             var itemCount = atkValues[AtkValueItemCountIndex];
             var visibleCount = 0;

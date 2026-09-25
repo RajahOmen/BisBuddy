@@ -13,7 +13,8 @@ namespace BisBuddy.Services.Addon
         IGearsetsService gearsetsService,
         IItemDataService itemDataService,
         IConfigurationService configurationService,
-        IDebugService debugService
+        IDebugService debugService,
+        IOptionalUpgradeService optionalUpgradeService
         ) where T : class
     {
         public readonly ITypedLogger<T> logger = logger;
@@ -24,5 +25,6 @@ namespace BisBuddy.Services.Addon
         public readonly IItemDataService ItemDataService = itemDataService;
         public readonly IConfigurationService ConfigurationService = configurationService;
         public readonly IDebugService DebugService = debugService;
+        public readonly IOptionalUpgradeService OptionalUpgradeService = optionalUpgradeService;
     }
 }

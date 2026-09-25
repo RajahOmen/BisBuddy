@@ -42,12 +42,14 @@ namespace BisBuddy.Services.Configuration
             this.jsonSerializerService = jsonSerializerService;
             configuration = this.configurationLoaderService.LoadConfig();
             configuration.DefaultHighlightColor.OnColorChange += handleDefaultHighlightColorChange;
+            configuration.OptionalUpgradeColor.OnColorChange += handleOptionalUpgradeColorChange;
             configuration.UiTheme.PropertyChanged += handleUiThemePropertyChange;
         }
 
         public void Dispose()
         {
             configuration.DefaultHighlightColor.OnColorChange -= handleDefaultHighlightColorChange;
+            configuration.OptionalUpgradeColor.OnColorChange -= handleOptionalUpgradeColorChange;
             configuration.UiTheme.PropertyChanged -= handleUiThemePropertyChange;
         }
 
@@ -150,6 +152,12 @@ namespace BisBuddy.Services.Configuration
             set => updateConfigProperty(cfg => cfg.AnnotateTooltips, value, affectsAssignments: false);
         }
 
+        public bool HighlightOptionalUpgrades
+        {
+            get => configuration.HighlightOptionalUpgrades;
+            set => updateConfigProperty(cfg => cfg.HighlightOptionalUpgrades, value, affectsAssignments: false);
+        }
+
         public bool AutoCompleteItems
         {
             get => configuration.AutoCompleteItems;
@@ -208,6 +216,17 @@ namespace BisBuddy.Services.Configuration
             get => configuration.DefaultHighlightColor;
         }
 
+        public HighlightColor OptionalUpgradeColor
+        {
+            get => configuration.OptionalUpgradeColor;
+            set
+            {
+                configuration.OptionalUpgradeColor.OnColorChange -= handleOptionalUpgradeColorChange;
+                value.OnColorChange += handleOptionalUpgradeColorChange;
+                updateConfigProperty(cfg => cfg.OptionalUpgradeColor, value, affectsAssignments: false);
+            }
+        }
+
         public UiTheme UiTheme
         {
             get => configuration.UiTheme;
@@ -229,6 +248,12 @@ namespace BisBuddy.Services.Configuration
         }
 
         private void handleDefaultHighlightColorChange()
+        {
+            configurationLoaderService.ScheduleConfigSave(configuration);
+            triggerConfigurationChange(affectsAssignments: false);
+        }
+
+        private void handleOptionalUpgradeColorChange()
         {
             configurationLoaderService.ScheduleConfigSave(configuration);
             triggerConfigurationChange(affectsAssignments: false);

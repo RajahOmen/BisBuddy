@@ -1,6 +1,7 @@
 using BisBuddy.Resources;
 using BisBuddy.Services.Configuration;
 using BisBuddy.Ui.Renderers.Components;
+using BisBuddy.Gear;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
@@ -101,12 +102,29 @@ namespace BisBuddy.Ui.Renderers.Tabs.Config
             if (ImGui.IsItemHovered())
                 ImGui.SetTooltip(Resource.HighlightMarketboardHelp);
 
-            // ITEM TOOLTIPS
             var annotateTooltips = configurationService.AnnotateTooltips;
             if (ImGui.Checkbox(Resource.HighlightItemTooltipsCheckbox, ref annotateTooltips))
                 configurationService.AnnotateTooltips = annotateTooltips;
             if (ImGui.IsItemHovered())
                 ImGui.SetTooltip(Resource.HighlightItemTooltipsHelp);
+
+            // OPTIONAL UPGRADES
+            var highlightOptionalUpgrades = configurationService.HighlightOptionalUpgrades;
+            if (ImGui.Checkbox("Highlight Optional Upgrades", ref highlightOptionalUpgrades))
+                configurationService.HighlightOptionalUpgrades = highlightOptionalUpgrades;
+            if (ImGui.IsItemHovered())
+                ImGui.SetTooltip("Highlight items that are an upgrade to your current active gearsets.");
+
+            using (ImRaii.Disabled(!highlightOptionalUpgrades))
+            {
+                UiComponents.DrawChildLConnector();
+                using (ImRaii.PushIndent(25.0f, scaled: false))
+                {
+                    var upgradeColor = configurationService.OptionalUpgradeColor.BaseColor;
+                    if (ImGui.ColorEdit4("Optional Upgrade Color", ref upgradeColor, ImGuiColorEditFlags.NoInputs | ImGuiColorEditFlags.AlphaPreviewHalf))
+                        configurationService.OptionalUpgradeColor = new HighlightColor(upgradeColor);
+                }
+            }
         }
 
         public void PreDraw() { }

@@ -29,6 +29,7 @@ namespace BisBuddy.Services.Addon
         protected readonly IItemDataService itemDataService = dependencies.ItemDataService;
         protected readonly IConfigurationService configurationService = dependencies.ConfigurationService;
         protected readonly IDebugService debugService = dependencies.DebugService;
+        protected readonly IOptionalUpgradeService optionalUpgradeService = dependencies.OptionalUpgradeService;
 
         private static readonly HighlightColor NullColor = new(0.0f, 0.0f, 0.0f, 0.393f);
         private readonly Dictionary<nint, (NodeBase Node, HighlightColor Color)> customNodes = [];
